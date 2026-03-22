@@ -735,8 +735,8 @@ function renderLoginExtras(){
             ${acc.area?`<div style="font-size:12px;color:#888;margin-top:5px">📍 ${acc.area}</div>`:''}
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-            ${acc.photo?`<img src="${acc.photo}" style="width:72px;height:72px;border-radius:10px;border:1px solid #ddd;object-fit:cover">`:''}
-            ${acc.qr?`<img src="${acc.qr}" style="width:72px;height:72px;border-radius:10px;border:1px solid #ddd;object-fit:contain">`:''}
+            ${acc.photo?`<img src="${acc.photo}" style="width:72px;height:72px;border-radius:50%;border:2px solid #1D9E75;object-fit:cover">`:''}
+
           </div>
         </div>
       </div>`).join('');
@@ -2427,14 +2427,42 @@ T.orgsettings=function(){
             <div style="font-size:12px;color:#185FA5;font-weight:600;margin-top:3px">${acc.bank}</div>
             <div style="font-size:13px;font-weight:700;letter-spacing:1px;margin-top:5px;background:#E6F1FB;color:#185FA5;padding:5px 10px;border-radius:6px;display:inline-block">${acc.number}</div>
             ${acc.area?`<div style="font-size:11px;color:#888;margin-top:5px">📍 ${acc.area}</div>`:''}
-            <div style="margin-top:8px"><button class="btn-xs" style="background:#E24B4A;color:#fff;border:none;cursor:pointer" onclick="removeBankAccount(${i})">🗑️ Remove</button></div>
+            <div style="display:flex;gap:6px;margin-top:8px">
+              <button class="btn-xs" style="background:#1D9E75;color:#fff;border:none;cursor:pointer" onclick="openEditBank(${i})">✏️ Edit</button>
+              <button class="btn-xs" style="background:#E24B4A;color:#fff;border:none;cursor:pointer" onclick="removeBankAccount(${i})">🗑️ Remove</button>
+            </div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-            ${acc.photo?`<img src="${acc.photo}" style="width:64px;height:64px;border-radius:8px;border:1px solid #ddd;object-fit:cover">`:''}
-            ${acc.qr?`<img src="${acc.qr}" style="width:64px;height:64px;border-radius:8px;border:1px solid #ddd;object-fit:contain">`:''}
+            ${acc.photo?`<img src="${acc.photo}" style="width:64px;height:64px;border-radius:50%;border:2px solid #1D9E75;object-fit:cover">`:''}
           </div>
         </div>
       </div>`).join('')}
+    <div id="bankEditSection" style="display:none;background:#E1F5EE;border:1px solid #1D9E75;border-radius:10px;padding:14px;margin-bottom:10px">
+      <div style="font-size:13px;font-weight:600;color:#0F6E56;margin-bottom:10px">✏️ Edit Account | اکاؤنٹ ترمیم کریں</div>
+      <label>Account Title *</label>
+      <div class="inp-wrap"><span class="inp-icon">🏦</span><input type="text" id="baEditTitle" placeholder="Account title"></div>
+      <label>Bank Name *</label>
+      <div class="inp-wrap"><span class="inp-icon">🏛️</span><input type="text" id="baEditBank" placeholder="Bank name"></div>
+      <label>Account Number *</label>
+      <div class="inp-wrap"><span class="inp-icon">🔢</span><input type="text" id="baEditNumber" placeholder="Account number"></div>
+      <label>Area <span style="font-size:10px;color:#1D9E75">علاقہ</span></label>
+      <div class="inp-wrap"><span class="inp-icon">📍</span><select id="baEditArea"><option value="">-- Select Area --</option>${AREAS.map(a=>`<option value="${a}">${a}</option>`).join('')}</select></div>
+      <label>Account Holder Photo <span style="font-size:10px;color:#888">(leave empty to keep existing)</span></label>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:6px;margin-bottom:10px">
+        <div style="width:64px;height:64px;border:2px dashed #1D9E75;border-radius:50%;overflow:hidden;cursor:pointer;background:#f0fff8;display:flex;align-items:center;justify-content:center" onclick="document.getElementById('baEditPhotoInput').click()">
+          <img id="baEditPhotoPreview" src="" style="display:none;width:100%;height:100%;object-fit:cover">
+          <span id="baEditPhotoPlus" style="font-size:20px">📸</span>
+        </div>
+        <div style="font-size:11px;color:#888">Upload new photo<br>or leave to keep current</div>
+      </div>
+      <input type="file" accept="image/*" id="baEditPhotoInput" style="display:none" onchange="previewBaEditPhoto()">
+      <input type="hidden" id="baEditIndex">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+        <button class="btn" onclick="cancelEditBank()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveEditBank()">Save Changes | محفوظ کریں</button>
+      </div>
+    </div>
+
     <div style="border-top:1px solid #eee;margin-top:10px;padding-top:10px">
       <div style="font-size:13px;font-weight:600;margin-bottom:8px">Add New Account</div>
       <label>Account Title *</label>
@@ -2443,28 +2471,18 @@ T.orgsettings=function(){
       <div class="inp-wrap"><span class="inp-icon">🏛️</span><input type="text" id="baBank" placeholder="e.g. HBL, MCB, Meezan Bank"></div>
       <label>Account Number *</label>
       <div class="inp-wrap"><span class="inp-icon">🔢</span><input type="text" id="baNumber" placeholder="Account number"></div>
-      <label>Area / Account Holder <span style="font-size:10px;color:#1D9E75">علاقہ / اکاؤنٹ ہولڈر</span></label>
-      <div class="inp-wrap"><span class="inp-icon">📍</span><input type="text" id="baArea" placeholder="e.g. Sector A or account holder name"></div>
-      <label>Account Photo (optional) <span style="font-size:10px;color:#1D9E75">اکاؤنٹ تصویر</span></label>
+      <label>Area <span style="font-size:10px;color:#1D9E75">علاقہ</span></label>
+      <div class="inp-wrap"><span class="inp-icon">📍</span><select id="baArea"><option value="">-- Select Area --</option>${AREAS.map(a=>`<option value="${a}">${a}</option>`).join('')}</select></div>
+      <label>Account Holder Photo (optional) <span style="font-size:10px;color:#1D9E75">اکاؤنٹ ہولڈر تصویر</span></label>
       <div style="display:flex;align-items:center;gap:12px;margin-top:6px;margin-bottom:10px">
         <div style="width:72px;height:72px;border:2px dashed #ccc;border-radius:10px;overflow:hidden;cursor:pointer;background:#f5f5f5;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px" onclick="document.getElementById('baPhotoInput').click()">
           <img id="baPhotoPreview" src="" style="display:none;width:100%;height:100%;object-fit:cover">
           <span id="baPhotoPlus" style="font-size:22px">📸</span>
           <span id="baPhotoPlusText" style="font-size:9px;color:#aaa">Photo</span>
         </div>
-        <div style="flex:1;font-size:11px;color:#888">Passbook, cheque or<br>account screenshot</div>
+        <div style="flex:1;font-size:11px;color:#888">Account holder photo<br>or ID card photo</div>
       </div>
       <input type="file" accept="image/*" id="baPhotoInput" style="display:none" onchange="previewBaPhoto()">
-      <label>QR Code (optional) <span style="font-size:10px;color:#1D9E75">QR کوڈ</span></label>
-      <div style="display:flex;align-items:center;gap:12px;margin-top:6px">
-        <div style="width:72px;height:72px;border:2px dashed #ccc;border-radius:10px;overflow:hidden;cursor:pointer;background:#f5f5f5;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px" onclick="document.getElementById('baQrInput').click()">
-          <img id="baQrPreview" src="" style="display:none;width:100%;height:100%;object-fit:contain">
-          <span id="baQrPlus" style="font-size:22px">📷</span>
-          <span style="font-size:9px;color:#aaa">QR Code</span>
-        </div>
-        <div style="flex:1;font-size:11px;color:#888">Bank QR code or<br>payment screenshot</div>
-      </div>
-      <input type="file" accept="image/*" id="baQrInput" style="display:none" onchange="previewBaQr()">
       <button class="btn btn-primary" style="margin-top:12px" onclick="addBankAccount()">Add Account | اکاؤنٹ شامل کریں</button>
     </div>
   </div>`;
@@ -2559,10 +2577,7 @@ function saveSocialLinks(){
   renderLoginExtras();
   showPopup('✅','Saved','Social links saved. Main page pe icons nazar ayenge.');
 }
-function previewBaQr(){
-  const f=document.getElementById('baQrInput').files[0];if(!f)return;
-  const r=new FileReader();r.onload=e=>{const im=document.getElementById('baQrPreview');im.src=e.target.result;im.style.display='block';document.getElementById('baQrPlus').style.display='none';};r.readAsDataURL(f);
-}
+// previewBaQr removed
 function previewBaPhoto(){
   const f=document.getElementById('baPhotoInput').files[0];if(!f)return;
   const r=new FileReader();r.onload=e=>{
@@ -2578,31 +2593,87 @@ function addBankAccount(){
   const number=document.getElementById('baNumber').value.trim();
   const area=(document.getElementById('baArea')||{value:''}).value.trim();
   if(!title||!bank||!number){showPopup('⚠️','Incomplete','Title, bank and account number are required.');return;}
-  const fiQr=document.getElementById('baQrInput');
   const fiPhoto=document.getElementById('baPhotoInput');
-  function finish(qr,photo){
-    ORG_CONFIG.bankAccounts.push({title,bank,number,area,qr:qr||null,photo:photo||null});
+  function finish(photo){
+    ORG_CONFIG.bankAccounts.push({title,bank,number,area,photo:photo||null});
     FS.saveConfig();renderLoginExtras();
     showPopup('✅','Account Added','Bank account added.');
     renderTab('orgsettings');
   }
-  if(fiPhoto.files[0]&&fiQr.files[0]){
-    const r1=new FileReader();r1.onload=e1=>{
-      const photo=e1.target.result;
-      const r2=new FileReader();r2.onload=e2=>finish(e2.target.result,photo);
-      r2.readAsDataURL(fiQr.files[0]);
-    };r1.readAsDataURL(fiPhoto.files[0]);
-  } else if(fiPhoto.files[0]){
-    const r=new FileReader();r.onload=e=>finish(null,e.target.result);r.readAsDataURL(fiPhoto.files[0]);
-  } else if(fiQr.files[0]){
-    const r=new FileReader();r.onload=e=>finish(e.target.result,null);r.readAsDataURL(fiQr.files[0]);
-  } else {finish(null,null);}
+  if(fiPhoto.files[0]){
+    const r=new FileReader();r.onload=e=>finish(e.target.result);r.readAsDataURL(fiPhoto.files[0]);
+  } else {finish(null);}
 }
 function removeBankAccount(i){
+  if(!confirm('Remove this bank account?'))return;
   ORG_CONFIG.bankAccounts.splice(i,1);
   FS.saveConfig();renderLoginExtras();
   renderTab('orgsettings');
   showPopup('🗑️','Removed','Account removed.');
+}
+
+function openEditBank(i){
+  const acc=ORG_CONFIG.bankAccounts[i];
+  if(!acc)return;
+  // Fill edit form
+  document.getElementById('baEditTitle').value=acc.title||'';
+  document.getElementById('baEditBank').value=acc.bank||'';
+  document.getElementById('baEditNumber').value=acc.number||'';
+  document.getElementById('baEditIndex').value=i;
+  // Set area dropdown
+  const asel=document.getElementById('baEditArea');
+  if(asel){
+    Array.from(asel.options).forEach(o=>{o.selected=o.value===acc.area;});
+  }
+  // Show existing photo
+  const prev=document.getElementById('baEditPhotoPreview');
+  const plus=document.getElementById('baEditPhotoPlus');
+  if(acc.photo&&prev){prev.src=acc.photo;prev.style.display='block';if(plus)plus.style.display='none';}
+  else{if(prev)prev.style.display='none';if(plus)plus.style.display='block';}
+  // Reset file input
+  document.getElementById('baEditPhotoInput').value='';
+  // Show edit section, scroll to it
+  const es=document.getElementById('bankEditSection');
+  if(es){es.style.display='block';es.scrollIntoView({behavior:'smooth',block:'start'});}
+}
+
+function previewBaEditPhoto(){
+  const f=document.getElementById('baEditPhotoInput').files[0];if(!f)return;
+  const r=new FileReader();r.onload=e=>{
+    const im=document.getElementById('baEditPhotoPreview');
+    im.src=e.target.result;im.style.display='block';
+    const pl=document.getElementById('baEditPhotoPlus');if(pl)pl.style.display='none';
+  };r.readAsDataURL(f);
+}
+
+function cancelEditBank(){
+  const es=document.getElementById('bankEditSection');
+  if(es)es.style.display='none';
+}
+
+function saveEditBank(){
+  const i=parseInt(document.getElementById('baEditIndex').value);
+  const acc=ORG_CONFIG.bankAccounts[i];
+  if(!acc)return;
+  const title=document.getElementById('baEditTitle').value.trim();
+  const bank=document.getElementById('baEditBank').value.trim();
+  const number=document.getElementById('baEditNumber').value.trim();
+  const area=document.getElementById('baEditArea').value;
+  if(!title||!bank||!number){showPopup('⚠️','Incomplete','Title, bank and number required.');return;}
+  const fi=document.getElementById('baEditPhotoInput');
+  function finish(photo){
+    acc.title=title;acc.bank=bank;acc.number=number;acc.area=area;
+    if(photo!==undefined)acc.photo=photo;
+    FS.saveConfig();renderLoginExtras();
+    cancelEditBank();
+    showPopup('✅','Updated','Bank account updated.');
+    renderTab('orgsettings');
+  }
+  if(fi.files[0]){
+    const r=new FileReader();r.onload=e=>finish(e.target.result);r.readAsDataURL(fi.files[0]);
+  } else {
+    finish(undefined); // keep existing photo
+  }
 }
 
 // ---- PROFILE UPDATE ----

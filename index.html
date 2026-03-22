@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Falah e Qabristan | فلاح قبرستان</title>
+<title>Falah e Qabristan</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--green:#1D9E75;--green-dark:#0F6E56;--blue:#185FA5;--amber:#BA7517;--red:#E24B4A;--purple:#993556;--bg:#f0f4f3;--card:#fff;--border:#e0e0e0;--text:#1a1a1a;--muted:#888;--radius:12px}
@@ -13,7 +13,7 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;color:var(--t
 /* APP HEADER */
 .app-header{background:var(--green);color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 2px 8px rgba(0,0,0,0.15)}
 .app-header-left{display:flex;align-items:center;gap:10px}
-.app-title{font-size:15px;font-weight:700;color:#fff;line-height:1.15}
+.app-title{font-size:16px;font-weight:700;color:#fff}
 .app-subtitle{font-size:11px;opacity:0.85;color:#fff;margin-top:1px}
 .header-avatar{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;overflow:hidden;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.4)}
 .btn-logout{background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer}
@@ -179,6 +179,10 @@ input[type=file]{padding:6px}
 #regCnicStatus,#regMobileStatus,#donorMobileStatus,#donorCnicStatus,#profMobileStatus,#profCnicStatus{font-size:12px;padding:7px 10px;border-radius:7px}
 </style>
 
+<!-- Firebase CDN -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
 <!-- LOGIN SCREEN -->
 <div id="loginScreen" class="screen active">
   <div class="login-hero">
@@ -221,7 +225,7 @@ input[type=file]{padding:6px}
 <!-- HISTORY SCREEN -->
 <div id="historyScreen" class="screen">
   <div class="app-header">
-    <div class="app-header-left"><button class="btn-logout" onclick="showScreen('loginScreen')">← Back</button><div><div class="app-title">📖 <span style="display:block;font-size:15px;font-weight:700;line-height:1.1">Our History</span><span style="display:block;font-size:10px;font-weight:500;opacity:0.85;direction:rtl;text-align:left">ہماری کہانی</span></div></div></div>
+    <div class="app-header-left"><button class="btn-logout" onclick="showScreen('loginScreen')">← Back</button><div><div class="app-title">📖 Our History</div></div></div>
   </div>
   <div class="content-area">
     <div class="card">
@@ -244,7 +248,7 @@ input[type=file]{padding:6px}
 <!-- BANK SCREEN -->
 <div id="bankScreen" class="screen">
   <div class="app-header">
-    <div class="app-header-left"><button class="btn-logout" onclick="showScreen('loginScreen')">← Back</button><div><div class="app-title">🏦 <span style="display:block;font-size:15px;font-weight:700;line-height:1.1">Fund Transfer</span><span style="display:block;font-size:10px;font-weight:500;opacity:0.85;direction:rtl;text-align:left">فنڈ منتقلی</span></div></div></div>
+    <div class="app-header-left"><button class="btn-logout" onclick="showScreen('loginScreen')">← Back</button><div><div class="app-title">🏦 Fund Transfer</div></div></div>
   </div>
   <div class="content-area">
     <div id="bankAccountsList"></div>
@@ -256,7 +260,7 @@ input[type=file]{padding:6px}
 <!-- REG ROLE SCREEN -->
 <div id="regRoleScreen" class="screen">
   <div class="app-header">
-    <div class="app-header-left"><button class="btn-logout" onclick="showScreen('loginScreen')">← Back</button><div><div class="app-title"><span style="display:block;font-size:15px;font-weight:700;line-height:1.1">Create Account</span><span style="display:block;font-size:10px;font-weight:500;opacity:0.85;direction:rtl;text-align:left">نیا اکاؤنٹ بنائیں</span></div></div></div>
+    <div class="app-header-left"><button class="btn-logout" onclick="showScreen('loginScreen')">← Back</button><div><div class="app-title">Create Account</div></div></div>
   </div>
   <div class="content-area">
     <div class="card">
@@ -273,7 +277,7 @@ input[type=file]{padding:6px}
 <!-- REG SCREEN -->
 <div id="regScreen" class="screen">
   <div class="app-header">
-    <div class="app-header-left"><button class="btn-logout" onclick="showScreen('regRoleScreen')">← Back</button><div><div class="app-title"><span id="regTitle" style="display:block;font-size:15px;font-weight:700;line-height:1.1">Registration</span><span id="regSubtitle" style="display:block;font-size:10px;font-weight:500;opacity:0.85;direction:rtl;text-align:left">رجسٹریشن</span></div></div></div>
+    <div class="app-header-left"><button class="btn-logout" onclick="showScreen('regRoleScreen')">← Back</button><div><div class="app-title" id="regTitle">Registration</div><div class="app-subtitle" id="regSubtitle"></div></div></div>
   </div>
   <div class="content-area">
     <div id="regNotice" class="info-box" style="display:none"></div>
@@ -316,7 +320,7 @@ input[type=file]{padding:6px}
 <!-- DEV KEY SCREEN -->
 <div id="devKeyScreen" class="screen">
   <div class="app-header">
-    <div class="app-header-left"><button class="btn-logout" onclick="showScreen('loginScreen')">← Back</button><div><div class="app-title">⚙️ <span style="display:block;font-size:15px;font-weight:700;line-height:1.1">Developer Login</span><span style="display:block;font-size:10px;font-weight:500;opacity:0.85;direction:rtl;text-align:left">ڈیولپر لاگ ان</span></div></div></div>
+    <div class="app-header-left"><button class="btn-logout" onclick="showScreen('loginScreen')">← Back</button><div><div class="app-title"><span style="font-size:13px">Developer Login</span><span style="font-size:10px;color:rgba(255,255,255,0.7);display:block;margin-top:1px">ڈیولپر لاگ ان</span></div></div></div>
   </div>
   <div class="content-area">
     <div class="card" style="margin-top:20px;text-align:center;padding:30px 20px">
@@ -336,7 +340,7 @@ input[type=file]{padding:6px}
     <div class="app-header-left">
       <div class="header-avatar" id="dashAvatar"></div>
       <div>
-        <div class="app-title"><span id="dashTitleEmoji" style="display:none">🕌</span><span id="dashOrgName" style="display:block;font-size:15px;font-weight:700;line-height:1.1"></span><span id="dashOrgNameUr" style="display:block;font-size:10px;font-weight:500;opacity:0.85;direction:rtl;text-align:left">فلاح قبرستان</span></div>
+        <div class="app-title"><span id="dashTitleEmoji" style="display:none">🕌</span> <span id="dashOrgName"></span></div>
         <div class="app-subtitle" id="dashRole"></div>
       </div>
     </div>
@@ -404,6 +408,47 @@ input[type=file]{padding:6px}
 </div>
 
 <script>
+// Firebase init
+const firebaseConfig={apiKey:"AIzaSyDIfA45aTq6JZfu59ezWIXyGhjbe-dOiTg",authDomain:"falah-qabristan.firebaseapp.com",projectId:"falah-qabristan",storageBucket:"falah-qabristan.firebasestorage.app",messagingSenderId:"17144787021",appId:"1:17144787021:web:06c3c8511f2430565c2c04"};
+firebase.initializeApp(firebaseConfig);
+const fdb=firebase.firestore();
+
+// Firestore helpers
+const FS={
+  async save(col,id,data){try{await fdb.collection(col).doc(String(id)).set(JSON.parse(JSON.stringify(data,(k,v)=>v===undefined?null:v)));}catch(e){console.error('FS.save',e);}},
+  async del(col,id){try{await fdb.collection(col).doc(String(id)).delete();}catch(e){}},
+  async loadAll(col){try{const s=await fdb.collection(col).get();return s.docs.map(d=>({...d.data(),id:d.id}));}catch(e){return [];}},
+  async saveConfig(){try{await fdb.collection('config').doc('org').set(JSON.parse(JSON.stringify(ORG_CONFIG,(k,v)=>v===undefined?null:v)));}catch(e){}},
+  async loadConfig(){try{const d=await fdb.collection('config').doc('org').get();if(d.exists)Object.assign(ORG_CONFIG,d.data());}catch(e){}}
+};
+
+// Loading overlay
+function showLoading(on){
+  let el=document.getElementById('fbLoader');
+  if(!el&&on){el=document.createElement('div');el.id='fbLoader';el.innerHTML='<div style="font-size:40px;margin-bottom:10px">🕌</div><div style="font-size:15px;font-weight:600;color:#1D9E75">Loading...</div><div style="font-size:11px;color:#888;margin-top:4px">Syncing with server</div>';el.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:4px';document.body.appendChild(el);}
+  if(el)el.style.display=on?'flex':'none';
+}
+
+// Load all data from Firestore
+async function loadAllData(){
+  showLoading(true);
+  try{
+    const [u,pa,don,dec,donations,exp,trf,log,profs]=await Promise.all([
+      FS.loadAll('users'),FS.loadAll('pendingApprovals'),FS.loadAll('donors'),
+      FS.loadAll('deceased'),FS.loadAll('donations'),FS.loadAll('expenses'),
+      FS.loadAll('transfers'),FS.loadAll('auditLog'),FS.loadAll('professions')
+    ]);
+    DB.users=u;DB.pendingApprovals=pa;DB.donors=don;DB.deceased=dec;
+    DB.donations=donations;DB.expenses=exp;DB.transfers=trf;DB.auditLog=log;
+    if(profs.length>0)PROFESSIONS=profs.map(p=>p.name);
+    const txn=DB.donations.map(d=>parseInt((d.id||'0').replace(/[^0-9]/g,''))||0);
+    txnCounter=txn.length?Math.max(...txn)+1:1;
+    const bil=DB.expenses.map(e=>parseInt((e.billNo||'BILL-0000').replace('BILL-',''))||0);
+    expBillCounter=bil.length?Math.max(...bil):0;
+    await FS.loadConfig();
+  }catch(e){console.error('loadAllData:',e);}
+  showLoading(false);
+}
 
 const AREAS=['Sector A','Sector B','Sector C','Sector D','Model Town','Gulberg','Johar Town','DHA','Cantonment','Sadar'];
 let PROFESSIONS=['Doctor','Engineer','Teacher','Lawyer','Businessman','Farmer','Government Employee','Private Job','Student','Retired','Other'];
@@ -511,9 +556,7 @@ function doLogin(){
 }
 function openReg(role){
   pendingRegRole=role;
-  const roleUr={user:'یوزر رجسٹریشن',admin:'ایڈمن رجسٹریشن',manager:'مینیجر رجسٹریشن',developer:'ڈیولپر رجسٹریشن'};
-document.getElementById('regTitle').textContent=role.charAt(0).toUpperCase()+role.slice(1)+' Registration';
-document.getElementById('regSubtitle').textContent=roleUr[role]||'رجسٹریشن';
+  document.getElementById('regTitle').textContent=role.charAt(0).toUpperCase()+role.slice(1)+' Registration';
   const n=document.getElementById('regNotice');
   const msgs={user:'✅ Approval nahi chahiye — seedha login hoga.',admin:'⚠️ Admin account ke liye developer ki approval zaruri hai.',manager:'⚠️ Manager account ke liye developer ki approval zaruri hai.',developer:'⚙️ Developer account ke liye master key se approval di jayegi.'};
   const cls={user:'success',admin:'warning',manager:'warning',developer:'info'};
@@ -576,11 +619,13 @@ function finishReg(name,mobile,cnic,password,photo,signature){
   const profession=document.getElementById('regProfession').value;
   if(pendingRegRole==='user'){
     const nid=nextAllId();
-    DB.users.push({id:nid,name,cnic,mobile,password,area,profession,role:'user',approved:true,locked:false,photo,signature:null});
+    const nu={id:nid,name,cnic,mobile,password,area,profession,role:'user',approved:true,locked:false,photo,signature:null};
+    DB.users.push(nu);FS.save('users',nid,nu);
     currentUser=DB.users[DB.users.length-1];currentRole='user';
     showPopup('✅','Success!','Account created. ID: '+nid,null,()=>loadDashboard());
   } else {
-    DB.pendingApprovals.push({id:'PA'+Date.now(),name,cnic,mobile,password,area,profession,role:pendingRegRole,date:today(),photo,signature});
+    const pa={id:'PA'+Date.now(),name,cnic,mobile,password,area,profession,role:pendingRegRole,date:today(),photo,signature};
+    DB.pendingApprovals.push(pa);FS.save('pendingApprovals',pa.id,pa);
     showPopup('📤','Request Forward','You can login after developer approval.',null,()=>showScreen('loginScreen'));
   }
 }
@@ -892,14 +937,16 @@ function finishDonation(name,amount,mobile,cnic,photo){
     if(DB.donors.find(d=>d.mobile.replace(/-/g,'')===mobile.replace(/-/g,''))){showPopup('⚠️','Duplicate Mobile','Is mobile se donor already exist karta hai.');return;}
     const nid=nextAllId();
     donor={id:nid,name,mobile,cnic,area:document.getElementById('donorArea').value,profession:document.getElementById('donorProfession').value,totalDonation:0,photo:photo||null,entries:[]};
-    DB.donors.push(donor);
+    DB.donors.push(donor);FS.save('donors',donor.id,donor);
   }
   if(photo)donor.photo=photo;
   donor.totalDonation+=amount;
   const t=today();const desc=document.getElementById('donorDesc').value||'Donation';
   const eid=nextEntryId();
   donor.entries.push({id:eid,date:t,amount,by:currentUser.id,desc});
-  DB.donations.push({id:'TXN'+String(txnCounter++).padStart(3,'0'),donorId:donor.id,amount,date:t,by:currentUser.id,desc});
+  const txO={id:'TXN'+String(txnCounter++).padStart(3,'0'),donorId:donor.id,amount,date:t,by:currentUser.id,desc};
+  DB.donations.push(txO);FS.save('donations',txO.id,txO);
+  FS.save('donors',donor.id,donor);
   DB.auditLog.push({by:currentUser.id,action:'Donation Entry',target:donor.name,detail:'Rs '+fmt(amount)+' — '+desc,date:t});
   // Auto refresh
   showPopup('✅','Saved!','Donor ID: '+donor.id+'\nRs '+fmt(amount)+' save ho gayi.',null,()=>renderTab('donation'));
@@ -958,7 +1005,8 @@ function submitDeceased(){
   const pf=document.getElementById('dcPersonPhotoInput');
   const gf=document.getElementById('dcGravePhotoInput');
   function saveDeceased(personPhoto, gravePhoto){
-    DB.deceased.push({id:nid,name,fatherName:document.getElementById('dcFather').value,cnic:document.getElementById('dcCnic').value,area:document.getElementById('dcArea').value,dateOfDeath:document.getElementById('dcDate').value,approved:false,addedBy:currentUser.id,addedDate:today(),personPhoto:personPhoto||null,gravePhoto:gravePhoto||null,w1name:document.getElementById('w1name').value,w1father:document.getElementById('w1father').value,w1mobile:document.getElementById('w1mobile').value,w2name:document.getElementById('w2name').value,w2father:document.getElementById('w2father').value,w2mobile:document.getElementById('w2mobile').value});
+    const decO={id:nid,name,fatherName:document.getElementById('dcFather').value,cnic:document.getElementById('dcCnic').value,area:document.getElementById('dcArea').value,dateOfDeath:document.getElementById('dcDate').value,approved:false,addedBy:currentUser.id,addedDate:today(),personPhoto:personPhoto||null,gravePhoto:gravePhoto||null,w1name:document.getElementById('w1name').value,w1father:document.getElementById('w1father').value,w1mobile:document.getElementById('w1mobile').value,w2name:document.getElementById('w2name').value,w2father:document.getElementById('w2father').value,w2mobile:document.getElementById('w2mobile').value};
+  DB.deceased.push(decO);FS.save('deceased',nid,decO);
     DB.auditLog.push({by:currentUser.id,action:'Deceased Entry',target:name,detail:'ID: '+nid,date:today()});
     showPopup('📤','Submitted','ID: '+nid+' — Pending developer approval.',null,()=>renderTab('deceased'));
   }
@@ -1753,14 +1801,15 @@ function doTransfer(){
   const cash=calcCashInHand(currentUser.id);
   if(amount>cash){showPopup('⚠️','Insufficient','Insufficient balance. Cash in Hand: Rs '+fmt(cash));return;}
   const tid='TRF'+Date.now();
-  DB.transfers.push({id:tid,from:currentUser.id,to,amount,date:today(),note:document.getElementById('transferNote').value,received:false});
+  const trO={id:tid,from:currentUser.id,to,amount,date:today(),note:document.getElementById('transferNote').value,received:false};
+  DB.transfers.push(trO);FS.save('transfers',tid,trO);
   const tu=DB.users.find(u=>u.id===to)||{name:'?'};
   showPopup('✅','Transfer Sent','Rs '+fmt(amount)+' bheji gayi '+tu.name+' ko.');
   renderTab('transfer');
 }
 function markReceived(tid){
   const t=DB.transfers.find(x=>x.id===tid);if(!t)return;
-  t.received=true;
+  t.received=true;FS.save('transfers',t.id,t);
   DB.auditLog.push({by:currentUser.id,action:'Transfer Received',target:'Rs '+fmt(t.amount),detail:'From '+t.from,date:today()});
   showPopup('✅','Received!','Rs '+fmt(t.amount)+' balance mein add ho gayi.');
   renderTab('transfer');
@@ -1854,12 +1903,14 @@ function deleteDonation(id){
   const donor=DB.donors.find(x=>x.id===d.donorId);
   if(donor){donor.totalDonation-=d.amount;donor.entries=donor.entries.filter(e=>!(e.date===d.date&&e.amount===d.amount));}
   DB.auditLog.push({by:currentUser.id,action:'Deleted Donation',target:d.id,detail:'Rs '+fmt(d.amount)+' deleted',date:today()});
+  FS.del('donations',d.id);
   DB.donations.splice(DB.donations.indexOf(d),1);
   showPopup('🗑️','Deleted','Donation entry deleted successfully.',null,()=>renderTab('myentries'));
 }
 function deleteExpense(id){
   const e=DB.expenses.find(x=>x.id===id);if(!e)return;
   DB.auditLog.push({by:currentUser.id,action:'Deleted Expense',target:e.id,detail:e.desc+' deleted',date:today()});
+  FS.del('expenses',e.id);
   DB.expenses.splice(DB.expenses.indexOf(e),1);
   showPopup('🗑️','Deleted','Expense deleted successfully.',null,()=>renderTab('myentries'));
 }
@@ -1990,7 +2041,7 @@ function finishExpense(desc,amount,date,area,hardcopyImg){
     billNo,desc,vendor,category,amount,date,area,
     by:currentUser.id,hardcopyImg:hardcopyImg||null
   };
-  DB.expenses.push(newExp);
+  DB.expenses.push(newExp);FS.save('expenses',newExp.id,newExp);
   DB.auditLog.push({by:currentUser.id,action:'Expense Added',target:billNo,detail:desc+' Rs '+fmt(amount),date:today()});
   showPopup('✅','Bill Saved!','Bill No: '+billNo+'\nRs '+fmt(amount)+' save ho gaya.',null,()=>renderTab('expense'));
 }
@@ -2142,7 +2193,7 @@ T.decconfirm=function(){
   </div>`;
 };
 function adminApproveDeceased(id){
-  const d=DB.deceased.find(x=>x.id===id);if(d){d.approved=true;DB.auditLog.push({by:currentUser.id,action:'Deceased Confirmed',target:d.name,detail:'ID: '+d.id,date:today()});}
+  const d=DB.deceased.find(x=>x.id===id);if(d){d.approved=true;FS.save('deceased',d.id,d);DB.auditLog.push({by:currentUser.id,action:'Deceased Confirmed',target:d.name,detail:'ID: '+d.id,date:today()});}
   showPopup('✅','Confirmed!','Deceased entry has been confirmed.');
   renderTab('decconfirm');
 }
@@ -2269,31 +2320,31 @@ function saveOrgName(){
   const ur=document.getElementById('orgNameUr').value.trim();
   if(!en){showPopup('⚠️','Required','English name is required.');return;}
   ORG_CONFIG.name=en;if(ur)ORG_CONFIG.nameUrdu=ur;
-  renderLoginExtras();
+  FS.saveConfig();renderLoginExtras();
   showPopup('✅','Saved','Organization name saved — har jagah update ho gaya!');
 }
 function saveOrgAddress(){
   ORG_CONFIG.address=document.getElementById('orgAddress').value.trim();
-  renderLoginExtras();
+  FS.saveConfig();renderLoginExtras();
   showPopup('✅','Saved','Address saved.');
 }
 function saveOrgHistory(){
   ORG_CONFIG.history=document.getElementById('orgHistory').value.trim();
-  renderLoginExtras();
+  FS.saveConfig();renderLoginExtras();
   showPopup('✅','Saved','History saved. "View Our History" button nazar ayega.');
 }
 function uploadOrgLogo(){
   const f=document.getElementById('orgLogoInput').files[0];if(!f)return;
   const r=new FileReader();r.onload=e=>{
     ORG_CONFIG.logo=e.target.result;
-    renderLoginExtras();
+    FS.saveConfig();renderLoginExtras();
     showPopup('✅','Save Logod','Logo uploaded successfully. Har jagah show hoga.');
     renderTab('orgsettings');
   };r.readAsDataURL(f);
 }
 function removeLogo(){
   ORG_CONFIG.logo=null;
-  renderLoginExtras();
+  FS.saveConfig();renderLoginExtras();
   renderTab('orgsettings');
   showPopup('🗑️','Removed','Logo removed.');
 }
@@ -2363,12 +2414,12 @@ function addBankAccount(){
   const number=document.getElementById('baNumber').value.trim();
   if(!title||!bank||!number){showPopup('⚠️','Incomplete','Title, bank and account number are required.');return;}
   const fi=document.getElementById('baQrInput');
-  if(fi.files[0]){const r=new FileReader();r.onload=e=>{ORG_CONFIG.bankAccounts.push({title,bank,number,qr:e.target.result});renderLoginExtras();showPopup('✅','Account Added','Bank account add ho gaya.');renderTab('orgsettings');};r.readAsDataURL(fi.files[0]);}
-  else{ORG_CONFIG.bankAccounts.push({title,bank,number,qr:null});renderLoginExtras();showPopup('✅','Account Added','Bank account add ho gaya.');renderTab('orgsettings');}
+  if(fi.files[0]){const r=new FileReader();r.onload=e=>{ORG_CONFIG.bankAccounts.push({title,bank,number,qr:e.target.result});FS.saveConfig();renderLoginExtras();showPopup('✅','Account Added','Bank account add ho gaya.');renderTab('orgsettings');};r.readAsDataURL(fi.files[0]);}
+  else{ORG_CONFIG.bankAccounts.push({title,bank,number,qr:null});FS.saveConfig();renderLoginExtras();showPopup('✅','Account Added','Bank account add ho gaya.');renderTab('orgsettings');}
 }
 function removeBankAccount(i){
   ORG_CONFIG.bankAccounts.splice(i,1);
-  renderLoginExtras();
+  FS.saveConfig();renderLoginExtras();
   renderTab('orgsettings');
   showPopup('🗑️','Removed','Account removed.');
 }
@@ -2479,6 +2530,7 @@ function saveProfile(){
     if(photo)currentUser.photo=photo;
     if(sig)currentUser.signature=sig;
     if(newPwd){currentUser.password=newPwd;}
+    FS.save('users',currentUser.id,currentUser);
     DB.auditLog.push({by:currentUser.id,action:'Profile Updated',target:currentUser.name,detail:'Self profile update',date:today()});
     // Update header avatar
     const av=document.getElementById('dashAvatar');
@@ -2538,14 +2590,16 @@ T.approvals=function(){
 };
 function approveUser(i){
   const req=DB.pendingApprovals[i];const nid=nextAllId();
-  DB.users.push({id:nid,name:req.name,cnic:req.cnic,mobile:req.mobile,password:req.password,area:req.area,profession:req.profession,role:req.role,approved:true,locked:false,photo:req.photo||null,signature:req.signature||null});
-  DB.pendingApprovals.splice(i,1);
-  DB.auditLog.push({by:currentUser.id,action:'Approved',target:req.name,detail:req.role+' ID: '+nid,date:today()});
+  const au={id:nid,name:req.name,cnic:req.cnic,mobile:req.mobile,password:req.password,area:req.area,profession:req.profession,role:req.role,approved:true,locked:false,photo:req.photo||null,signature:req.signature||null};
+  DB.users.push(au);FS.save('users',nid,au);
+  DB.pendingApprovals.splice(i,1);FS.del('pendingApprovals',req.id);
+  const al1={by:currentUser.id,action:'Approved',target:req.name,detail:req.role+' ID: '+nid,date:today()};
+  DB.auditLog.push(al1);FS.save('auditLog','AL'+Date.now(),al1);
   showPopup('✅','Approved!',req.name+' ka ID: '+nid);
   renderTab('approvals');buildTabs();
 }
 function rejectUser(i){
-  const req=DB.pendingApprovals[i];DB.pendingApprovals.splice(i,1);
+  const req=DB.pendingApprovals[i];DB.pendingApprovals.splice(i,1);FS.del('pendingApprovals',req.id);
   showPopup('🗑️','Rejected',req.name+"'s request was rejected.");
   renderTab('approvals');buildTabs();
 }
@@ -2572,7 +2626,7 @@ T.lockuser=function(){
 };
 function toggleLock(uid){
   const u=DB.users.find(x=>x.id===uid);if(!u)return;
-  u.locked=!u.locked;
+  u.locked=!u.locked;FS.save('users',u.id,u);
   DB.auditLog.push({by:currentUser.id,action:u.locked?'Locked':'Unlocked',target:u.name,detail:'Login '+(u.locked?'lock':'unlock'),date:today()});
   showPopup(u.locked?'🔒':'🔓',u.locked?'Locked':'Unlocked',u.name+"'s login "+(u.locked?'locked':'unlocked')+".");
   renderTab('lockuser');
@@ -2593,7 +2647,7 @@ function resetPassword(uid){
     if(!np||np.length<4){showPopup('⚠️','Error','Password must be at least 4 characters.');return;}
     if(np!==cp){showPopup('⚠️','Mismatch','Passwords do not match.');return;}
     const usr=DB.users.find(x=>x.id===uid);
-    if(usr){const old=usr.password;usr.password=np;DB.auditLog.push({by:currentUser.id,action:'Password Reset',target:usr.name,detail:'Password change kiya',date:today()});}
+    if(usr){usr.password=np;FS.save('users',usr.id,usr);DB.auditLog.push({by:currentUser.id,action:'Password Reset',target:usr.name,detail:'Password change kiya',date:today()});}
     closeModal();
     showPopup('✅','Reset Done',u.name+' ka password reset ho gaya.');
   };
@@ -2636,8 +2690,8 @@ T.professions=function(){
     </div>
   </div>`;
 };
-function addProfession(){const v=document.getElementById('newProfInput').value.trim();if(v&&!PROFESSIONS.includes(v)){PROFESSIONS.push(v);renderTab('professions');}else showPopup('⚠️','Error','Enter a name or it already exists.');}
-function deleteProfession(i){PROFESSIONS.splice(i,1);renderTab('professions');}
+function addProfession(){const v=document.getElementById('newProfInput').value.trim();if(v&&!PROFESSIONS.includes(v)){PROFESSIONS.push(v);FS.save('professions',v.replace(/\s+/g,'_'),{name:v,id:v.replace(/\s+/g,'_')});renderTab('professions');}else showPopup('⚠️','Error','Enter a name or it already exists.');}
+function deleteProfession(i){const pn=PROFESSIONS[i];PROFESSIONS.splice(i,1);FS.del('professions',pn.replace(/\s+/g,'_'));renderTab('professions');}
 function editProfession(i){
   const old=PROFESSIONS[i];
   editingContext={type:'profession',index:i};
@@ -2659,8 +2713,8 @@ T.audit=function(){
 T.areas=function(){
   return `<div class="card"><h3><span class="bi-title"><span class="bi-en">Area Management</span><span class="bi-ur">علاقے</span></span></h3>${AREAS.map((a,i)=>`<div class="entry-row"><div class="entry-name">${a}</div><button class="btn-xs btn-danger" style="background:#E24B4A;color:#fff;border:none" onclick="removeArea(${i})">Hatao</button></div>`).join('')}<div style="display:flex;gap:8px;margin-top:10px"><input type="text" id="newAreaInput" placeholder="New area name" style="flex:1"><button class="btn btn-sm btn-primary" onclick="addArea()" style="margin-top:0">Add</button></div></div>`;
 };
-function removeArea(i){AREAS.splice(i,1);renderTab('areas');}
-function addArea(){const v=document.getElementById('newAreaInput').value.trim();if(v){AREAS.push(v);renderTab('areas');}else showPopup('⚠️','Error','Please enter an area name.');}
+function removeArea(i){AREAS.splice(i,1);FS.save('config','areas',{list:AREAS});renderTab('areas');}
+function addArea(){const v=document.getElementById('newAreaInput').value.trim();if(v){AREAS.push(v);FS.save('config','areas',{list:AREAS});renderTab('areas');}else showPopup('⚠️','Error','Please enter an area name.');}
 
 // Run on initial load
 renderLoginExtras();
@@ -2813,7 +2867,6 @@ function buildTabs(){
 }
 
 // renderTab — main tab renderer
-const TAB_UR={"dash": "ڈیش بورڈ", "donation": "چندہ درج کریں", "expense": "اخراجات درج کریں", "search": "تلاش", "deceased": "وفات درج کریں", "deathcert": "وفات نامہ", "area": "علاقہ وار رپورٹ", "expreport": "اخراجات رپورٹ", "ledger": "کھاتہ", "balreport": "بیلنس رپورٹ", "fundreport": "فنڈ رپورٹ", "usersreport": "صارفین رپورٹ", "myentries": "میری اندراجات", "donorlist": "عطیہ دہندگان", "slip": "چندہ دار سلپ", "top": "سرفہرست", "transfer": "رقم منتقل کریں", "decconfirm": "وفات کی تصدیق", "approvals": "منظوریاں", "lockuser": "لاگ ان کنٹرول", "userslist": "صارفین فہرست", "professions": "پیشے", "audit": "سرگرمی لاگ", "areas": "علاقے", "orgsettings": "ادارے کی ترتیبات", "profile": "میری پروفائل"};
 function renderTab(key){
   const c=document.getElementById('tabContent');
   if(T[key]){
@@ -2821,15 +2874,7 @@ function renderTab(key){
     populateAreas();populateProfs();
   }
   currentTab=key;
-  // Update header role line with current tab name bilingual
-  const rl=document.getElementById('dashRole');
-  if(rl){
-    const tabEn=TAB_LABELS[key]||key;
-    const tabUr=TAB_UR[key]||'';
-    const roleBase=rl.dataset.base||rl.innerHTML;
-    if(!rl.dataset.base)rl.dataset.base=rl.innerHTML;
-    rl.innerHTML=rl.dataset.base+'<span style="font-size:10px;opacity:0.7;margin-left:6px">| '+tabEn+(tabUr?' · '+tabUr:'')+'</span>';
-  }
+  // Scroll to top
   window.scrollTo(0,0);
 }
 
@@ -2909,19 +2954,16 @@ function updateFooterOrgName(){
     const fn=orgName();
     document.querySelectorAll('#dashFooterOrg,#footerOrgName').forEach(el=>{if(el)el.textContent=fn;});
     const don=document.getElementById('dashOrgName');if(don)don.textContent=fn;
-  const donUr=document.getElementById('dashOrgNameUr');if(donUr)donUr.textContent=orgNameUrdu();
   }catch(e){}
 }
 
 // Run on load safely
 function safeInit(){
-  try{renderLoginExtras();}catch(e){console.log('renderLoginExtras:',e);}
+  try{renderLoginExtras();}catch(e){}
   try{updateFooterOrgName();}catch(e){}
 }
-if(document.readyState==='loading'){
-  document.addEventListener('DOMContentLoaded', safeInit);
-} else {
-  safeInit();
-}
+async function appInit(){await loadAllData();safeInit();}
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',appInit);}
+else{appInit();}
 </script>
 </html>

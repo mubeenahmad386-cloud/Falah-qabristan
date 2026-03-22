@@ -727,13 +727,17 @@ function renderLoginExtras(){
     if(ORG_CONFIG.bankAccounts.length>0){
       be.style.display='none';
       bl.innerHTML=ORG_CONFIG.bankAccounts.map(acc=>`<div class="card" style="margin-bottom:10px">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start">
-          <div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+          <div style="flex:1">
             <div style="font-size:15px;font-weight:700">${acc.title||'—'}</div>
             <div style="font-size:13px;color:#185FA5;font-weight:600;margin-top:4px">${acc.bank||'—'}</div>
-            <div style="font-size:14px;font-weight:700;letter-spacing:1px;margin-top:4px;background:#f5f5f5;padding:6px 10px;border-radius:6px;display:inline-block">${acc.number||'—'}</div>
+            <div style="font-size:15px;font-weight:700;letter-spacing:1px;margin-top:6px;background:#E6F1FB;color:#185FA5;padding:7px 12px;border-radius:8px;display:inline-block">${acc.number||'—'}</div>
+            ${acc.area?`<div style="font-size:12px;color:#888;margin-top:5px">📍 ${acc.area}</div>`:''}
           </div>
-          ${acc.qr?`<img src="${acc.qr}" style="width:80px;height:80px;border-radius:8px;border:1px solid #ddd;object-fit:contain">`:''}
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+            ${acc.photo?`<img src="${acc.photo}" style="width:72px;height:72px;border-radius:10px;border:1px solid #ddd;object-fit:cover">`:''}
+            ${acc.qr?`<img src="${acc.qr}" style="width:72px;height:72px;border-radius:10px;border:1px solid #ddd;object-fit:contain">`:''}
+          </div>
         </div>
       </div>`).join('');
     } else {be.style.display='block';bl.innerHTML='';}
@@ -2415,31 +2419,53 @@ T.orgsettings=function(){
   <div class="card">
     <h3>🏦 Bank Accounts</h3>
     <p style="font-size:12px;color:#888;margin-bottom:10px">Add bank account details for fund transfers</p>
-    ${banks.length===0?'<p style="font-size:13px;color:#888;margin-bottom:10px">Koi account nahi abhi tak.</p>':banks.map((acc,i)=>`
-      <div style="background:#f9f9f9;border-radius:8px;padding:10px;margin-bottom:8px;border:1px solid #eee">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-          <div style="font-size:13px;font-weight:700">${acc.title}</div>
-          <button class="btn-xs" style="background:#E24B4A;color:#fff;border:none" onclick="removeBankAccount(${i})">Remove</button>
+    ${banks.length===0?'<p style="font-size:13px;color:#888;margin-bottom:10px">No accounts added yet. | ابھی تک کوئی اکاؤنٹ نہیں۔</p>':banks.map((acc,i)=>`
+      <div style="background:#f9f9f9;border-radius:10px;padding:12px;margin-bottom:8px;border:1px solid #eee">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:700">${acc.title}</div>
+            <div style="font-size:12px;color:#185FA5;font-weight:600;margin-top:3px">${acc.bank}</div>
+            <div style="font-size:13px;font-weight:700;letter-spacing:1px;margin-top:5px;background:#E6F1FB;color:#185FA5;padding:5px 10px;border-radius:6px;display:inline-block">${acc.number}</div>
+            ${acc.area?`<div style="font-size:11px;color:#888;margin-top:5px">📍 ${acc.area}</div>`:''}
+            <div style="margin-top:8px"><button class="btn-xs" style="background:#E24B4A;color:#fff;border:none;cursor:pointer" onclick="removeBankAccount(${i})">🗑️ Remove</button></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+            ${acc.photo?`<img src="${acc.photo}" style="width:64px;height:64px;border-radius:8px;border:1px solid #ddd;object-fit:cover">`:''}
+            ${acc.qr?`<img src="${acc.qr}" style="width:64px;height:64px;border-radius:8px;border:1px solid #ddd;object-fit:contain">`:''}
+          </div>
         </div>
-        <div style="font-size:12px;color:#185FA5">${acc.bank}</div>
-        <div style="font-size:12px;font-weight:600;letter-spacing:1px">${acc.number}</div>
-        ${acc.qr?`<img src="${acc.qr}" style="width:60px;height:60px;margin-top:6px;border-radius:6px;border:1px solid #ddd">`:''}
       </div>`).join('')}
     <div style="border-top:1px solid #eee;margin-top:10px;padding-top:10px">
       <div style="font-size:13px;font-weight:600;margin-bottom:8px">Add New Account</div>
-      <label>Account Title *</label><input type="text" id="baTitle" placeholder="e.g. Falah e Qabristan Fund">
-      <label>Bank Name *</label><input type="text" id="baBank" placeholder="e.g. HBL, MCB, Meezan Bank">
-      <label>Account Number *</label><input type="text" id="baNumber" placeholder="Account number">
-      <label>QR Code (optional)</label>
-      <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
-        <div style="width:70px;height:70px;border:2px dashed #ccc;border-radius:8px;overflow:hidden;cursor:pointer;background:#f5f5f5;display:flex;align-items:center;justify-content:center" onclick="document.getElementById('baQrInput').click()">
-          <img id="baQrPreview" src="" style="display:none;width:100%;height:100%;object-fit:contain">
-          <span id="baQrPlus" style="font-size:11px;color:#aaa;text-align:center">📷 QR</span>
+      <label>Account Title *</label>
+      <div class="inp-wrap"><span class="inp-icon">🏦</span><input type="text" id="baTitle" placeholder="e.g. Falah e Qabristan Fund"></div>
+      <label>Bank Name *</label>
+      <div class="inp-wrap"><span class="inp-icon">🏛️</span><input type="text" id="baBank" placeholder="e.g. HBL, MCB, Meezan Bank"></div>
+      <label>Account Number *</label>
+      <div class="inp-wrap"><span class="inp-icon">🔢</span><input type="text" id="baNumber" placeholder="Account number"></div>
+      <label>Area / Account Holder <span style="font-size:10px;color:#1D9E75">علاقہ / اکاؤنٹ ہولڈر</span></label>
+      <div class="inp-wrap"><span class="inp-icon">📍</span><input type="text" id="baArea" placeholder="e.g. Sector A or account holder name"></div>
+      <label>Account Photo (optional) <span style="font-size:10px;color:#1D9E75">اکاؤنٹ تصویر</span></label>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:6px;margin-bottom:10px">
+        <div style="width:72px;height:72px;border:2px dashed #ccc;border-radius:10px;overflow:hidden;cursor:pointer;background:#f5f5f5;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px" onclick="document.getElementById('baPhotoInput').click()">
+          <img id="baPhotoPreview" src="" style="display:none;width:100%;height:100%;object-fit:cover">
+          <span id="baPhotoPlus" style="font-size:22px">📸</span>
+          <span id="baPhotoPlusText" style="font-size:9px;color:#aaa">Photo</span>
         </div>
-        <div style="font-size:11px;color:#888">Bank QR code<br>ya payment screenshot</div>
+        <div style="flex:1;font-size:11px;color:#888">Passbook, cheque or<br>account screenshot</div>
+      </div>
+      <input type="file" accept="image/*" id="baPhotoInput" style="display:none" onchange="previewBaPhoto()">
+      <label>QR Code (optional) <span style="font-size:10px;color:#1D9E75">QR کوڈ</span></label>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:6px">
+        <div style="width:72px;height:72px;border:2px dashed #ccc;border-radius:10px;overflow:hidden;cursor:pointer;background:#f5f5f5;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px" onclick="document.getElementById('baQrInput').click()">
+          <img id="baQrPreview" src="" style="display:none;width:100%;height:100%;object-fit:contain">
+          <span id="baQrPlus" style="font-size:22px">📷</span>
+          <span style="font-size:9px;color:#aaa">QR Code</span>
+        </div>
+        <div style="flex:1;font-size:11px;color:#888">Bank QR code or<br>payment screenshot</div>
       </div>
       <input type="file" accept="image/*" id="baQrInput" style="display:none" onchange="previewBaQr()">
-      <button class="btn btn-primary" style="margin-top:10px" onclick="addBankAccount()">Add Account</button>
+      <button class="btn btn-primary" style="margin-top:12px" onclick="addBankAccount()">Add Account | اکاؤنٹ شامل کریں</button>
     </div>
   </div>`;
 };
@@ -2537,14 +2563,40 @@ function previewBaQr(){
   const f=document.getElementById('baQrInput').files[0];if(!f)return;
   const r=new FileReader();r.onload=e=>{const im=document.getElementById('baQrPreview');im.src=e.target.result;im.style.display='block';document.getElementById('baQrPlus').style.display='none';};r.readAsDataURL(f);
 }
+function previewBaPhoto(){
+  const f=document.getElementById('baPhotoInput').files[0];if(!f)return;
+  const r=new FileReader();r.onload=e=>{
+    const im=document.getElementById('baPhotoPreview');
+    im.src=e.target.result;im.style.display='block';
+    document.getElementById('baPhotoPlus').style.display='none';
+    document.getElementById('baPhotoPlusText').style.display='none';
+  };r.readAsDataURL(f);
+}
 function addBankAccount(){
   const title=document.getElementById('baTitle').value.trim();
   const bank=document.getElementById('baBank').value.trim();
   const number=document.getElementById('baNumber').value.trim();
+  const area=(document.getElementById('baArea')||{value:''}).value.trim();
   if(!title||!bank||!number){showPopup('⚠️','Incomplete','Title, bank and account number are required.');return;}
-  const fi=document.getElementById('baQrInput');
-  if(fi.files[0]){const r=new FileReader();r.onload=e=>{ORG_CONFIG.bankAccounts.push({title,bank,number,qr:e.target.result});FS.saveConfig();renderLoginExtras();showPopup('✅','Account Added','Bank account added.');renderTab('orgsettings');};r.readAsDataURL(fi.files[0]);}
-  else{ORG_CONFIG.bankAccounts.push({title,bank,number,qr:null});FS.saveConfig();renderLoginExtras();showPopup('✅','Account Added','Bank account added.');renderTab('orgsettings');}
+  const fiQr=document.getElementById('baQrInput');
+  const fiPhoto=document.getElementById('baPhotoInput');
+  function finish(qr,photo){
+    ORG_CONFIG.bankAccounts.push({title,bank,number,area,qr:qr||null,photo:photo||null});
+    FS.saveConfig();renderLoginExtras();
+    showPopup('✅','Account Added','Bank account added.');
+    renderTab('orgsettings');
+  }
+  if(fiPhoto.files[0]&&fiQr.files[0]){
+    const r1=new FileReader();r1.onload=e1=>{
+      const photo=e1.target.result;
+      const r2=new FileReader();r2.onload=e2=>finish(e2.target.result,photo);
+      r2.readAsDataURL(fiQr.files[0]);
+    };r1.readAsDataURL(fiPhoto.files[0]);
+  } else if(fiPhoto.files[0]){
+    const r=new FileReader();r.onload=e=>finish(null,e.target.result);r.readAsDataURL(fiPhoto.files[0]);
+  } else if(fiQr.files[0]){
+    const r=new FileReader();r.onload=e=>finish(e.target.result,null);r.readAsDataURL(fiQr.files[0]);
+  } else {finish(null,null);}
 }
 function removeBankAccount(i){
   ORG_CONFIG.bankAccounts.splice(i,1);

@@ -182,6 +182,7 @@ input[type=file]{padding:6px}
 <!-- Firebase CDN -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<!-- PDF & Image Export — inline -->
 
 <!-- LOGIN SCREEN -->
 <div id="loginScreen" class="screen active">
@@ -289,10 +290,10 @@ input[type=file]{padding:6px}
       <input type="file" accept="image/*" id="regPhotoInput" style="display:none" onchange="previewImg('regPhotoInput','regAvatarPreview','regAvatarPlus')">
       <label>Full Name * <span style="font-size:10px;color:#1D9E75;font-weight:500">پورا نام</span></label><div class="inp-wrap"><span class="inp-icon">👤</span><input type="text" id="regName" placeholder="Your full name"></div>
       <label>CNIC No * (13 digits) <span style="font-size:10px;color:#1D9E75;font-weight:500">شناختی کارڈ</span></label>
-      <div class="inp-wrap"><span class="inp-icon">🪪</span><input type="text" id="regCnic" placeholder="00000-0000000-0" maxlength="15" oninput="checkRegCnic(this.value)"></div>
+      <div class="inp-wrap"><span class="inp-icon">🪪</span><input type="text" id="regCnic" placeholder="00000-0000000-0" maxlength="15" oninput="checkRegCnic(this.value)" onkeypress="return blockExtraCnic(this,event)"></div>
       <div id="regCnicStatus" style="display:none;margin-top:4px"></div>
       <label>Mobile No * (11 digits) <span style="font-size:10px;color:#1D9E75;font-weight:500">موبائل نمبر</span></label>
-      <div class="inp-wrap"><span class="inp-icon">📱</span><input type="text" id="regMobile" placeholder="03XX-XXXXXXX" maxlength="12" oninput="checkRegMobile(this.value)"></div>
+      <div class="inp-wrap"><span class="inp-icon">📱</span><input type="text" id="regMobile" placeholder="03XX-XXXXXXX" maxlength="12" oninput="checkRegMobile(this.value)" onkeypress="return blockExtraMobile(this,event)"></div>
       <div id="regMobileStatus" style="display:none;margin-top:4px"></div>
       <label>Password * <span style="font-size:10px;color:#1D9E75;font-weight:500">پاس ورڈ</span></label>
       <div class="inp-wrap" style="position:relative"><span class="inp-icon">🔒</span><input type="password" id="regPassword" placeholder="Set your password" style="padding-right:42px;padding-left:38px"><span onclick="togglePwd('regPassword',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:16px;color:#aaa">👁</span></div>
@@ -386,8 +387,12 @@ input[type=file]{padding:6px}
 <div id="popupOverlay" class="popup" style="display:none">
   <div class="popup-box">
     <div style="font-size:36px;margin-bottom:10px" id="popupIcon">✅</div>
-    <h3 id="popupTitle" style="margin-bottom:10px">Success</h3>
-    <p id="popupMsg">Done!</p>
+    <div style="margin-bottom:10px">
+      <div id="popupTitle" style="font-size:15px;font-weight:700;color:#1a1a1a;line-height:1.2"></div>
+      <div id="popupTitleUr" style="font-size:11px;font-weight:500;color:#1D9E75;direction:rtl;margin-top:2px"></div>
+    </div>
+    <p id="popupMsg" style="font-size:13px;color:#666;margin-bottom:8px;line-height:1.5"></p>
+    <p id="popupMsgUr" style="font-size:11px;color:#1D9E75;margin-bottom:16px;line-height:1.5;direction:rtl"></p>
     <button class="btn btn-primary" style="border-radius:10px" onclick="closePopup()" id="popupBtn">OK</button>
   </div>
 </div>
@@ -408,19 +413,33 @@ input[type=file]{padding:6px}
 </div>
 
 <script>
-// Firebase init
-const firebaseConfig={apiKey:"AIzaSyDIfA45aTq6JZfu59ezWIXyGhjbe-dOiTg",authDomain:"falah-qabristan.firebaseapp.com",projectId:"falah-qabristan",storageBucket:"falah-qabristan.firebasestorage.app",messagingSenderId:"17144787021",appId:"1:17144787021:web:06c3c8511f2430565c2c04"};
-firebase.initializeApp(firebaseConfig);
-const fdb=firebase.firestore();
-
-// Firestore helpers
-const FS={
-  async save(col,id,data){try{await fdb.collection(col).doc(String(id)).set(JSON.parse(JSON.stringify(data,(k,v)=>v===undefined?null:v)));}catch(e){console.error('FS.save',e);}},
-  async del(col,id){try{await fdb.collection(col).doc(String(id)).delete();}catch(e){}},
-  async loadAll(col){try{const s=await fdb.collection(col).get();return s.docs.map(d=>({...d.data(),id:d.id}));}catch(e){return [];}},
-  async saveConfig(){try{await fdb.collection('config').doc('org').set(JSON.parse(JSON.stringify(ORG_CONFIG,(k,v)=>v===undefined?null:v)));}catch(e){}},
-  async loadConfig(){try{const d=await fdb.collection('config').doc('org').get();if(d.exists)Object.assign(ORG_CONFIG,d.data());}catch(e){}}
+// Firebase init — safe initialization
+let fdb = null;
+const FS = {
+  async save(col,id,data){if(!fdb)return;try{await fdb.collection(col).doc(String(id)).set(JSON.parse(JSON.stringify(data,(k,v)=>v===undefined?null:v)));}catch(e){console.error('FS.save',e);}},
+  async del(col,id){if(!fdb)return;try{await fdb.collection(col).doc(String(id)).delete();}catch(e){}},
+  async loadAll(col){if(!fdb)return[];try{const s=await fdb.collection(col).get();return s.docs.map(d=>({...d.data(),id:d.id}));}catch(e){console.error('FS.loadAll',e);return [];}},
+  async saveConfig(){if(!fdb)return;try{await fdb.collection('config').doc('org').set(JSON.parse(JSON.stringify(ORG_CONFIG,(k,v)=>v===undefined?null:v)));}catch(e){}},
+  async loadConfig(){if(!fdb)return;try{const d=await fdb.collection('config').doc('org').get();if(d.exists)Object.assign(ORG_CONFIG,d.data());}catch(e){}}
 };
+
+function initFirebase(){
+  try{
+    if(typeof firebase==='undefined'){
+      // Retry after 2 seconds if CDN still loading
+      setTimeout(initFirebase, 2000);
+      return;
+    }
+    const firebaseConfig={apiKey:"AIzaSyDIfA45aTq6JZfu59ezWIXyGhjbe-dOiTg",authDomain:"falah-qabristan.firebaseapp.com",projectId:"falah-qabristan",storageBucket:"falah-qabristan.firebasestorage.app",messagingSenderId:"17144787021",appId:"1:17144787021:web:06c3c8511f2430565c2c04"};
+    if(!firebase.apps||!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+    fdb=firebase.firestore();
+    // Enable offline persistence
+    fdb.enablePersistence({synchronizeTabs:true}).catch(e=>{
+      if(e.code==='unimplemented')console.log('Offline persistence not supported');
+    });
+    console.log('Firebase connected ✅');
+  }catch(e){console.error('Firebase init error:',e);}
+}
 
 // Loading overlay
 function showLoading(on){
@@ -468,10 +487,10 @@ const DB={
   auditLog:[]
 };
 
-let currentUser=null,currentRole=null,pendingRegRole=null,txnCounter=1,expBillCounter=0;
+var currentUser=null,currentRole=null,pendingRegRole=null,txnCounter=1,expBillCounter=0;
 
 // ---- Global Config (editable by developer) ----
-let ORG_CONFIG={
+var ORG_CONFIG={
   name:'Falah e Qabristan',
   nameUrdu:'فلاح قبرستان',
   address:'',
@@ -483,7 +502,7 @@ let ORG_CONFIG={
 };
 function orgName(){return ORG_CONFIG.name||'Falah e Qabristan';}
 function orgNameUrdu(){return ORG_CONFIG.nameUrdu||'فلاح قبرستان';}
-let editingContext={};
+var editingContext={};
 
 // ---- Utility Functions ----
 function calcCashInHand(uid){
@@ -504,11 +523,24 @@ function nextDecId(){
 }
 function nextEntryId(){return 'E'+String(Date.now()).slice(-6);}
 function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+// Bilingual popup messages
+const POPUP_UR={'Success!':'کامیابی!','Incomplete':'نامکمل','Duplicate':'ڈپلیکیٹ','Mismatch':'مطابقت نہیں','Weak Password':'کمزور پاس ورڈ','Weak':'کمزور','Mobile Short':'موبائل چھوٹا','CNIC Short':'شناختی کارڈ چھوٹا','Wrong Key':'غلط کی','User Not Found':'صارف نہیں ملا','Entry Saved':'اندراج محفوظ','Request Submitted':'درخواست جمع','Request Forward':'درخواست بھیجی','Bill Saved':'بل محفوظ','Transfer Sent':'رقم بھیجی گئی','Amount Received':'رقم موصول','Approved!':'منظور!','Rejected':'مسترد','Confirmed!':'تصدیق شدہ!','Locked':'بند','Unlocked':'کھلا','Deleted':'حذف','Updated':'اپ ڈیٹ','Saved':'محفوظ','Error':'خرابی','Insufficient Balance':'ناکافی بیلنس','Duplicate CNIC':'ڈپلیکیٹ شناختی کارڈ','Duplicate Mobile':'ڈپلیکیٹ موبائل','Account Created':'اکاؤنٹ بنایا','Submitted':'جمع کرایا','Password Reset':'پاس ورڈ ری سیٹ','Profile Updated':'پروفائل اپ ڈیٹ','Done':'مکمل','Required':'ضروری','Photo Added':'تصویر شامل','Logo Saved':'لوگو محفوظ'};
+const POPUP_MSG_UR={'Name, CNIC, mobile and password are required.':'نام، شناختی کارڈ، موبائل اور پاس ورڈ ضروری ہیں۔','Passwords do not match.':'پاس ورڈ مطابقت نہیں رکھتے۔','Password must be at least 4 characters.':'پاس ورڈ کم از کم 4 حروف کا ہونا چاہیے۔','An account with this mobile already exists.':'اس موبائل سے اکاؤنٹ پہلے سے موجود ہے۔','An account with this CNIC already exists.':'اس شناختی کارڈ سے اکاؤنٹ پہلے سے موجود ہے۔','Your request has been submitted. Login after developer approval.':'ڈیولپر کی منظوری کے بعد لاگ ان کر سکتے ہیں۔','Incorrect master key. Please try again.':'غلط ماسٹر کی۔ دوبارہ کوشش کریں۔','Name, mobile, CNIC and amount are required.':'نام، موبائل، شناختی کارڈ اور رقم ضروری ہے۔','Name is required.':'نام ضروری ہے۔','Please select a date range.':'براہ کرم تاریخ کی حد منتخب کریں۔','Please select a month.':'براہ کرم مہینہ منتخب کریں۔','Receiver and amount are required.':'وصول کنندہ اور رقم ضروری ہے۔','Description, amount and date are required.':'تفصیل، رقم اور تاریخ ضروری ہے۔','Address saved.':'پتہ محفوظ ہو گیا۔','Organization name saved!':'ادارے کا نام محفوظ ہو گیا!','Please enter an area name.':'براہ کرم علاقے کا نام درج کریں۔','Title, bank and account number are required.':'عنوان، بینک اور اکاؤنٹ نمبر ضروری ہے۔','Please select a photo first.':'پہلے تصویر منتخب کریں۔'};
+POPUP_MSG_UR['No account found. Would you like to create one?']='کوئی اکاؤنٹ نہیں ملا۔ نیا بنانا چاہتے ہیں؟';
+POPUP_MSG_UR['Mobile must be exactly 11 digits.']='موبائل نمبر بالکل 11 ہندسوں کا ہونا ضروری ہے۔';
+POPUP_MSG_UR['CNIC must be exactly 13 digits.']='شناختی کارڈ بالکل 13 ہندسوں کا ہونا ضروری ہے۔';
+POPUP_MSG_UR['Your profile has been updated.']='آپ کی پروفائل اپ ڈیٹ ہو گئی۔';
+POPUP_MSG_UR['Your request has been submitted. Login after developer approval.']='آپ کی درخواست جمع ہو گئی۔ منظوری کے بعد لاگ ان کریں۔';
+POPUP_MSG_UR['Report not found. Please generate report first.']='رپورٹ نہیں ملی۔ پہلے رپورٹ بنائیں۔';
+POPUP_MSG_UR['Please allow popups for this site, then try again.']='براہ کرم پاپ اپ کی اجازت دیں پھر دوبارہ کوشش کریں۔';
+
 function showPopup(icon,title,msg,btnText,onClose){
   document.getElementById('popupIcon').textContent=icon;
   document.getElementById('popupTitle').textContent=title;
-  document.getElementById('popupMsg').textContent=msg;
-  document.getElementById('popupBtn').textContent=btnText||'Theek hai';
+  const tu=document.getElementById('popupTitleUr');if(tu)tu.textContent=POPUP_UR[title]||'';
+  document.getElementById('popupMsg').textContent=msg||'';
+  const mu=document.getElementById('popupMsgUr');if(mu)mu.textContent=POPUP_MSG_UR[msg]||'';
+  document.getElementById('popupBtn').textContent=btnText||'OK';
   window._onClose=onClose||null;
   document.getElementById('popupOverlay').style.display='flex';
 }
@@ -552,13 +584,13 @@ function doLogin(){
   if(wrongPwd){showLoginError('Incorrect password. Please try again.');return;}
   const pending=DB.pendingApprovals.find(u=>u.mobile.replace(/-/g,'')===mobile.replace(/-/g,''));
   if(pending){showLoginError('Account approval pending hai.');return;}
-  showPopup('❌','User Not Found','Is mobile ka koi account nahi mila. Naya account banayein?','Naya Account',()=>showScreen('regRoleScreen'));
+  showPopup('❌','User Not Found','No account found. Would you like to create one?','Create Account',()=>showScreen('regRoleScreen'));
 }
 function openReg(role){
   pendingRegRole=role;
   document.getElementById('regTitle').textContent=role.charAt(0).toUpperCase()+role.slice(1)+' Registration';
   const n=document.getElementById('regNotice');
-  const msgs={user:'✅ Approval nahi chahiye — seedha login hoga.',admin:'⚠️ Admin account ke liye developer ki approval zaruri hai.',manager:'⚠️ Manager account ke liye developer ki approval zaruri hai.',developer:'⚙️ Developer account ke liye master key se approval di jayegi.'};
+  const msgs={user:'✅ Direct login — no approval required.',admin:'⚠️ Admin account requires developer approval.',manager:'⚠️ Manager account requires developer approval.',developer:'⚙️ Developer account is approved via master key.'};
   const cls={user:'success',admin:'warning',manager:'warning',developer:'info'};
   n.className='info-box '+cls[role];n.textContent=msgs[role];n.style.display='block';
   document.getElementById('regSubtitle').textContent=role==='user'?'Seedha login hoga':'Approval ke baad login hoga';
@@ -572,10 +604,14 @@ function openReg(role){
   showScreen('regScreen');setTimeout(()=>{populateAreas();populateProfs();},50);
 }
 function checkDevKey(){
-  if(document.getElementById('devKey').value==='6029604'){
+  const key=document.getElementById('devKey').value;
+  if(key==='6029604'){
     currentUser={id:'DEV001',name:'Developer',role:'developer',area:'All',approved:true,locked:false,photo:null,profession:'Engineer',signature:null};
-    currentRole='developer';loadDashboard();
-  } else showPopup('❌','Wrong Key','Incorrect master key. Please try again.');
+    currentRole='developer';
+    try{loadDashboard();}catch(e){console.error('loadDashboard error:',e);alert('Login error: '+e.message);}
+  } else {
+    showPopup('❌','Wrong Key','Incorrect master key. Please try again.');
+  }
 }
 function previewRegSig(){
   const f=document.getElementById('regSigInput').files[0];if(!f)return;
@@ -592,9 +628,9 @@ function submitReg(){
   const confirm=document.getElementById('regConfirmPassword').value.trim();
   if(!name||!mobile||!password||!cnic){showPopup('⚠️','Incomplete','Name, CNIC, mobile and password are required.');return;}
   const mobileDigits=mobile.replace(/[-\s]/g,'');
-  if(mobileDigits.length<11){showPopup('⚠️','Mobile Short','Mobile number 11 digits ka hona chahiye. Entered: '+mobileDigits.length);return;}
+  if(mobileDigits.length!==11){showPopup('⚠️','Mobile Short','Mobile must be exactly 11 digits. Entered: '+mobileDigits.length);return;}
   const cnicDigits=cnic.replace(/[-\s]/g,'');
-  if(cnicDigits.length<13){showPopup('⚠️','CNIC Short','CNIC 13 digits ka hona chahiye. Entered: '+cnicDigits.length);return;}
+  if(cnicDigits.length!==13){showPopup('⚠️','CNIC Short','CNIC must be exactly 13 digits. Entered: '+cnicDigits.length);return;}
   if(password!==confirm){showPopup('⚠️','Mismatch','Passwords do not match.');return;}
   if(password.length<4){showPopup('⚠️','Weak','Password must be at least 4 characters.');return;}
   const allExisting=[...DB.users,...DB.pendingApprovals];
@@ -626,7 +662,7 @@ function finishReg(name,mobile,cnic,password,photo,signature){
   } else {
     const pa={id:'PA'+Date.now(),name,cnic,mobile,password,area,profession,role:pendingRegRole,date:today(),photo,signature};
     DB.pendingApprovals.push(pa);FS.save('pendingApprovals',pa.id,pa);
-    showPopup('📤','Request Forward','You can login after developer approval.',null,()=>showScreen('loginScreen'));
+    showPopup('📤','Request Forward','Your request has been submitted. Login after developer approval.',null,()=>showScreen('loginScreen'));
   }
 }
 function logout(){currentUser=null;currentRole=null;document.getElementById('devKey').value='';document.getElementById('loginMobile').value='';document.getElementById('loginPassword').value='';hideLoginError();showScreen('loginScreen');renderLoginExtras();}
@@ -775,10 +811,10 @@ T.donation=function(){
     </div>
     <label>Donor Name * <span style="font-size:10px;color:#1D9E75;font-weight:500">عطیہ دہندہ</span></label><div class="inp-wrap"><span class="inp-icon">👤</span><input type="text" id="donorName" placeholder="Name"></div>
     <label>Mobile No * <span style="font-size:10px;color:#1D9E75;font-weight:500">موبائل نمبر</span></label>
-    <input type="text" id="donorMobile" placeholder="03XX-XXXXXXX" oninput="checkDonorMobile(this.value)">
+    <input type="text" id="donorMobile" placeholder="03XX-XXXXXXX" maxlength="12" oninput="checkDonorMobile(this.value)" onkeypress="return blockExtraMobile(this,event)">
     <div id="donorMobileStatus" style="display:none;margin-top:4px;font-size:12px;padding:6px 10px;border-radius:6px"></div>
     <label>CNIC No * <span style="font-size:10px;color:#1D9E75;font-weight:500">شناختی کارڈ</span></label>
-    <input type="text" id="donorCnic" placeholder="00000-0000000-0" oninput="checkDonorCnic(this.value)">
+    <input type="text" id="donorCnic" placeholder="00000-0000000-0" maxlength="15" oninput="checkDonorCnic(this.value)" onkeypress="return blockExtraCnic(this,event)">
     <div id="donorCnicStatus" style="display:none;margin-top:4px;font-size:12px;padding:6px 10px;border-radius:6px"></div>
     <label>Profession <span style="font-size:10px;color:#1D9E75;font-weight:500">پیشہ</span></label><select id="donorProfession" class="prof-sel"></select>
     <label>Area <span style="font-size:10px;color:#1D9E75;font-weight:500">علاقہ</span></label><select id="donorArea" class="area-sel"></select>
@@ -816,8 +852,18 @@ function fillDonorFetch(found){
 }
 
 // ---- AUTO CHECK FUNCTIONS ----
-function normMob(m){return (m||'').replace(/[-\s]/g,'');}
-function normCnic(c){return (c||'').replace(/[-\s]/g,'');}
+function normMob(m){return (m||'').replace(/[^0-9]/g,'');}
+function normCnic(c){return (c||'').replace(/[^0-9]/g,'');}
+function blockExtraMobile(input,e){
+  const digits=input.value.replace(/[^0-9]/g,'');
+  if(digits.length>=11&&e.key>='0'&&e.key<='9'){e.preventDefault();return false;}
+  return true;
+}
+function blockExtraCnic(input,e){
+  const digits=input.value.replace(/[^0-9]/g,'');
+  if(digits.length>=13&&e.key>='0'&&e.key<='9'){e.preventDefault();return false;}
+  return true;
+}
 
 function statusBox(elId, type, msg){
   const el=document.getElementById(elId);if(!el)return;
@@ -849,7 +895,7 @@ function recordLabel(r){
 function checkRegCnic(val){
   const nc=normCnic(val);
   if(nc.length<3){hideStatus('regCnicStatus');return;}
-  if(nc.length<13){statusBox('regCnicStatus','warning','⚠️ CNIC 13 digits ka hona chahiye — Entered: '+nc.length);return;}
+  if(nc.length<13){statusBox('regCnicStatus','warning','⚠️ CNIC must be exactly 13 digits. Entered: '+nc.length);return;}
   const found=findAnyByCnic(val);
   if(found){
     statusBox('regCnicStatus','error',`⚠️ Yeh CNIC already registered hai: <strong>${recordLabel(found)}</strong>`);
@@ -861,7 +907,8 @@ function checkRegCnic(val){
 function checkRegMobile(val){
   const nm=normMob(val);
   if(nm.length<3){hideStatus('regMobileStatus');return;}
-  if(nm.length<11){statusBox('regMobileStatus','warning','⚠️ Mobile 11 digits ka hona chahiye — Entered: '+nm.length);return;}
+  if(nm.length<11){statusBox('regMobileStatus','warning','⚠️ Mobile must be exactly 11 digits. Entered: '+nm.length);return;}
+  if(nm.length>11){statusBox('regMobileStatus','warning','⚠️ Mobile must be exactly 11 digits. Entered: '+nm.length);return;}
   const found=findAnyByMobile(val);
   if(found){
     statusBox('regMobileStatus','error',`⚠️ Yeh mobile already registered hai: <strong>${recordLabel(found)}</strong>`);
@@ -875,12 +922,13 @@ function checkRegMobile(val){
 function checkDonorMobile(val){
   const nm=normMob(val);
   if(nm.length<3){hideStatus('donorMobileStatus');return;}
-  if(nm.length<11&&nm.length>=3){statusBox('donorMobileStatus','warning','⚠️ Mobile 11 digits ka hona chahiye — Entered: '+nm.length);return;}
+  if(nm.length<11){statusBox('donorMobileStatus','warning','⚠️ Mobile must be exactly 11 digits. Entered: '+nm.length);return;}
+  if(nm.length>11){statusBox('donorMobileStatus','warning','⚠️ Mobile must be exactly 11 digits. Entered: '+nm.length);return;}
   // Check donors first (auto-fetch)
   const donor=DB.donors.find(d=>normMob(d.mobile)===nm);
   if(donor){
     fillDonorFetch(donor);
-    statusBox('donorMobileStatus','info',`ℹ️ Donor mila: <strong>${donor.name}</strong> (${donor.id}) — Data auto fill ho gaya`);
+    statusBox('donorMobileStatus','info',`✅ Donor found: <strong>${donor.name}</strong> (${donor.id}) — Data auto-filled`);
     return;
   }
   // Check users
@@ -890,7 +938,7 @@ function checkDonorMobile(val){
     document.getElementById('donorName').value=user.name;
     document.getElementById('donorCnic').value=user.cnic||'';
     setTimeout(()=>{const ae=document.getElementById('donorArea');if(ae)ae.value=user.area;const pe=document.getElementById('donorProfession');if(pe)pe.value=user.profession||'';},100);
-    statusBox('donorMobileStatus','warning',`⚠️ Yeh mobile ek registered <strong>${user.role}</strong> ka hai: <strong>${user.name}</strong> — Data fill kar diya gaya`);
+    statusBox('donorMobileStatus','warning',`ℹ️ This mobile belongs to registered <strong>${user.role}</strong>: <strong>${user.name}</strong> — Data filled`);
     return;
   }
   hideStatus('donorMobileStatus');
@@ -898,11 +946,12 @@ function checkDonorMobile(val){
 function checkDonorCnic(val){
   const nc=normCnic(val);
   if(nc.length<3){hideStatus('donorCnicStatus');return;}
-  if(nc.length<13&&nc.length>=3){statusBox('donorCnicStatus','warning','⚠️ CNIC 13 digits ka hona chahiye — Entered: '+nc.length);return;}
+  if(nc.length<13){statusBox('donorCnicStatus','warning','⚠️ CNIC must be exactly 13 digits. Entered: '+nc.length);return;}
+  if(nc.length>13){statusBox('donorCnicStatus','warning','⚠️ CNIC must be exactly 13 digits. Entered: '+nc.length);return;}
   const donor=DB.donors.find(d=>normCnic(d.cnic)===nc);
   if(donor){
     fillDonorFetch(donor);
-    statusBox('donorCnicStatus','info',`ℹ️ Donor mila: <strong>${donor.name}</strong> (${donor.id}) — Data auto fill ho gaya`);
+    statusBox('donorCnicStatus','info',`✅ Donor found: <strong>${donor.name}</strong> (${donor.id}) — Data auto-filled`);
     return;
   }
   const user=DB.users.find(u=>normCnic(u.cnic)===nc);
@@ -910,7 +959,7 @@ function checkDonorCnic(val){
     document.getElementById('donorName').value=user.name;
     document.getElementById('donorMobile').value=user.mobile||'';
     setTimeout(()=>{const ae=document.getElementById('donorArea');if(ae)ae.value=user.area;const pe=document.getElementById('donorProfession');if(pe)pe.value=user.profession||'';},100);
-    statusBox('donorCnicStatus','warning',`⚠️ Yeh CNIC ek registered <strong>${user.role}</strong> ka hai: <strong>${user.name}</strong> — Data fill kar diya`);
+    statusBox('donorCnicStatus','warning',`ℹ️ This CNIC belongs to registered <strong>${user.role}</strong>: <strong>${user.name}</strong> — Data filled`);
     return;
   }
   statusBox('donorCnicStatus','success','✅ CNIC available hai — new donor banega');
@@ -949,7 +998,7 @@ function finishDonation(name,amount,mobile,cnic,photo){
   FS.save('donors',donor.id,donor);
   DB.auditLog.push({by:currentUser.id,action:'Donation Entry',target:donor.name,detail:'Rs '+fmt(amount)+' — '+desc,date:t});
   // Auto refresh
-  showPopup('✅','Saved!','Donor ID: '+donor.id+'\nRs '+fmt(amount)+' save ho gayi.',null,()=>renderTab('donation'));
+  showPopup('✅','Entry Saved','Donor ID: '+donor.id+' | Rs '+fmt(amount)+' saved.',null,()=>renderTab('donation'));
 }
 
 // ---- DECEASED ----
@@ -1008,7 +1057,7 @@ function submitDeceased(){
     const decO={id:nid,name,fatherName:document.getElementById('dcFather').value,cnic:document.getElementById('dcCnic').value,area:document.getElementById('dcArea').value,dateOfDeath:document.getElementById('dcDate').value,approved:false,addedBy:currentUser.id,addedDate:today(),personPhoto:personPhoto||null,gravePhoto:gravePhoto||null,w1name:document.getElementById('w1name').value,w1father:document.getElementById('w1father').value,w1mobile:document.getElementById('w1mobile').value,w2name:document.getElementById('w2name').value,w2father:document.getElementById('w2father').value,w2mobile:document.getElementById('w2mobile').value};
   DB.deceased.push(decO);FS.save('deceased',nid,decO);
     DB.auditLog.push({by:currentUser.id,action:'Deceased Entry',target:name,detail:'ID: '+nid,date:today()});
-    showPopup('📤','Submitted','ID: '+nid+' — Pending developer approval.',null,()=>renderTab('deceased'));
+    showPopup('📤','Submitted','ID: '+nid+' | Pending developer approval.',null,()=>renderTab('deceased'));
   }
   if(pf.files[0]){
     const r=new FileReader();r.onload=e=>{
@@ -1036,7 +1085,7 @@ function showDeathCert(id){
   const eu=DB.users.find(u=>u.id===d.addedBy)||{name:'Unknown',id:d.addedBy,mobile:'—',area:'—',role:'—'};
   const issued=new Date().toLocaleDateString('en-PK');
   document.getElementById('deathCertResult').innerHTML=`
-  <div class="cert-wrap">
+  <div class="cert-wrap" id="certWrap_${d.id}">
     <div class="cert-green-header">
       ${ORG_CONFIG.logo?`<div style="margin:0 auto 8px;width:64px;height:64px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;border:2px solid rgba(255,255,255,0.5)"><img src="${ORG_CONFIG.logo}" style="max-width:54px;max-height:54px;object-fit:contain"></div>`:'<div class="dc-stamp">🕌</div>'}
       <div style="font-size:20px;font-weight:700;letter-spacing:1px">DEATH CERTIFICATE</div>
@@ -1089,6 +1138,10 @@ function showDeathCert(id){
         <div><div style="height:40px;border-bottom:1px solid #999;margin-bottom:4px"></div><div style="font-size:10px;color:#888">Registrar</div></div>
       </div>
       <div style="text-align:center;margin-top:10px;font-size:10px;color:#aaa">This certificate is issued by ${orgName()}. Certificate No: ${d.id}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid #eee">
+        <button onclick="downloadReport('certWrap_${d.id}','death_cert_${d.id}','pdf')" style="background:#E24B4A;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">📄 PDF Download</button>
+        <button onclick="downloadReport('certWrap_${d.id}','death_cert_${d.id}','image')" style="background:#185FA5;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🖼️ Image/Print</button>
+      </div>
     </div>
   </div>`;
 }
@@ -1099,7 +1152,8 @@ T.area=function(){
   DB.donations.forEach(d=>{const dn=DB.donors.find(x=>x.id===d.donorId);if(dn&&byArea[dn.area])byArea[dn.area].income+=d.amount;});
   DB.expenses.forEach(e=>{if(byArea[e.area])byArea[e.area].expense+=e.amount;});
   const gi=Object.values(byArea).reduce((s,v)=>s+v.income,0),ge=Object.values(byArea).reduce((s,v)=>s+v.expense,0);
-  return `<div class="card">
+  const dlBarArea=addDownloadBar('Area Report | علاقہ وار رپورٹ','areaReport');
+  return `<div id="areaReport">${dlBarArea}<div class="card">
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
       <div class="stat-card"><div class="stat-label">Total Income</div><div class="stat-val" style="color:#0F6E56;font-size:15px">Rs ${fmt(gi)}</div></div>
       <div class="stat-card"><div class="stat-label">Total Expenses</div><div class="stat-val" style="color:#E24B4A;font-size:15px">Rs ${fmt(ge)}</div></div>
@@ -1200,7 +1254,8 @@ function genExpReport(allTime){
     </div>`;
   }).join('');
 
-  document.getElementById('expReportResult').innerHTML=`
+  const expDlBar=`<div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:8px"><button onclick="downloadReport('expReportContent','expense_report','pdf')" style="background:#E24B4A;color:#fff;border:none;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">📄 PDF</button><button onclick="downloadReport('expReportContent','expense_report','image')" style="background:#185FA5;color:#fff;border:none;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🖼️ Image/Print</button></div><div id="expReportContent">`;
+  document.getElementById('expReportResult').innerHTML=expDlBar+`
     <div style="background:#FCEBEB;border:1.5px solid #E24B4A;border-radius:10px;padding:12px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
       <div>
         <div style="font-size:12px;color:#A32D2D;font-weight:600">Total Expenses</div>
@@ -1258,8 +1313,8 @@ function generateLedger(){
   const before=all.filter(t=>t.date<from),inR=all.filter(t=>t.date>=from&&t.date<=to);
   const ob=before.reduce((s,t)=>s+(t.credit-t.debit),0),ri=inR.reduce((s,t)=>s+t.credit,0),re=inR.reduce((s,t)=>s+t.debit,0);
   const cb=ob+ri-re;let run=ob;
-  document.getElementById('ledgerResult').innerHTML=`<div class="card">
-    <h3 style="margin-bottom:6px">Ledger: ${from} — ${to}</h3>
+  document.getElementById('ledgerResult').innerHTML=`<div class="card" id="ledgerContent">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h3>Ledger: ${from} — ${to}</h3><div style="display:flex;gap:6px"><button onclick="downloadReport('ledgerContent','ledger','pdf')" style="background:#E24B4A;color:#fff;border:none;padding:5px 10px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer">📄 PDF</button><button onclick="downloadReport('ledgerContent','ledger','image')" style="background:#185FA5;color:#fff;border:none;padding:5px 10px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer">🖼️ IMG</button></div></div>
     <div style="background:#E6F1FB;border-radius:8px;padding:8px 12px;display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px"><span style="font-weight:600">Opening Balance</span><span style="color:#185FA5;font-weight:600">Rs ${fmt(ob)}</span></div>
     <div class="ledger-hdr"><span>Date</span><span>Description</span><span style="text-align:right">Income</span><span style="text-align:right">Expense</span><span style="text-align:right">Balance</span></div>
     ${inR.length===0?'<p style="font-size:13px;color:#888;padding:8px 0">No entries found.</p>':inR.map(t=>{run+=t.credit-t.debit;return `<div class="ledger-row"><span style="color:#888">${t.date}</span><span>${t.desc}</span><span style="text-align:right;color:${t.credit>0?'#0F6E56':'#ccc'}">${t.credit>0?'Rs '+fmt(t.credit):'—'}</span><span style="text-align:right;color:${t.debit>0?'#E24B4A':'#ccc'}">${t.debit>0?'Rs '+fmt(t.debit):'—'}</span><span style="text-align:right;font-weight:600;color:${run>=0?'#185FA5':'#E24B4A'}">Rs ${fmt(run)}</span></div>`;}).join('')}
@@ -1373,7 +1428,8 @@ T.balreport=function(){
   }).join('');
 
   return `
-    <div style="background:linear-gradient(135deg,#1D9E75,#0F6E56);border-radius:14px;padding:16px;margin-bottom:14px;color:#fff">
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:8px"><button onclick="downloadReport('balReportContent','balance_report','pdf')" style="background:#E24B4A;color:#fff;border:none;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">📄 PDF</button><button onclick="downloadReport('balReportContent','balance_report','image')" style="background:#185FA5;color:#fff;border:none;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🖼️ Image/Print</button></div>
+    <div id="balReportContent"><div style="background:linear-gradient(135deg,#1D9E75,#0F6E56);border-radius:14px;padding:16px;margin-bottom:14px;color:#fff">
       <div style="font-size:13px;opacity:0.85;margin-bottom:8px">All Users — Grand Total Summary</div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
         <div style="background:rgba(255,255,255,0.15);border-radius:8px;padding:10px;text-align:center">
@@ -1621,7 +1677,8 @@ function genFundReport(){
     </tr>`;
   }).join('');
 
-  document.getElementById('fundReportResult').innerHTML=`
+  const fundDlBar=`<div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:8px"><button onclick="downloadReport('fundReportContent','fund_report','pdf')" style="background:#E24B4A;color:#fff;border:none;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">📄 PDF</button><button onclick="downloadReport('fundReportContent','fund_report','image')" style="background:#185FA5;color:#fff;border:none;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🖼️ Image/Print</button></div><div id="fundReportContent">`;
+  document.getElementById('fundReportResult').innerHTML=fundDlBar+`
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px">
       <div style="background:#E1F5EE;border:1.5px solid #1D9E75;border-radius:10px;padding:12px;text-align:center">
         <div style="font-size:11px;color:#0F6E56;font-weight:700;margin-bottom:4px">RECEIVED ✓</div>
@@ -1685,7 +1742,7 @@ function generateSlip(){
   const lastAmt=last5.length>0?last5[0].amount:0;
   const lastEntry=last5.length>0?last5[0]:null;
   const slipUser=lastEntry?DB.users.find(u=>u.id===lastEntry.by)||null:null;
-  res.innerHTML=`<div class="cert-wrap">
+  res.innerHTML=`<div class="cert-wrap" id="donorSlipWrap">
     <div class="cert-green-header">
       ${ORG_CONFIG.logo?`<img src="${ORG_CONFIG.logo}" style="height:40px;max-width:100px;object-fit:contain;margin-bottom:6px;filter:brightness(0) invert(1);opacity:0.9">`:'<div style="font-size:18px;margin-bottom:4px">🕌</div>'}
       <div style="font-size:16px;font-weight:700">${orgNameUrdu()}</div>
@@ -1720,7 +1777,11 @@ function generateSlip(){
         <span style="color:${i===0?'#185FA5':'#666'}">${e.date} — ${e.desc||'Donation'}</span>
         <span style="font-weight:600;color:${i===0?'#185FA5':'#0F6E56'}">Rs ${fmt(e.amount)}</span>
       </div>`).join('')}
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;text-align:center;margin-top:16px;padding-top:12px;border-top:1px dashed #ccc">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;margin-bottom:8px">
+        <button onclick="downloadReport('donorSlipWrap','donor_slip_${donor.id}','pdf')" style="background:#E24B4A;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">📄 PDF</button>
+        <button onclick="downloadReport('donorSlipWrap','donor_slip_${donor.id}','image')" style="background:#185FA5;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🖼️ Image/Print</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;text-align:center;margin-top:12px;padding-top:12px;border-top:1px dashed #ccc">
         <div>${slipUser&&slipUser.signature?`<img src="${slipUser.signature}" style="height:32px;max-width:100%;object-fit:contain;margin-bottom:2px"><br>`:'<div style="height:35px;border-bottom:1px solid #999;margin-bottom:4px"></div>'}<div style="font-size:10px;color:#888">${slipUser?slipUser.name+' ('+slipUser.role+')':'Admin / Manager'}</div></div>
         <div><div style="height:35px;border-bottom:1px solid #999;margin-bottom:4px"></div><div style="font-size:10px;color:#888">Official Seal</div></div>
       </div>
@@ -1811,7 +1872,7 @@ function markReceived(tid){
   const t=DB.transfers.find(x=>x.id===tid);if(!t)return;
   t.received=true;FS.save('transfers',t.id,t);
   DB.auditLog.push({by:currentUser.id,action:'Transfer Received',target:'Rs '+fmt(t.amount),detail:'From '+t.from,date:today()});
-  showPopup('✅','Received!','Rs '+fmt(t.amount)+' balance mein add ho gayi.');
+  showPopup('✅','Amount Received','Rs '+fmt(t.amount)+' added to your balance.');
   renderTab('transfer');
 }
 
@@ -2043,7 +2104,7 @@ function finishExpense(desc,amount,date,area,hardcopyImg){
   };
   DB.expenses.push(newExp);FS.save('expenses',newExp.id,newExp);
   DB.auditLog.push({by:currentUser.id,action:'Expense Added',target:billNo,detail:desc+' Rs '+fmt(amount),date:today()});
-  showPopup('✅','Bill Saved!','Bill No: '+billNo+'\nRs '+fmt(amount)+' save ho gaya.',null,()=>renderTab('expense'));
+  showPopup('✅','Bill Saved','Bill No: '+billNo+' | Rs '+fmt(amount)+' saved.',null,()=>renderTab('expense'));
 }
 
 function printExpenseBill(id){
@@ -2321,7 +2382,7 @@ function saveOrgName(){
   if(!en){showPopup('⚠️','Required','English name is required.');return;}
   ORG_CONFIG.name=en;if(ur)ORG_CONFIG.nameUrdu=ur;
   FS.saveConfig();renderLoginExtras();
-  showPopup('✅','Saved','Organization name saved — har jagah update ho gaya!');
+  showPopup('✅','Saved','Organization name saved — updated everywhere!');
 }
 function saveOrgAddress(){
   ORG_CONFIG.address=document.getElementById('orgAddress').value.trim();
@@ -2363,7 +2424,7 @@ function addHistoryPhoto(){
     if(!ORG_CONFIG.historyPhotos)ORG_CONFIG.historyPhotos=[];
     ORG_CONFIG.historyPhotos.push({img:e.target.result,name:name||''});
     renderLoginExtras();
-    showPopup('✅','Photo Added','History photo add ho gayi.');
+    showPopup('✅','Photo Added','History photo added.');
     renderTab('orgsettings');
   };r.readAsDataURL(fi.files[0]);
 }
@@ -2390,7 +2451,7 @@ function editHistoryPhoto(i){
       const r=new FileReader();r.onload=e=>{ORG_CONFIG.historyPhotos[i].img=e.target.result;renderLoginExtras();renderTab('orgsettings');};r.readAsDataURL(fi.files[0]);
     } else {renderLoginExtras();renderTab('orgsettings');}
     closeModal();
-    showPopup('✅','Updated','Photo update ho gayi.');
+    showPopup('✅','Updated','Photo updated.');
   };
 }
 function saveSocialLinks(){
@@ -2414,8 +2475,8 @@ function addBankAccount(){
   const number=document.getElementById('baNumber').value.trim();
   if(!title||!bank||!number){showPopup('⚠️','Incomplete','Title, bank and account number are required.');return;}
   const fi=document.getElementById('baQrInput');
-  if(fi.files[0]){const r=new FileReader();r.onload=e=>{ORG_CONFIG.bankAccounts.push({title,bank,number,qr:e.target.result});FS.saveConfig();renderLoginExtras();showPopup('✅','Account Added','Bank account add ho gaya.');renderTab('orgsettings');};r.readAsDataURL(fi.files[0]);}
-  else{ORG_CONFIG.bankAccounts.push({title,bank,number,qr:null});FS.saveConfig();renderLoginExtras();showPopup('✅','Account Added','Bank account add ho gaya.');renderTab('orgsettings');}
+  if(fi.files[0]){const r=new FileReader();r.onload=e=>{ORG_CONFIG.bankAccounts.push({title,bank,number,qr:e.target.result});FS.saveConfig();renderLoginExtras();showPopup('✅','Account Added','Bank account added.');renderTab('orgsettings');};r.readAsDataURL(fi.files[0]);}
+  else{ORG_CONFIG.bankAccounts.push({title,bank,number,qr:null});FS.saveConfig();renderLoginExtras();showPopup('✅','Account Added','Bank account added.');renderTab('orgsettings');}
 }
 function removeBankAccount(i){
   ORG_CONFIG.bankAccounts.splice(i,1);
@@ -2444,10 +2505,10 @@ T.profile=function(){
     </div>
     <label>Name</label><div class="inp-wrap"><span class="inp-icon">👤</span><input type="text" id="profName"</div> value="${u.name||''}">
     <label>Mobile No</label>
-    <input type="text" id="profMobile" value="${u.mobile||''}" oninput="checkProfMobile(this.value)">
+    <input type="text" id="profMobile" value="${u.mobile||''}" maxlength="12" oninput="checkProfMobile(this.value)" onkeypress="return blockExtraMobile(this,event)">
     <div id="profMobileStatus" style="display:none;margin-top:4px;font-size:12px;padding:6px 10px;border-radius:6px"></div>
     <label>CNIC No <span style="font-size:10px;color:#1D9E75;font-weight:500">شناختی کارڈ</span></label>
-    <input type="text" id="profCnic" value="${u.cnic||''}" oninput="checkProfCnic(this.value)">
+    <input type="text" id="profCnic" value="${u.cnic||''}" maxlength="15" oninput="checkProfCnic(this.value)" onkeypress="return blockExtraCnic(this,event)">
     <div id="profCnicStatus" style="display:none;margin-top:4px;font-size:12px;padding:6px 10px;border-radius:6px"></div>
     <label>Area <span style="font-size:10px;color:#1D9E75;font-weight:500">علاقہ</span></label><select id="profArea" class="area-sel"></select>
     <label>Profession <span style="font-size:10px;color:#1D9E75;font-weight:500">پیشہ</span></label><select id="profProfession" class="prof-sel"></select>
@@ -2511,9 +2572,9 @@ function saveProfile(){
   const confirmPwd=document.getElementById('profConfirmPwd').value.trim();
   if(!name){showPopup('⚠️','Incomplete','Name is required.');return;}
   const mDig=mobile.replace(/[-\s]/g,'');
-  if(mDig.length>0&&mDig.length<11){showPopup('⚠️','Mobile Short','Mobile 11 digits ka hona chahiye.');return;}
+  if(mDig.length>0&&mDig.length!==11){showPopup('⚠️','Mobile Short','Mobile must be exactly 11 digits.');return;}
   const cDig=cnic.replace(/[-\s]/g,'');
-  if(cDig.length>0&&cDig.length<13){showPopup('⚠️','CNIC Short','CNIC 13 digits ka hona chahiye.');return;}
+  if(cDig.length>0&&cDig.length!==13){showPopup('⚠️','CNIC Short','CNIC must be exactly 13 digits.');return;}
   if(newPwd&&newPwd!==confirmPwd){showPopup('⚠️','Mismatch','Passwords do not match.');return;}
   if(newPwd&&newPwd.length<4){showPopup('⚠️','Weak','Password must be at least 4 characters.');return;}
   // Check duplicates (exclude self)
@@ -2536,7 +2597,7 @@ function saveProfile(){
     const av=document.getElementById('dashAvatar');
     if(currentUser.photo)av.innerHTML=`<img src="${currentUser.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
     else av.textContent=currentUser.name.charAt(0);
-    showPopup('✅','Profile Updated!','Aapki profile update ho gayi.',null,()=>renderTab('profile'));
+    showPopup('✅','Profile Updated!','Your profile has been updated.',null,()=>renderTab('profile'));
   };
 
   const fi=document.getElementById('profPhotoInput');
@@ -2932,17 +2993,19 @@ T.dash = function(){
 
 // Patch loadDashboard
 function loadDashboard(){
-  showScreen('dashScreen');
-  const dashRoleEl=document.getElementById('dashRole');
-  if(dashRoleEl) dashRoleEl.innerHTML=`<span style="color:rgba(255,255,255,0.8)">${currentRole.charAt(0).toUpperCase()+currentRole.slice(1)}</span> — <span style="color:#fff;font-weight:600">${currentUser.name}</span>`;
-  const av=document.getElementById('dashAvatar');
-  if(av){
-    if(currentUser.photo)av.innerHTML=`<img src="${currentUser.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-    else av.textContent=currentUser.name.charAt(0);
-  }
-  try{renderLoginExtras();}catch(e){}
-  try{updateFooterOrgName();}catch(e){}
-  buildTabs();
+  try{
+    showScreen('dashScreen');
+    const dashRoleEl=document.getElementById('dashRole');
+    if(dashRoleEl) dashRoleEl.innerHTML=`<span style="color:rgba(255,255,255,0.8)">${currentRole.charAt(0).toUpperCase()+currentRole.slice(1)}</span> — <span style="color:#fff;font-weight:600">${currentUser.name}</span>`;
+    const av=document.getElementById('dashAvatar');
+    if(av){
+      if(currentUser.photo)av.innerHTML=`<img src="${currentUser.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+      else av.textContent=currentUser.name.charAt(0);
+    }
+    try{renderLoginExtras();}catch(e){console.error('RLE:',e);}
+    try{updateFooterOrgName();}catch(e){}
+    buildTabs();
+  }catch(e){console.error('loadDashboard error:',e);}
 }
 
 function showLoginError(msg){const e=document.getElementById('loginError');e.className='info-box danger';e.textContent=msg;e.style.display='block';}
@@ -2962,7 +3025,102 @@ function safeInit(){
   try{renderLoginExtras();}catch(e){}
   try{updateFooterOrgName();}catch(e){}
 }
-async function appInit(){await loadAllData();safeInit();}
+// ============================================================
+// REPORT DOWNLOAD — PDF & IMAGE
+// ============================================================
+function downloadReport(elementId, filename, format){
+  const el=document.getElementById(elementId);
+  if(!el){showPopup('⚠️','Error','Report not found. Please generate report first.');return;}
+
+  const orgN=orgName()||'Falah e Qabristan';
+  const html=el.innerHTML;
+  const date=new Date().toLocaleDateString('en-PK');
+
+  // Create a hidden iframe for printing — works without popup permission
+  let iframe=document.getElementById('printFrame');
+  if(iframe)iframe.remove();
+  iframe=document.createElement('iframe');
+  iframe.id='printFrame';
+  iframe.style.cssText='position:fixed;top:-9999px;left:-9999px;width:800px;height:600px;border:none;visibility:hidden';
+  document.body.appendChild(iframe);
+
+  const doc=iframe.contentDocument||iframe.contentWindow.document;
+  doc.open();
+  doc.write(`<!DOCTYPE html><html><head>
+<meta charset="UTF-8">
+<title>${filename}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;font-size:12px;color:#1a1a1a;background:#fff;padding:12px}
+.print-header{text-align:center;padding:10px;background:#1D9E75;color:#fff;border-radius:6px;margin-bottom:12px}
+.print-header h2{font-size:15px;font-weight:bold}
+.print-header p{font-size:10px;opacity:0.85;margin-top:2px}
+.card{background:#fff;border:1px solid #ddd;border-radius:8px;padding:12px;margin-bottom:8px}
+h3,.bi-en{font-size:13px;font-weight:bold;margin-bottom:6px}
+.bi-ur{font-size:10px;color:#1D9E75}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+.stat-card{background:#f5f5f5;border-radius:6px;padding:8px;text-align:center}
+.stat-label{font-size:10px;color:#888;margin-bottom:2px}
+.stat-val{font-size:15px;font-weight:bold}
+.entry-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid #eee}
+.entry-name{font-size:12px;font-weight:600}
+.entry-sub{font-size:10px;color:#888}
+.entry-amt{font-size:12px;font-weight:600;color:#0F6E56}
+.badge,.id-badge{display:inline-block;padding:1px 6px;border-radius:12px;font-size:10px;font-weight:600;background:#E6F1FB;color:#185FA5}
+.cert-wrap{border:2px solid #1D9E75;border-radius:10px;overflow:hidden;margin-bottom:8px}
+.cert-green-header{background:#1D9E75;color:#fff;padding:14px;text-align:center}
+.cert-body{padding:12px}
+.dc-field{display:flex;gap:6px;padding:5px 0;border-bottom:1px solid #f0f0f0;font-size:11px}
+.dc-key{color:#888;min-width:90px;font-size:10px}
+.dc-val{font-weight:600}
+.ledger-hdr,.ledger-row{display:grid;grid-template-columns:70px 1fr 70px 70px 75px;gap:4px;font-size:10px;padding:4px 0;border-bottom:0.5px solid #eee}
+.ledger-hdr{font-weight:bold;color:#888;border-bottom:2px solid #ddd}
+.section-bi{margin-bottom:6px;margin-top:10px}
+table{width:100%;border-collapse:collapse}
+th{font-size:10px;color:#888;font-weight:bold;padding:5px;border-bottom:2px solid #ddd;text-align:left}
+td{font-size:10px;padding:5px;border-bottom:0.5px solid #eee}
+button,input,select,textarea,.no-print,[onclick*="download"],[onclick*="toggle"],[onclick*="selectTab"],[onclick*="showDonor"]{display:none!important}
+img{max-width:100%;height:auto}
+</style>
+</head><body>
+<div class="print-header">
+  <h2>${orgN}</h2>
+  <p>${filename.replace(/_/g,' ').toUpperCase()} | ${date}</p>
+</div>
+${html}
+</body></html>`);
+  doc.close();
+
+  // Wait for content to render then print
+  setTimeout(()=>{
+    try{
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+    }catch(e){
+      // Fallback: direct window print with overlay
+      showPopup('ℹ️','Print','Use browser print: Ctrl+P (PC) or Share → Print (mobile)');
+    }
+  },600);
+}
+
+function addDownloadBar(title, elementId){
+  return `<div style="display:flex;justify-content:space-between;align-items:center;background:#f0fff8;border:1px solid #1D9E75;border-radius:10px;padding:10px 14px;margin-bottom:10px">
+    <div>
+      <div style="font-size:13px;font-weight:600;color:#0F6E56">${title}</div>
+      <div style="font-size:10px;color:#0F6E56;margin-top:1px">Download Report | رپورٹ ڈاؤن لوڈ</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button onclick="downloadReport('${elementId}','${elementId}_report','pdf')" style="background:#E24B4A;color:#fff;border:none;padding:7px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🖨️ Print/PDF</button>
+      <button onclick="downloadReport('${elementId}','${elementId}_report','image')" style="background:#185FA5;color:#fff;border:none;padding:7px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🖼️ Image/Print</button>
+    </div>
+  </div>`;
+}
+
+async function appInit(){
+  initFirebase();
+  try{await loadAllData();}catch(e){console.error('Data load error:',e);}
+  try{safeInit();}catch(e){console.error('safeInit error:',e);}
+}
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',appInit);}
 else{appInit();}
 </script>

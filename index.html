@@ -196,7 +196,7 @@ input[type=file]{padding:6px}
   <div class="login-card">
     <h2 style="margin-bottom:14px"><span style="font-size:14px">Sign In</span><span style="font-size:10px;color:rgba(255,255,255,0.75);display:block;margin-top:1px">لاگ ان کریں</span></h2>
     <label>Mobile Number <span style="font-size:10px;color:#1D9E75;font-weight:500">موبائل نمبر</span></label>
-    <div class="inp-wrap"><span class="inp-icon">📱</span><input type="tel" id="loginMobile" placeholder="03XX-XXXXXXX"></div>
+    <div class="inp-wrap"><span class="inp-icon">📱</span><input type="tel" id="loginMobile" placeholder="0300-1234567" maxlength="12" oninput="autoFormatMobile(this,null)"></div>
     <label>Password</label>
     <div class="inp-wrap" style="position:relative"><span class="inp-icon">🔒</span><input type="password" id="loginPassword" placeholder="Enter password" style="padding-right:42px;padding-left:38px"><span onclick="togglePwd('loginPassword',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:16px;color:#aaa">👁</span></div>
     <div id="loginError" style="display:none;margin-top:8px"></div>
@@ -290,10 +290,10 @@ input[type=file]{padding:6px}
       <input type="file" accept="image/*" id="regPhotoInput" style="display:none" onchange="previewImg('regPhotoInput','regAvatarPreview','regAvatarPlus')">
       <label>Full Name * <span style="font-size:10px;color:#1D9E75;font-weight:500">پورا نام</span></label><div class="inp-wrap"><span class="inp-icon">👤</span><input type="text" id="regName" placeholder="Your full name"></div>
       <label>CNIC No * (13 digits) <span style="font-size:10px;color:#1D9E75;font-weight:500">شناختی کارڈ</span></label>
-      <div class="inp-wrap"><span class="inp-icon">🪪</span><input type="text" id="regCnic" placeholder="00000-0000000-0" maxlength="15" oninput="checkRegCnic(this.value)" onkeypress="return blockExtraCnic(this,event)"></div>
+      <div class="inp-wrap"><span class="inp-icon">🪪</span><input type="text" id="regCnic" placeholder="00000-0000000-0" maxlength="15" oninput="autoFormatCnic(this,'regCnicStatus')"></div>
       <div id="regCnicStatus" style="display:none;margin-top:4px"></div>
       <label>Mobile No * (11 digits) <span style="font-size:10px;color:#1D9E75;font-weight:500">موبائل نمبر</span></label>
-      <div class="inp-wrap"><span class="inp-icon">📱</span><input type="text" id="regMobile" placeholder="03XX-XXXXXXX" maxlength="12" oninput="checkRegMobile(this.value)" onkeypress="return blockExtraMobile(this,event)"></div>
+      <div class="inp-wrap"><span class="inp-icon">📱</span><input type="text" id="regMobile" placeholder="0300-1234567" maxlength="12" oninput="autoFormatMobile(this,'regMobileStatus')"></div>
       <div id="regMobileStatus" style="display:none;margin-top:4px"></div>
       <label>Password * <span style="font-size:10px;color:#1D9E75;font-weight:500">پاس ورڈ</span></label>
       <div class="inp-wrap" style="position:relative"><span class="inp-icon">🔒</span><input type="password" id="regPassword" placeholder="Set your password" style="padding-right:42px;padding-left:38px"><span onclick="togglePwd('regPassword',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:16px;color:#aaa">👁</span></div>
@@ -627,9 +627,9 @@ function submitReg(){
   const password=document.getElementById('regPassword').value.trim();
   const confirm=document.getElementById('regConfirmPassword').value.trim();
   if(!name||!mobile||!password||!cnic){showPopup('⚠️','Incomplete','Name, CNIC, mobile and password are required.');return;}
-  const mobileDigits=mobile.replace(/[-\s]/g,'');
+  const mobileDigits=normMob(mobile);
   if(mobileDigits.length!==11){showPopup('⚠️','Mobile Short','Mobile must be exactly 11 digits. Entered: '+mobileDigits.length);return;}
-  const cnicDigits=cnic.replace(/[-\s]/g,'');
+  const cnicDigits=normCnic(cnic);
   if(cnicDigits.length!==13){showPopup('⚠️','CNIC Short','CNIC must be exactly 13 digits. Entered: '+cnicDigits.length);return;}
   if(password!==confirm){showPopup('⚠️','Mismatch','Passwords do not match.');return;}
   if(password.length<4){showPopup('⚠️','Weak','Password must be at least 4 characters.');return;}
@@ -811,10 +811,10 @@ T.donation=function(){
     </div>
     <label>Donor Name * <span style="font-size:10px;color:#1D9E75;font-weight:500">عطیہ دہندہ</span></label><div class="inp-wrap"><span class="inp-icon">👤</span><input type="text" id="donorName" placeholder="Name"></div>
     <label>Mobile No * <span style="font-size:10px;color:#1D9E75;font-weight:500">موبائل نمبر</span></label>
-    <input type="text" id="donorMobile" placeholder="03XX-XXXXXXX" maxlength="12" oninput="checkDonorMobile(this.value)" onkeypress="return blockExtraMobile(this,event)">
+    <input type="text" id="donorMobile" placeholder="0300-1234567" maxlength="12" oninput="autoFormatMobile(this,'donorMobileStatus');checkDonorMobileAF(this.value)">
     <div id="donorMobileStatus" style="display:none;margin-top:4px;font-size:12px;padding:6px 10px;border-radius:6px"></div>
     <label>CNIC No * <span style="font-size:10px;color:#1D9E75;font-weight:500">شناختی کارڈ</span></label>
-    <input type="text" id="donorCnic" placeholder="00000-0000000-0" maxlength="15" oninput="checkDonorCnic(this.value)" onkeypress="return blockExtraCnic(this,event)">
+    <input type="text" id="donorCnic" placeholder="00000-0000000-0" maxlength="15" oninput="autoFormatCnic(this,'donorCnicStatus');checkDonorCnicAF(this.value)">
     <div id="donorCnicStatus" style="display:none;margin-top:4px;font-size:12px;padding:6px 10px;border-radius:6px"></div>
     <label>Profession <span style="font-size:10px;color:#1D9E75;font-weight:500">پیشہ</span></label><select id="donorProfession" class="prof-sel"></select>
     <label>Area <span style="font-size:10px;color:#1D9E75;font-weight:500">علاقہ</span></label><select id="donorArea" class="area-sel"></select>
@@ -854,16 +854,78 @@ function fillDonorFetch(found){
 // ---- AUTO CHECK FUNCTIONS ----
 function normMob(m){return (m||'').replace(/[^0-9]/g,'');}
 function normCnic(c){return (c||'').replace(/[^0-9]/g,'');}
-function blockExtraMobile(input,e){
-  const digits=input.value.replace(/[^0-9]/g,'');
-  if(digits.length>=11&&e.key>='0'&&e.key<='9'){e.preventDefault();return false;}
-  return true;
+
+// Auto-format mobile: 0300-1234567 (4-7 pattern)
+function formatMobile(digits){
+  digits=digits.replace(/[^0-9]/g,'').slice(0,11);
+  if(digits.length<=4) return digits;
+  return digits.slice(0,4)+'-'+digits.slice(4);
 }
-function blockExtraCnic(input,e){
-  const digits=input.value.replace(/[^0-9]/g,'');
-  if(digits.length>=13&&e.key>='0'&&e.key<='9'){e.preventDefault();return false;}
-  return true;
+
+// Auto-format CNIC: 35201-1234567-1 (5-7-1 pattern)
+function formatCnic(digits){
+  digits=digits.replace(/[^0-9]/g,'').slice(0,13);
+  if(digits.length<=5) return digits;
+  if(digits.length<=12) return digits.slice(0,5)+'-'+digits.slice(5);
+  return digits.slice(0,5)+'-'+digits.slice(5,12)+'-'+digits.slice(12);
 }
+
+// oninput handler for mobile fields
+function autoFormatMobile(input, statusId){
+  const raw=input.value;
+  const digits=raw.replace(/[^0-9]/g,'').slice(0,11);
+  const formatted=formatMobile(digits);
+  const pos=input.selectionStart;
+  input.value=formatted;
+  // Keep cursor position smart
+  try{input.setSelectionRange(formatted.length,formatted.length);}catch(e){}
+  if(statusId) checkFieldMobile(digits, statusId, input.id);
+}
+
+// oninput handler for CNIC fields
+function autoFormatCnic(input, statusId){
+  const raw=input.value;
+  const digits=raw.replace(/[^0-9]/g,'').slice(0,13);
+  const formatted=formatCnic(digits);
+  input.value=formatted;
+  try{input.setSelectionRange(formatted.length,formatted.length);}catch(e){}
+  if(statusId) checkFieldCnic(digits, statusId, input.id);
+}
+
+function checkFieldMobile(digits, statusId, inputId){
+  if(digits.length<3){hideStatus(statusId);return;}
+  if(digits.length<11){statusBox(statusId,'warning','⚠️ Mobile: '+digits.length+'/11 digits');return;}
+  if(digits.length>11){statusBox(statusId,'warning','⚠️ Mobile must be exactly 11 digits');return;}
+  // Check duplicate (exclude self if editing)
+  const val=formatMobile(digits);
+  const found=findAnyByMobile(val);
+  const selfId=inputId==='profMobile'?currentUser&&currentUser.id:null;
+  if(found&&found.id!==selfId){
+    statusBox(statusId,'error','⚠️ Already registered: '+recordLabel(found));
+  } else {
+    statusBox(statusId,'success','✅ Mobile OK — 0'+digits.slice(1,4)+'-'+digits.slice(4));
+    setTimeout(()=>hideStatus(statusId),2000);
+  }
+}
+
+function checkFieldCnic(digits, statusId, inputId){
+  if(digits.length<3){hideStatus(statusId);return;}
+  if(digits.length<13){statusBox(statusId,'warning','⚠️ CNIC: '+digits.length+'/13 digits');return;}
+  if(digits.length>13){statusBox(statusId,'warning','⚠️ CNIC must be exactly 13 digits');return;}
+  const val=formatCnic(digits);
+  const found=findAnyByCnic(val);
+  const selfId=inputId==='profCnic'?currentUser&&currentUser.id:null;
+  if(found&&found.id!==selfId){
+    statusBox(statusId,'error','⚠️ Already registered: '+recordLabel(found));
+  } else {
+    statusBox(statusId,'success','✅ CNIC OK');
+    setTimeout(()=>hideStatus(statusId),2000);
+  }
+}
+
+// Legacy blockExtra (kept for safety, not really needed now)
+function blockExtraMobile(input,e){return true;}
+function blockExtraCnic(input,e){return true;}
 
 function statusBox(elId, type, msg){
   const el=document.getElementById(elId);if(!el)return;
@@ -918,12 +980,14 @@ function checkRegMobile(val){
   }
 }
 
+// Donation form — auto-fetch wrappers
+function checkDonorMobileAF(val){checkDonorMobile(val);}
+function checkDonorCnicAF(val){checkDonorCnic(val);}
 // Donation form checks — with auto-fetch
 function checkDonorMobile(val){
   const nm=normMob(val);
   if(nm.length<3){hideStatus('donorMobileStatus');return;}
-  if(nm.length<11){statusBox('donorMobileStatus','warning','⚠️ Mobile must be exactly 11 digits. Entered: '+nm.length);return;}
-  if(nm.length>11){statusBox('donorMobileStatus','warning','⚠️ Mobile must be exactly 11 digits. Entered: '+nm.length);return;}
+  if(nm.length<11){return;}  // wait for complete
   // Check donors first (auto-fetch)
   const donor=DB.donors.find(d=>normMob(d.mobile)===nm);
   if(donor){
@@ -1140,7 +1204,7 @@ function showDeathCert(id){
       <div style="text-align:center;margin-top:10px;font-size:10px;color:#aaa">This certificate is issued by ${orgName()}. Certificate No: ${d.id}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid #eee">
         <button onclick="downloadReport('certWrap_${d.id}','death_cert_${d.id}','pdf')" style="background:#E24B4A;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">📄 PDF Download</button>
-        <button onclick="downloadReport('certWrap_${d.id}','death_cert_${d.id}','image')" style="background:#185FA5;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🖼️ Image/Print</button>
+        <button onclick="downloadSlipPNG('certWrap_${d.id}','death_cert_${d.id}')" style="background:#185FA5;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🖼️ PNG Download</button>
       </div>
     </div>
   </div>`;
@@ -1778,8 +1842,8 @@ function generateSlip(){
         <span style="font-weight:600;color:${i===0?'#185FA5':'#0F6E56'}">Rs ${fmt(e.amount)}</span>
       </div>`).join('')}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;margin-bottom:8px">
-        <button onclick="downloadReport('donorSlipWrap','donor_slip_${donor.id}','pdf')" style="background:#E24B4A;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">📄 PDF</button>
-        <button onclick="downloadReport('donorSlipWrap','donor_slip_${donor.id}','image')" style="background:#185FA5;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🖼️ Image/Print</button>
+        <button onclick="downloadReport('donorSlipWrap','donor_slip_${donor.id}','pdf')" style="background:#E24B4A;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🖨️ Print/PDF</button>
+        <button onclick="downloadSlipPNG('donorSlipWrap','donor_slip_${donor.id}')" style="background:#185FA5;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🖼️ PNG Download</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;text-align:center;margin-top:12px;padding-top:12px;border-top:1px dashed #ccc">
         <div>${slipUser&&slipUser.signature?`<img src="${slipUser.signature}" style="height:32px;max-width:100%;object-fit:contain;margin-bottom:2px"><br>`:'<div style="height:35px;border-bottom:1px solid #999;margin-bottom:4px"></div>'}<div style="font-size:10px;color:#888">${slipUser?slipUser.name+' ('+slipUser.role+')':'Admin / Manager'}</div></div>
@@ -2505,10 +2569,10 @@ T.profile=function(){
     </div>
     <label>Name</label><div class="inp-wrap"><span class="inp-icon">👤</span><input type="text" id="profName"</div> value="${u.name||''}">
     <label>Mobile No</label>
-    <input type="text" id="profMobile" value="${u.mobile||''}" maxlength="12" oninput="checkProfMobile(this.value)" onkeypress="return blockExtraMobile(this,event)">
+    <input type="text" id="profMobile" value="${u.mobile||''}" maxlength="12" oninput="autoFormatMobile(this,'profMobileStatus')">
     <div id="profMobileStatus" style="display:none;margin-top:4px;font-size:12px;padding:6px 10px;border-radius:6px"></div>
     <label>CNIC No <span style="font-size:10px;color:#1D9E75;font-weight:500">شناختی کارڈ</span></label>
-    <input type="text" id="profCnic" value="${u.cnic||''}" maxlength="15" oninput="checkProfCnic(this.value)" onkeypress="return blockExtraCnic(this,event)">
+    <input type="text" id="profCnic" value="${u.cnic||''}" maxlength="15" oninput="autoFormatCnic(this,'profCnicStatus')">
     <div id="profCnicStatus" style="display:none;margin-top:4px;font-size:12px;padding:6px 10px;border-radius:6px"></div>
     <label>Area <span style="font-size:10px;color:#1D9E75;font-weight:500">علاقہ</span></label><select id="profArea" class="area-sel"></select>
     <label>Profession <span style="font-size:10px;color:#1D9E75;font-weight:500">پیشہ</span></label><select id="profProfession" class="prof-sel"></select>
@@ -2571,9 +2635,9 @@ function saveProfile(){
   const newPwd=document.getElementById('profNewPwd').value.trim();
   const confirmPwd=document.getElementById('profConfirmPwd').value.trim();
   if(!name){showPopup('⚠️','Incomplete','Name is required.');return;}
-  const mDig=mobile.replace(/[-\s]/g,'');
+  const mDig=normMob(mobile);
   if(mDig.length>0&&mDig.length!==11){showPopup('⚠️','Mobile Short','Mobile must be exactly 11 digits.');return;}
-  const cDig=cnic.replace(/[-\s]/g,'');
+  const cDig=normCnic(cnic);
   if(cDig.length>0&&cDig.length!==13){showPopup('⚠️','CNIC Short','CNIC must be exactly 13 digits.');return;}
   if(newPwd&&newPwd!==confirmPwd){showPopup('⚠️','Mismatch','Passwords do not match.');return;}
   if(newPwd&&newPwd.length<4){showPopup('⚠️','Weak','Password must be at least 4 characters.');return;}
@@ -3028,6 +3092,83 @@ function safeInit(){
 // ============================================================
 // REPORT DOWNLOAD — PDF & IMAGE
 // ============================================================
+// ============================================================
+// PNG DOWNLOAD — Pure Canvas (no external library needed)
+// ============================================================
+function downloadSlipPNG(elementId, filename){
+  const el = document.getElementById(elementId);
+  if(!el){ showPopup('⚠️','Error','Element not found. Please generate slip first.'); return; }
+
+  showPopup('⏳','Preparing PNG...','Image tayyar ho rahi hai... | تصویر تیار ہو رہی ہے');
+
+  setTimeout(()=>{
+    try{
+      // Use the browser's built-in screenshot via canvas
+      const rect = el.getBoundingClientRect();
+      const canvas = document.createElement('canvas');
+      const scale = 2; // retina quality
+      canvas.width = rect.width * scale;
+      canvas.height = rect.height * scale;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(scale, scale);
+
+      // Draw white background
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, rect.width, rect.height);
+
+      // Use foreignObject approach via serialized HTML
+      const data = `<svg xmlns='http://www.w3.org/2000/svg' width='${rect.width}' height='${rect.height}'>
+        <foreignObject width='100%' height='100%'>
+          <div xmlns='http://www.w3.org/1999/xhtml' style='font-family:Arial,sans-serif;font-size:13px;background:white;width:${rect.width}px;padding:0;margin:0'>
+            ${el.outerHTML}
+          </div>
+        </foreignObject>
+      </svg>`;
+
+      const img = new Image();
+      const blob = new Blob([data], {type:'image/svg+xml;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+
+      img.onload = function(){
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+
+        // Download PNG
+        try{
+          const pngUrl = canvas.toDataURL('image/png');
+          const link = document.createElement('a');
+          link.download = (filename||'slip') + '.png';
+          link.href = pngUrl;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          closePopup();
+          showPopup('✅','PNG Downloaded!','Image download ho gayi | تصویر ڈاؤن لوڈ ہو گئی');
+        }catch(e){
+          // Security error on some browsers — fallback to print
+          closePopup();
+          downloadReport(elementId, filename, 'pdf');
+        }
+      };
+
+      img.onerror = function(){
+        URL.revokeObjectURL(url);
+        closePopup();
+        // Fallback: open in new tab as image
+        downloadReport(elementId, filename, 'pdf');
+      };
+
+      img.src = url;
+
+    }catch(e){
+      closePopup();
+      console.error('PNG error:', e);
+      // Fallback to print
+      downloadReport(elementId, filename, 'pdf');
+    }
+  }, 400);
+}
+
 function downloadReport(elementId, filename, format){
   const el=document.getElementById(elementId);
   if(!el){showPopup('⚠️','Error','Report not found. Please generate report first.');return;}

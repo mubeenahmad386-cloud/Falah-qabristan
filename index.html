@@ -384,8 +384,9 @@ input[type=file]{padding:6px}
 </div>
 
 <!-- POPUP -->
-<div id="popupOverlay" class="popup" style="display:none">
-  <div class="popup-box">
+<div id="popupOverlay" class="popup" style="display:none" onclick="handlePopupOverlayClick(event)">
+  <div class="popup-box" style="position:relative">
+    <button onclick="closePopup()" style="position:absolute;top:10px;right:12px;background:none;border:none;font-size:20px;cursor:pointer;color:#aaa;line-height:1;padding:2px 6px;border-radius:6px">✕</button>
     <div style="font-size:36px;margin-bottom:10px" id="popupIcon">✅</div>
     <div style="margin-bottom:10px">
       <div id="popupTitle" style="font-size:15px;font-weight:700;color:#1a1a1a;line-height:1.2"></div>
@@ -545,6 +546,7 @@ function showPopup(icon,title,msg,btnText,onClose){
   document.getElementById('popupOverlay').style.display='flex';
 }
 function closePopup(){document.getElementById('popupOverlay').style.display='none';if(window._onClose)window._onClose();window._onClose=null;}
+function handlePopupOverlayClick(e){if(e.target.id==='popupOverlay')closePopup();}
 function closeModal(){document.getElementById('editModal').style.display='none';editingContext={};}
 function populateSel(cls,items,val){
   document.querySelectorAll('.'+cls).forEach(el=>{
@@ -578,7 +580,7 @@ function doLogin(){
   const user=DB.users.find(u=>u.mobile.replace(/-/g,'')===mobile.replace(/-/g,'')&&u.password===password&&u.approved);
   if(user){
     if(user.locked){showLoginError('Your login is locked. Contact the developer.');return;}
-    hideLoginError();currentUser=user;currentRole=user.role;loadDashboard();return;
+    hideLoginError();currentUser=user;currentRole=user.role;saveSession();loadDashboard();return;
   }
   const wrongPwd=DB.users.find(u=>u.mobile.replace(/-/g,'')===mobile.replace(/-/g,'')&&u.approved);
   if(wrongPwd){showLoginError('Incorrect password. Please try again.');return;}
@@ -608,6 +610,7 @@ function checkDevKey(){
   if(key==='6029604'){
     currentUser={id:'DEV001',name:'Developer',role:'developer',area:'All',approved:true,locked:false,photo:null,profession:'Engineer',signature:null};
     currentRole='developer';
+    saveSession();
     try{loadDashboard();}catch(e){console.error('loadDashboard error:',e);alert('Login error: '+e.message);}
   } else {
     showPopup('❌','Wrong Key','Incorrect master key. Please try again.');
@@ -658,6 +661,7 @@ function finishReg(name,mobile,cnic,password,photo,signature){
     const nu={id:nid,name,cnic,mobile,password,area,profession,role:'user',approved:true,locked:false,photo,signature:null};
     DB.users.push(nu);FS.save('users',nid,nu);
     currentUser=DB.users[DB.users.length-1];currentRole='user';
+    saveSession();
     showPopup('✅','Success!','Account created. ID: '+nid,null,()=>loadDashboard());
   } else {
     const pa={id:'PA'+Date.now(),name,cnic,mobile,password,area,profession,role:pendingRegRole,date:today(),photo,signature};
@@ -665,7 +669,7 @@ function finishReg(name,mobile,cnic,password,photo,signature){
     showPopup('📤','Request Forward','Your request has been submitted. Login after developer approval.',null,()=>showScreen('loginScreen'));
   }
 }
-function logout(){currentUser=null;currentRole=null;document.getElementById('devKey').value='';document.getElementById('loginMobile').value='';document.getElementById('loginPassword').value='';hideLoginError();showScreen('loginScreen');renderLoginExtras();}
+function logout(){clearSession();currentUser=null;currentRole=null;document.getElementById('devKey').value='';document.getElementById('loginMobile').value='';document.getElementById('loginPassword').value='';hideLoginError();showScreen('loginScreen');renderLoginExtras();}
 function renderLoginExtras(){
   // Logo on login page
   const ll=document.getElementById('loginLogo');
@@ -3085,6 +3089,43 @@ function updateFooterOrgName(){
 }
 
 // Run on load safely
+
+// ============================================================
+// SESSION MANAGEMENT — Stay logged in on refresh
+// ============================================================
+function saveSession(){
+  try{
+    if(!currentUser) return;
+    const s={id:currentUser.id,role:currentRole,ts:Date.now()};
+    localStorage.setItem('fq_session',JSON.stringify(s));
+  }catch(e){}
+}
+function clearSession(){
+  try{localStorage.removeItem('fq_session');}catch(e){}
+}
+async function restoreSession(){
+  try{
+    const raw=localStorage.getItem('fq_session');
+    if(!raw) return false;
+    const s=JSON.parse(raw);
+    // Session expires after 7 days
+    if(Date.now()-s.ts > 7*24*60*60*1000){clearSession();return false;}
+    // Developer session
+    if(s.id==='DEV001'){
+      currentUser={id:'DEV001',name:'Developer',role:'developer',area:'All',approved:true,locked:false,photo:null,profession:'Engineer',signature:null};
+      currentRole='developer';
+      return true;
+    }
+    // Find user in DB (loaded from Firestore)
+    const u=DB.users.find(x=>x.id===s.id&&x.role===s.role);
+    if(u&&!u.locked&&u.approved){
+      currentUser=u;currentRole=u.role;
+      return true;
+    }
+    clearSession();return false;
+  }catch(e){clearSession();return false;}
+}
+
 function safeInit(){
   try{renderLoginExtras();}catch(e){}
   try{updateFooterOrgName();}catch(e){}
@@ -3099,74 +3140,86 @@ function downloadSlipPNG(elementId, filename){
   const el = document.getElementById(elementId);
   if(!el){ showPopup('⚠️','Error','Element not found. Please generate slip first.'); return; }
 
-  showPopup('⏳','Preparing PNG...','Image tayyar ho rahi hai... | تصویر تیار ہو رہی ہے');
+  // Open new window with the slip content + auto-screenshot instructions
+  const orgN = orgName()||'Falah e Qabristan';
+  const html = el.outerHTML;
 
+  const w = window.open('','_blank','width=480,height=700,scrollbars=yes');
+  if(!w){
+    showPopup('ℹ️','Screenshot','Take a screenshot to save as image. Android: Power+Volume Down | iPhone: Power+Volume Up');
+    return;
+  }
+
+  w.document.write(`<!DOCTYPE html><html><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${filename||'slip'}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#f0f4f3;display:flex;flex-direction:column;align-items:center;padding:10px;font-family:Arial,sans-serif}
+.cert-wrap{background:#fff;border:2px solid #1D9E75;border-radius:14px;overflow:hidden;width:100%;max-width:440px;margin-bottom:12px}
+.cert-green-header{background:#1D9E75;color:#fff;padding:20px;text-align:center}
+.cert-body{padding:16px}
+.dc-field{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid #f0f0f0;font-size:13px}
+.dc-key{color:#888;min-width:110px;font-size:12px}
+.dc-val{font-weight:500}
+.id-badge{background:#E6F1FB;color:#185FA5;border-radius:6px;padding:2px 7px;font-size:11px;font-weight:600}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
+.bi-title{display:flex;flex-direction:column}.bi-en{font-size:14px;font-weight:700}.bi-ur{font-size:10px;color:#1D9E75}
+img{max-width:100%;height:auto}
+button{display:none!important}
+.action-btns{display:none!important}
+.no-dl{display:none!important}
+</style>
+</head><body>
+<div style="background:#1D9E75;color:#fff;padding:10px 16px;border-radius:10px;margin-bottom:10px;width:100%;max-width:440px;text-align:center">
+  <div style="font-size:14px;font-weight:700">${orgN}</div>
+  <div style="font-size:11px;opacity:0.85;margin-top:2px">${(filename||'slip').replace(/_/g,' ').toUpperCase()}</div>
+</div>
+${html}
+<div style="background:#fff;border-radius:10px;padding:14px;margin-top:10px;width:100%;max-width:440px;text-align:center">
+  <div style="font-size:13px;font-weight:700;color:#1D9E75;margin-bottom:10px">Save as Image / PNG</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <button id="dlBtn" onclick="savePNG()" style="display:block!important;background:#185FA5;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">⬇️ Save PNG</button>
+    <button onclick="window.print()" style="display:block!important;background:#E24B4A;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">🖨️ Print/PDF</button>
+  </div>
+  <div style="font-size:11px;color:#888;margin-top:8px">Or take a screenshot: Power+Volume</div>
+</div>
+<script>
+function savePNG(){
+  const btn=document.getElementById('dlBtn');
+  btn.textContent='⏳ Saving...';btn.disabled=true;
+  // Hide controls during capture
+  document.querySelectorAll('[style*="display:block"]').forEach(b=>{if(b.closest('div')&&b.closest('div').textContent.includes('Save as Image'))b.closest('div').parentElement.style.display='none';});
   setTimeout(()=>{
-    try{
-      // Use the browser's built-in screenshot via canvas
-      const rect = el.getBoundingClientRect();
-      const canvas = document.createElement('canvas');
-      const scale = 2; // retina quality
-      canvas.width = rect.width * scale;
-      canvas.height = rect.height * scale;
-      const ctx = canvas.getContext('2d');
-      ctx.scale(scale, scale);
-
-      // Draw white background
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, rect.width, rect.height);
-
-      // Use foreignObject approach via serialized HTML
-      const data = `<svg xmlns='http://www.w3.org/2000/svg' width='${rect.width}' height='${rect.height}'>
-        <foreignObject width='100%' height='100%'>
-          <div xmlns='http://www.w3.org/1999/xhtml' style='font-family:Arial,sans-serif;font-size:13px;background:white;width:${rect.width}px;padding:0;margin:0'>
-            ${el.outerHTML}
-          </div>
-        </foreignObject>
-      </svg>`;
-
-      const img = new Image();
-      const blob = new Blob([data], {type:'image/svg+xml;charset=utf-8'});
-      const url = URL.createObjectURL(blob);
-
-      img.onload = function(){
-        ctx.drawImage(img, 0, 0);
-        URL.revokeObjectURL(url);
-
-        // Download PNG
-        try{
-          const pngUrl = canvas.toDataURL('image/png');
-          const link = document.createElement('a');
-          link.download = (filename||'slip') + '.png';
-          link.href = pngUrl;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          closePopup();
-          showPopup('✅','PNG Downloaded!','Image download ho gayi | تصویر ڈاؤن لوڈ ہو گئی');
-        }catch(e){
-          // Security error on some browsers — fallback to print
-          closePopup();
-          downloadReport(elementId, filename, 'pdf');
-        }
-      };
-
-      img.onerror = function(){
-        URL.revokeObjectURL(url);
-        closePopup();
-        // Fallback: open in new tab as image
-        downloadReport(elementId, filename, 'pdf');
-      };
-
-      img.src = url;
-
-    }catch(e){
-      closePopup();
-      console.error('PNG error:', e);
-      // Fallback to print
-      downloadReport(elementId, filename, 'pdf');
-    }
-  }, 400);
+    const el=document.querySelector('.cert-wrap')||document.body;
+    const svgData=\`<svg xmlns='http://www.w3.org/2000/svg' width='\${el.offsetWidth}' height='\${el.offsetHeight}'>
+      <foreignObject width='100%' height='100%'>
+        <div xmlns='http://www.w3.org/1999/xhtml' style='font-family:Arial,sans-serif;font-size:13px;background:white'>\${el.outerHTML}</div>
+      </foreignObject>
+    </svg>\`;
+    const canvas=document.createElement('canvas');
+    canvas.width=el.offsetWidth*2;canvas.height=el.offsetHeight*2;
+    const ctx=canvas.getContext('2d');ctx.scale(2,2);
+    ctx.fillStyle='#fff';ctx.fillRect(0,0,el.offsetWidth,el.offsetHeight);
+    const img=new Image();
+    const url='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svgData);
+    img.onload=()=>{
+      ctx.drawImage(img,0,0);
+      const a=document.createElement('a');
+      a.download='${filename||'slip'}'+'.png';
+      a.href=canvas.toDataURL('image/png');
+      a.click();
+      btn.textContent='✅ Saved!';btn.disabled=false;
+      document.querySelectorAll('[style*="display:none"]').forEach(b=>{if(b.textContent.includes('Save as Image'))b.style.display='';});
+    };
+    img.onerror=()=>{btn.textContent='❌ Failed';btn.disabled=false;};
+    img.src=url;
+  },200);
+}
+<\/script>
+</body></html>`);
+  w.document.close();
 }
 
 function downloadReport(elementId, filename, format){
@@ -3261,6 +3314,13 @@ async function appInit(){
   initFirebase();
   try{await loadAllData();}catch(e){console.error('Data load error:',e);}
   try{safeInit();}catch(e){console.error('safeInit error:',e);}
+  // Restore session after data is loaded
+  try{
+    const restored = await restoreSession();
+    if(restored){
+      loadDashboard();
+    }
+  }catch(e){console.error('Session restore error:',e);}
 }
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',appInit);}
 else{appInit();}

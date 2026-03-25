@@ -209,6 +209,9 @@ input[type=file]{padding:6px}
     <div id="bankBtnWrap" style="display:none;margin-top:8px">
       <button class="btn" style="background:#E6F1FB;color:#185FA5;border-color:#185FA5;font-weight:600" onclick="showScreen('bankScreen')">🏦 Fund Transfer Accounts</button>
     </div>
+    <div id="contactBtnWrap" style="display:none;margin-top:8px">
+      <button class="btn" style="background:#f0f4ff;color:#3730a3;border-color:#6366f1;font-weight:600" onclick="showScreen('contactScreen')">📞 Contact Us | ہم سے رابطہ</button>
+    </div>
     <div style="margin-top:16px;padding:14px;background:#f9f0f5;border-radius:12px;border:1.5px solid #993556">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
         <div style="font-size:22px">⚙️</div>
@@ -259,6 +262,28 @@ input[type=file]{padding:6px}
 </div>
 
 <!-- REG ROLE SCREEN -->
+<!-- CONTACT US SCREEN -->
+<div id="contactScreen" class="screen">
+  <div class="app-header">
+    <div class="app-header-left">
+      <button class="btn-logout" onclick="showScreen('loginScreen')">← Back</button>
+      <div><div class="app-title"><span style="display:block;font-size:15px;font-weight:700;line-height:1.1">Contact Us</span><span style="display:block;font-size:10px;font-weight:500;opacity:0.85;direction:rtl;text-align:left">ہم سے رابطہ</span></div></div>
+    </div>
+  </div>
+  <div class="content-area">
+    <div class="card">
+      <div style="text-align:center;margin-bottom:16px;padding:16px;background:linear-gradient(135deg,#1D9E75,#0F6E56);border-radius:12px;color:#fff">
+        <div id="contactLogo" style="font-size:42px;margin-bottom:8px">🕌</div>
+        <div id="contactOrgName" style="font-size:16px;font-weight:700">Falah e Qabristan</div>
+        <div id="contactOrgAddr" style="font-size:12px;opacity:0.85;margin-top:4px"></div>
+      </div>
+      <div id="contactNumbersList"></div>
+      <div id="contactSocialLinks" style="margin-top:12px"></div>
+      <div id="contactEmpty" style="font-size:13px;color:#888;text-align:center;padding:16px;display:none">No contact info added. | ابھی تک کوئی معلومات نہیں</div>
+    </div>
+  </div>
+</div>
+
 <div id="regRoleScreen" class="screen">
   <div class="app-header">
     <div class="app-header-left"><button class="btn-logout" onclick="showScreen('loginScreen')">← Back</button><div><div class="app-title">Create Account</div></div></div>
@@ -460,7 +485,11 @@ async function loadAllData(){
     ]);
     DB.users=u;DB.pendingApprovals=pa;DB.donors=don;DB.deceased=dec;
     DB.donations=donations;DB.expenses=exp;DB.transfers=trf;DB.auditLog=log;
-    if(profs.length>0)PROFESSIONS=profs.map(p=>p.name);
+    if(profs.length>0){
+      PROFESSIONS=profs.map(p=>p.name);
+      // Merge custom profs into PROF_LIST if not there
+      PROFESSIONS.forEach(pr=>{if(!PROF_LIST.find(p=>p.en===pr))PROF_LIST.push({en:pr,ur:''});});
+    }
     const txn=DB.donations.map(d=>parseInt((d.id||'0').replace(/[^0-9]/g,''))||0);
     txnCounter=txn.length?Math.max(...txn)+1:1;
     const bil=DB.expenses.map(e=>parseInt((e.billNo||'BILL-0000').replace('BILL-',''))||0);
@@ -471,14 +500,34 @@ async function loadAllData(){
 }
 
 const AREAS=['Sector A','Sector B','Sector C','Sector D','Model Town','Gulberg','Johar Town','DHA','Cantonment','Sadar'];
-let PROFESSIONS=['Doctor','Engineer','Teacher','Lawyer','Businessman','Farmer','Government Employee','Private Job','Student','Retired','Other'];
+// Bilingual profession list {en, ur}
+const PROF_LIST=[
+  {en:'Doctor',           ur:'ڈاکٹر'},
+  {en:'Engineer',         ur:'انجینئر'},
+  {en:'Teacher',          ur:'استاد'},
+  {en:'Lawyer',           ur:'وکیل'},
+  {en:'Businessman',      ur:'تاجر'},
+  {en:'Farmer',           ur:'کسان'},
+  {en:'Government Employee', ur:'سرکاری ملازم'},
+  {en:'Private Job',      ur:'نجی ملازمت'},
+  {en:'Student',          ur:'طالب علم'},
+  {en:'Retired',          ur:'ریٹائرڈ'},
+  {en:'Shopkeeper',       ur:'دکاندار'},
+  {en:'Driver',           ur:'ڈرائیور'},
+  {en:'Tailor',           ur:'درزی'},
+  {en:'Carpenter',        ur:'بڑھئی'},
+  {en:'Electrician',      ur:'الیکٹریشن'},
+  {en:'Plumber',          ur:'پلمبر'},
+  {en:'Labor',            ur:'مزدور'},
+  {en:'Imam / Clergy',    ur:'امام / مولوی'},
+  {en:'Housewife',        ur:'گھریلو خاتون'},
+  {en:'Other',            ur:'دیگر'},
+];
+let PROFESSIONS=PROF_LIST.map(p=>p.en);
+const PROF_UR={};PROF_LIST.forEach(p=>{PROF_UR[p.en]=p.ur;});
 
 const DB={
-  users:[
-    {id:'P1001',name:'Ali Hassan',cnic:'35201-1234567-1',mobile:'0300-1234567',password:'ali123',area:'Sector A',role:'user',profession:'Teacher',approved:true,locked:false,photo:null,signature:null},
-    {id:'P1002',name:'Sara Khan',cnic:'35201-7654321-2',mobile:'0301-7654321',password:'sara123',area:'Gulberg',role:'admin',profession:'Doctor',approved:true,locked:false,photo:null,signature:null},
-    {id:'P1003',name:'Usman Malik',cnic:'35201-1111111-3',mobile:'0302-1111111',password:'usman123',area:'DHA',role:'manager',profession:'Engineer',approved:true,locked:false,photo:null,signature:null}
-  ],
+  users:[],
   pendingApprovals:[],
   donors:[],
   deceased:[],
@@ -499,7 +548,8 @@ var ORG_CONFIG={
   history:'',
   historyPhotos:[],
   socialLinks:{facebook:'',instagram:'',twitter:'',youtube:'',whatsapp:''},
-  bankAccounts:[]
+  bankAccounts:[],
+  contactNumbers:[]
 };
 function orgName(){return ORG_CONFIG.name||'Falah e Qabristan';}
 function orgNameUrdu(){return ORG_CONFIG.nameUrdu||'فلاح قبرستان';}
@@ -516,7 +566,7 @@ function calcCashInHand(uid){
 function nextAllId(){
   const all=[...DB.users,...DB.donors];
   const nums=all.map(x=>parseInt((x.id||'').replace(/\D/g,''))||0);
-  return 'P'+(Math.max(1003,...nums)+1);
+  return String(Math.max(10000,...nums)+1);
 }
 function nextDecId(){
   const nums=DB.deceased.map(x=>parseInt((x.id||'').replace(/\D/g,''))||0);
@@ -555,7 +605,26 @@ function populateSel(cls,items,val){
   });
 }
 function populateAreas(){populateSel('area-sel',AREAS);}
-function populateProfs(){populateSel('prof-sel',PROFESSIONS);}
+function populateProfs(){
+  document.querySelectorAll('.prof-sel').forEach(el=>{
+    const cur=el.value;
+    el.innerHTML='<option value="">-- Select Profession | پیشہ منتخب کریں --</option>';
+    PROF_LIST.forEach(p=>{
+      const o=document.createElement('option');
+      o.value=p.en;
+      o.textContent=p.en+' — '+p.ur;
+      if(p.en===cur)o.selected=true;
+      el.appendChild(o);
+    });
+    // Add any custom professions not in PROF_LIST
+    PROFESSIONS.filter(pr=>!PROF_LIST.find(p=>p.en===pr)).forEach(pr=>{
+      const o=document.createElement('option');
+      o.value=pr;o.textContent=pr;
+      if(pr===cur)o.selected=true;
+      el.appendChild(o);
+    });
+  });
+}
 function previewImg(inp,imgId,plusId){
   const f=document.getElementById(inp).files[0];if(!f)return;
   const r=new FileReader();r.onload=e=>{const im=document.getElementById(imgId);im.src=e.target.result;im.style.display='block';const pl=document.getElementById(plusId);if(pl)pl.style.display='none';};r.readAsDataURL(f);
@@ -595,7 +664,7 @@ function openReg(role){
   const msgs={user:'✅ Direct login — no approval required.',admin:'⚠️ Admin account requires developer approval.',manager:'⚠️ Manager account requires developer approval.',developer:'⚙️ Developer account is approved via master key.'};
   const cls={user:'success',admin:'warning',manager:'warning',developer:'info'};
   n.className='info-box '+cls[role];n.textContent=msgs[role];n.style.display='block';
-  document.getElementById('regSubtitle').textContent=role==='user'?'Seedha login hoga':'Approval ke baad login hoga';
+  document.getElementById('regSubtitle').textContent=role==='user'?'Direct login — no approval needed | براہ راست لاگ ان':'Login after developer approval | منظوری کے بعد لاگ ان';
   document.getElementById('regAutoIdDisplay').innerHTML='Auto ID: <span class="id-badge">'+nextAllId()+'</span>';
   ['regName','regCnic','regMobile','regPassword','regConfirmPassword'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('regAvatarPreview').style.display='none';document.getElementById('regAvatarPlus').style.display='block';
@@ -629,7 +698,7 @@ function submitReg(){
   const cnic=document.getElementById('regCnic').value.trim();
   const password=document.getElementById('regPassword').value.trim();
   const confirm=document.getElementById('regConfirmPassword').value.trim();
-  if(!name||!mobile||!password||!cnic){showPopup('⚠️','Incomplete','Name, CNIC, mobile and password are required.');return;}
+  if(!name||!mobile||!password){showPopup('⚠️','Incomplete','Name, mobile and password are required.');return;}
   const mobileDigits=normMob(mobile);
   if(mobileDigits.length!==11){showPopup('⚠️','Mobile Short','Mobile must be exactly 11 digits. Entered: '+mobileDigits.length);return;}
   const cnicDigits=normCnic(cnic);
@@ -716,6 +785,40 @@ function renderLoginExtras(){
   // Bank button
   const bb=document.getElementById('bankBtnWrap');
   if(bb)bb.style.display=ORG_CONFIG.bankAccounts.length>0?'block':'none';
+  // Contact Us button
+  const cb=document.getElementById('contactBtnWrap');
+  if(cb)cb.style.display=(ORG_CONFIG.contactNumbers&&ORG_CONFIG.contactNumbers.length>0)||Object.values(ORG_CONFIG.socialLinks||{}).some(v=>v)?'block':'none';
+  // Update contact screen
+  const cnl=document.getElementById('contactNumbersList');
+  const csl=document.getElementById('contactSocialLinks');
+  const ce=document.getElementById('contactEmpty');
+  const coa=document.getElementById('contactOrgAddr');
+  const coln=document.getElementById('contactOrgName');
+  if(coln)coln.textContent=orgName();
+  if(coa)coa.textContent=ORG_CONFIG.address||'';
+  const clo=document.getElementById('contactLogo');
+  if(clo)clo.innerHTML=ORG_CONFIG.logo?`<img src="${ORG_CONFIG.logo}" style="max-height:70px;max-width:150px;object-fit:contain;border-radius:10px">`:'🕌';
+  if(cnl){
+    const nums=ORG_CONFIG.contactNumbers||[];
+    cnl.innerHTML=nums.map(n=>`
+      <a href="tel:${n.number.replace(/[^0-9+]/g,'')}" style="display:flex;align-items:center;gap:12px;padding:12px;background:#f0fff8;border-radius:10px;border:1px solid #1D9E75;margin-bottom:8px;text-decoration:none">
+        <div style="width:40px;height:40px;background:#1D9E75;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">📞</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700;color:#0F6E56">${n.label||'Contact'}</div>
+          <div style="font-size:14px;font-weight:600;color:#185FA5;margin-top:2px">${n.number}</div>
+        </div>
+        <div style="font-size:12px;color:#1D9E75;font-weight:600">Call ☎️</div>
+      </a>`).join('');
+  }
+  if(csl){
+    const icons={facebook:{emoji:'📘',label:'Facebook'},instagram:{emoji:'📸',label:'Instagram'},twitter:{emoji:'🐦',label:'Twitter'},youtube:{emoji:'▶️',label:'YouTube'},whatsapp:{emoji:'💬',label:'WhatsApp'}};
+    const links=Object.entries(ORG_CONFIG.socialLinks||{}).filter(([,v])=>v);
+    csl.innerHTML=links.length?`<div style="font-size:12px;font-weight:600;color:#888;margin-bottom:8px">Social Media</div><div style="display:flex;flex-wrap:wrap;gap:8px">${links.map(([k,v])=>`<a href="${v}" target="_blank" style="display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;padding:10px 14px;background:#f5f5f5;border-radius:10px;border:1px solid #eee"><span style="font-size:24px">${icons[k].emoji}</span><span style="font-size:10px;color:#666">${icons[k].label}</span></a>`).join('')}</div>`:'';
+  }
+  if(ce){
+    const hasInfo=(ORG_CONFIG.contactNumbers&&ORG_CONFIG.contactNumbers.length>0)||Object.values(ORG_CONFIG.socialLinks||{}).some(v=>v);
+    ce.style.display=hasInfo?'none':'block';
+  }
   // History content
   const hc=document.getElementById('historyContent');
   const he=document.getElementById('historyEmpty');
@@ -767,7 +870,7 @@ function getTabs(){
   // My Entries: only user, admin, manager (NOT developer)
   if(['user','admin','manager'].includes(currentRole)) t.splice(t.findIndex(x=>x.key==='area'),0,{label:'My Entries / میری اندراجات',key:'myentries'});
   // Donor list, slip, top: not for user
-  if(currentRole!=='user') t.push({label:'Donors / عطیہ دہندگان',key:'donorlist'},{label:'Fund / فنڈ',key:'fundreport'},{label:'Slip / سلپ',key:'slip'},{label:'Top 10 / سرفہرست',key:'top'},{label:'Transfer / منتقلی',key:'transfer'});
+  if(currentRole!=='user') t.push({label:'Donors / عطیہ دہندگان',key:'donorlist'},{label:'Slip / سلپ',key:'slip'},{label:'Top 10 / سرفہرست',key:'top'},{label:'Transfer / منتقلی',key:'transfer'});
   // Admin: deceased confirmation tab
   if(currentRole==='admin') t.push({label:'Deceased Confirm',key:'decconfirm'});
   // Developer only tabs
@@ -802,65 +905,153 @@ T.donation=function(){
   return `<div class="card"><h3><span class="bi-title"><span class="bi-en">Donation Entry</span><span class="bi-ur">چندہ درج کریں</span></span></h3>
     <div class="info-box info">Enter Personal ID or Mobile — existing donor data will auto-fill. | پرسنل ID یا موبائل درج کریں — ڈیٹا خودبخود آ جائے گا۔</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <div><label>Personal ID</label><input type="text" id="fetchById" placeholder="P1004..." oninput="autoFetchDonor()"></div>
-      <div><label>Mobile No</label><input type="text" id="fetchByMob" placeholder="03XX..." oninput="autoFetchDonorMob()"></div>
+      <div>
+        <label>Personal ID or Mobile No <span style="font-size:10px;color:#1D9E75">ID یا موبائل نمبر</span></label>
+        <div class="inp-wrap"><span class="inp-icon">🔍</span><input type="text" id="fetchById" placeholder="Enter ID (e.g. 10001) or Mobile (0300-1234567)" oninput="autoFetchDonorUnified(this.value)" maxlength="15" style="font-size:12px"></div>
+        <div id="unifiedFetchStatus" style="display:none;margin-top:4px"></div>
+      </div>
     </div>
     <div id="donorFetchResult"></div>
-    <div style="background:#f9f9f9;border-radius:8px;padding:10px;margin-top:10px">
-      <div style="font-size:12px;color:#888;margin-bottom:6px">Donor photo (from gallery)</div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <div class="avatar-box" style="width:50px;height:50px" onclick="document.getElementById('donorPhotoInput').click()"><img id="donorAvatarPreview" src="" style="display:none"><span id="donorAvatarPlus" style="font-size:18px;color:#aaa">+</span></div>
-        <div style="font-size:11px;color:#888">Tap to choose</div>
+
+    <!-- NEW DONOR fields — only shown when donor NOT found -->
+    <div id="donorNewFields">
+      <div style="background:#f9f9f9;border-radius:8px;padding:10px;margin-top:10px">
+        <div style="font-size:12px;color:#888;margin-bottom:6px">Donor Photo <span style="font-size:10px;color:#1D9E75">تصویر</span></div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="avatar-box" style="width:50px;height:50px" onclick="document.getElementById('donorPhotoInput').click()"><img id="donorAvatarPreview" src="" style="display:none"><span id="donorAvatarPlus" style="font-size:18px;color:#aaa">+</span></div>
+          <div style="font-size:11px;color:#888">Tap to add photo</div>
+        </div>
+        <input type="file" accept="image/*" id="donorPhotoInput" style="display:none" onchange="previewImg('donorPhotoInput','donorAvatarPreview','donorAvatarPlus')">
       </div>
-      <input type="file" accept="image/*" id="donorPhotoInput" style="display:none" onchange="previewImg('donorPhotoInput','donorAvatarPreview','donorAvatarPlus')">
+      <div style="background:#E1F5EE;border-radius:8px;padding:8px 10px;margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;color:#0F6E56">Auto ID:</span><span class="id-badge" id="autoIdDisplay">${nextAllId()} (new)</span>
+      </div>
+      <label>Donor Name * <span style="font-size:10px;color:#1D9E75;font-weight:500">عطیہ دہندہ</span></label>
+      <div class="inp-wrap"><span class="inp-icon">👤</span><input type="text" id="donorName" placeholder="Full Name"></div>
+      <label>Mobile No * <span style="font-size:10px;color:#1D9E75;font-weight:500">موبائل نمبر</span></label>
+      <input type="text" id="donorMobile" placeholder="0300-1234567" maxlength="12" oninput="autoFormatMobile(this,'donorMobileStatus');checkDonorMobileAF(this.value)">
+      <div id="donorMobileStatus" style="display:none;margin-top:4px;font-size:12px;padding:6px 10px;border-radius:6px"></div>
+      <label>Area <span style="font-size:10px;color:#1D9E75;font-weight:500">علاقہ</span></label>
+      <select id="donorArea" class="area-sel"></select>
     </div>
-    <div style="background:#E1F5EE;border-radius:8px;padding:8px 10px;margin-top:8px;display:flex;justify-content:space-between;align-items:center">
-      <span style="font-size:12px;color:#0F6E56">Auto ID:</span><span class="id-badge" id="autoIdDisplay">${nextAllId()} (new)</span>
+    <!-- END NEW DONOR fields -->
+
+    <input type="hidden" id="donorCnic" value="">
+    <input type="hidden" id="donorProfession" value="">
+    <input type="hidden" id="donorBankAccount" value="">
+
+    <!-- AMOUNT section — always shown after donor found/filled -->
+    <div id="donorAmountSection" style="display:none">
+      <label>Amount (Rs) * <span style="font-size:10px;color:#1D9E75;font-weight:500">رقم</span></label>
+      <div class="inp-wrap"><span class="inp-icon">💰</span><input type="number" id="donorAmount" placeholder="Amount in Rs"></div>
+      <label>Description <span style="font-size:10px;color:#1D9E75;font-weight:500">تفصیل</span></label>
+      <div class="inp-wrap"><span class="inp-icon">📝</span><input type="text" id="donorDesc" placeholder="Note (optional)"></div>
+      <button class="btn btn-primary" style="margin-top:12px" onclick="submitDonation()">
+        <span style="font-size:13px">Save Entry</span>
+        <span style="font-size:10px;opacity:0.85;display:block">محفوظ کریں</span>
+      </button>
     </div>
-    <label>Donor Name * <span style="font-size:10px;color:#1D9E75;font-weight:500">عطیہ دہندہ</span></label><div class="inp-wrap"><span class="inp-icon">👤</span><input type="text" id="donorName" placeholder="Name"></div>
-    <label>Mobile No * <span style="font-size:10px;color:#1D9E75;font-weight:500">موبائل نمبر</span></label>
-    <input type="text" id="donorMobile" placeholder="0300-1234567" maxlength="12" oninput="autoFormatMobile(this,'donorMobileStatus');checkDonorMobileAF(this.value)">
-    <div id="donorMobileStatus" style="display:none;margin-top:4px;font-size:12px;padding:6px 10px;border-radius:6px"></div>
-    <label>CNIC No * <span style="font-size:10px;color:#1D9E75;font-weight:500">شناختی کارڈ</span></label>
-    <input type="text" id="donorCnic" placeholder="00000-0000000-0" maxlength="15" oninput="autoFormatCnic(this,'donorCnicStatus');checkDonorCnicAF(this.value)">
-    <div id="donorCnicStatus" style="display:none;margin-top:4px;font-size:12px;padding:6px 10px;border-radius:6px"></div>
-    <label>Profession <span style="font-size:10px;color:#1D9E75;font-weight:500">پیشہ</span></label><select id="donorProfession" class="prof-sel"></select>
-    <label>Area <span style="font-size:10px;color:#1D9E75;font-weight:500">علاقہ</span></label><select id="donorArea" class="area-sel"></select>
-    <label>Amount (Rs) * <span style="font-size:10px;color:#1D9E75;font-weight:500">رقم</span></label><div class="inp-wrap"><span class="inp-icon">💰</span><input type="number" id="donorAmount" placeholder="Amount"></div>
-    <label>Description <span style="font-size:10px;color:#1D9E75;font-weight:500">تفصیل</span></label><div class="inp-wrap"><span class="inp-icon">📝</span><input type="text" id="donorDesc" placeholder="Note"></div>
-    <button class="btn btn-primary" style="margin-top:12px" onclick="submitDonation()"><span style="font-size:13px">Save Entry</span><span style="font-size:10px;opacity:0.85;display:block">محفوظ کریں</span></button>
   </div>`;
 };
 
-function autoFetchDonor(){
-  const bi=(document.getElementById('fetchById').value||'').trim();
-  if(bi.length<4)return;
-  const found=DB.donors.find(d=>d.id.toLowerCase()===bi.toLowerCase());
-  fillDonorFetch(found);
+function autoFetchDonorUnified(val){
+  val=(val||'').trim();
+  const statusEl=document.getElementById('unifiedFetchStatus');
+  const res=document.getElementById('donorFetchResult');
+  if(!val){
+    if(statusEl)statusEl.style.display='none';
+    if(res)res.innerHTML='';
+    // Clear all form fields
+    ['donorName','donorMobile','donorCnic','donorAmount','donorDesc'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    // Unlock mobile field
+    const mobUnlock=document.getElementById('donorMobile');
+    if(mobUnlock){mobUnlock.readOnly=false;mobUnlock.style.background='';mobUnlock.style.color='';mobUnlock.style.fontWeight='';};
+    const ae=document.getElementById('donorArea');if(ae)ae.selectedIndex=0;
+    const pi=document.getElementById('donorAvatarPreview');if(pi){pi.src='';pi.style.display='none';}
+    const pp=document.getElementById('donorAvatarPlus');if(pp)pp.style.display='block';
+    const ms=document.getElementById('donorMobileStatus');if(ms)ms.style.display='none';
+    // Reset ID display
+    const d=document.getElementById('autoIdDisplay');if(d)d.textContent=nextAllId()+' (new)';
+    // Show new donor fields, hide amount section
+    const nf=document.getElementById('donorNewFields');if(nf)nf.style.display='block';
+    const af=document.getElementById('donorAmountSection');if(af)af.style.display='none';
+    return;
+  }
+  // Detect: if starts with 03 (mobile) or pure digits >= 10 chars = mobile
+  // else treat as ID (pure numeric ID like 10001)
+  const digits=normMob(val);
+  const isMobile=digits.length>=10||(val.startsWith('03'));
+  const isId=!isMobile&&digits.length>=4&&digits.length<=6;
+  const found=isMobile
+    ?[...DB.donors,...DB.users].find(d=>normMob(d.mobile)===digits)
+    :[...DB.donors,...DB.users].find(d=>String(d.id)===String(val));
+  if(found){
+    fillDonorFetch(found);
+    if(statusEl){
+      statusEl.style.display='block';
+      statusEl.innerHTML=`<div style="background:#E1F5EE;border:1px solid #1D9E75;border-radius:6px;padding:6px 10px;font-size:12px;color:#0F6E56">✅ Found: <strong>${found.name}</strong> (${found.id}) — data auto-filled</div>`;
+    }
+  } else {
+    if(res)res.innerHTML='';
+    const d=document.getElementById('autoIdDisplay');if(d)d.textContent=nextAllId()+' (new)';
+    // If looks like mobile — auto-fill mobile field and lock it
+    if(isMobile&&val.length>=10){
+      const mobField=document.getElementById('donorMobile');
+      if(mobField){
+        mobField.value=val;
+        autoFormatMobile(mobField,null);
+        mobField.readOnly=true;
+        mobField.style.background='#f0fff8';
+        mobField.style.color='#0F6E56';
+        mobField.style.fontWeight='600';
+      }
+      if(statusEl){
+        statusEl.style.display='block';
+        statusEl.innerHTML=`<div style="background:#E1F5EE;border:1px solid #1D9E75;border-radius:6px;padding:6px 10px;font-size:12px;color:#0F6E56">📱 Mobile auto-filled — new donor. ID: <strong>${nextAllId()}</strong></div>`;
+      }
+      const nfm=document.getElementById('donorNewFields');if(nfm)nfm.style.display='block';
+      const afm=document.getElementById('donorAmountSection');if(afm)afm.style.display='block';
+      setTimeout(()=>{const nf=document.getElementById('donorName');if(nf)nf.focus();},150);
+    } else if(val.length>3){
+      if(statusEl){
+        statusEl.style.display='block';
+        statusEl.innerHTML=`<div style="background:#f9f9f9;border:1px solid #ddd;border-radius:6px;padding:6px 10px;font-size:12px;color:#888">🆕 New donor — fill details below. New ID: <strong>${nextAllId()}</strong></div>`;
+      }
+      // Show full form for new donor
+      const nfd=document.getElementById('donorNewFields');if(nfd)nfd.style.display='block';
+      const afd=document.getElementById('donorAmountSection');if(afd)afd.style.display='block';
+    } else {
+      if(statusEl)statusEl.style.display='none';
+    }
+  }
 }
-function autoFetchDonorMob(){
-  const bm=(document.getElementById('fetchByMob').value||'').trim();
-  if(bm.length<8)return;
-  const found=DB.donors.find(d=>d.mobile.replace(/-/g,'')===bm.replace(/-/g,''));
-  fillDonorFetch(found);
-}
+function autoFetchDonor(){autoFetchDonorUnified((document.getElementById('fetchById').value||'').trim());}
+function autoFetchDonorMob(){autoFetchDonorUnified((document.getElementById('fetchByMob')||{value:''}).value);}
 function fillDonorFetch(found){
   const res=document.getElementById('donorFetchResult');
-  if(!found){res.innerHTML='';const d=document.getElementById('autoIdDisplay');if(d)d.textContent=nextAllId()+' (new)';return;}
+  if(!found){if(res)res.innerHTML='';const d=document.getElementById('autoIdDisplay');if(d)d.textContent=nextAllId()+' (new)';return;}
   document.getElementById('donorName').value=found.name;
   document.getElementById('donorMobile').value=found.mobile;
-  document.getElementById('donorCnic').value=found.cnic||'';
+  if(document.getElementById('donorCnic'))document.getElementById('donorCnic').value=found.cnic||'';
+  const ad=document.getElementById('autoIdDisplay');if(ad)ad.textContent=found.id;
+  if(res)res.innerHTML=`<div class="fetch-card">${avatarHtml(found.photo,found.name,42)}<div><div style="font-size:13px;font-weight:600">${found.name} <span class="id-badge">${found.id}</span></div><div style="font-size:11px;color:#888;margin-top:2px">${found.area||''} • Total: Rs ${fmt(found.totalDonation||0)}</div></div></div>`;
   setTimeout(()=>{
-    const ae=document.getElementById('donorArea');if(ae)ae.value=found.area;
+    const ae=document.getElementById('donorArea');if(ae)ae.value=found.area||'';
     const pe=document.getElementById('donorProfession');if(pe)pe.value=found.profession||'';
   },100);
-  if(found.photo){const pi=document.getElementById('donorAvatarPreview');pi.src=found.photo;pi.style.display='block';document.getElementById('donorAvatarPlus').style.display='none';}
-  document.getElementById('autoIdDisplay').textContent=found.id+' (existing)';
-  res.innerHTML=`<div class="fetch-card">${avatarHtml(found.photo,found.name,42)}<div><div style="font-size:13px;font-weight:600">${found.name} <span class="id-badge">${found.id}</span></div><div style="font-size:11px;color:#888;margin-top:2px">${found.area} • ${found.profession||''} • Kul: Rs ${fmt(found.totalDonation)}</div></div></div>`;
+  if(found.photo){const pi=document.getElementById('donorAvatarPreview');if(pi){pi.src=found.photo;pi.style.display='block';const ap=document.getElementById('donorAvatarPlus');if(ap)ap.style.display='none';}}
+  const ad2=document.getElementById('autoIdDisplay');if(ad2)ad2.textContent=found.id;
+  if(res)res.innerHTML=`<div class="fetch-card" style="margin-bottom:8px">${avatarHtml(found.photo,found.name,42)}<div><div style="font-size:13px;font-weight:600">${found.name} <span class="id-badge">${found.id}</span></div><div style="font-size:11px;color:#888;margin-top:2px">${found.area||''} • Total: Rs ${fmt(found.totalDonation||0)}</div></div></div>`;
+  // Hide new donor fields, show only amount+desc
+  const nf=document.getElementById('donorNewFields');if(nf)nf.style.display='none';
+  const af=document.getElementById('donorAmountSection');if(af){af.style.display='block';const amtEl=af.querySelector('#donorAmount');if(amtEl)amtEl.focus();}
 }
 
 // ---- AUTO CHECK FUNCTIONS ----
 function normMob(m){return (m||'').replace(/[^0-9]/g,'');}
+function callMobile(mob){if(mob)window.location.href='tel:'+normMob(mob);}
+function callableNum(mob){return mob?`<a href="tel:${normMob(mob)}" onclick="event.stopPropagation()" style="color:#185FA5;text-decoration:none;font-weight:600">${mob} 📞</a>`:mob;}
+
 function normCnic(c){return (c||'').replace(/[^0-9]/g,'');}
 
 // Auto-format mobile: 0300-1234567 (4-7 pattern)
@@ -1043,7 +1234,7 @@ function submitDonation(){
   const amount=parseInt(document.getElementById('donorAmount').value)||0;
   const mobile=document.getElementById('donorMobile').value.trim();
   const cnic=document.getElementById('donorCnic').value.trim();
-  if(!name||!amount||!mobile||!cnic){showPopup('⚠️','Incomplete','Name, mobile, CNIC and amount are required.');return;}
+  if(!name||!amount||!mobile){showPopup('⚠️','Incomplete','Name, mobile and amount are required.');return;}
   const fi=document.getElementById('donorPhotoInput');
   if(fi.files[0]){const r=new FileReader();r.onload=e=>finishDonation(name,amount,mobile,cnic,e.target.result);r.readAsDataURL(fi.files[0]);}
   else finishDonation(name,amount,mobile,cnic,null);
@@ -1065,7 +1256,9 @@ function finishDonation(name,amount,mobile,cnic,photo){
   const t=today();const desc=document.getElementById('donorDesc').value||'Donation';
   const eid=nextEntryId();
   donor.entries.push({id:eid,date:t,amount,by:currentUser.id,desc});
-  const txO={id:'TXN'+String(txnCounter++).padStart(3,'0'),donorId:donor.id,amount,date:t,by:currentUser.id,desc};
+  const bankIdx=(document.getElementById('donorBankAccount')||{value:''}).value;
+  const bankRef=bankIdx!==''&&ORG_CONFIG.bankAccounts[parseInt(bankIdx)]?ORG_CONFIG.bankAccounts[parseInt(bankIdx)].title:null;
+  const txO={id:'TXN'+String(txnCounter++).padStart(3,'0'),donorId:donor.id,amount,date:t,by:currentUser.id,desc,bankAccount:bankRef};
   DB.donations.push(txO);FS.save('donations',txO.id,txO);
   FS.save('donors',donor.id,donor);
   DB.auditLog.push({by:currentUser.id,action:'Donation Entry',target:donor.name,detail:'Rs '+fmt(amount)+' — '+desc,date:t});
@@ -1226,6 +1419,7 @@ T.area=function(){
   const gi=Object.values(byArea).reduce((s,v)=>s+v.income,0),ge=Object.values(byArea).reduce((s,v)=>s+v.expense,0);
   const dlBarArea=addDownloadBar('Area Report | علاقہ وار رپورٹ','areaReport');
   return `<div id="areaReport">${dlBarArea}<div class="card">
+    <button onclick="openSMSReminders()" style="width:100%;background:linear-gradient(135deg,#1D9E75,#0F6E56);color:#fff;border:none;padding:10px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:10px">📱 SMS Reminders | یاد دہانی</button>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
       <div class="stat-card"><div class="stat-label">Total Income</div><div class="stat-val" style="color:#0F6E56;font-size:15px">Rs ${fmt(gi)}</div></div>
       <div class="stat-card"><div class="stat-label">Total Expenses</div><div class="stat-val" style="color:#E24B4A;font-size:15px">Rs ${fmt(ge)}</div></div>
@@ -1369,7 +1563,7 @@ T.ledger=function(){
       <div><label>To Date <span style="font-size:10px;color:#1D9E75;font-weight:500">تک</span></label><div class="inp-wrap"><span class="inp-icon">📅</span><input type="date" id="ledgerTo"</div> value="${t}"></div>
     </div>
     <label>Area <span style="font-size:10px;color:#1D9E75;font-weight:500">علاقہ</span></label><select id="ledgerArea" class="area-sel"></select>
-    <label>User (Admin / Manager / User)</label><select id="ledgerUser"><option value="">-- All --</option>${DB.users.filter(u=>u.approved&&['admin','manager','user'].includes(u.role)).map(u=>`<option value="${u.id}">${u.name} — ${u.role} (${u.id})</option>`).join('')}</select>
+    ${(currentRole==='developer'||currentRole==='manager')?`<label>View User Ledger <span style="font-size:10px;color:#1D9E75">کس کا کھاتہ</span></label><select id="ledgerUser"><option value="${currentUser.id}">My Ledger (${currentUser.name})</option>${DB.users.filter(u=>u.approved&&['admin','manager','developer'].includes(u.role)&&u.id!==currentUser.id).map(u=>`<option value="${u.id}">${u.name} — ${u.role}</option>`).join('')}</select>`:`<input type="hidden" id="ledgerUser" value="${currentUser.id}">`}
     <button class="btn btn-primary" onclick="generateLedger()"><span style="font-size:13px">Generate Report</span><span style="font-size:10px;opacity:0.85;display:block">رپورٹ بنائیں</span></button>
   </div><div id="ledgerResult"></div>`;
 };
@@ -1377,10 +1571,11 @@ function generateLedger(){
   const from=document.getElementById('ledgerFrom').value,to=document.getElementById('ledgerTo').value;
   const fa=document.getElementById('ledgerArea').value,fu=document.getElementById('ledgerUser').value;
   if(!from||!to){showPopup('⚠️','Incomplete','Please select a date range.');return;}
+  const fu2=document.getElementById('ledgerUser')?document.getElementById('ledgerUser').value:(fu||currentUser.id);
   const all=[];
-  DB.donations.forEach(d=>{const dn=DB.donors.find(x=>x.id===d.donorId)||{area:'',name:'?'};if(fa&&dn.area!==fa)return;if(fu&&d.by!==fu)return;all.push({date:d.date,desc:'Income: '+dn.name,credit:d.amount,debit:0});});
-  DB.expenses.forEach(e=>{if(fa&&e.area!==fa)return;if(fu&&e.by!==fu)return;all.push({date:e.date,desc:'Expense: '+e.desc,credit:0,debit:e.amount});});
-  DB.transfers.filter(t=>t.received).forEach(t=>{const fU=DB.users.find(u=>u.id===t.from)||{name:'?'};const tU=DB.users.find(u=>u.id===t.to)||{name:'?'};if(!fu||t.from===fu)all.push({date:t.date,desc:'Transfer to '+tU.name,credit:0,debit:t.amount});if(!fu||t.to===fu)all.push({date:t.date,desc:'Transfer from '+fU.name,credit:t.amount,debit:0});});
+  DB.donations.forEach(d=>{const dn=DB.donors.find(x=>x.id===d.donorId)||{area:'',name:'?'};if(fa&&dn.area!==fa)return;if(fu2&&d.by!==fu2)return;all.push({date:d.date,desc:'Income: '+dn.name,credit:d.amount,debit:0});});
+  DB.expenses.forEach(e=>{if(fa&&e.area!==fa)return;if(fu2&&e.by!==fu2)return;all.push({date:e.date,desc:'Expense: '+e.desc,credit:0,debit:e.amount});});
+  DB.transfers.filter(t=>t.received).forEach(t=>{const fU=DB.users.find(u=>u.id===t.from)||{name:'?'};const tU=DB.users.find(u=>u.id===t.to)||{name:'?'};if(!fu2||t.from===fu2)all.push({date:t.date,desc:'Transfer to '+tU.name,credit:0,debit:t.amount});if(!fu2||t.to===fu2)all.push({date:t.date,desc:'Transfer from '+fU.name,credit:t.amount,debit:0});});
   all.sort((a,b)=>a.date.localeCompare(b.date));
   const before=all.filter(t=>t.date<from),inR=all.filter(t=>t.date>=from&&t.date<=to);
   const ob=before.reduce((s,t)=>s+(t.credit-t.debit),0),ri=inR.reduce((s,t)=>s+t.credit,0),re=inR.reduce((s,t)=>s+t.debit,0);
@@ -1639,7 +1834,7 @@ function doSearch(){
   const deceased=DB.deceased.filter(d=>d.name.toLowerCase().includes(q)||d.area.toLowerCase().includes(q)||d.id.toLowerCase().includes(q));
   const users=DB.users.filter(u=>u.name.toLowerCase().includes(q)||u.mobile.includes(q)||u.id.toLowerCase().includes(q)||u.cnic.includes(q));
   let html='';
-  if(donors.length){html+=`<div class="section-bi"><span class="bi-en">Donors</span><span class="bi-ur">عطیہ دہندگان</span></div>`;donors.forEach(d=>{html+=`<div class="entry-row"><div style="display:flex;align-items:center;gap:8px;flex:1">${avatarHtml(d.photo,d.name,30)}<div><div class="entry-name">${d.name} <span class="id-badge">${d.id}</span></div><div class="entry-sub">${d.mobile} • ${d.area} • ${d.profession||''}</div></div></div><div class="entry-amt">Rs ${fmt(d.totalDonation)}</div></div>`;});}
+  if(donors.length){html+=`<div class="section-bi"><span class="bi-en">Donors</span><span class="bi-ur">عطیہ دہندگان</span></div>`;donors.forEach(d=>{html+=`<div class="entry-row"><div style="display:flex;align-items:center;gap:8px;flex:1">${avatarHtml(d.photo,d.name,30)}<div><div class="entry-name">${d.name} <span class="id-badge">${d.id}</span></div><div class="entry-sub">${callableNum(d.mobile)} • ${d.area}</div></div></div></div>`;});}
   if(deceased.length){html+=`<div class="section-bi"><span class="bi-en">Deceased</span><span class="bi-ur">مرحومین</span></div>`;deceased.forEach(d=>{html+=`<div class="entry-row"><div><div class="entry-name">${d.name} <span class="badge badge-manager">${d.id}</span></div><div class="entry-sub">${d.area} • ${d.dateOfDeath}</div></div><span class="badge ${d.approved?'badge-user':'badge-pending'}">${d.approved?'Approved':'Pending'}</span></div>`;});}
   if(users.length){html+=`<div class="section-bi"><span class="bi-en">Users</span><span class="bi-ur">صارفین</span></div>`;users.forEach(u=>{html+=`<div class="entry-row"><div style="display:flex;align-items:center;gap:8px">${avatarHtml(u.photo,u.name,30)}<div><div class="entry-name">${u.name} <span class="id-badge">${u.id}</span></div><div class="entry-sub">${u.role} • ${u.mobile} • ${u.profession||''}</div></div></div></div>`;});}
   if(!html)html='<p style="font-size:13px;color:#888">No results found.</p>';
@@ -1722,7 +1917,7 @@ function genFundReport(){
   const monthLabel=new Date(yr,parseInt(mo)-1,1).toLocaleString('en-PK',{month:'long',year:'numeric'});
 
   if(filtered.length===0){
-    document.getElementById('fundReportResult').innerHTML=`<div class="card"><p style="font-size:13px;color:#888">Is filter ke mutabiq koi donor nahi mila.</p></div>`;
+    document.getElementById('fundReportResult').innerHTML=`<div class="card"><p style="font-size:13px;color:#888">No donors found for selected filter. | منتخب فلٹر کے مطابق کوئی ڈونر نہیں ملا</p></div>`;
     return;
   }
 
@@ -1806,7 +2001,7 @@ T.slip=function(){
 };
 function generateSlip(){
   const raw=(document.getElementById('slipSearch').value||'').trim();
-  if(!raw){showPopup('⚠️','Khaali','ID ya mobile zaruri.');return;}
+  if(!raw){showPopup('⚠️','Required','Personal ID or Mobile is required. | ID یا موبائل ضروری ہے');return;}
   const donor=DB.donors.find(d=>d.id.toLowerCase()===raw.toLowerCase()||d.mobile.replace(/-/g,'').includes(raw.replace(/-/g,'')));
   const res=document.getElementById('slipResult');
   if(!donor){res.innerHTML=`<div class="info-box warning">Donor nahi mila: "${raw}"</div>`;return;}
@@ -1937,7 +2132,7 @@ function doTransfer(){
   const trO={id:tid,from:currentUser.id,to,amount,date:today(),note:document.getElementById('transferNote').value,received:false};
   DB.transfers.push(trO);FS.save('transfers',tid,trO);
   const tu=DB.users.find(u=>u.id===to)||{name:'?'};
-  showPopup('✅','Transfer Sent','Rs '+fmt(amount)+' bheji gayi '+tu.name+' ko.');
+  showPopup('✅','Transfer Sent','Rs '+fmt(amount)+' sent to '+tu.name+'. | '+tu.name+' کو بھیجی گئی');
   renderTab('transfer');
 }
 function markReceived(tid){
@@ -1980,7 +2175,7 @@ function myEntriesHtml(){
   html+=`</div>`;
   return html;
 }
-T.myentries=function(){return myEntriesHtml();};
+T.myentries=function(){return myEntriesHtml(false);};function showAllEntries(){const el=document.getElementById('tabContent');if(el)el.innerHTML=myEntriesHtml(true);}
 
 function editDonation(id){
   const d=DB.donations.find(x=>x.id===id);if(!d)return;
@@ -2049,7 +2244,7 @@ function deleteExpense(id){
 }
 
 // ---- EXPENSE ENTRY (admin, manager, developer only) ----
-const EXP_CATEGORIES=['Maintenance','Cleaning','Repair','Equipment','Supplies','Salaries','Utilities','Transport','Miscellaneous'];
+let EXP_CATEGORIES=['Maintenance','Cleaning','Repair','Equipment','Supplies','Salaries','Utilities','Transport','Miscellaneous'];
 
 function nextBillNo(){
   const nums=DB.expenses.map(e=>parseInt((e.billNo||'BILL-0000').replace('BILL-',''))||0);
@@ -2081,7 +2276,7 @@ T.expense=function(){
     <label>Category <span style="font-size:10px;color:#1D9E75;font-weight:500">زمرہ</span></label>
     <select id="expCategory">
       <option value="">-- Category --</option>
-      ${EXP_CATEGORIES.map(c=>`<option value="${c}">${c}</option>`).join('')}
+      ${EXP_CATEGORIES.map(cat=>`<option value="${cat}">${cat}</option>`).join('')}<option value="__manual__">+ Add new category...</option>
     </select>
     <label>Amount (Rs) * <span style="font-size:10px;color:#1D9E75;font-weight:500">رقم</span></label><div class="inp-wrap"><span class="inp-icon">💵</span><input type="number" id="expAmount" placeholder="Amount" oninput="updateExpBalance(this.value)"></div>
     <label>Date * <span style="font-size:10px;color:#1D9E75;font-weight:500">تاریخ</span></label><div class="inp-wrap"><span class="inp-icon">📅</span><input type="date" id="expDate" value="${today()}"></div>
@@ -2158,7 +2353,7 @@ function updateExpBalance(val){
   box.style.display='block';
   if(after<0){
     box.style.background='#FCEBEB';box.style.color='#A32D2D';box.style.border='1px solid #E24B4A';
-    box.innerHTML='⚠️ Cash in Hand after expense: <strong>Rs '+fmt(after)+'</strong> — Balance kafi nahi!';
+    box.innerHTML='⚠️ Cash in Hand after expense: <strong>Rs '+fmt(after)+'</strong> — Insufficient balance! | ناکافی بیلنس';
   } else {
     box.style.background='#E6F1FB';box.style.color='#185FA5';box.style.border='1px solid #378ADD';
     box.innerHTML='ℹ️ Cash in Hand after expense: <strong>Rs '+fmt(after)+'</strong>';
@@ -2406,6 +2601,20 @@ T.orgsettings=function(){
   </div>
 
   <div class="card">
+    <h3>📞 Contact Numbers <span style="font-size:10px;color:#1D9E75">رابطہ نمبر</span></h3>
+    <p style="font-size:12px;color:#888;margin-bottom:10px">Shown on Contact Us page | رابطہ صفحے پر</p>
+    ${(ORG_CONFIG.contactNumbers||[]).length===0?'<p style="font-size:13px;color:#888;margin-bottom:8px">No numbers added. | کوئی نمبر نہیں</p>':(ORG_CONFIG.contactNumbers||[]).map((n,i)=>`
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f0fff8;border-radius:8px;border:1px solid #1D9E75;margin-bottom:6px">
+        <div style="flex:1"><div style="font-size:12px;font-weight:700;color:#0F6E56">${n.label}</div><div style="font-size:13px;font-weight:600;color:#185FA5">${n.number}</div></div>
+        <button class="btn-xs" style="background:#E24B4A;color:#fff;border:none;cursor:pointer" onclick="removeContactNumber(${i})">🗑️</button>
+      </div>`).join('')}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+      <div class="inp-wrap"><span class="inp-icon">🏷️</span><input type="text" id="cnLabel" placeholder="Label (e.g. Office)"></div>
+      <div class="inp-wrap"><span class="inp-icon">📞</span><input type="text" id="cnNumber" placeholder="0300-1234567" maxlength="12" oninput="autoFormatMobile(this,null)"></div>
+    </div>
+    <button class="btn btn-primary" style="margin-top:8px" onclick="addContactNumber()">+ Add Number | نمبر شامل کریں</button>
+  </div>
+  <div class="card">
     <h3>🌐 Social Media Links</h3>
     <p style="font-size:12px;color:#888;margin-bottom:8px">Social icons will appear on the main page. Leave blank to hide.</p>
     <label>📘 Facebook URL</label><input type="url" id="slFacebook" value="${sl.facebook||''}" placeholder="https://facebook.com/...">
@@ -2494,24 +2703,24 @@ function saveOrgName(){
   if(!en){showPopup('⚠️','Required','English name is required.');return;}
   ORG_CONFIG.name=en;if(ur)ORG_CONFIG.nameUrdu=ur;
   FS.saveConfig();renderLoginExtras();
-  showPopup('✅','Saved','Organization name saved — updated everywhere!');
+  showPopup('✅','Saved','Organization name saved — updated everywhere! | ادارے کا نام محفوظ ہو گیا');
 }
 function saveOrgAddress(){
   ORG_CONFIG.address=document.getElementById('orgAddress').value.trim();
   FS.saveConfig();renderLoginExtras();
-  showPopup('✅','Saved','Address saved.');
+  showPopup('✅','Saved','Address saved. | پتہ محفوظ ہو گیا');
 }
 function saveOrgHistory(){
   ORG_CONFIG.history=document.getElementById('orgHistory').value.trim();
   FS.saveConfig();renderLoginExtras();
-  showPopup('✅','Saved','History saved. "View Our History" button nazar ayega.');
+  showPopup('✅','Saved','History saved. | تاریخ محفوظ ہو گئی');
 }
 function uploadOrgLogo(){
   const f=document.getElementById('orgLogoInput').files[0];if(!f)return;
   const r=new FileReader();r.onload=e=>{
     ORG_CONFIG.logo=e.target.result;
     FS.saveConfig();renderLoginExtras();
-    showPopup('✅','Save Logod','Logo uploaded successfully. Har jagah show hoga.');
+    showPopup('✅','Logo Saved','Logo uploaded — visible everywhere. | ہر جگہ نظر آئے گا');
     renderTab('orgsettings');
   };r.readAsDataURL(f);
 }
@@ -2548,7 +2757,7 @@ function removeHistoryPhoto(i){
 function editHistoryPhoto(i){
   const p=ORG_CONFIG.historyPhotos[i];if(!p)return;
   editingContext={type:'histphoto',index:i};
-  document.getElementById('editModalTitle').textContent='Photo Edit karein';
+  document.getElementById('editModalTitle').textContent='Edit Photo | تصویر تبدیل کریں';
   document.getElementById('editModalBody').innerHTML=`
     <div style="margin-bottom:10px"><img src="${p.img}" style="width:100%;max-height:150px;object-fit:cover;border-radius:8px"></div>
     <label>Caption / Name</label><input type="text" id="editAmount" value="${p.name||''}">
@@ -2566,6 +2775,25 @@ function editHistoryPhoto(i){
     showPopup('✅','Updated','Photo updated.');
   };
 }
+function addContactNumber(){
+  const label=document.getElementById('cnLabel').value.trim();
+  const number=document.getElementById('cnNumber').value.trim();
+  if(!label||!number){showPopup('⚠️','Required','Label and number are required. | لیبل اور نمبر ضروری ہے');return;}
+  if(!ORG_CONFIG.contactNumbers)ORG_CONFIG.contactNumbers=[];
+  ORG_CONFIG.contactNumbers.push({label,number});
+  FS.saveConfig();renderLoginExtras();
+  document.getElementById('cnLabel').value='';
+  document.getElementById('cnNumber').value='';
+  showPopup('✅','Added','Contact number added. | نمبر شامل ہو گیا');
+  renderTab('orgsettings');
+}
+function removeContactNumber(i){
+  if(!ORG_CONFIG.contactNumbers)return;
+  ORG_CONFIG.contactNumbers.splice(i,1);
+  FS.saveConfig();renderLoginExtras();
+  renderTab('orgsettings');
+  showPopup('🗑️','Removed','Contact number removed.');
+}
 function saveSocialLinks(){
   ORG_CONFIG.socialLinks={
     facebook:document.getElementById('slFacebook').value.trim(),
@@ -2574,8 +2802,8 @@ function saveSocialLinks(){
     youtube:document.getElementById('slYoutube').value.trim(),
     whatsapp:document.getElementById('slWhatsapp').value.trim()
   };
-  renderLoginExtras();
-  showPopup('✅','Saved','Social links saved. Main page pe icons nazar ayenge.');
+  FS.saveConfig();renderLoginExtras();
+  showPopup('✅','Saved','Social links saved. | سوشل لنکس محفوظ ہو گئے');
 }
 // previewBaQr removed
 function previewBaPhoto(){
@@ -2718,7 +2946,7 @@ T.profile=function(){
     </div>`:''}
     <div style="border-top:1px solid #f0f0f0;margin-top:14px;padding-top:12px">
       <div style="font-size:13px;font-weight:600;margin-bottom:8px">Change Password</div>
-      <label>New Password (khali chhorein agar change nahi karna)</label>
+      <label>New Password <span style="font-size:10px;color:#888">(leave blank to keep current | خالی چھوڑیں)</span></label>
       <div style="position:relative"><input type="password" id="profNewPwd" placeholder="New password" style="padding-right:40px"><span onclick="togglePwd('profNewPwd',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:16px;color:#aaa">👁</span></div>
       <label>Confirm Password</label>
       <input type="password" id="profConfirmPwd" placeholder="Confirm password">
@@ -2806,7 +3034,7 @@ function saveProfile(){
 
 function autoPrefixSlip(input){
   let v=input.value;
-  if(v&&!v.startsWith('P')&&!v.startsWith('0')&&/^\d/.test(v)) input.value='P'+v;
+  // No auto P prefix needed — IDs are now numeric
 }
 function autoPrefixDC(input){
   let v=input.value;
@@ -2863,49 +3091,49 @@ function approveDeceased(id){
 
 // ---- LOGIN MANAGEMENT (developer) ----
 T.lockuser=function(){
-  return `<div class="card"><h3><span class="bi-title"><span class="bi-en">Login Management</span><span class="bi-ur">لاگ ان کنٹرول</span></span></h3>
-    ${DB.users.filter(u=>u.role!=='developer'||u.id!=='DEV001').map(u=>`<div class="user-mgmt-row">${avatarHtml(u.photo,u.name,34)}
-      <div style="flex:1"><div style="font-size:13px;font-weight:600">${u.name} <span class="id-badge">${u.id}</span></div><div style="font-size:11px;color:#888">${u.role} • ${u.mobile}</div></div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-        <span class="lock-badge ${u.locked?'locked':'active'}">${u.locked?'🔒 Locked':'✓ Active'}</span>
-        <div style="display:flex;gap:4px">
-          <button class="btn-xs ${u.locked?'btn-primary':'btn-warn'}" style="background:${u.locked?'#1D9E75':'#BA7517'};color:#fff;border:none" onclick="toggleLock('${u.id}')">${u.locked?'Unlock':'Lock'}</button>
-          <button class="btn-xs" style="background:#185FA5;color:#fff;border:none" onclick="resetPassword('${u.id}')">Reset Pwd</button>
+  const users=DB.users.filter(u=>u.role!=='developer');
+  return `<div class="card">
+    <h3><span class="bi-title"><span class="bi-en">Login Management</span><span class="bi-ur">لاگ ان کنٹرول</span></span></h3>
+    <div class="inp-wrap" style="margin-bottom:10px"><span class="inp-icon">🔍</span><input type="text" id="lockUserSearch" placeholder="Search by name or mobile..." oninput="renderLockUserList()" style="font-size:13px"></div>
+    <div id="lockUserList">${renderLockUserListHtml(users,'')}</div>
+  </div>`;
+}
+function renderLockUserListHtml(users,q){
+  const filtered=q?users.filter(u=>u.name.toLowerCase().includes(q.toLowerCase())||normMob(u.mobile).includes(normMob(q))):users;
+  if(!filtered.length)return '<p style="font-size:13px;color:#888">No users found.</p>';
+  return filtered.map(u=>`
+    <div style="background:#f9f9f9;border-radius:8px;padding:10px;margin-bottom:8px;border:1px solid #eee">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:13px;font-weight:700">${u.name} <span class="badge badge-${u.role}">${u.role}</span></div>
+          <div style="font-size:11px;color:#888;margin-top:2px">${u.mobile} • ${u.id}</div>
+          ${u.locked?'<span style="font-size:10px;color:#E24B4A;font-weight:600">🔒 Locked</span>':'<span style="font-size:10px;color:#1D9E75">🔓 Active</span>'}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+          <button class="btn-xs" style="background:${u.locked?'#1D9E75':'#E24B4A'};color:#fff;border:none;cursor:pointer" onclick="toggleLock('${u.id}')">${u.locked?'🔓 Unlock':'🔒 Lock'}</button>
+          <button class="btn-xs" style="background:#185FA5;color:#fff;border:none;cursor:pointer" onclick="resetPwdPrompt('${u.id}')">🔑 Reset</button>
+          <button class="btn-xs" style="background:#E24B4A;color:#fff;border:none;cursor:pointer" onclick="deleteUser('${u.id}')">🗑️ Delete</button>
         </div>
       </div>
-    </div>`).join('')}
-  </div>`;
-};
-function toggleLock(uid){
-  const u=DB.users.find(x=>x.id===uid);if(!u)return;
-  u.locked=!u.locked;FS.save('users',u.id,u);
-  DB.auditLog.push({by:currentUser.id,action:u.locked?'Locked':'Unlocked',target:u.name,detail:'Login '+(u.locked?'lock':'unlock'),date:today()});
-  showPopup(u.locked?'🔒':'🔓',u.locked?'Locked':'Unlocked',u.name+"'s login "+(u.locked?'locked':'unlocked')+".");
-  renderTab('lockuser');
+    </div>`).join('');
 }
-function resetPassword(uid){
-  const u=DB.users.find(x=>x.id===uid);if(!u)return;
-  editingContext={type:'resetpwd',id:uid};
-  document.getElementById('editModalTitle').textContent='Reset Password — '+u.name;
-  document.getElementById('editModalBody').innerHTML=`
-    <div class="info-box info" style="margin-top:0">User: ${u.name} (${u.id})</div>
-    <label>New Password</label><input type="text" id="editAmount" placeholder="New password likhein">
-    <label>Confirm Password</label><input type="text" id="editDesc" placeholder="Confirm password">`;
-  document.getElementById('editModal').style.display='flex';
-  // Override save
-  document.querySelector('#editModal .btn-primary').onclick=function(){
-    const np=document.getElementById('editAmount').value.trim();
-    const cp=document.getElementById('editDesc').value.trim();
-    if(!np||np.length<4){showPopup('⚠️','Error','Password must be at least 4 characters.');return;}
-    if(np!==cp){showPopup('⚠️','Mismatch','Passwords do not match.');return;}
-    const usr=DB.users.find(x=>x.id===uid);
-    if(usr){usr.password=np;FS.save('users',usr.id,usr);DB.auditLog.push({by:currentUser.id,action:'Password Reset',target:usr.name,detail:'Password change kiya',date:today()});}
-    closeModal();
-    showPopup('✅','Reset Done',u.name+' ka password reset ho gaya.');
-  };
+function renderLockUserList(){
+  const q=(document.getElementById('lockUserSearch')||{value:''}).value;
+  const el=document.getElementById('lockUserList');
+  if(el)el.innerHTML=renderLockUserListHtml(DB.users.filter(u=>u.role!=='developer'),q);
+}
+function deleteUser(id){
+  const u=DB.users.find(x=>x.id===id);
+  if(!u)return;
+  if(!confirm('Delete '+u.name+'? This cannot be undone.'))return;
+  DB.users=DB.users.filter(x=>x.id!==id);
+  FS.del('users',id);
+  const al={by:currentUser.id,action:'Deleted User',target:u.name,detail:'ID: '+id,date:today()};
+  DB.auditLog.push(al);FS.save('auditLog','AL'+Date.now(),al);
+  renderTab('lockuser');
+  showPopup('🗑️','Deleted',u.name+' has been deleted.');
 }
 
-// ---- USERS LIST ----
 T.userslist=function(){
   const roles=['user','admin','manager','developer'];
   return roles.map(r=>{
@@ -2928,21 +3156,76 @@ T.userslist=function(){
 
 // ---- PROFESSIONS ----
 T.professions=function(){
-  return `<div class="card"><h3><span class="bi-title"><span class="bi-en">Profession List</span><span class="bi-ur">پیشے</span></span></h3>
-    <p style="font-size:12px;color:#888;margin-bottom:10px">These professions are used in registration and donor entry forms.</p>
-    ${PROFESSIONS.map((p,i)=>`<div class="entry-row"><div class="entry-name">${p}</div>
-      <div style="display:flex;gap:4px">
-        <button class="btn-xs" style="color:#185FA5;border-color:#185FA5;background:#E6F1FB" onclick="editProfession(${i})">Edit</button>
-        <button class="btn-xs" style="color:#E24B4A;border-color:#E24B4A;background:#FCEBEB" onclick="deleteProfession(${i})">Del</button>
+  return `<div class="card">
+    <h3><span class="bi-title"><span class="bi-en">Profession List</span><span class="bi-ur">پیشے</span></span></h3>
+    ${PROFESSIONS.map((p,i)=>`
+      <div class="entry-row" id="profRow_${i}">
+        <div class="entry-name">${p}<span style="font-size:11px;color:#1D9E75;margin-left:8px">${PROF_UR[p]||''}</span></div>
+        <div style="display:flex;gap:4px">
+          <button class="btn-xs" style="background:#1D9E75;color:#fff;border:none;cursor:pointer" onclick="editProfInline(${i})">✏️</button>
+          <button class="btn-xs" style="background:#E24B4A;color:#fff;border:none;cursor:pointer" onclick="deleteProfession(${i})">🗑️</button>
+        </div>
       </div>
-    </div>`).join('')}
-    <div style="display:flex;gap:8px;margin-top:12px">
-      <input type="text" id="newProfInput" placeholder="New profession name" style="flex:1">
-      <button class="btn btn-sm btn-primary" onclick="addProfession()" style="margin-top:0">Add</button>
+      <div id="profEditRow_${i}" style="display:none;padding:6px 0">
+        <div style="display:flex;gap:6px">
+          <input type="text" id="profEditInput_${i}" value="${p}" style="flex:1;padding:6px 10px;border:1px solid #1D9E75;border-radius:6px;font-size:13px">
+          <button class="btn-xs" style="background:#1D9E75;color:#fff;border:none;cursor:pointer" onclick="saveProfEdit(${i})">Save</button>
+          <button class="btn-xs" style="background:#888;color:#fff;border:none;cursor:pointer" onclick="cancelProfEdit(${i})">✕</button>
+        </div>
+      </div>`).join('')}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
+      <div class="inp-wrap"><span class="inp-icon">🇬🇧</span><input type="text" id="newProfInput" placeholder="English name"></div>
+      <div class="inp-wrap"><span class="inp-icon">🇵🇰</span><input type="text" id="newProfUrInput" placeholder="اردو نام" dir="rtl"></div>
     </div>
+    <button class="btn btn-primary" onclick="addProfession()" style="margin-top:8px">+ Add Profession | پیشہ شامل کریں</button>
   </div>`;
-};
-function addProfession(){const v=document.getElementById('newProfInput').value.trim();if(v&&!PROFESSIONS.includes(v)){PROFESSIONS.push(v);FS.save('professions',v.replace(/\s+/g,'_'),{name:v,id:v.replace(/\s+/g,'_')});renderTab('professions');}else showPopup('⚠️','Error','Enter a name or it already exists.');}
+}
+function editProfInline(i){
+  document.getElementById('profRow_'+i).style.display='none';
+  document.getElementById('profEditRow_'+i).style.display='block';
+}
+function cancelProfEdit(i){
+  document.getElementById('profRow_'+i).style.display='flex';
+  document.getElementById('profEditRow_'+i).style.display='none';
+}
+function saveProfEdit(i){
+  const v=document.getElementById('profEditInput_'+i).value.trim();
+  if(!v){showPopup('⚠️','Required','Profession cannot be empty.');return;}
+  const old=PROFESSIONS[i];
+  PROFESSIONS[i]=v;
+  FS.del('professions',old.replace(/\s+/g,'_'));
+  FS.save('professions',v.replace(/\s+/g,'_'),{name:v,id:v.replace(/\s+/g,'_')});
+  renderTab('professions');
+  showPopup('✅','Updated','Profession updated.');
+}
+function handleExpCatChange(sel){
+  if(sel.value==='__manual__'){
+    const v=prompt('Enter new category name:');
+    if(v&&v.trim()){
+      const name=v.trim();
+      if(!EXP_CATEGORIES.includes(name)){
+        EXP_CATEGORIES.push(name);
+        // Add option before __manual__
+        const opt=document.createElement('option');
+        opt.value=name;opt.textContent=name;opt.selected=true;
+        sel.insertBefore(opt,sel.querySelector('[value="__manual__"]'));
+        sel.value=name;
+      } else {sel.value=name;}
+    } else {sel.value=EXP_CATEGORIES[0]||'';}
+  }
+}
+function addProfession(){
+  const v=document.getElementById('newProfInput').value.trim();
+  const ur=(document.getElementById('newProfUrInput')||{value:''}).value.trim();
+  if(!v){showPopup('⚠️','Required','Please enter profession name.');return;}
+  if(PROFESSIONS.includes(v)){showPopup('⚠️','Duplicate','This profession already exists.');return;}
+  PROFESSIONS.push(v);
+  PROF_LIST.push({en:v,ur:ur});
+  PROF_UR[v]=ur;
+  FS.save('professions',v.replace(/\s+/g,'_'),{name:v,id:v.replace(/\s+/g,'_'),ur:ur});
+  renderTab('professions');
+  showPopup('✅','Added',v+(ur?' — '+ur:'')+' added.');
+}
 function deleteProfession(i){const pn=PROFESSIONS[i];PROFESSIONS.splice(i,1);FS.del('professions',pn.replace(/\s+/g,'_'));renderTab('professions');}
 function editProfession(i){
   const old=PROFESSIONS[i];
@@ -2963,7 +3246,44 @@ T.audit=function(){
 
 // ---- AREAS ----
 T.areas=function(){
-  return `<div class="card"><h3><span class="bi-title"><span class="bi-en">Area Management</span><span class="bi-ur">علاقے</span></span></h3>${AREAS.map((a,i)=>`<div class="entry-row"><div class="entry-name">${a}</div><button class="btn-xs btn-danger" style="background:#E24B4A;color:#fff;border:none" onclick="removeArea(${i})">Hatao</button></div>`).join('')}<div style="display:flex;gap:8px;margin-top:10px"><input type="text" id="newAreaInput" placeholder="New area name" style="flex:1"><button class="btn btn-sm btn-primary" onclick="addArea()" style="margin-top:0">Add</button></div></div>`;
+  return `<div class="card">
+    <h3><span class="bi-title"><span class="bi-en">Area Management</span><span class="bi-ur">علاقے</span></span></h3>
+    ${AREAS.map((a,i)=>`
+      <div class="entry-row" id="areaRow_${i}">
+        <div class="entry-name" id="areaName_${i}">${a}</div>
+        <div style="display:flex;gap:4px">
+          <button class="btn-xs" style="background:#1D9E75;color:#fff;border:none;cursor:pointer" onclick="editAreaInline(${i})">✏️</button>
+          <button class="btn-xs btn-danger" style="background:#E24B4A;color:#fff;border:none;cursor:pointer" onclick="removeArea(${i})">🗑️</button>
+        </div>
+      </div>
+      <div id="areaEditRow_${i}" style="display:none;padding:6px 0">
+        <div style="display:flex;gap:6px">
+          <input type="text" id="areaEditInput_${i}" value="${a}" style="flex:1;padding:6px 10px;border:1px solid #1D9E75;border-radius:6px;font-size:13px">
+          <button class="btn-xs" style="background:#1D9E75;color:#fff;border:none;cursor:pointer" onclick="saveAreaEdit(${i})">Save</button>
+          <button class="btn-xs" style="background:#888;color:#fff;border:none;cursor:pointer" onclick="cancelAreaEdit(${i})">✕</button>
+        </div>
+      </div>`).join('')}
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <input type="text" id="newAreaInput" placeholder="New area name | نیا علاقہ" style="flex:1">
+      <button class="btn btn-sm btn-primary" onclick="addArea()" style="margin-top:0">+ Add</button>
+    </div>
+  </div>`;
+}
+function editAreaInline(i){
+  document.getElementById('areaRow_'+i).style.display='none';
+  document.getElementById('areaEditRow_'+i).style.display='block';
+}
+function cancelAreaEdit(i){
+  document.getElementById('areaRow_'+i).style.display='flex';
+  document.getElementById('areaEditRow_'+i).style.display='none';
+}
+function saveAreaEdit(i){
+  const v=document.getElementById('areaEditInput_'+i).value.trim();
+  if(!v){showPopup('⚠️','Required','Area name cannot be empty.');return;}
+  AREAS[i]=v;
+  FS.save('config','areas',{list:AREAS});
+  renderTab('areas');
+  showPopup('✅','Updated','Area updated.');
 };
 function removeArea(i){AREAS.splice(i,1);FS.save('config','areas',{list:AREAS});renderTab('areas');}
 function addArea(){const v=document.getElementById('newAreaInput').value.trim();if(v){AREAS.push(v);FS.save('config','areas',{list:AREAS});renderTab('areas');}else showPopup('⚠️','Error','Please enter an area name.');}
@@ -2996,7 +3316,7 @@ function getMenuConfig(){
       {icon:'⚰️', label:'Deceased / وفات', tab:'deceased'},
     ]
   };
-  if(currentRole!=='user') forms.items.push({icon:'💰', label:'Donation / چندہ', tab:'donation'});
+  forms.items.push({icon:'💰', label:'Donation / چندہ', tab:'donation'});
   if(['manager','developer'].includes(currentRole)) forms.items.push({icon:'🧾', label:'Expense / اخراجات', tab:'expense'});
   if(currentRole==='admin') forms.items.push({icon:'✅', label:'Confirm / تصدیق', tab:'decconfirm'});
 
@@ -3007,7 +3327,7 @@ function getMenuConfig(){
       {icon:'📈', label:'Expense Rpt / اخراجات', tab:'expreport'},
       {icon:'📒', label:'Ledger / کھاتہ', tab:'ledger'},
       {icon:'💼', label:'Balance / بیلنس', tab:'balreport'},
-      {icon:'📅', label:'Fund / فنڈ', tab:'fundreport'},
+      ...(currentRole!=='user'?[{icon:'📅', label:'Fund / فنڈ', tab:'fundreport'}]:[]),
     ]
   };
   if(['manager','developer'].includes(currentRole)) reports.items.push({icon:'👥', label:'Users / صارفین', tab:'usersreport'});
@@ -3261,7 +3581,7 @@ function safeInit(){
 // ============================================================
 function downloadSlipPNG(elementId, filename){
   const el = document.getElementById(elementId);
-  if(!el){ showPopup('⚠️','Error','Element not found. Please generate slip first.'); return; }
+  if(!el){ showPopup('⚠️','Error','Please generate slip/certificate first, then download. | پہلے سلپ بنائیں'); return; }
 
   // Open new window with the slip content + auto-screenshot instructions
   const orgN = orgName()||'Falah e Qabristan';
@@ -3433,6 +3753,66 @@ function addDownloadBar(title, elementId){
   </div>`;
 }
 
+
+// ============================================================
+// SMS / REMINDER MODULE (In-app — no external API needed)
+// ============================================================
+function getSMSTemplate(type, data){
+  if(type==='thanks')
+    return `Dear ${data.name}, Thank you for your donation of Rs ${fmt(data.amount)} to ${orgName()}. JazakAllah Khair! | ${orgName()} — ${data.date}`;
+  if(type==='reminder')
+    return `Dear ${data.name}, This is a reminder from ${orgName()}. Your donation of Rs ${fmt(data.amount||0)} is pending. Please contribute at your earliest convenience. | ${orgName()}`;
+  return '';
+}
+function openSMSReminders(){
+  // Get donors with recent donations (for thanks)
+  const recentDons=DB.donations.slice(-20).reverse();
+  // Get donors with no donation this month
+  const thisMonth=today().substring(0,7);
+  const activeDonors=DB.donors.filter(d=>d.totalDonation>0);
+  const pendingDonors=activeDonors.filter(d=>{
+    const lastDon=DB.donations.filter(x=>x.donorId===d.id).sort((a,b)=>b.date.localeCompare(a.date))[0];
+    return !lastDon||lastDon.date.substring(0,7)!==thisMonth;
+  });
+  const html=`
+    <div style="background:#fff;border-radius:14px;padding:16px;max-width:95vw;width:440px;max-height:80vh;overflow-y:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div style="font-size:15px;font-weight:700">📱 SMS / Reminders</div>
+        <button onclick="closePopup()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#aaa">✕</button>
+      </div>
+      <div style="font-size:12px;font-weight:600;color:#0F6E56;margin-bottom:8px">✅ Send Thanks (Recent Donations)</div>
+      ${recentDons.slice(0,5).map(d=>{
+        const donor=DB.donors.find(x=>x.id===d.donorId)||{name:'?',mobile:'0000'};
+        const msg=getSMSTemplate('thanks',{name:donor.name,amount:d.amount,date:d.date});
+        return `<div style="background:#E1F5EE;border-radius:8px;padding:8px;margin-bottom:6px">
+          <div style="font-size:12px;font-weight:600">${donor.name} — Rs ${fmt(d.amount)}</div>
+          <div style="font-size:10px;color:#888;margin:2px 0">${donor.mobile}</div>
+          <div style="font-size:11px;color:#555;margin-bottom:6px">${msg}</div>
+          <a href="sms:${normMob(donor.mobile)}?body=${encodeURIComponent(msg)}" style="display:inline-block;background:#1D9E75;color:#fff;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;text-decoration:none">📱 Send SMS</a>
+        </div>`;
+      }).join('')}
+      <div style="font-size:12px;font-weight:600;color:#E24B4A;margin:12px 0 8px">⏰ Send Reminders (Pending This Month)</div>
+      ${pendingDonors.slice(0,5).map(d=>{
+        const msg=getSMSTemplate('reminder',{name:d.name,amount:0});
+        return `<div style="background:#FAEEDA;border-radius:8px;padding:8px;margin-bottom:6px">
+          <div style="font-size:12px;font-weight:600">${d.name}</div>
+          <div style="font-size:10px;color:#888;margin:2px 0">${d.mobile}</div>
+          <div style="font-size:11px;color:#555;margin-bottom:6px">${msg}</div>
+          <a href="sms:${normMob(d.mobile)}?body=${encodeURIComponent(msg)}" style="display:inline-block;background:#BA7517;color:#fff;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;text-decoration:none">📱 Send Reminder</a>
+        </div>`;
+      }).join('')}
+      ${pendingDonors.length===0?'<p style="font-size:12px;color:#888">All donors have donated this month! 🎉</p>':''}
+    </div>`;
+  document.getElementById('popupMsg').innerHTML='';
+  document.getElementById('popupMsgUr').innerHTML='';
+  document.getElementById('popupIcon').textContent='';
+  document.getElementById('popupTitle').textContent='';
+  document.getElementById('popupTitleUr').textContent='';
+  document.getElementById('popupBtn').style.display='none';
+  const box=document.querySelector('.popup-box');
+  if(box){box.style.maxWidth='95vw';box.innerHTML=html;}
+  document.getElementById('popupOverlay').style.display='flex';
+}
 async function appInit(){
   initFirebase();
   try{await loadAllData();}catch(e){console.error('Data load error:',e);}

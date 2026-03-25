@@ -485,6 +485,8 @@ async function loadAllData(){
     ]);
     DB.users=u;DB.pendingApprovals=pa;DB.donors=don;DB.deceased=dec;
     DB.donations=donations;DB.expenses=exp;DB.transfers=trf;DB.auditLog=log;
+    // Load saved areas
+    try{const areasDoc=await FS.loadAll('config');const aConf=areasDoc.find(x=>x.id==='areas');if(aConf&&aConf.list&&aConf.list.length>0)AREAS=aConf.list;}catch(e){}
     if(profs.length>0){
       PROFESSIONS=profs.map(p=>p.name);
       // Merge custom profs into PROF_LIST if not there
@@ -499,7 +501,7 @@ async function loadAllData(){
   showLoading(false);
 }
 
-const AREAS=['Sector A','Sector B','Sector C','Sector D','Model Town','Gulberg','Johar Town','DHA','Cantonment','Sadar'];
+let AREAS=[];
 // Bilingual profession list {en, ur}
 const PROF_LIST=[
   {en:'Doctor',           ur:'ڈاکٹر'},
@@ -1827,17 +1829,29 @@ T.search=function(){
   </div>`;
 };
 function doSearch(){
-  const q=document.getElementById('searchInput').value.toLowerCase().trim();
+  const q=(document.getElementById('searchInput').value||'').toLowerCase().trim();
   const res=document.getElementById('searchResults');
-  if(!q){res.innerHTML='<p style="font-size:13px;color:#888">Start typing...</p>';return;}
-  const donors=DB.donors.filter(d=>d.name.toLowerCase().includes(q)||d.mobile.includes(q)||d.area.toLowerCase().includes(q)||d.id.toLowerCase().includes(q)||d.cnic.includes(q));
-  const deceased=DB.deceased.filter(d=>d.name.toLowerCase().includes(q)||d.area.toLowerCase().includes(q)||d.id.toLowerCase().includes(q));
-  const users=DB.users.filter(u=>u.name.toLowerCase().includes(q)||u.mobile.includes(q)||u.id.toLowerCase().includes(q)||u.cnic.includes(q));
+  if(!q||q.length<2){res.innerHTML='<p style="font-size:13px;color:#888">Type at least 2 characters... | کم از کم 2 حروف لکھیں</p>';return;}
+  // null-safe search helpers
+  const has=(v)=>(v||'').toLowerCase().includes(q);
+  const hasMob=(v)=>normMob(v||'').includes(normMob(q));
+  const donors=DB.donors.filter(d=>has(d.name)||hasMob(d.mobile)||has(d.area)||has(d.id));
+  const deceased=DB.deceased.filter(d=>has(d.name)||has(d.area)||has(d.id)||has(d.fatherName));
+  const users=DB.users.filter(u=>has(u.name)||hasMob(u.mobile)||has(u.id)||has(u.role));
   let html='';
-  if(donors.length){html+=`<div class="section-bi"><span class="bi-en">Donors</span><span class="bi-ur">عطیہ دہندگان</span></div>`;donors.forEach(d=>{html+=`<div class="entry-row"><div style="display:flex;align-items:center;gap:8px;flex:1">${avatarHtml(d.photo,d.name,30)}<div><div class="entry-name">${d.name} <span class="id-badge">${d.id}</span></div><div class="entry-sub">${callableNum(d.mobile)} • ${d.area}</div></div></div></div>`;});}
-  if(deceased.length){html+=`<div class="section-bi"><span class="bi-en">Deceased</span><span class="bi-ur">مرحومین</span></div>`;deceased.forEach(d=>{html+=`<div class="entry-row"><div><div class="entry-name">${d.name} <span class="badge badge-manager">${d.id}</span></div><div class="entry-sub">${d.area} • ${d.dateOfDeath}</div></div><span class="badge ${d.approved?'badge-user':'badge-pending'}">${d.approved?'Approved':'Pending'}</span></div>`;});}
-  if(users.length){html+=`<div class="section-bi"><span class="bi-en">Users</span><span class="bi-ur">صارفین</span></div>`;users.forEach(u=>{html+=`<div class="entry-row"><div style="display:flex;align-items:center;gap:8px">${avatarHtml(u.photo,u.name,30)}<div><div class="entry-name">${u.name} <span class="id-badge">${u.id}</span></div><div class="entry-sub">${u.role} • ${u.mobile} • ${u.profession||''}</div></div></div></div>`;});}
-  if(!html)html='<p style="font-size:13px;color:#888">No results found.</p>';
+  if(donors.length){
+    html+=`<div class="section-bi"><span class="bi-en">Donors (${donors.length})</span><span class="bi-ur">عطیہ دہندگان</span></div>`;
+    donors.forEach(d=>{html+=`<div class="entry-row"><div style="display:flex;align-items:center;gap:8px;flex:1">${avatarHtml(d.photo,d.name,30)}<div><div class="entry-name">${d.name} <span class="id-badge">${d.id}</span></div><div class="entry-sub">${callableNum(d.mobile)} • ${d.area||'—'}</div></div></div></div>`;});
+  }
+  if(deceased.length){
+    html+=`<div class="section-bi"><span class="bi-en">Deceased (${deceased.length})</span><span class="bi-ur">مرحومین</span></div>`;
+    deceased.forEach(d=>{html+=`<div class="entry-row"><div><div class="entry-name">${d.name} <span class="badge badge-manager">${d.id}</span></div><div class="entry-sub">${d.area||'—'} • ${d.dateOfDeath||'—'}</div></div><span class="badge ${d.approved?'badge-user':'badge-pending'}">${d.approved?'✅':'⏳'}</span></div>`;});
+  }
+  if(users.length){
+    html+=`<div class="section-bi"><span class="bi-en">Users (${users.length})</span><span class="bi-ur">صارفین</span></div>`;
+    users.forEach(u=>{html+=`<div class="entry-row"><div style="display:flex;align-items:center;gap:8px">${avatarHtml(u.photo,u.name,30)}<div><div class="entry-name">${u.name} <span class="id-badge">${u.id}</span></div><div class="entry-sub">${u.role} • ${callableNum(u.mobile)}</div></div></div></div>`;});
+  }
+  if(!html)html='<p style="font-size:13px;color:#888">No results for "<strong>'+q+'</strong>"</p>';
   res.innerHTML=html;
 }
 
@@ -3099,7 +3113,7 @@ T.lockuser=function(){
   </div>`;
 }
 function renderLockUserListHtml(users,q){
-  const filtered=q?users.filter(u=>u.name.toLowerCase().includes(q.toLowerCase())||normMob(u.mobile).includes(normMob(q))):users;
+  const filtered=q?users.filter(u=>(u.name||'').toLowerCase().includes(q.toLowerCase())||normMob(u.mobile||'').includes(normMob(q))||(u.id||'').toLowerCase().includes(q.toLowerCase())):users;
   if(!filtered.length)return '<p style="font-size:13px;color:#888">No users found.</p>';
   return filtered.map(u=>`
     <div style="background:#f9f9f9;border-radius:8px;padding:10px;margin-bottom:8px;border:1px solid #eee">
@@ -3118,9 +3132,12 @@ function renderLockUserListHtml(users,q){
     </div>`).join('');
 }
 function renderLockUserList(){
-  const q=(document.getElementById('lockUserSearch')||{value:''}).value;
+  const searchEl=document.getElementById('lockUserSearch');
+  const q=searchEl?searchEl.value.trim():'';
   const el=document.getElementById('lockUserList');
-  if(el)el.innerHTML=renderLockUserListHtml(DB.users.filter(u=>u.role!=='developer'),q);
+  if(!el)return;
+  const filtered=DB.users.filter(u=>u.role!=='developer');
+  el.innerHTML=renderLockUserListHtml(filtered,q);
 }
 function deleteUser(id){
   const u=DB.users.find(x=>x.id===id);
@@ -3240,6 +3257,120 @@ function editProfession(i){
 }
 
 // ---- AUDIT LOG ----
+T.datamanager=function(){
+  return `<div class="card">
+    <h3><span class="bi-title"><span class="bi-en">Data Management</span><span class="bi-ur">ڈیٹا مینیجمنٹ</span></span></h3>
+    <div style="background:#FCEBEB;border:1px solid #E24B4A;border-radius:8px;padding:10px;margin-bottom:14px;font-size:12px;color:#A32D2D">
+      ⚠️ Deleting entries is permanent and cannot be undone. | حذف کرنا مستقل ہے
+    </div>
+
+    <!-- Donations -->
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:700">💰 Donations (${DB.donations.length})</div>
+        <button onclick="devDeleteAll('donations')" style="background:#E24B4A;color:#fff;border:none;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">🗑️ Delete All</button>
+      </div>
+      ${DB.donations.slice(-5).reverse().map(d=>{const dn=DB.donors.find(x=>x.id===d.donorId)||{name:'Unknown'};return `
+        <div class="entry-row">
+          <div><div class="entry-name">${dn.name} — Rs ${fmt(d.amount)}</div><div class="entry-sub">${d.date} • ${d.id}</div></div>
+          <button onclick="devDeleteOne('donations','${d.id}')" style="background:#E24B4A;color:#fff;border:none;padding:4px 8px;border-radius:5px;font-size:11px;cursor:pointer">🗑️</button>
+        </div>`}).join('')}
+      ${DB.donations.length>5?`<div style="font-size:11px;color:#888;text-align:center;margin-top:4px">Showing last 5 of ${DB.donations.length}</div>`:''}
+    </div>
+
+    <!-- Expenses -->
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:700">📋 Expenses (${DB.expenses.length})</div>
+        <button onclick="devDeleteAll('expenses')" style="background:#E24B4A;color:#fff;border:none;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">🗑️ Delete All</button>
+      </div>
+      ${DB.expenses.slice(-5).reverse().map(e=>`
+        <div class="entry-row">
+          <div><div class="entry-name">${e.desc} — Rs ${fmt(e.amount)}</div><div class="entry-sub">${e.date} • ${e.billNo}</div></div>
+          <button onclick="devDeleteOne('expenses','${e.id}')" style="background:#E24B4A;color:#fff;border:none;padding:4px 8px;border-radius:5px;font-size:11px;cursor:pointer">🗑️</button>
+        </div>`).join('')}
+      ${DB.expenses.length>5?`<div style="font-size:11px;color:#888;text-align:center;margin-top:4px">Showing last 5 of ${DB.expenses.length}</div>`:''}
+    </div>
+
+    <!-- Deceased -->
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:700">🕌 Deceased (${DB.deceased.length})</div>
+        <button onclick="devDeleteAll('deceased')" style="background:#E24B4A;color:#fff;border:none;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">🗑️ Delete All</button>
+      </div>
+      ${DB.deceased.slice(-5).reverse().map(d=>`
+        <div class="entry-row">
+          <div><div class="entry-name">${d.name}</div><div class="entry-sub">${d.dateOfDeath} • ${d.id}</div></div>
+          <button onclick="devDeleteOne('deceased','${d.id}')" style="background:#E24B4A;color:#fff;border:none;padding:4px 8px;border-radius:5px;font-size:11px;cursor:pointer">🗑️</button>
+        </div>`).join('')}
+      ${DB.deceased.length>5?`<div style="font-size:11px;color:#888;text-align:center;margin-top:4px">Showing last 5 of ${DB.deceased.length}</div>`:''}
+    </div>
+
+    <!-- Donors -->
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:700">👤 Donors (${DB.donors.length})</div>
+        <button onclick="devDeleteAll('donors')" style="background:#E24B4A;color:#fff;border:none;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">🗑️ Delete All</button>
+      </div>
+      ${DB.donors.slice(0,5).map(d=>`
+        <div class="entry-row">
+          <div><div class="entry-name">${d.name} <span class="id-badge">${d.id}</span></div><div class="entry-sub">${d.mobile} • Rs ${fmt(d.totalDonation)}</div></div>
+          <button onclick="devDeleteOne('donors','${d.id}')" style="background:#E24B4A;color:#fff;border:none;padding:4px 8px;border-radius:5px;font-size:11px;cursor:pointer">🗑️</button>
+        </div>`).join('')}
+      ${DB.donors.length>5?`<div style="font-size:11px;color:#888;text-align:center;margin-top:4px">Showing first 5 of ${DB.donors.length}</div>`:''}
+    </div>
+
+    <!-- Transfers -->
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:700">💸 Transfers (${DB.transfers.length})</div>
+        <button onclick="devDeleteAll('transfers')" style="background:#E24B4A;color:#fff;border:none;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">🗑️ Delete All</button>
+      </div>
+    </div>
+
+    <!-- Audit Log -->
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:13px;font-weight:700">📋 Audit Log (${DB.auditLog.length})</div>
+        <button onclick="devDeleteAll('auditLog')" style="background:#888;color:#fff;border:none;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">🗑️ Clear Log</button>
+      </div>
+    </div>
+  </div>`;
+};
+
+// Developer delete functions
+function devDeleteOne(collection, id){
+  if(!confirm('Delete this entry? Cannot be undone.'))return;
+  DB[collection]=DB[collection].filter(x=>x.id!==id);
+  FS.del(collection,id);
+  // If donation deleted, recalculate donor total
+  if(collection==='donations'){
+    DB.donors.forEach(d=>{
+      d.totalDonation=DB.donations.filter(x=>x.donorId===d.id).reduce((s,x)=>s+x.amount,0);
+      FS.save('donors',d.id,d);
+    });
+  }
+  const al={by:currentUser.id,action:'Dev Deleted',target:collection,detail:'ID: '+id,date:today()};
+  DB.auditLog.push(al);FS.save('auditLog','AL'+Date.now(),al);
+  renderTab('datamanager');
+  showPopup('🗑️','Deleted','Entry deleted.');
+}
+function devDeleteAll(collection){
+  const counts={donations:DB.donations.length,expenses:DB.expenses.length,deceased:DB.deceased.length,donors:DB.donors.length,transfers:DB.transfers.length,auditLog:DB.auditLog.length};
+  if(!confirm('Delete ALL '+counts[collection]+' entries from '+collection+'? This cannot be undone!'))return;
+  // Delete from Firestore
+  DB[collection].forEach(x=>FS.del(collection,x.id||x));
+  DB[collection]=[];
+  // Recalculate donors if donations cleared
+  if(collection==='donations'){
+    DB.donors.forEach(d=>{d.totalDonation=0;FS.save('donors',d.id,d);});
+  }
+  const al={by:currentUser.id,action:'Dev Deleted All',target:collection,detail:counts[collection]+' entries deleted',date:today()};
+  DB.auditLog.push(al);FS.save('auditLog','AL'+Date.now(),al);
+  renderTab('datamanager');
+  showPopup('🗑️','Deleted','All '+collection+' entries deleted.');
+}
+
 T.audit=function(){
   return `<div class="card"><h3><span class="bi-title"><span class="bi-en">Activity Log</span><span class="bi-ur">سرگرمی لاگ</span></span></h3>${DB.auditLog.length===0?'<p style="font-size:13px;color:#888">No activity log entries.</p>':DB.auditLog.slice().reverse().map(l=>{const u=DB.users.find(x=>x.id===l.by)||{name:l.by};return `<div style="padding:8px;background:#f9f9f9;border-radius:8px;margin-bottom:5px;border-left:3px solid #1D9E75"><div style="font-size:12px;font-weight:600">${l.action} — ${l.target}</div><div style="font-size:11px;color:#888;margin-top:2px">${l.detail} • By: ${u.name} • ${l.date}</div></div>`;}).join('')}</div>`;
 };
@@ -3359,7 +3490,8 @@ function getMenuConfig(){
       {icon:'💼', label:'Profession / پیشہ', tab:'professions'},
       {icon:'🏘️', label:'Areas / علاقے', tab:'areas'},
       {icon:'🏢', label:'Organization Settings', tab:'orgsettings'},
-      {icon:'📋', label:'Audit / لاگ', tab:'audit'}
+      {icon:'📋', label:'Audit / لاگ', tab:'audit'},
+      {icon:'🗄️', label:'Data Manager', tab:'datamanager'}
     );
   }
 
@@ -3459,7 +3591,7 @@ const TAB_LABELS={
   donorlist:'Donor List',slip:'Donor Slip',top:'Top Donors',transfer:'Transfer',
   decconfirm:'Confirm Deceased',approvals:'Approvals',lockuser:'Login Management',
   userslist:'Users List',professions:'Professions',audit:'Audit Log',areas:'Areas',
-  orgsettings:'Organization Settings',profile:'My Profile'
+  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager'
 };
 
 // ============================================================

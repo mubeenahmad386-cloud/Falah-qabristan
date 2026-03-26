@@ -650,14 +650,16 @@ function doLogin(){
   const mobile=(document.getElementById('loginMobile').value||'').trim();
   const password=(document.getElementById('loginPassword').value||'').trim();
   if(!mobile||!password){showLoginError('Mobile number and password are required.');return;}
-  const user=DB.users.find(u=>u.mobile.replace(/-/g,'')===mobile.replace(/-/g,'')&&u.password===password&&u.approved);
+  // Normalize both sides — strip all non-digits for comparison
+  const mDig=normMob(mobile);
+  const user=DB.users.find(u=>normMob(u.mobile)===mDig&&u.password===password&&u.approved);
   if(user){
     if(user.locked){showLoginError('Your login is locked. Contact the developer.');return;}
     hideLoginError();currentUser=user;currentRole=user.role;saveSession();loadDashboard();return;
   }
-  const wrongPwd=DB.users.find(u=>u.mobile.replace(/-/g,'')===mobile.replace(/-/g,'')&&u.approved);
+  const wrongPwd=DB.users.find(u=>normMob(u.mobile)===mDig&&u.approved);
   if(wrongPwd){showLoginError('Incorrect password. Please try again.');return;}
-  const pending=DB.pendingApprovals.find(u=>u.mobile.replace(/-/g,'')===mobile.replace(/-/g,''));
+  const pending=DB.pendingApprovals.find(u=>normMob(u.mobile)===mDig);
   if(pending){showLoginError('Account approval pending hai.');return;}
   showPopup('❌','User Not Found','No account found. Would you like to create one?','Create Account',()=>showScreen('regRoleScreen'));
 }
@@ -910,6 +912,9 @@ T.dash=function(){
 
 // ---- DONATION ENTRY ----
 T.donation=function(){
+  if(!['admin','manager','developer'].includes(currentRole)){
+    return `<div class="card"><div style="text-align:center;padding:24px;color:#888;font-size:13px">⛔<br>Access denied | رسائی نہیں<br><span style="font-size:11px">Donation entry is for admin/manager/developer only.</span></div></div>`;
+  }
   return `<div class="card"><h3><span class="bi-title"><span class="bi-en">Donation Entry</span><span class="bi-ur">چندہ درج کریں</span></span></h3>
     <div class="info-box info">Enter Personal ID or Mobile — existing donor data will auto-fill. | پرسنل ID یا موبائل درج کریں — ڈیٹا خودبخود آ جائے گا۔</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
@@ -941,6 +946,7 @@ T.donation=function(){
       <div id="donorMobileStatus" style="display:none;margin-top:4px;font-size:12px;padding:6px 10px;border-radius:6px"></div>
       <label>Area <span style="font-size:10px;color:#1D9E75;font-weight:500">علاقہ</span></label>
       <select id="donorArea" class="area-sel"></select>
+      <script>setTimeout(()=>{const ae=document.getElementById('donorArea');if(ae&&currentUser&&currentUser.area){ae.value=currentUser.area;if(!ae.value){const o=document.createElement('option');o.value=currentUser.area;o.textContent=currentUser.area;o.selected=true;ae.insertBefore(o,ae.firstChild);}}},200);<\/script>
     </div>
     <!-- END NEW DONOR fields -->
 
@@ -3294,14 +3300,19 @@ function approveDeceased(id){
 // ---- LOGIN MANAGEMENT (developer) ----
 T.lockuser=function(){
   const users=DB.users.filter(u=>u.role!=='developer');
+  const html=renderLockUserListHtml(users,'');
+  setTimeout(()=>{
+    const si=document.getElementById('lockUserSearch');
+    if(si){si.addEventListener('input',renderLockUserList);si.addEventListener('keyup',renderLockUserList);}
+  },100);
   return `<div class="card">
     <h3><span class="bi-title"><span class="bi-en">Login Management</span><span class="bi-ur">لاگ ان کنٹرول</span></span></h3>
-    <div class="inp-wrap" style="margin-bottom:10px"><span class="inp-icon">🔍</span><input type="text" id="lockUserSearch" placeholder="Search by name or mobile..." oninput="renderLockUserList()" onkeyup="renderLockUserList()" style="font-size:13px"></div>
-    <div id="lockUserList">${renderLockUserListHtml(users,'')}</div>
+    <div class="inp-wrap" style="margin-bottom:10px"><span class="inp-icon">🔍</span><input type="text" id="lockUserSearch" placeholder="Search name, mobile, ID, area..." style="font-size:13px"></div>
+    <div id="lockUserList">${html}</div>
   </div>`;
 }
 function renderLockUserListHtml(users,q){
-  const filtered=q?users.filter(u=>(u.name||'').toLowerCase().includes(q.toLowerCase())||normMob(u.mobile||'').includes(normMob(q))||(u.id||'').toLowerCase().includes(q.toLowerCase())):users;
+  const filtered=q?users.filter(u=>(u.name||'').toLowerCase().includes(q.toLowerCase())||normMob(u.mobile||'').includes(normMob(q))||(u.id||'').toLowerCase().includes(q.toLowerCase())||(u.area||'').toLowerCase().includes(q.toLowerCase())):users;
   if(!filtered.length)return '<p style="font-size:13px;color:#888">No users found.</p>';
   return filtered.map(u=>`
     <div style="background:#f9f9f9;border-radius:8px;padding:10px;margin-bottom:8px;border:1px solid #eee">
@@ -3801,7 +3812,7 @@ function getMenuConfig(){
       {icon:'⚰️', label:'Deceased / وفات', tab:'deceased'},
     ]
   };
-  forms.items.push({icon:'💰', label:'Donation / چندہ', tab:'donation'});
+  if(['admin','manager','developer'].includes(currentRole)) forms.items.push({icon:'💰', label:'Donation / چندہ', tab:'donation'});
   if(['manager','developer'].includes(currentRole)) forms.items.push({icon:'🧾', label:'Expense / اخراجات', tab:'expense'});
   if(currentRole==='admin') forms.items.push({icon:'✅', label:'Confirm / تصدیق', tab:'decconfirm'});
 

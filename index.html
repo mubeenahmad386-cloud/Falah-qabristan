@@ -182,6 +182,7 @@ input[type=file]{padding:6px}
 <!-- Firebase CDN -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <!-- PDF & Image Export — inline -->
 
 <!-- LOGIN SCREEN -->
@@ -603,7 +604,8 @@ function closeModal(){document.getElementById('editModal').style.display='none';
 function populateSel(cls,items,val){
   document.querySelectorAll('.'+cls).forEach(el=>{
     const c=val||el.value;el.innerHTML='<option value="">-- Select --</option>';
-    items.forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;if(a===c)o.selected=true;el.appendChild(o);});
+    const sorted=[...items].sort((a,b)=>a.localeCompare(b));
+    sorted.forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;if(a===c)o.selected=true;el.appendChild(o);});
   });
 }
 function populateAreas(){populateSel('area-sel',AREAS);}
@@ -700,7 +702,11 @@ function submitReg(){
   const cnic=document.getElementById('regCnic').value.trim();
   const password=document.getElementById('regPassword').value.trim();
   const confirm=document.getElementById('regConfirmPassword').value.trim();
-  if(!name||!mobile||!password){showPopup('⚠️','Incomplete','Name, mobile and password are required.');return;}
+  const missing=[];
+  if(!name)missing.push('Full Name | پورا نام');
+  if(!mobile||normMob(mobile).length!==11)missing.push('Mobile (11 digits) | موبائل نمبر');
+  if(!password)missing.push('Password | پاس ورڈ');
+  if(missing.length){showPopup('⚠️','Incomplete','Missing: '+missing.join(', '));return;}
   const mobileDigits=normMob(mobile);
   if(mobileDigits.length!==11){showPopup('⚠️','Mobile Short','Mobile must be exactly 11 digits. Entered: '+mobileDigits.length);return;}
   const cnicDigits=normCnic(cnic);
@@ -709,7 +715,7 @@ function submitReg(){
   if(password.length<4){showPopup('⚠️','Weak','Password must be at least 4 characters.');return;}
   const allExisting=[...DB.users,...DB.pendingApprovals];
   if(allExisting.find(u=>u.mobile.replace(/-/g,'')===mobileDigits)){showPopup('⚠️','Duplicate','An account with this mobile already exists.');return;}
-  if(allExisting.find(u=>u.cnic.replace(/-/g,'')===cnicDigits)){showPopup('⚠️','Duplicate','An account with this CNIC already exists.');return;}
+
   const fi=document.getElementById('regPhotoInput');
   const si=document.getElementById('regSigInput');
   // Read photo first, then signature
@@ -804,9 +810,9 @@ function renderLoginExtras(){
     const nums=ORG_CONFIG.contactNumbers||[];
     cnl.innerHTML=nums.map(n=>`
       <a href="tel:${n.number.replace(/[^0-9+]/g,'')}" style="display:flex;align-items:center;gap:12px;padding:12px;background:#f0fff8;border-radius:10px;border:1px solid #1D9E75;margin-bottom:8px;text-decoration:none">
-        <div style="width:40px;height:40px;background:#1D9E75;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">📞</div>
+        ${n.photo?`<img src="${n.photo}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid #1D9E75;flex-shrink:0">`:`<div style="width:48px;height:48px;background:#1D9E75;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📞</div>`}
         <div style="flex:1">
-          <div style="font-size:13px;font-weight:700;color:#0F6E56">${n.label||'Contact'}</div>
+          <div style="font-size:13px;font-weight:700;color:#0F6E56">${n.label||'Contact'}${n.area?' — '+n.area:''}</div>
           <div style="font-size:14px;font-weight:600;color:#185FA5;margin-top:2px">${n.number}</div>
         </div>
         <div style="font-size:12px;color:#1D9E75;font-weight:600">Call ☎️</div>
@@ -876,7 +882,7 @@ function getTabs(){
   // Admin: deceased confirmation tab
   if(currentRole==='admin') t.push({label:'Deceased Confirm',key:'decconfirm'});
   // Developer only tabs
-  if(currentRole==='developer') t.push({label:'Approvals / منظوری',key:'approvals'},{label:'Login / لاگ ان',key:'lockuser'},{label:'Users / صارفین',key:'userslist'},{label:'Profession / پیشہ',key:'professions'},{label:'Audit / لاگ',key:'audit'},{label:'Areas / علاقے',key:'areas'},{label:'Organization Settings',key:'orgsettings'});
+  if(currentRole==='developer') t.push({label:'Approvals / منظوری',key:'approvals'},{label:'Login / لاگ ان',key:'lockuser'},{label:'Users / صارفین',key:'userslist'},{label:'Profession / پیشہ',key:'professions'},{label:'Audit / لاگ',key:'audit'},{label:'Areas / علاقے',key:'areas'},{label:'Organization Settings',key:'orgsettings'},{label:'Exp Categories',key:'expcategories'});
   t.push({label:'Profile / پروفائل',key:'profile'});
   return t;
 }
@@ -909,7 +915,7 @@ T.donation=function(){
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
       <div>
         <label>Personal ID or Mobile No <span style="font-size:10px;color:#1D9E75">ID یا موبائل نمبر</span></label>
-        <div class="inp-wrap"><span class="inp-icon">🔍</span><input type="text" id="fetchById" placeholder="Enter ID (e.g. 10001) or Mobile (0300-1234567)" oninput="autoFetchDonorUnified(this.value)" maxlength="15" style="font-size:12px"></div>
+        <div class="inp-wrap"><span class="inp-icon">🔍</span><input type="text" id="fetchById" placeholder="Enter ID (e.g. 10001) or Mobile (0300-1234567)" oninput="autoFetchDonorUnified(this.value)" onkeydown="blockSearchTabIfMobile(event,this)" maxlength="15" style="font-size:12px"></div>
         <div id="unifiedFetchStatus" style="display:none;margin-top:4px"></div>
       </div>
     </div>
@@ -931,7 +937,7 @@ T.donation=function(){
       <label>Donor Name * <span style="font-size:10px;color:#1D9E75;font-weight:500">عطیہ دہندہ</span></label>
       <div class="inp-wrap"><span class="inp-icon">👤</span><input type="text" id="donorName" placeholder="Full Name"></div>
       <label>Mobile No * <span style="font-size:10px;color:#1D9E75;font-weight:500">موبائل نمبر</span></label>
-      <input type="text" id="donorMobile" placeholder="0300-1234567" maxlength="12" oninput="autoFormatMobile(this,'donorMobileStatus');checkDonorMobileAF(this.value)">
+      <input type="text" id="donorMobile" placeholder="0300-1234567" maxlength="12" oninput="autoFormatMobile(this,'donorMobileStatus')">
       <div id="donorMobileStatus" style="display:none;margin-top:4px;font-size:12px;padding:6px 10px;border-radius:6px"></div>
       <label>Area <span style="font-size:10px;color:#1D9E75;font-weight:500">علاقہ</span></label>
       <select id="donorArea" class="area-sel"></select>
@@ -956,6 +962,18 @@ T.donation=function(){
   </div>`;
 };
 
+function blockSearchTabIfMobile(event,input){
+  // Prevent Tab/Enter if value looks like a mobile number but not yet 11 digits
+  if(event.key==='Enter') event.preventDefault();
+  if(event.key==='Tab'){
+    const val=(input.value||'').trim();
+    const digits=normMob(val);
+    const looksLikeMobile=val.startsWith('03')||digits.length>=8;
+    if(looksLikeMobile && digits.length<11){
+      event.preventDefault(); // block tab until 11 digits
+    }
+  }
+}
 function autoFetchDonorUnified(val){
   val=(val||'').trim();
   const statusEl=document.getElementById('unifiedFetchStatus');
@@ -982,7 +1000,9 @@ function autoFetchDonorUnified(val){
   // Detect: if starts with 03 (mobile) or pure digits >= 10 chars = mobile
   // else treat as ID (pure numeric ID like 10001)
   const digits=normMob(val);
-  const isMobile=digits.length>=10||(val.startsWith('03'));
+  // Mobile = exactly 11 digits OR starts with 03 AND has 11 digits
+  // Don't trigger at 10 digits — wait for full 11
+  const isMobile=digits.length===11||(val.startsWith('03')&&digits.length===11);
   const isId=!isMobile&&digits.length>=4&&digits.length<=6;
   const found=isMobile
     ?[...DB.donors,...DB.users].find(d=>normMob(d.mobile)===digits)
@@ -997,7 +1017,7 @@ function autoFetchDonorUnified(val){
     if(res)res.innerHTML='';
     const d=document.getElementById('autoIdDisplay');if(d)d.textContent=nextAllId()+' (new)';
     // If looks like mobile — auto-fill mobile field and lock it
-    if(isMobile&&val.length>=10){
+    if(isMobile&&digits.length===11){
       const mobField=document.getElementById('donorMobile');
       if(mobField){
         mobField.value=val;
@@ -1017,7 +1037,11 @@ function autoFetchDonorUnified(val){
     } else if(val.length>3){
       if(statusEl){
         statusEl.style.display='block';
-        statusEl.innerHTML=`<div style="background:#f9f9f9;border:1px solid #ddd;border-radius:6px;padding:6px 10px;font-size:12px;color:#888">🆕 New donor — fill details below. New ID: <strong>${nextAllId()}</strong></div>`;
+        // If typing mobile but not yet 11 digits — show progress
+        const hint=val.startsWith('03')&&digits.length<11
+          ?`📱 Mobile: ${digits.length}/11 digits... | ${digits.length}/11 ہندسے`
+          :`🆕 New donor — fill details below. New ID: <strong>${nextAllId()}</strong>`;
+        statusEl.innerHTML=`<div style="background:#f9f9f9;border:1px solid #ddd;border-radius:6px;padding:6px 10px;font-size:12px;color:#888">${hint}</div>`;
       }
       // Show full form for new donor
       const nfd=document.getElementById('donorNewFields');if(nfd)nfd.style.display='block';
@@ -1076,11 +1100,18 @@ function autoFormatMobile(input, statusId){
   const raw=input.value;
   const digits=raw.replace(/[^0-9]/g,'').slice(0,11);
   const formatted=formatMobile(digits);
-  const pos=input.selectionStart;
   input.value=formatted;
-  // Keep cursor position smart
-  try{input.setSelectionRange(formatted.length,formatted.length);}catch(e){}
+  // Set cursor at end without triggering focus change
+  setTimeout(()=>{try{input.setSelectionRange(formatted.length,formatted.length);}catch(e){}},0);
   if(statusId) checkFieldMobile(digits, statusId, input.id);
+  // donorMobile: only move to next field when EXACTLY 11 digits done
+  if(digits.length===11 && (input.id==='donorMobile'||input.id==='w1mobile'||input.id==='w2mobile'||input.id==='imamMobile')){
+    checkDonorMobileAF(formatted);
+    setTimeout(()=>{
+      const next=document.getElementById('donorName');
+      if(next && !next.value) next.focus();
+    },300);
+  }
 }
 
 // oninput handler for CNIC fields
@@ -1104,7 +1135,7 @@ function checkFieldMobile(digits, statusId, inputId){
   if(found&&found.id!==selfId){
     statusBox(statusId,'error','⚠️ Already registered: '+recordLabel(found));
   } else {
-    statusBox(statusId,'success','✅ Mobile OK — 0'+digits.slice(1,4)+'-'+digits.slice(4));
+    statusBox(statusId,'success','✅ Mobile OK — '+formatMobile(digits));
     setTimeout(()=>hideStatus(statusId),2000);
   }
 }
@@ -1247,7 +1278,7 @@ function finishDonation(name,amount,mobile,cnic,photo){
   if(!donor&&bi)donor=DB.donors.find(d=>d.id.toLowerCase()===bi.toLowerCase());
   // duplicate check for new donor
   if(!donor){
-    if(DB.donors.find(d=>d.cnic===cnic)){showPopup('⚠️','Duplicate CNIC','Is CNIC se donor already exist karta hai.');return;}
+
     if(DB.donors.find(d=>d.mobile.replace(/-/g,'')===mobile.replace(/-/g,''))){showPopup('⚠️','Duplicate Mobile','Is mobile se donor already exist karta hai.');return;}
     const nid=nextAllId();
     donor={id:nid,name,mobile,cnic,area:document.getElementById('donorArea').value,profession:document.getElementById('donorProfession').value,totalDonation:0,photo:photo||null,entries:[]};
@@ -1265,6 +1296,7 @@ function finishDonation(name,amount,mobile,cnic,photo){
   FS.save('donors',donor.id,donor);
   DB.auditLog.push({by:currentUser.id,action:'Donation Entry',target:donor.name,detail:'Rs '+fmt(amount)+' — '+desc,date:t});
   // Auto refresh
+  addNotification('donation','Donation Saved','Rs '+fmt(amount)+' — '+donor.name+' ('+donor.id+')');
   showPopup('✅','Entry Saved','Donor ID: '+donor.id+' | Rs '+fmt(amount)+' saved.',null,()=>renderTab('donation'));
 }
 
@@ -1302,6 +1334,9 @@ T.deceased=function(){
     <label>Name</label><div class="inp-wrap"><span class="inp-icon">👤</span><input type="text" id="w1name"></div><label>Father</label><div class="inp-wrap"><span class="inp-icon">👨</span><input type="text" id="w1father"></div><label>Mobile No</label><div class="inp-wrap"><span class="inp-icon">📱</span><input type="text" id="w1mobile"></div>
     <div class="section-bi"><span class="bi-en">Witness 2</span><span class="bi-ur">گواہ دوم</span></div>
     <label>Name</label><div class="inp-wrap"><span class="inp-icon">👤</span><input type="text" id="w2name"></div><label>Father</label><div class="inp-wrap"><span class="inp-icon">👨</span><input type="text" id="w2father"></div><label>Mobile No</label><div class="inp-wrap"><span class="inp-icon">📱</span><input type="text" id="w2mobile"></div>
+    <div class="section-bi" style="margin-top:12px"><span class="bi-en">Imam / Clergy</span><span class="bi-ur">امام / مولوی</span></div>
+    <label>Imam Name <span style="font-size:10px;color:#1D9E75">امام کا نام</span></label><div class="inp-wrap"><span class="inp-icon">🕌</span><input type="text" id="imamName" placeholder="Imam / Maulvi name"></div>
+    <label>Imam Mobile <span style="font-size:10px;color:#1D9E75">موبائل نمبر</span></label><div class="inp-wrap"><span class="inp-icon">📱</span><input type="text" id="imamMobile" placeholder="0300-1234567" maxlength="12" oninput="autoFormatMobile(this,null)"></div>
     <button class="btn btn-primary" style="margin-top:12px" onclick="submitDeceased()">Submit</button>
   </div>`;
 };
@@ -1321,9 +1356,10 @@ function submitDeceased(){
   const pf=document.getElementById('dcPersonPhotoInput');
   const gf=document.getElementById('dcGravePhotoInput');
   function saveDeceased(personPhoto, gravePhoto){
-    const decO={id:nid,name,fatherName:document.getElementById('dcFather').value,cnic:document.getElementById('dcCnic').value,area:document.getElementById('dcArea').value,dateOfDeath:document.getElementById('dcDate').value,approved:false,addedBy:currentUser.id,addedDate:today(),personPhoto:personPhoto||null,gravePhoto:gravePhoto||null,w1name:document.getElementById('w1name').value,w1father:document.getElementById('w1father').value,w1mobile:document.getElementById('w1mobile').value,w2name:document.getElementById('w2name').value,w2father:document.getElementById('w2father').value,w2mobile:document.getElementById('w2mobile').value};
+    const decO={id:nid,name,fatherName:document.getElementById('dcFather').value,cnic:document.getElementById('dcCnic').value,area:document.getElementById('dcArea').value,dateOfDeath:document.getElementById('dcDate').value,approved:false,addedBy:currentUser.id,addedDate:today(),personPhoto:personPhoto||null,gravePhoto:gravePhoto||null,w1name:document.getElementById('w1name').value,w1father:document.getElementById('w1father').value,w1mobile:document.getElementById('w1mobile').value,w2name:document.getElementById('w2name').value,w2father:document.getElementById('w2father').value,w2mobile:document.getElementById('w2mobile').value,imamName:(document.getElementById('imamName')||{value:''}).value,imamMobile:(document.getElementById('imamMobile')||{value:''}).value};
   DB.deceased.push(decO);FS.save('deceased',nid,decO);
     DB.auditLog.push({by:currentUser.id,action:'Deceased Entry',target:name,detail:'ID: '+nid,date:today()});
+    addNotification('deceased','Deceased Entry','ID: '+nid+' — '+name+' | Pending approval');
     showPopup('📤','Submitted','ID: '+nid+' | Pending developer approval.',null,()=>renderTab('deceased'));
   }
   if(pf.files[0]){
@@ -1387,6 +1423,11 @@ function showDeathCert(id){
         <div style="background:#f9f9ff;border-radius:8px;padding:10px;border:1px solid #ddd">
           <div style="font-size:11px;font-weight:700;color:#185FA5;margin-bottom:8px">WITNESS 2 / گواہ دوم</div>
           <div style="font-size:12px"><div style="font-weight:600">${d.w2name||'—'}</div><div style="color:#888;margin-top:2px">${d.w2father?'W/O: '+d.w2father:''}</div><div style="color:#888;margin-top:2px">${d.w2mobile||''}</div></div>
+        ${(d.imamName)?`<div style="margin-top:12px;padding:10px;background:#f0fff8;border-radius:8px;border:1px solid #1D9E75">
+          <div style="font-size:11px;font-weight:700;color:#0F6E56;margin-bottom:6px">🕌 Imam / Clergy</div>
+          <div style="font-size:12px;font-weight:600">${d.imamName||'—'}</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">${d.imamMobile||''}</div>
+        </div>`:''}
         </div>
       </div>
 
@@ -1828,6 +1869,111 @@ T.search=function(){
     <div id="searchResults"><p style="font-size:13px;color:#888">Start typing...</p></div>
   </div>`;
 };
+function openDonorProfile(donorId){
+  const donor=[...DB.donors,...DB.users].find(x=>x.id===donorId);
+  if(!donor){showPopup('⚠️','Error','Donor not found.');return;}
+  // Build profile popup
+  const totalDon=DB.donations.filter(d=>d.donorId===donorId).reduce((s,d)=>s+d.amount,0);
+  const lastDons=DB.donations.filter(d=>d.donorId===donorId).sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
+  document.getElementById('popupIcon').textContent='';
+  document.getElementById('popupTitle').textContent='';
+  document.getElementById('popupTitleUr').textContent='';
+  document.getElementById('popupMsg').innerHTML='';
+  document.getElementById('popupMsgUr').innerHTML='';
+  document.getElementById('popupBtn').style.display='none';
+  const box=document.querySelector('.popup-box');
+  if(box){
+    box.style.maxWidth='95vw';box.style.padding='16px';
+    box.innerHTML=`
+      <button onclick="closePopup()" style="position:absolute;top:10px;right:12px;background:none;border:none;font-size:20px;cursor:pointer;color:#aaa">✕</button>
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #eee">
+        ${avatarHtml(donor.photo,donor.name,64)}
+        <div>
+          <div style="font-size:18px;font-weight:800">${donor.name}</div>
+          <div style="margin-top:4px"><span class="id-badge" style="font-size:12px">${donor.id}</span> <span class="badge badge-${donor.role||'user'}">${donor.role||'donor'}</span></div>
+          <div style="font-size:12px;color:#888;margin-top:4px">${callableNum(donor.mobile)}</div>
+          <div style="font-size:12px;color:#888;margin-top:2px">📍 ${donor.area||'—'}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <div style="background:#E1F5EE;border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:11px;color:#0F6E56;font-weight:700">Total Donated</div>
+          <div style="font-size:20px;font-weight:800;color:#0F6E56">Rs ${fmt(totalDon)}</div>
+        </div>
+        <div style="background:#E6F1FB;border-radius:10px;padding:10px;text-align:center">
+          <div style="font-size:11px;color:#185FA5;font-weight:700">Donations</div>
+          <div style="font-size:20px;font-weight:800;color:#185FA5">${lastDons.length}</div>
+        </div>
+      </div>
+      ${lastDons.length?'<div style="font-size:12px;font-weight:700;margin-bottom:6px">Recent Entries</div>'+lastDons.map(d=>`<div style="display:flex;justify-content:space-between;padding:6px 8px;background:#f9f9f9;border-radius:6px;margin-bottom:4px;font-size:12px"><span>${d.date} — ${d.desc||'Donation'}</span><span style="font-weight:600;color:#0F6E56">Rs ${fmt(d.amount)}</span></div>`).join(''):''}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
+        <button onclick="closePopup();openEditDonorProfile('${donorId}')" style="background:#1D9E75;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">✏️ Edit Profile</button>
+        <button onclick="closePopup();selectTab('donation');setTimeout(()=>{const inp=document.getElementById('fetchById');if(inp){inp.value='${donorId}';autoFetchDonorUnified('${donorId}');}},200)" style="background:#185FA5;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">💰 Donate</button>
+      </div>`;
+  }
+  document.getElementById('popupOverlay').style.display='flex';
+}
+function openEditDonorProfile(donorId){
+  const donor=DB.donors.find(x=>x.id===donorId);
+  if(!donor){showPopup('⚠️','Error','Donor not found.');return;}
+  document.getElementById('popupIcon').textContent='✏️';
+  document.getElementById('popupTitle').textContent='Edit Donor';
+  document.getElementById('popupTitleUr').textContent='ڈونر اپ ڈیٹ';
+  document.getElementById('popupBtn').style.display='none';
+  const box=document.querySelector('.popup-box');
+  if(box){
+    box.style.maxWidth='95vw';box.style.padding='16px';
+    box.innerHTML=`
+      <button onclick="closePopup()" style="position:absolute;top:10px;right:12px;background:none;border:none;font-size:20px;cursor:pointer;color:#aaa">✕</button>
+      <div style="font-size:15px;font-weight:700;margin-bottom:12px">✏️ Edit Donor Profile</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <div onclick="document.getElementById('donorEditPhotoInp').click()" style="width:64px;height:64px;border-radius:50%;overflow:hidden;border:2px dashed #1D9E75;cursor:pointer;display:flex;align-items:center;justify-content:center;background:#f0fff8">
+          <img id="donorEditPhotoPreview" src="${donor.photo||''}" style="display:${donor.photo?'block':'none'};width:100%;height:100%;object-fit:cover">
+          <span id="donorEditPhotoPlus" style="display:${donor.photo?'none':'block'};font-size:22px">📸</span>
+        </div>
+        <div style="font-size:11px;color:#888">Tap to change photo</div>
+        <input type="file" id="donorEditPhotoInp" accept="image/*" style="display:none" onchange="previewImg('donorEditPhotoInp','donorEditPhotoPreview','donorEditPhotoPlus')">
+      </div>
+      <label>Name *</label><input type="text" id="donorEditName" value="${donor.name||''}" style="margin-bottom:8px">
+      <label>Mobile *</label><input type="text" id="donorEditMobile" value="${donor.mobile||''}" maxlength="12" oninput="autoFormatMobile(this,null)" style="margin-bottom:8px">
+      <label>Area</label><select id="donorEditArea" style="margin-bottom:12px"><option value="">-- Select --</option>${AREAS.map(a=>`<option value="${a}" ${a===donor.area?'selected':''}>${a}</option>`).join('')}</select>
+      <input type="hidden" id="donorEditId" value="${donorId}">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button onclick="closePopup()" style="background:#f5f5f5;color:#333;border:1px solid #ddd;padding:10px;border-radius:8px;font-size:13px;cursor:pointer">Cancel</button>
+        <button onclick="saveDonorProfile()" style="background:#1D9E75;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">Save | محفوظ کریں</button>
+      </div>`;
+  }
+  document.getElementById('popupOverlay').style.display='flex';
+}
+function saveDonorProfile(){
+  const id=document.getElementById('donorEditId').value;
+  const donor=DB.donors.find(x=>x.id===id);
+  if(!donor)return;
+  const name=document.getElementById('donorEditName').value.trim();
+  const mobile=document.getElementById('donorEditMobile').value.trim();
+  const area=document.getElementById('donorEditArea').value;
+  if(!name||!mobile){showPopup('⚠️','Required','Name and mobile are required.');return;}
+  donor.name=name;donor.mobile=mobile;donor.area=area;
+  const photoInp=document.getElementById('donorEditPhotoInp');
+  function finish(){
+    FS.save('donors',id,donor);
+    const al={by:currentUser.id,action:'Donor Profile Updated',target:donor.name,detail:'ID: '+id,date:today()};
+    DB.auditLog.push(al);FS.save('auditLog','AL'+Date.now(),al);
+    closePopup();
+    showPopup('✅','Updated','Donor profile updated. | ڈونر پروفائل اپ ڈیٹ ہو گئی');
+  }
+  if(photoInp&&photoInp.files[0]){
+    const r=new FileReader();r.onload=e=>{donor.photo=e.target.result;finish();};r.readAsDataURL(photoInp.files[0]);
+  } else {finish();}
+}
+
+function openDonorFromSearch(id){
+  selectTab('donation');
+  setTimeout(()=>{
+    const inp=document.getElementById('fetchById');
+    if(inp){inp.value=id;autoFetchDonorUnified(id);}
+  },200);
+}
 function doSearch(){
   const q=(document.getElementById('searchInput').value||'').toLowerCase().trim();
   const res=document.getElementById('searchResults');
@@ -1841,7 +1987,7 @@ function doSearch(){
   let html='';
   if(donors.length){
     html+=`<div class="section-bi"><span class="bi-en">Donors (${donors.length})</span><span class="bi-ur">عطیہ دہندگان</span></div>`;
-    donors.forEach(d=>{html+=`<div class="entry-row"><div style="display:flex;align-items:center;gap:8px;flex:1">${avatarHtml(d.photo,d.name,30)}<div><div class="entry-name">${d.name} <span class="id-badge">${d.id}</span></div><div class="entry-sub">${callableNum(d.mobile)} • ${d.area||'—'}</div></div></div></div>`;});
+    donors.forEach(d=>{html+=`<div class="entry-row" onclick="openDonorProfile('${d.id}')" style="cursor:pointer"><div style="display:flex;align-items:center;gap:8px;flex:1">${avatarHtml(d.photo,d.name,30)}<div><div class="entry-name">${d.name} <span class="id-badge">${d.id}</span></div><div class="entry-sub">${callableNum(d.mobile)} • ${d.area||'—'}</div></div></div><div style="font-size:10px;color:#1D9E75;font-weight:600">💰 Donate</div></div>`;});
   }
   if(deceased.length){
     html+=`<div class="section-bi"><span class="bi-en">Deceased (${deceased.length})</span><span class="bi-ur">مرحومین</span></div>`;
@@ -2054,7 +2200,7 @@ function generateSlip(){
         </div>
       </div>
       <div style="font-size:12px;font-weight:700;color:#333;margin-bottom:8px;text-transform:uppercase">Last ${last5.length} Entries</div>
-      ${last5.map((e,i)=>`<div style="display:flex;justify-content:space-between;padding:8px 10px;border-radius:8px;margin-bottom:4px;background:${i===0?'#E6F1FB':'#f9f9f9'};font-size:13px">
+      ${last5.map((e,i)=>`<div style="display:flex;justify-content:space-between;padding:6px 8px;border-radius:7px;margin-bottom:3px;background:${i===0?'#E6F1FB':'#f9f9f9'};font-size:11px">
         <span style="color:${i===0?'#185FA5':'#666'}">${e.date} — ${e.desc||'Donation'}</span>
         <span style="font-weight:600;color:${i===0?'#185FA5':'#0F6E56'}">Rs ${fmt(e.amount)}</span>
       </div>`).join('')}
@@ -2146,6 +2292,7 @@ function doTransfer(){
   const trO={id:tid,from:currentUser.id,to,amount,date:today(),note:document.getElementById('transferNote').value,received:false};
   DB.transfers.push(trO);FS.save('transfers',tid,trO);
   const tu=DB.users.find(u=>u.id===to)||{name:'?'};
+  addNotification('transfer','Transfer Sent','Rs '+fmt(amount)+' sent to '+tu.name);
   showPopup('✅','Transfer Sent','Rs '+fmt(amount)+' sent to '+tu.name+'. | '+tu.name+' کو بھیجی گئی');
   renderTab('transfer');
 }
@@ -2295,6 +2442,7 @@ T.expense=function(){
     <label>Amount (Rs) * <span style="font-size:10px;color:#1D9E75;font-weight:500">رقم</span></label><div class="inp-wrap"><span class="inp-icon">💵</span><input type="number" id="expAmount" placeholder="Amount" oninput="updateExpBalance(this.value)"></div>
     <label>Date * <span style="font-size:10px;color:#1D9E75;font-weight:500">تاریخ</span></label><div class="inp-wrap"><span class="inp-icon">📅</span><input type="date" id="expDate" value="${today()}"></div>
     <label>Area <span style="font-size:10px;color:#1D9E75;font-weight:500">علاقہ</span></label><select id="expArea" class="area-sel"></select>
+    <script>setTimeout(()=>{const ea=document.getElementById("expArea");if(ea&&currentUser&&currentUser.area)ea.value=currentUser.area;},150);<\/script>
     <div style="background:#f9f9f9;border-radius:8px;padding:10px;margin-top:10px">
       <div style="font-size:12px;font-weight:600;margin-bottom:6px">Hardcopy Bill Upload (optional)</div>
       <div style="font-size:11px;color:#888;margin-bottom:8px">Upload a photo of the physical bill/receipt</div>
@@ -2385,6 +2533,7 @@ function finishExpense(desc,amount,date,area,hardcopyImg){
   };
   DB.expenses.push(newExp);FS.save('expenses',newExp.id,newExp);
   DB.auditLog.push({by:currentUser.id,action:'Expense Added',target:billNo,detail:desc+' Rs '+fmt(amount),date:today()});
+  addNotification('expense','Expense Added','Bill '+billNo+' — Rs '+fmt(amount)+' | '+desc);
   showPopup('✅','Bill Saved','Bill No: '+billNo+' | Rs '+fmt(amount)+' saved.',null,()=>renderTab('expense'));
 }
 
@@ -2618,13 +2767,33 @@ T.orgsettings=function(){
     <h3>📞 Contact Numbers <span style="font-size:10px;color:#1D9E75">رابطہ نمبر</span></h3>
     <p style="font-size:12px;color:#888;margin-bottom:10px">Shown on Contact Us page | رابطہ صفحے پر</p>
     ${(ORG_CONFIG.contactNumbers||[]).length===0?'<p style="font-size:13px;color:#888;margin-bottom:8px">No numbers added. | کوئی نمبر نہیں</p>':(ORG_CONFIG.contactNumbers||[]).map((n,i)=>`
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f0fff8;border-radius:8px;border:1px solid #1D9E75;margin-bottom:6px">
-        <div style="flex:1"><div style="font-size:12px;font-weight:700;color:#0F6E56">${n.label}</div><div style="font-size:13px;font-weight:600;color:#185FA5">${n.number}</div></div>
-        <button class="btn-xs" style="background:#E24B4A;color:#fff;border:none;cursor:pointer" onclick="removeContactNumber(${i})">🗑️</button>
+      <div style="background:#f0fff8;border-radius:10px;border:1px solid #1D9E75;margin-bottom:6px;padding:10px">
+        <div style="display:flex;align-items:center;gap:10px">
+          ${n.photo?`<img src="${n.photo}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #1D9E75;flex-shrink:0">`:``}
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:700;color:#0F6E56">${n.label}${n.area?' — '+n.area:''}</div>
+            <div style="font-size:13px;font-weight:600;color:#185FA5">${n.number}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <button class="btn-xs" style="background:#1D9E75;color:#fff;border:none;cursor:pointer" onclick="editContactNumber(${i})">✏️</button>
+            <button class="btn-xs" style="background:#E24B4A;color:#fff;border:none;cursor:pointer" onclick="removeContactNumber(${i})">🗑️</button>
+          </div>
+        </div>
       </div>`).join('')}
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
       <div class="inp-wrap"><span class="inp-icon">🏷️</span><input type="text" id="cnLabel" placeholder="Label (e.g. Office)"></div>
       <div class="inp-wrap"><span class="inp-icon">📞</span><input type="text" id="cnNumber" placeholder="0300-1234567" maxlength="12" oninput="autoFormatMobile(this,null)"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+      <div class="inp-wrap"><span class="inp-icon">📍</span><select id="cnArea"><option value="">-- Area (optional) --</option>${AREAS.map(a=>`<option value="${a}">${a}</option>`).join('')}</select></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:44px;height:44px;border-radius:50%;overflow:hidden;border:2px dashed #1D9E75;cursor:pointer;background:#f0fff8;display:flex;align-items:center;justify-content:center;flex-shrink:0" onclick="document.getElementById('cnPhotoInp').click()">
+          <img id="cnPhotoPreview" src="" style="display:none;width:100%;height:100%;object-fit:cover">
+          <span id="cnPhotoPlus" style="font-size:18px">📸</span>
+        </div>
+        <div style="font-size:11px;color:#888">Photo (optional)</div>
+        <input type="file" id="cnPhotoInp" accept="image/*" style="display:none" onchange="previewImg('cnPhotoInp','cnPhotoPreview','cnPhotoPlus')">
+      </div>
     </div>
     <button class="btn btn-primary" style="margin-top:8px" onclick="addContactNumber()">+ Add Number | نمبر شامل کریں</button>
   </div>
@@ -2790,16 +2959,35 @@ function editHistoryPhoto(i){
   };
 }
 function addContactNumber(){
-  const label=document.getElementById('cnLabel').value.trim();
-  const number=document.getElementById('cnNumber').value.trim();
+  const label=(document.getElementById('cnLabel')||{value:''}).value.trim();
+  const number=(document.getElementById('cnNumber')||{value:''}).value.trim();
+  const area=(document.getElementById('cnArea')||{value:''}).value.trim();
+  const fi=document.getElementById('cnPhotoInp');
   if(!label||!number){showPopup('⚠️','Required','Label and number are required. | لیبل اور نمبر ضروری ہے');return;}
   if(!ORG_CONFIG.contactNumbers)ORG_CONFIG.contactNumbers=[];
-  ORG_CONFIG.contactNumbers.push({label,number});
+  function finish(photo){
+    ORG_CONFIG.contactNumbers.push({label,number,area,photo:photo||null});
+    FS.saveConfig();renderLoginExtras();
+    document.getElementById('cnLabel').value='';
+    document.getElementById('cnNumber').value='';
+    showPopup('✅','Added','Contact number added. | نمبر شامل ہو گیا');
+    renderTab('orgsettings');
+  }
+  if(fi&&fi.files[0]){const r=new FileReader();r.onload=e=>finish(e.target.result);r.readAsDataURL(fi.files[0]);}
+  else finish(null);
+}
+function editContactNumber(i){
+  const n=ORG_CONFIG.contactNumbers[i];if(!n)return;
+  // Simple edit via prompts
+  const newLabel=prompt('Label:',n.label);if(newLabel===null)return;
+  const newNum=prompt('Number:',n.number);if(newNum===null)return;
+  const newArea=prompt('Area (optional):',n.area||'');
+  n.label=newLabel.trim()||n.label;
+  n.number=newNum.trim()||n.number;
+  n.area=newArea.trim();
   FS.saveConfig();renderLoginExtras();
-  document.getElementById('cnLabel').value='';
-  document.getElementById('cnNumber').value='';
-  showPopup('✅','Added','Contact number added. | نمبر شامل ہو گیا');
   renderTab('orgsettings');
+  showPopup('✅','Updated','Contact updated.');
 }
 function removeContactNumber(i){
   if(!ORG_CONFIG.contactNumbers)return;
@@ -3108,7 +3296,7 @@ T.lockuser=function(){
   const users=DB.users.filter(u=>u.role!=='developer');
   return `<div class="card">
     <h3><span class="bi-title"><span class="bi-en">Login Management</span><span class="bi-ur">لاگ ان کنٹرول</span></span></h3>
-    <div class="inp-wrap" style="margin-bottom:10px"><span class="inp-icon">🔍</span><input type="text" id="lockUserSearch" placeholder="Search by name or mobile..." oninput="renderLockUserList()" style="font-size:13px"></div>
+    <div class="inp-wrap" style="margin-bottom:10px"><span class="inp-icon">🔍</span><input type="text" id="lockUserSearch" placeholder="Search by name or mobile..." oninput="renderLockUserList()" onkeyup="renderLockUserList()" style="font-size:13px"></div>
     <div id="lockUserList">${renderLockUserListHtml(users,'')}</div>
   </div>`;
 }
@@ -3120,7 +3308,7 @@ function renderLockUserListHtml(users,q){
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div>
           <div style="font-size:13px;font-weight:700">${u.name} <span class="badge badge-${u.role}">${u.role}</span></div>
-          <div style="font-size:11px;color:#888;margin-top:2px">${u.mobile} • ${u.id}</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">${u.mobile} • ${u.id} • ${u.area||'—'}</div>
           ${u.locked?'<span style="font-size:10px;color:#E24B4A;font-weight:600">🔒 Locked</span>':'<span style="font-size:10px;color:#1D9E75">🔓 Active</span>'}
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
@@ -3260,6 +3448,10 @@ function editProfession(i){
 T.datamanager=function(){
   return `<div class="card">
     <h3><span class="bi-title"><span class="bi-en">Data Management</span><span class="bi-ur">ڈیٹا مینیجمنٹ</span></span></h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+      <button onclick="exportToExcel()" style="background:#1D7A5F;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">📥 Export Excel</button>
+      <label style="background:#185FA5;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;text-align:center;display:block">📤 Import Excel<input type="file" accept=".xlsx,.xls" style="display:none" onchange="importFromExcel(this.files[0])"></label>
+    </div>
     <div style="background:#FCEBEB;border:1px solid #E24B4A;border-radius:8px;padding:10px;margin-bottom:14px;font-size:12px;color:#A32D2D">
       ⚠️ Deleting entries is permanent and cannot be undone. | حذف کرنا مستقل ہے
     </div>
@@ -3371,6 +3563,166 @@ function devDeleteAll(collection){
   showPopup('🗑️','Deleted','All '+collection+' entries deleted.');
 }
 
+T.expcategories=function(){
+  return `<div class="card">
+    <h3><span class="bi-title"><span class="bi-en">Expense Categories</span><span class="bi-ur">اخراجات کے زمرے</span></span></h3>
+    ${EXP_CATEGORIES.map((cat,i)=>`
+      <div class="entry-row" id="expCatRow_${i}">
+        <div class="entry-name">${cat}</div>
+        <div style="display:flex;gap:4px">
+          <button class="btn-xs" style="background:#1D9E75;color:#fff;border:none;cursor:pointer" onclick="editExpCatInline(${i})">✏️</button>
+          <button class="btn-xs" style="background:#E24B4A;color:#fff;border:none;cursor:pointer" onclick="deleteExpCat(${i})">🗑️</button>
+        </div>
+      </div>
+      <div id="expCatEditRow_${i}" style="display:none;padding:6px 0">
+        <div style="display:flex;gap:6px">
+          <input type="text" id="expCatEditInput_${i}" value="${cat}" style="flex:1;padding:6px 10px;border:1px solid #1D9E75;border-radius:6px;font-size:13px">
+          <button class="btn-xs" style="background:#1D9E75;color:#fff;border:none;cursor:pointer" onclick="saveExpCatEdit(${i})">Save</button>
+          <button class="btn-xs" style="background:#888;color:#fff;border:none;cursor:pointer" onclick="cancelExpCatEdit(${i})">✕</button>
+        </div>
+      </div>`).join('')}
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <div class="inp-wrap" style="flex:1"><span class="inp-icon">📂</span><input type="text" id="newExpCatInput" placeholder="New category | نئی قسم"></div>
+      <button class="btn btn-sm btn-primary" onclick="addExpCat()" style="margin-top:0">+ Add</button>
+    </div>
+  </div>`;
+}
+function editExpCatInline(i){document.getElementById('expCatRow_'+i).style.display='none';document.getElementById('expCatEditRow_'+i).style.display='block';}
+function cancelExpCatEdit(i){document.getElementById('expCatRow_'+i).style.display='flex';document.getElementById('expCatEditRow_'+i).style.display='none';}
+function saveExpCatEdit(i){
+  const v=document.getElementById('expCatEditInput_'+i).value.trim();
+  if(!v){showPopup('⚠️','Required','Category name cannot be empty.');return;}
+  EXP_CATEGORIES[i]=v;renderTab('expcategories');
+  showPopup('✅','Updated','Category updated.');
+}
+function deleteExpCat(i){
+  if(!confirm('Delete "'+EXP_CATEGORIES[i]+'"?'))return;
+  EXP_CATEGORIES.splice(i,1);renderTab('expcategories');
+  showPopup('🗑️','Deleted','Category deleted.');
+}
+function addExpCat(){
+  const v=(document.getElementById('newExpCatInput')||{value:''}).value.trim();
+  if(!v){showPopup('⚠️','Required','Enter category name.');return;}
+  if(EXP_CATEGORIES.includes(v)){showPopup('⚠️','Duplicate','Category already exists.');return;}
+  EXP_CATEGORIES.push(v);renderTab('expcategories');
+  showPopup('✅','Added',v+' added.');
+}
+
+T.contacts=function(){
+  const allUsers=[...DB.users,...DB.donors].filter(x=>x.mobile);
+  const uniqueAreas=['All',...new Set(allUsers.map(u=>u.area||'').filter(Boolean)).values()].sort();
+  return `<div style="position:sticky;top:0;z-index:10;background:var(--bg);padding:8px 0 4px">
+    <div style="display:flex;gap:8px;margin-bottom:6px">
+      <div class="inp-wrap" style="flex:1;margin-bottom:0"><span class="inp-icon">🔍</span><input type="text" id="contactSearch" placeholder="Search name or mobile... | نام یا موبائل" oninput="filterContacts()" onkeyup="filterContacts()" style="font-size:13px"></div>
+    </div>
+    <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px">
+      ${uniqueAreas.map(a=>`<button onclick="filterContacts('${a}')" id="areaBtn_${a.replace(/\s/g,'_')}" class="btn-xs" style="white-space:nowrap;background:${a==='All'?'#1D9E75':'#f5f5f5'};color:${a==='All'?'#fff':'#333'};border:1px solid #ddd;padding:5px 10px;border-radius:20px;cursor:pointer;font-size:11px">${a}</button>`).join('')}
+    </div>
+  </div>
+  <div id="contactListBody"></div>
+  <script>
+    setTimeout(()=>filterContacts('All'),50);
+  <\/script>`;
+}
+function filterContacts(area){
+  const searchEl=document.getElementById('contactSearch');
+  const q=(searchEl?searchEl.value:'').toLowerCase().trim();
+  const allContacts=[...DB.users,...DB.donors].filter(x=>x.mobile);
+  // Update area button styles
+  const areas=['All',...new Set(allContacts.map(u=>u.area||'').filter(Boolean))];
+  const activeArea=area||window._contactArea||'All';
+  if(area)window._contactArea=area;
+  areas.forEach(a=>{
+    const btn=document.getElementById('areaBtn_'+a.replace(/\s/g,'_'));
+    if(btn){btn.style.background=a===activeArea?'#1D9E75':'#f5f5f5';btn.style.color=a===activeArea?'#fff':'#333';}
+  });
+  // Filter
+  let filtered=allContacts;
+  if(activeArea&&activeArea!=='All')filtered=filtered.filter(u=>(u.area||'')=== activeArea);
+  if(q)filtered=filtered.filter(u=>(u.name||'').toLowerCase().includes(q)||(u.mobile||'').includes(q)||(u.id||'').toLowerCase().includes(q));
+  // Sort A-Z
+  filtered.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const el=document.getElementById('contactListBody');
+  if(!el)return;
+  if(!filtered.length){el.innerHTML='<p style="font-size:13px;color:#888;text-align:center;padding:20px">No contacts found. | کوئی رابطہ نہیں</p>';return;}
+  // Group by first letter
+  const groups={};
+  filtered.forEach(u=>{
+    const letter=(u.name||'?')[0].toUpperCase();
+    if(!groups[letter])groups[letter]=[];
+    groups[letter].push(u);
+  });
+  let html='';
+  Object.keys(groups).sort().forEach(letter=>{
+    html+=`<div style="font-size:11px;font-weight:700;color:#888;padding:8px 0 4px;border-bottom:1px solid #eee;margin-bottom:4px">${letter}</div>`;
+    groups[letter].forEach(u=>{
+      const isDonor=DB.donors.find(d=>d.id===u.id)?'donor':'user';
+      html+=`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid #f5f5f5" onclick="openDonorProfile('${u.id}')">
+        <div style="flex-shrink:0">${avatarHtml(u.photo,u.name,44)}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.name} <span class="id-badge" style="font-size:10px">${u.id}</span></div>
+          <div style="font-size:11px;color:#888;margin-top:2px">${u.area||'—'} • <span class="badge badge-${u.role||isDonor}" style="font-size:10px">${u.role||isDonor}</span></div>
+        </div>
+        <a href="tel:${(u.mobile||'').replace(/[^0-9+]/g,'')}" onclick="event.stopPropagation()" style="flex-shrink:0;width:36px;height:36px;background:#1D9E75;border-radius:50%;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:16px">📞</a>
+      </div>`;
+    });
+  });
+  html+=`<div style="text-align:center;padding:12px;font-size:11px;color:#aaa">${filtered.length} contacts | ${filtered.length} رابطے</div>`;
+  el.innerHTML=html;
+}
+
+// ============================================================
+// NOTIFICATIONS TAB
+// ============================================================
+// In-app notification system
+let DB_NOTIFICATIONS=[];
+function addNotification(type,title,message,link){
+  const n={id:'N'+Date.now(),type,title,message,link:link||'',date:today(),time:new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'}),read:false};
+  DB_NOTIFICATIONS.unshift(n);
+  if(DB_NOTIFICATIONS.length>50)DB_NOTIFICATIONS=DB_NOTIFICATIONS.slice(0,50);
+  updateNotifBadge();
+}
+function updateNotifBadge(){
+  const unread=DB_NOTIFICATIONS.filter(n=>!n.read).length;
+  const badges=document.querySelectorAll('.notif-badge');
+  badges.forEach(b=>{b.textContent=unread||'';b.style.display=unread?'flex':'none';});
+}
+function markAllNotifRead(){
+  DB_NOTIFICATIONS.forEach(n=>n.read=true);
+  updateNotifBadge();
+  renderTab('notifications');
+}
+
+T.notifications=function(){
+  const unread=DB_NOTIFICATIONS.filter(n=>!n.read).length;
+  const icons={donation:'💰',expense:'📋',deceased:'🕌',transfer:'💸',approval:'✅',system:'🔔',login:'👤',sms:'📱'};
+  const colors={donation:'#E1F5EE',expense:'#FAEEDA',deceased:'#f0f0f0',transfer:'#E6F1FB',approval:'#E1F5EE',system:'#f5f5f5',login:'#E6F1FB',sms:'#f0fff8'};
+  return `<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h3><span class="bi-title"><span class="bi-en">Notifications ${unread>0?`<span style="background:#E24B4A;color:#fff;border-radius:20px;padding:1px 7px;font-size:11px">${unread}</span>`:''}
+      </span><span class="bi-ur">اطلاعات</span></span></h3>
+      ${unread>0?`<button onclick="markAllNotifRead()" style="background:#f5f5f5;border:1px solid #ddd;padding:5px 10px;border-radius:8px;font-size:11px;cursor:pointer">Mark all read</button>`:''}
+    </div>
+    ${DB_NOTIFICATIONS.length===0?`<div style="text-align:center;padding:24px;color:#888;font-size:13px">🔔<br>No notifications yet | ابھی کوئی اطلاع نہیں</div>`:
+    DB_NOTIFICATIONS.map(n=>`
+      <div style="display:flex;gap:10px;padding:10px;border-radius:10px;margin-bottom:8px;background:${n.read?'#f9f9f9':colors[n.type]||'#f0fff8'};border:1px solid ${n.read?'#eee':'#ddd'};cursor:pointer" onclick="markNotifRead('${n.id}')">
+        <div style="width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,0.07);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${icons[n.type]||'🔔'}</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:${n.read?'500':'700'};color:#1a1a1a">${n.title}</div>
+          <div style="font-size:11px;color:#666;margin-top:2px">${n.message}</div>
+          <div style="font-size:10px;color:#aaa;margin-top:4px">${n.date} ${n.time}</div>
+        </div>
+        ${!n.read?'<div style="width:8px;height:8px;background:#1D9E75;border-radius:50%;flex-shrink:0;margin-top:4px"></div>':''}
+      </div>`).join('')}
+  </div>`;
+}
+function markNotifRead(id){
+  const n=DB_NOTIFICATIONS.find(x=>x.id===id);
+  if(n)n.read=true;
+  updateNotifBadge();
+  renderTab('notifications');
+}
+
 T.audit=function(){
   return `<div class="card"><h3><span class="bi-title"><span class="bi-en">Activity Log</span><span class="bi-ur">سرگرمی لاگ</span></span></h3>${DB.auditLog.length===0?'<p style="font-size:13px;color:#888">No activity log entries.</p>':DB.auditLog.slice().reverse().map(l=>{const u=DB.users.find(x=>x.id===l.by)||{name:l.by};return `<div style="padding:8px;background:#f9f9f9;border-radius:8px;margin-bottom:5px;border-left:3px solid #1D9E75"><div style="font-size:12px;font-weight:600">${l.action} — ${l.target}</div><div style="font-size:11px;color:#888;margin-top:2px">${l.detail} • By: ${u.name} • ${l.date}</div></div>`;}).join('')}</div>`;
 };
@@ -3434,6 +3786,8 @@ function getMenuConfig(){
     items:[
       {icon:'🏠', label:'Dashboard / ڈیش بورڈ', tab:'dash'},
       {icon:'🔍', label:'Search / تلاش', tab:'search'},
+      {icon:'📒', label:'Contacts / رابطے', tab:'contacts'},
+      {icon:'🔔', label:'Notifications / اطلاعات', tab:'notifications'},
       {icon:'👤', label:'Profile / پروفائل', tab:'profile'},
     ]
   };
@@ -3489,6 +3843,7 @@ function getMenuConfig(){
       {icon:'👥', label:'Users / صارفین', tab:'userslist'},
       {icon:'💼', label:'Profession / پیشہ', tab:'professions'},
       {icon:'🏘️', label:'Areas / علاقے', tab:'areas'},
+      {icon:'📂', label:'Exp Categories', tab:'expcategories'},
       {icon:'🏢', label:'Organization Settings', tab:'orgsettings'},
       {icon:'📋', label:'Audit / لاگ', tab:'audit'},
       {icon:'🗄️', label:'Data Manager', tab:'datamanager'}
@@ -3591,7 +3946,7 @@ const TAB_LABELS={
   donorlist:'Donor List',slip:'Donor Slip',top:'Top Donors',transfer:'Transfer',
   decconfirm:'Confirm Deceased',approvals:'Approvals',lockuser:'Login Management',
   userslist:'Users List',professions:'Professions',audit:'Audit Log',areas:'Areas',
-  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager'
+  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',contacts:'Contacts',notifications:'Notifications'
 };
 
 // ============================================================
@@ -3638,6 +3993,7 @@ T.dash = function(){
 function loadDashboard(){
   try{
     showScreen('dashScreen');
+    addNotification('login','Logged In',currentUser.name+' ('+currentRole+') logged in at '+new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'}));
     const dashRoleEl=document.getElementById('dashRole');
     if(dashRoleEl) dashRoleEl.innerHTML=`<span style="color:rgba(255,255,255,0.8)">${currentRole.charAt(0).toUpperCase()+currentRole.slice(1)}</span> — <span style="color:#fff;font-weight:600">${currentUser.name}</span>`;
     const av=document.getElementById('dashAvatar');
@@ -3945,6 +4301,86 @@ function openSMSReminders(){
   if(box){box.style.maxWidth='95vw';box.innerHTML=html;}
   document.getElementById('popupOverlay').style.display='flex';
 }
+// ============================================================
+// EXCEL BACKUP & UPLOAD
+// ============================================================
+function exportToExcel(){
+  // Build workbook data
+  const wb={SheetNames:[],Sheets:{}};
+  // Donors sheet
+  const donors=DB.donors.map(d=>({ID:d.id,Name:d.name,Mobile:d.mobile,Area:d.area||'',TotalDonation:d.totalDonation||0}));
+  // Donations sheet
+  const donations=DB.donations.map(d=>{const dn=DB.donors.find(x=>x.id===d.donorId)||{name:'?'};return{TxnID:d.id,DonorID:d.donorId,DonorName:dn.name,Amount:d.amount,Date:d.date,Description:d.desc||'',By:d.by};});
+  // Expenses sheet
+  const expenses=DB.expenses.map(e=>({BillNo:e.billNo,Description:e.desc,Amount:e.amount,Date:e.date,Category:e.category||'',Area:e.area||'',By:e.by}));
+  // Users sheet
+  const users=DB.users.map(u=>({ID:u.id,Name:u.name,Mobile:u.mobile,Role:u.role,Area:u.area||'',Status:u.locked?'Locked':'Active'}));
+
+  function arrToSheet(arr){
+    if(!arr.length)return{};
+    const keys=Object.keys(arr[0]);
+    const ws={};
+    keys.forEach((k,ci)=>{ws[XLSX.utils.encode_cell({r:0,c:ci})]={v:k,t:'s'};});
+    arr.forEach((row,ri)=>{keys.forEach((k,ci)=>{const v=row[k];ws[XLSX.utils.encode_cell({r:ri+1,c:ci})]={v:v,t:typeof v==='number'?'n':'s'};});});
+    const range={s:{r:0,c:0},e:{r:arr.length,c:keys.length-1}};
+    ws['!ref']=XLSX.utils.encode_range(range);
+    return ws;
+  }
+  wb.SheetNames=['Donors','Donations','Expenses','Users'];
+  wb.Sheets['Donors']=arrToSheet(donors);
+  wb.Sheets['Donations']=arrToSheet(donations);
+  wb.Sheets['Expenses']=arrToSheet(expenses);
+  wb.Sheets['Users']=arrToSheet(users);
+  const wbout=XLSX.write(wb,{bookType:'xlsx',type:'binary'});
+  const buf=new ArrayBuffer(wbout.length);
+  const view=new Uint8Array(buf);
+  for(let i=0;i<wbout.length;i++)view[i]=wbout.charCodeAt(i)&0xFF;
+  const blob=new Blob([buf],{type:'application/octet-stream'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=orgName()+'_backup_'+today()+'.xlsx';
+  a.click();URL.revokeObjectURL(url);
+  showPopup('✅','Downloaded','Excel backup downloaded! | ایکسل بیک اپ ڈاؤن لوڈ ہو گیا');
+}
+
+function importFromExcel(file){
+  if(!file)return;
+  const r=new FileReader();
+  r.onload=function(e){
+    try{
+      const data=new Uint8Array(e.target.result);
+      const wb=XLSX.read(data,{type:'array'});
+      let imported=0;
+      // Import Donors
+      if(wb.Sheets['Donors']){
+        const rows=XLSX.utils.sheet_to_json(wb.Sheets['Donors']);
+        rows.forEach(row=>{
+          if(!row.Name||!row.Mobile)return;
+          const existing=DB.donors.find(d=>normMob(d.mobile)===normMob(String(row.Mobile)));
+          if(!existing){
+            const nd={id:nextAllId(),name:row.Name,mobile:String(row.Mobile),area:row.Area||'',totalDonation:row.TotalDonation||0,photo:null,entries:[]};
+            DB.donors.push(nd);FS.save('donors',nd.id,nd);imported++;
+          }
+        });
+      }
+      // Import Donations
+      if(wb.Sheets['Donations']){
+        const rows=XLSX.utils.sheet_to_json(wb.Sheets['Donations']);
+        rows.forEach(row=>{
+          if(!row.DonorID||!row.Amount)return;
+          const exists=DB.donations.find(d=>d.id===row.TxnID);
+          if(!exists){
+            const nd={id:row.TxnID||'TXN'+Date.now(),donorId:row.DonorID,amount:Number(row.Amount)||0,date:row.Date||today(),by:row.By||currentUser.id,desc:row.Description||''};
+            DB.donations.push(nd);FS.save('donations',nd.id,nd);imported++;
+          }
+        });
+      }
+      showPopup('✅','Imported',imported+' records imported. | '+imported+' ریکارڈ درآمد ہوئے');
+    }catch(err){showPopup('❌','Error','Import failed: '+err.message);}
+  };
+  r.readAsArrayBuffer(file);
+}
+
 async function appInit(){
   initFirebase();
   try{await loadAllData();}catch(e){console.error('Data load error:',e);}

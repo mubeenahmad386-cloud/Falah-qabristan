@@ -484,13 +484,15 @@ function showLoading(on){
 async function loadAllData(){
   showLoading(true);
   try{
-    const [u,pa,don,dec,donations,exp,trf,log,profs]=await Promise.all([
+    const [u,pa,don,dec,donations,exp,trf,log,profs,sugg]=await Promise.all([
       FS.loadAll('users'),FS.loadAll('pendingApprovals'),FS.loadAll('donors'),
       FS.loadAll('deceased'),FS.loadAll('donations'),FS.loadAll('expenses'),
-      FS.loadAll('transfers'),FS.loadAll('auditLog'),FS.loadAll('professions')
+      FS.loadAll('transfers'),FS.loadAll('auditLog'),FS.loadAll('professions'),
+      FS.loadAll('suggestions')
     ]);
     DB.users=u;DB.pendingApprovals=pa;DB.donors=don;DB.deceased=dec;
     DB.donations=donations;DB.expenses=exp;DB.transfers=trf;DB.auditLog=log;
+    DB.suggestions=sugg||[];
     // Load saved areas
     try{const areasDoc=await FS.loadAll('config');const aConf=areasDoc.find(x=>x.id==='areas');if(aConf&&aConf.list&&aConf.list.length>0)AREAS=aConf.list;}catch(e){}
     if(profs.length>0){
@@ -542,7 +544,8 @@ const DB={
   donations:[],
   expenses:[],
   transfers:[],
-  auditLog:[]
+  auditLog:[],
+  suggestions:[]
 };
 
 var currentUser=null,currentRole=null,pendingRegRole=null,txnCounter=1,expBillCounter=0;
@@ -914,7 +917,7 @@ T.dash=function(){
     <div class="stat-card"><div class="stat-label">Cash in Hand</div><div class="stat-val" style="color:#185FA5">Rs ${fmt(cash)}</div></div>
   </div>
   ${pt>0?`<div class="info-box warning">📩 ${pt} transfer(s) receive karni hain — Transfer tab dekhen.</div>`:''}
-  <div class="card"><h3><span class="bi-title"><span class="bi-en">Recent Entries</span><span class="bi-ur">حالیہ اندراجات</span></span></h3>${myD.length===0?'<p style="font-size:13px;color:#888">No entries found.</p>':myD.slice(-3).reverse().map(d=>{const dn=DB.donors.find(x=>x.id===d.donorId)||{name:'Unknown',area:''};return `<div class="entry-row"><div style="display:flex;align-items:center;gap:8px;flex:1">${avatarHtml(dn.photo,dn.name,28)}<div><div class="entry-name">${dn.name}</div><div class="entry-sub">${dn.area} • ${d.date}</div></div></div><div class="entry-amt">+Rs ${fmt(d.amount)}</div></div>`;}).join('')}</div>`;
+  <div class="card" style="padding:10px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="font-size:11px;font-weight:700;color:#333">Recent Entries | حالیہ اندراجات</div><button onclick="selectTab('myentries')" style="font-size:10px;color:#1D9E75;background:none;border:none;cursor:pointer;font-weight:600">View All →</button></div>${myD.length===0?'<p style="font-size:11px;color:#888">No entries found.</p>':myD.slice(-5).reverse().map(d=>{const dn=DB.donors.find(x=>x.id===d.donorId)||{name:'Unknown',area:''};return `<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:0.5px solid #f5f5f5">${avatarHtml(dn.photo,dn.name,22)}<div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${dn.name}</div><div style="font-size:10px;color:#aaa">${d.date}</div></div><div style="font-size:11px;font-weight:700;color:#0F6E56;white-space:nowrap">+Rs ${fmt(d.amount)}</div></div>`;}).join('')}</div>`;
 };
 
 // ---- DONATION ENTRY ----
@@ -2742,6 +2745,37 @@ function printExpenseBill(id){
 
 
 // ---- DONOR LIST (admin, manager, developer) ----
+T.donorprofileupdate=function(){
+  const donors=[...DB.donors].sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  return `<div class="card">
+    <h3><span class="bi-title"><span class="bi-en">Donor Profile Update</span><span class="bi-ur">ڈونر پروفائل اپ ڈیٹ</span></span></h3>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <div class="inp-wrap" style="flex:1;margin-bottom:0"><span class="inp-icon">🔍</span><input type="text" id="dpuSearch" placeholder="Search donor name or mobile... | تلاش کریں" oninput="filterDPU()" style="font-size:13px"></div>
+      <button onclick="document.getElementById('dpuSearch').value='';filterDPU()" style="background:#f5f5f5;border:1px solid #ddd;border-radius:8px;padding:0 12px;font-size:12px;cursor:pointer;color:#666">✕</button>
+    </div>
+    <div id="dpuList">${renderDPUList(donors,'')}</div>
+  </div>`;
+}
+function renderDPUList(donors,q){
+  const filtered=q?donors.filter(d=>(d.name||'').toLowerCase().includes(q.toLowerCase())||normMob(d.mobile||'').includes(normMob(q))):donors;
+  if(!filtered.length)return '<p style="font-size:13px;color:#888;text-align:center;padding:16px">No donors found.</p>';
+  return filtered.map(d=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px;background:#f9f9f9;border-radius:10px;margin-bottom:8px;border:1px solid #eee">
+      <div style="flex-shrink:0">${avatarHtml(d.photo,d.name,44)}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.name} <span class="id-badge">${d.id}</span></div>
+        <div style="font-size:11px;color:#888;margin-top:2px">${d.mobile||'—'} • ${d.area||'—'}</div>
+        <div style="font-size:11px;color:#0F6E56;margin-top:1px">Total: Rs ${fmt(d.totalDonation||0)}</div>
+      </div>
+      <button onclick="openEditDonorProfile('${d.id}')" style="background:#1D9E75;color:#fff;border:none;padding:7px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0">✏️ Edit</button>
+    </div>`).join('');
+}
+function filterDPU(){
+  const q=(document.getElementById('dpuSearch')||{value:''}).value.trim();
+  const el=document.getElementById('dpuList');
+  if(!el)return;
+  el.innerHTML=renderDPUList([...DB.donors].sort((a,b)=>(a.name||'').localeCompare(b.name||'')),q);
+}
 T.donorlist=function(){
   const donors=[...DB.donors].sort((a,b)=>b.totalDonation-a.totalDonation);
   return `<div class="card">
@@ -3885,6 +3919,140 @@ function markNotifRead(id){
   renderTab('notifications');
 }
 
+T.suggestion=function(){
+  return `<div class="card">
+    <h3><span class="bi-title"><span class="bi-en">Send Suggestion</span><span class="bi-ur">تجویز بھیجیں</span></span></h3>
+    <p style="font-size:12px;color:#888;margin-bottom:14px">Share your ideas, feedback or issues with the developer. | اپنی تجاویز، رائے یا مسائل developer کو بھیجیں۔</p>
+    <label>Category <span style="font-size:10px;color:#1D9E75">قسم</span></label>
+    <select id="suggCategory">
+      <option value="Feature Request">💡 Feature Request</option>
+      <option value="Bug Report">🐛 Bug Report</option>
+      <option value="Improvement">⚡ Improvement</option>
+      <option value="Complaint">⚠️ Complaint</option>
+      <option value="General Feedback">💬 General Feedback</option>
+      <option value="Other">📌 Other</option>
+    </select>
+    <label style="margin-top:10px">Your Suggestion * <span style="font-size:10px;color:#1D9E75">آپ کی تجویز</span></label>
+    <textarea id="suggText" placeholder="Write your suggestion here... | یہاں لکھیں" rows="5" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;margin-top:4px"></textarea>
+    <button class="btn btn-primary" style="margin-top:12px" onclick="submitSuggestion()">
+      <span style="font-size:13px">Send Suggestion</span>
+      <span style="font-size:10px;opacity:0.85;display:block">تجویز بھیجیں</span>
+    </button>
+    <div id="suggStatus" style="display:none;margin-top:10px"></div>
+  </div>
+  <div class="card" style="background:#f0fff8;border:1px solid #1D9E75">
+    <div style="font-size:12px;font-weight:600;color:#0F6E56;margin-bottom:6px">My Suggestions | میری تجاویز</div>
+    ${DB.suggestions.filter(s=>s.by===currentUser.id).length===0
+      ?'<p style="font-size:12px;color:#888">No suggestions sent yet. | ابھی تک کوئی نہیں</p>'
+      :DB.suggestions.filter(s=>s.by===currentUser.id).sort((a,b)=>b.date.localeCompare(a.date)).map(s=>`
+        <div style="padding:10px;background:#fff;border-radius:8px;margin-bottom:8px;border:1px solid #ddd">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <span style="font-size:11px;font-weight:700;color:#1D9E75">${s.category}</span>
+            <span style="font-size:10px;color:#aaa">${s.date} ${s.time||''}</span>
+          </div>
+          <div style="font-size:12px;color:#333">${s.text}</div>
+          ${s.reply?`<div style="margin-top:6px;padding:6px 8px;background:#E1F5EE;border-radius:6px;font-size:11px;color:#0F6E56"><strong>Developer Reply:</strong> ${s.reply}</div>`:'<div style="margin-top:4px;font-size:10px;color:#aaa">⏳ Awaiting reply...</div>'}
+        </div>`).join('')}
+  </div>`;
+}
+function submitSuggestion(){
+  const text=(document.getElementById('suggText').value||'').trim();
+  const category=(document.getElementById('suggCategory').value||'General Feedback');
+  const statusEl=document.getElementById('suggStatus');
+  if(!text){
+    if(statusEl){statusEl.style.display='block';statusEl.innerHTML='<div style="background:#FCEBEB;border:1px solid #E24B4A;border-radius:6px;padding:8px 10px;font-size:12px;color:#A32D2D">⚠️ Please write your suggestion first. | پہلے تجویز لکھیں</div>';}
+    return;
+  }
+  const sid='SUGG'+Date.now();
+  const now=new Date();
+  const sugg={
+    id:sid,
+    by:currentUser.id,
+    byName:currentUser.name,
+    byMobile:currentUser.mobile||'',
+    byArea:currentUser.area||'',
+    byRole:currentUser.role,
+    category,
+    text,
+    date:today(),
+    time:now.toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'}),
+    read:false,
+    reply:''
+  };
+  DB.suggestions.push(sugg);
+  FS.save('suggestions',sid,sugg);
+  // Notification
+  addNotification('system','Suggestion Sent','Your '+category+' has been sent to developer.');
+  // Clear form
+  document.getElementById('suggText').value='';
+  if(statusEl){
+    statusEl.style.display='block';
+    statusEl.innerHTML='<div style="background:#E1F5EE;border:1px solid #1D9E75;border-radius:6px;padding:8px 10px;font-size:12px;color:#0F6E56">✅ Suggestion sent! Developer will review it. | تجویز بھیج دی گئی</div>';
+    setTimeout(()=>{statusEl.style.display='none';},4000);
+  }
+  renderTab('suggestion');
+}
+
+// ============================================================
+// Developer — View all suggestions
+// ============================================================
+T.suggestions=function(){
+  const all=[...DB.suggestions].sort((a,b)=>b.date.localeCompare(a.date));
+  const unread=all.filter(s=>!s.read).length;
+  return `<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h3><span class="bi-title"><span class="bi-en">Suggestions ${unread>0?`<span style="background:#E24B4A;color:#fff;border-radius:20px;padding:1px 7px;font-size:11px">${unread}</span>`:''}
+      </span><span class="bi-ur">تجاویز</span></span></h3>
+      ${unread>0?`<button onclick="markAllSuggRead()" style="background:#f5f5f5;border:1px solid #ddd;padding:5px 10px;border-radius:8px;font-size:11px;cursor:pointer">Mark all read</button>`:''}
+    </div>
+    ${all.length===0
+      ?'<p style="font-size:13px;color:#888;text-align:center;padding:16px">No suggestions yet. | ابھی تک کوئی تجویز نہیں</p>'
+      :all.map(s=>`
+        <div style="padding:12px;border-radius:10px;margin-bottom:10px;background:${s.read?'#f9f9f9':'#E1F5EE'};border:1px solid ${s.read?'#eee':'#1D9E75'}" onclick="markSuggRead('${s.id}')">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px">
+            <div>
+              <span style="font-size:11px;font-weight:700;color:#1D9E75;background:#fff;padding:2px 8px;border-radius:20px;border:1px solid #1D9E75">${s.category}</span>
+              ${!s.read?'<span style="font-size:10px;color:#E24B4A;font-weight:600;margin-left:6px">● New</span>':''}
+            </div>
+            <span style="font-size:10px;color:#aaa;white-space:nowrap">${s.date} ${s.time||''}</span>
+          </div>
+          <div style="font-size:13px;color:#1a1a1a;margin-bottom:8px;line-height:1.5">${s.text}</div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px;background:rgba(255,255,255,0.7);border-radius:8px;border:1px solid rgba(0,0,0,0.05)">
+            <div style="width:36px;height:36px;border-radius:50%;background:#1D9E75;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0">${(s.byName||'?')[0].toUpperCase()}</div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:700">${s.byName||'?'} <span class="badge badge-${s.byRole||'user'}">${s.byRole||'user'}</span></div>
+              <div style="font-size:11px;color:#888;margin-top:1px">${callableNum(s.byMobile)} • ${s.byArea||'—'}</div>
+            </div>
+          </div>
+          ${s.reply
+            ?`<div style="margin-top:8px;padding:8px;background:#E6F1FB;border-radius:8px;font-size:12px;color:#185FA5"><strong>Your Reply:</strong> ${s.reply}</div>`
+            :`<div style="display:flex;gap:6px;margin-top:8px">
+                <input type="text" id="replyInp_${s.id}" placeholder="Reply to this suggestion... | جواب لکھیں" style="flex:1;padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:12px">
+                <button onclick="replyToSuggestion('${s.id}')" style="background:#1D9E75;color:#fff;border:none;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">Reply</button>
+              </div>`}
+        </div>`).join('')}
+  </div>`;
+}
+function markSuggRead(id){
+  const s=DB.suggestions.find(x=>x.id===id);
+  if(s&&!s.read){s.read=true;FS.save('suggestions',id,s);}
+}
+function markAllSuggRead(){
+  DB.suggestions.forEach(s=>{if(!s.read){s.read=true;FS.save('suggestions',s.id,s);}});
+  renderTab('suggestions');
+}
+function replyToSuggestion(id){
+  const reply=(document.getElementById('replyInp_'+id)||{value:''}).value.trim();
+  if(!reply){showPopup('⚠️','Required','Please write a reply first.');return;}
+  const s=DB.suggestions.find(x=>x.id===id);
+  if(!s)return;
+  s.reply=reply;s.read=true;
+  FS.save('suggestions',id,s);
+  showPopup('✅','Reply Sent','Reply sent to '+s.byName+'.');
+  addNotification('system','Suggestion Replied',s.byName+': '+reply.slice(0,40));
+  renderTab('suggestions');
+}
+
 T.audit=function(){
   return `<div class="card"><h3><span class="bi-title"><span class="bi-en">Activity Log</span><span class="bi-ur">سرگرمی لاگ</span></span></h3>${DB.auditLog.length===0?'<p style="font-size:13px;color:#888">No activity log entries.</p>':DB.auditLog.slice().reverse().map(l=>{const u=DB.users.find(x=>x.id===l.by)||{name:l.by};return `<div style="padding:8px;background:#f9f9f9;border-radius:8px;margin-bottom:5px;border-left:3px solid #1D9E75"><div style="font-size:12px;font-weight:600">${l.action} — ${l.target}</div><div style="font-size:11px;color:#888;margin-top:2px">${l.detail} • By: ${u.name} • ${l.date}</div></div>`;}).join('')}</div>`;
 };
@@ -3950,6 +4118,7 @@ function getMenuConfig(){
       {icon:'🔍', label:'Search / تلاش', tab:'search'},
       {icon:'📒', label:'Contacts / رابطے', tab:'contacts'},
       {icon:'🔔', label:'Notifications / اطلاعات', tab:'notifications'},
+      {icon:'💡', label:'Send Suggestion / تجویز', tab:'suggestion'},
       {icon:'👤', label:'Profile / پروفائل', tab:'profile'},
     ]
   };
@@ -3988,6 +4157,7 @@ function getMenuConfig(){
   if(currentRole!=='user'){
     donors.items.push(
       {icon:'👥', label:'Donors / عطیہ دہندگان', tab:'donorlist'},
+      {icon:'✏️', label:'Donor Profile Update', tab:'donorprofileupdate'},
       {icon:'🧾', label:'Slip / سلپ', tab:'slip'},
       {icon:'🏆', label:'Top 10 / سرفہرست', tab:'top'},
       {icon:'💸', label:'Transfer / منتقلی', tab:'transfer'}
@@ -4008,7 +4178,8 @@ function getMenuConfig(){
       {icon:'📂', label:'Exp Categories', tab:'expcategories'},
       {icon:'🏢', label:'Organization Settings', tab:'orgsettings'},
       {icon:'📋', label:'Audit / لاگ', tab:'audit'},
-      {icon:'🗄️', label:'Data Manager', tab:'datamanager'}
+      {icon:'🗄️', label:'Data Manager', tab:'datamanager'},
+      {icon:'💡', label:'Suggestions', tab:'suggestions', badge:DB.suggestions.filter(s=>!s.read).length||0}
     );
   }
 
@@ -4090,7 +4261,7 @@ function buildTabs(){
 // renderTab — main tab renderer
 // FAB config per tab
 const FAB_CONFIG={
-  dash:     {icon:'🔍', action:()=>selectTab('search')},
+  dash:     {icon:'➕', action:()=>selectTab('donation')},
   search:   {icon:'✕',  action:()=>{const si=document.getElementById('searchInput');if(si){si.value='';doSearch();si.focus();}}},
   donation: {icon:'💾', action:()=>submitDonation()},
   deceased: {icon:'💾', action:()=>submitDeceased()},
@@ -4144,7 +4315,7 @@ const TAB_LABELS={
   donorlist:'Donor List',slip:'Donor Slip',top:'Top Donors',transfer:'Transfer',
   decconfirm:'Confirm Deceased',approvals:'Approvals',lockuser:'Login Management',
   userslist:'Users List',professions:'Professions',audit:'Audit Log',areas:'Areas',
-  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',contacts:'Contacts',notifications:'Notifications'
+  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',contacts:'Contacts',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',suggestion:'Send Suggestion',suggestions:'Suggestions'
 };
 
 // ============================================================
@@ -4172,20 +4343,26 @@ T.dash = function(){
   </div>
   ${pt>0?`<div class="info-box warning">📩 ${pt} transfer(s) pending — go to Transfer tab to confirm.</div>`:''}
   ${currentRole==='developer'&&DB.pendingApprovals.length>0?`<div class="info-box warning">⚠️ ${DB.pendingApprovals.length} account approval(s) pending.</div>`:''}
-  <div class="card">
-    <div class="card-header"><div class="card-title">Recent Entries</div></div>
-    ${myD.length===0?'<p style="font-size:13px;color:#888">No entries yet.</p>':myD.slice(-3).reverse().map(d=>{const dn=DB.donors.find(x=>x.id===d.donorId)||{name:'Unknown',area:''};return `<div class="entry-row"><div style="display:flex;align-items:center;gap:8px;flex:1">${avatarHtml(dn.photo,dn.name,28)}<div><div class="entry-name">${dn.name}</div><div class="entry-sub">${dn.area} • ${d.date}</div></div></div><div class="entry-amt">+Rs ${fmt(d.amount)}</div></div>`;}).join('')}
+  <div class="card" style="padding:10px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <div style="font-size:11px;font-weight:700;color:#333">Recent Entries | حالیہ اندراجات</div>
+      <button onclick="selectTab('myentries')" style="font-size:10px;color:#1D9E75;background:none;border:none;cursor:pointer;font-weight:600">View All →</button>
+    </div>
+    ${myD.length===0?'<p style="font-size:11px;color:#888">No entries yet.</p>':myD.slice(-5).reverse().map(d=>{const dn=DB.donors.find(x=>x.id===d.donorId)||{name:'Unknown',area:''};return `<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:0.5px solid #f5f5f5">${avatarHtml(dn.photo,dn.name,22)}<div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${dn.name}</div><div style="font-size:10px;color:#aaa">${d.date}</div></div><div style="font-size:11px;font-weight:700;color:#0F6E56;white-space:nowrap">+Rs ${fmt(d.amount)}</div></div>`;}).join('')}
   </div>
-  <div class="card" style="background:linear-gradient(135deg,#1D9E75,#0F6E56);color:#fff">
-    <div style="font-size:12px;opacity:0.85;margin-bottom:8px;font-weight:600">Quick Actions | فوری عمل</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
-      ${['admin','manager','developer'].includes(currentRole)?`<button style="background:rgba(255,255,255,0.18);color:#fff;border:1px solid rgba(255,255,255,0.25);padding:8px 4px;border-radius:9px;cursor:pointer;font-size:10px;font-weight:600;line-height:1.3" onclick="selectTab('donation')">💰<br>Donation</button>`:''}
-      ${['admin','manager','developer'].includes(currentRole)?`<button style="background:rgba(255,255,255,0.18);color:#fff;border:1px solid rgba(255,255,255,0.25);padding:8px 4px;border-radius:9px;cursor:pointer;font-size:10px;font-weight:600;line-height:1.3" onclick="selectTab('expense')">📋<br>Expense</button>`:''}
-      <button style="background:rgba(255,255,255,0.18);color:#fff;border:1px solid rgba(255,255,255,0.25);padding:8px 4px;border-radius:9px;cursor:pointer;font-size:10px;font-weight:600;line-height:1.3" onclick="selectTab('deceased')">🕌<br>Deceased</button>
-      <button style="background:rgba(255,255,255,0.18);color:#fff;border:1px solid rgba(255,255,255,0.25);padding:8px 4px;border-radius:9px;cursor:pointer;font-size:10px;font-weight:600;line-height:1.3" onclick="selectTab('search')">🔍<br>Search</button>
-      ${currentRole!=='user'?`<button style="background:rgba(255,255,255,0.18);color:#fff;border:1px solid rgba(255,255,255,0.25);padding:8px 4px;border-radius:9px;cursor:pointer;font-size:10px;font-weight:600;line-height:1.3" onclick="selectTab('slip')">🧾<br>Slip</button>`:''}
-      <button style="background:rgba(255,255,255,0.18);color:#fff;border:1px solid rgba(255,255,255,0.25);padding:8px 4px;border-radius:9px;cursor:pointer;font-size:10px;font-weight:600;line-height:1.3" onclick="openMyDonationsQuick()">📊<br>My Don.</button>
-      <button style="background:rgba(255,255,255,0.18);color:#fff;border:1px solid rgba(255,255,255,0.25);padding:8px 4px;border-radius:9px;cursor:pointer;font-size:10px;font-weight:600;line-height:1.3" onclick="openMyExpensesQuick()">📑<br>My Exp.</button>
+  <div style="background:linear-gradient(135deg,#1D9E75,#0a5e42);border-radius:16px;padding:14px 12px">
+    <div style="font-size:10px;font-weight:700;letter-spacing:1px;opacity:0.75;margin-bottom:10px;text-transform:uppercase;color:#fff">⚡ Quick Actions | فوری عمل</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:7px">
+      ${['admin','manager','developer'].includes(currentRole)?`<button onclick="selectTab('donation')" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.25);padding:11px 2px 9px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px"><span style="font-size:22px">💰</span><span style="font-size:9px;font-weight:700;opacity:0.9">Donation</span></button>`:'<span></span>'}
+      ${['admin','manager','developer'].includes(currentRole)?`<button onclick="selectTab('expense')" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.25);padding:11px 2px 9px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px"><span style="font-size:22px">📋</span><span style="font-size:9px;font-weight:700;opacity:0.9">Expense</span></button>`:'<span></span>'}
+      <button onclick="selectTab('deceased')" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.25);padding:11px 2px 9px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px"><span style="font-size:22px">🕌</span><span style="font-size:9px;font-weight:700;opacity:0.9">Deceased</span></button>
+      ${currentRole!=='user'?`<button onclick="selectTab('slip')" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.25);padding:11px 2px 9px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px"><span style="font-size:22px">🧾</span><span style="font-size:9px;font-weight:700;opacity:0.9">Slip</span></button>`:'<span></span>'}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px">
+      <button onclick="openMyDonationsQuick()" style="background:rgba(0,0,0,0.18);color:#fff;border:1px solid rgba(255,255,255,0.15);padding:11px 2px 9px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px"><span style="font-size:22px">📊</span><span style="font-size:9px;font-weight:700;opacity:0.9">My Don.</span></button>
+      <button onclick="openMyExpensesQuick()" style="background:rgba(0,0,0,0.18);color:#fff;border:1px solid rgba(255,255,255,0.15);padding:11px 2px 9px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px"><span style="font-size:22px">📑</span><span style="font-size:9px;font-weight:700;opacity:0.9">My Exp.</span></button>
+      <button onclick="selectTab('search')" style="background:rgba(0,0,0,0.18);color:#fff;border:1px solid rgba(255,255,255,0.15);padding:11px 2px 9px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px"><span style="font-size:22px">🔍</span><span style="font-size:9px;font-weight:700;opacity:0.9">Search</span></button>
+      <button onclick="selectTab('contacts')" style="background:rgba(0,0,0,0.18);color:#fff;border:1px solid rgba(255,255,255,0.15);padding:11px 2px 9px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px"><span style="font-size:22px">📒</span><span style="font-size:9px;font-weight:700;opacity:0.9">Contacts</span></button>
     </div>
   </div>`;
 };

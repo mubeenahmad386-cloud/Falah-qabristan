@@ -2315,6 +2315,60 @@ function markReceived(tid){
 }
 
 // ---- MY ENTRIES (modify/delete) ----
+function openMyDonationsQuick(){
+  const myD=DB.donations.filter(d=>d.assignedTo?d.assignedTo===currentUser.id:d.by===currentUser.id).slice().reverse().slice(0,10);
+  const box=document.querySelector('.popup-box');
+  document.getElementById('popupIcon').textContent='💰';
+  document.getElementById('popupTitle').textContent='My Donations';
+  document.getElementById('popupTitleUr').textContent='میرے چندے';
+  document.getElementById('popupBtn').style.display='none';
+  if(box){
+    box.style.padding='14px';box.style.maxWidth='95vw';
+    box.innerHTML=`
+      <button onclick="closePopup()" style="position:absolute;top:8px;right:10px;background:none;border:none;font-size:20px;cursor:pointer;color:#aaa">✕</button>
+      <div style="font-size:15px;font-weight:700;margin-bottom:10px">💰 My Donations</div>
+      ${myD.length===0?'<p style="color:#888;font-size:13px">No donations yet.</p>':myD.map(d=>{
+        const dn=DB.donors.find(x=>x.id===d.donorId)||{name:'?'};
+        return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid #f0f0f0">
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:600">${dn.name}</div>
+            <div style="font-size:10px;color:#888">${d.date} • ${d.desc||'Donation'}</div>
+          </div>
+          <span style="font-size:13px;font-weight:700;color:#0F6E56">Rs ${fmt(d.amount)}</span>
+          <button onclick="closePopup();editDonation('${d.id}')" style="background:#185FA5;color:#fff;border:none;padding:4px 7px;border-radius:5px;cursor:pointer;font-size:11px">✏️</button>
+          <button onclick="closePopup();deleteDonation('${d.id}')" style="background:#E24B4A;color:#fff;border:none;padding:4px 7px;border-radius:5px;cursor:pointer;font-size:11px">🗑️</button>
+        </div>`;
+      }).join('')}
+      <button onclick="closePopup();selectTab('myentries')" style="width:100%;background:#f5f5f5;border:1px solid #ddd;padding:8px;border-radius:8px;font-size:12px;cursor:pointer;margin-top:10px">View All Entries →</button>`;
+  }
+  document.getElementById('popupOverlay').style.display='flex';
+}
+function openMyExpensesQuick(){
+  const myE=DB.expenses.filter(e=>e.assignedTo?e.assignedTo===currentUser.id:e.by===currentUser.id).slice().reverse().slice(0,10);
+  const box=document.querySelector('.popup-box');
+  document.getElementById('popupIcon').textContent='📋';
+  document.getElementById('popupTitle').textContent='My Expenses';
+  document.getElementById('popupTitleUr').textContent='میرے اخراجات';
+  document.getElementById('popupBtn').style.display='none';
+  if(box){
+    box.style.padding='14px';box.style.maxWidth='95vw';
+    box.innerHTML=`
+      <button onclick="closePopup()" style="position:absolute;top:8px;right:10px;background:none;border:none;font-size:20px;cursor:pointer;color:#aaa">✕</button>
+      <div style="font-size:15px;font-weight:700;margin-bottom:10px">📋 My Expenses</div>
+      ${myE.length===0?'<p style="color:#888;font-size:13px">No expenses yet.</p>':myE.map(e=>`
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid #f0f0f0">
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:600">${e.desc}</div>
+            <div style="font-size:10px;color:#888">${e.date} • ${e.billNo}</div>
+          </div>
+          <span style="font-size:13px;font-weight:700;color:#E24B4A">Rs ${fmt(e.amount)}</span>
+          <button onclick="closePopup();editExpense('${e.id}')" style="background:#185FA5;color:#fff;border:none;padding:4px 7px;border-radius:5px;cursor:pointer;font-size:11px">✏️</button>
+          <button onclick="closePopup();deleteExpense('${e.id}')" style="background:#E24B4A;color:#fff;border:none;padding:4px 7px;border-radius:5px;cursor:pointer;font-size:11px">🗑️</button>
+        </div>`).join('')}
+      <button onclick="closePopup();selectTab('myentries')" style="width:100%;background:#f5f5f5;border:1px solid #ddd;padding:8px;border-radius:8px;font-size:12px;cursor:pointer;margin-top:10px">View All Entries →</button>`;
+  }
+  document.getElementById('popupOverlay').style.display='flex';
+}
 function myEntriesHtml(){
   // Show entries: by me, OR assigned to me by developer
   // Developer sees: unassigned entries only (assigned ones move to assignee)
@@ -4081,12 +4135,15 @@ T.dash = function(){
     ${myD.length===0?'<p style="font-size:13px;color:#888">No entries yet.</p>':myD.slice(-3).reverse().map(d=>{const dn=DB.donors.find(x=>x.id===d.donorId)||{name:'Unknown',area:''};return `<div class="entry-row"><div style="display:flex;align-items:center;gap:8px;flex:1">${avatarHtml(dn.photo,dn.name,28)}<div><div class="entry-name">${dn.name}</div><div class="entry-sub">${dn.area} • ${d.date}</div></div></div><div class="entry-amt">+Rs ${fmt(d.amount)}</div></div>`;}).join('')}
   </div>
   <div class="card" style="background:linear-gradient(135deg,#1D9E75,#0F6E56);color:#fff">
-    <div style="font-size:13px;opacity:0.85;margin-bottom:4px">Quick Actions</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      ${currentRole!=='user'?`<button style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.3);padding:10px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:600" onclick="selectTab('donation')">+ Donation</button>`:''}
-      <button style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.3);padding:10px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:600" onclick="selectTab('deceased')">+ Deceased</button>
-      <button style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.3);padding:10px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:600" onclick="selectTab('search')">🔍 Search</button>
-      ${currentRole!=='user'?`<button style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.3);padding:10px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:600" onclick="selectTab('slip')">Donor Slip</button>`:''}
+    <div style="font-size:12px;opacity:0.85;margin-bottom:8px;font-weight:600">Quick Actions | فوری عمل</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+      ${['admin','manager','developer'].includes(currentRole)?`<button style="background:rgba(255,255,255,0.18);color:#fff;border:1px solid rgba(255,255,255,0.25);padding:8px 4px;border-radius:9px;cursor:pointer;font-size:10px;font-weight:600;line-height:1.3" onclick="selectTab('donation')">💰<br>Donation</button>`:''}
+      ${['admin','manager','developer'].includes(currentRole)?`<button style="background:rgba(255,255,255,0.18);color:#fff;border:1px solid rgba(255,255,255,0.25);padding:8px 4px;border-radius:9px;cursor:pointer;font-size:10px;font-weight:600;line-height:1.3" onclick="selectTab('expense')">📋<br>Expense</button>`:''}
+      <button style="background:rgba(255,255,255,0.18);color:#fff;border:1px solid rgba(255,255,255,0.25);padding:8px 4px;border-radius:9px;cursor:pointer;font-size:10px;font-weight:600;line-height:1.3" onclick="selectTab('deceased')">🕌<br>Deceased</button>
+      <button style="background:rgba(255,255,255,0.18);color:#fff;border:1px solid rgba(255,255,255,0.25);padding:8px 4px;border-radius:9px;cursor:pointer;font-size:10px;font-weight:600;line-height:1.3" onclick="selectTab('search')">🔍<br>Search</button>
+      ${currentRole!=='user'?`<button style="background:rgba(255,255,255,0.18);color:#fff;border:1px solid rgba(255,255,255,0.25);padding:8px 4px;border-radius:9px;cursor:pointer;font-size:10px;font-weight:600;line-height:1.3" onclick="selectTab('slip')">🧾<br>Slip</button>`:''}
+      <button style="background:rgba(255,255,255,0.18);color:#fff;border:1px solid rgba(255,255,255,0.25);padding:8px 4px;border-radius:9px;cursor:pointer;font-size:10px;font-weight:600;line-height:1.3" onclick="openMyDonationsQuick()">📊<br>My Don.</button>
+      <button style="background:rgba(255,255,255,0.18);color:#fff;border:1px solid rgba(255,255,255,0.25);padding:8px 4px;border-radius:9px;cursor:pointer;font-size:10px;font-weight:600;line-height:1.3" onclick="openMyExpensesQuick()">📑<br>My Exp.</button>
     </div>
   </div>`;
 };

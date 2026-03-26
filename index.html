@@ -560,8 +560,9 @@ var editingContext={};
 
 // ---- Utility Functions ----
 function calcCashInHand(uid){
-  const inc=DB.donations.filter(d=>d.by===uid).reduce((s,d)=>s+d.amount,0);
-  const exp=DB.expenses.filter(e=>e.by===uid).reduce((s,e)=>s+e.amount,0);
+  // Include entries assigned to this user
+  const inc=DB.donations.filter(d=>(d.assignedTo?d.assignedTo===uid:d.by===uid)).reduce((s,d)=>s+d.amount,0);
+  const exp=DB.expenses.filter(e=>(e.assignedTo?e.assignedTo===uid:e.by===uid)).reduce((s,e)=>s+e.amount,0);
   const sent=DB.transfers.filter(t=>t.from===uid&&t.received).reduce((s,t)=>s+t.amount,0);
   const recv=DB.transfers.filter(t=>t.to===uid&&t.received).reduce((s,t)=>s+t.amount,0);
   return inc-exp-sent+recv;
@@ -2163,7 +2164,7 @@ function genFundReport(){
 T.slip=function(){
   return `<div class="card"><h3><span class="bi-title"><span class="bi-en">Donor Payment Slip</span><span class="bi-ur">چندہ دار سلپ</span></span></h3>
     <label>Personal ID or Mobile <span style="font-size:10px;color:#1D9E75;font-weight:500">ID یا موبائل</span></label>
-    <input type="text" id="slipSearch" placeholder="1004 ya mobile..." oninput="autoPrefixSlip(this)">
+    <input type="text" id="slipSearch" placeholder="ID or Mobile | ID یا موبائل" oninput="generateSlip()" style="font-size:13px">
     <button class="btn btn-primary" style="margin-top:8px" onclick="generateSlip()"><span style="font-size:13px">Generate Slip</span><span style="font-size:10px;opacity:0.85;display:block">سلپ بنائیں</span></button>
     <div id="slipResult" style="margin-top:12px"></div>
   </div>`;
@@ -2274,7 +2275,7 @@ T.transfer=function(){
   const recvd=DB.transfers.filter(t=>t.to===currentUser.id&&t.received);
   return `<div class="cash-box"><div><div style="font-size:12px;color:#0F6E56;font-weight:600">Cash in Hand (before transfer)</div><div style="font-size:11px;color:#0F6E56;margin-top:2px">Updated balance shown after entering amount</div></div><div style="font-size:20px;font-weight:700;color:#0F6E56">Rs ${fmt(cash)}</div></div>
   <div class="card"><h3>Make Transfer</h3>
-    <label>Recipient <span style="font-size:10px;color:#1D9E75;font-weight:500">وصول کنندہ</span></label><div class="inp-wrap"><span class="inp-icon">👥</span><select id="transferTo"></div><option value="">-- Select --</option>${DB.users.filter(u=>u.id!==currentUser.id&&u.approved&&!u.locked).map(u=>`<option value="${u.id}">${u.name} (${u.role})</option>`).join('')}</select>
+    <label>Recipient <span style="font-size:10px;color:#1D9E75;font-weight:500">وصول کنندہ</span></label><div class="inp-wrap"><span class="inp-icon">👥</span><select id="transferTo"></div><option value="">-- Select Manager | منیجر منتخب کریں --</option>${DB.users.filter(u=>u.id!==currentUser.id&&u.approved&&!u.locked&&u.role==='manager').map(u=>`<option value="${u.id}">${u.name} (${u.role}) — ${u.area||''}</option>`).join('')}</select>
     <label>Amount (Rs)</label><input type="number" id="transferAmt" oninput="updateAfterTransfer(${cash})">
     <div id="afterTransferBox" style="display:none;margin-top:8px;padding:8px 10px;background:#FAEEDA;border-radius:8px;font-size:12px;color:#854F0B"></div>
     <label>Note <span style="font-size:10px;color:#1D9E75;font-weight:500">نوٹ</span></label><div class="inp-wrap"><span class="inp-icon">📝</span><input type="text" id="transferNote"></div>
@@ -2315,30 +2316,52 @@ function markReceived(tid){
 
 // ---- MY ENTRIES (modify/delete) ----
 function myEntriesHtml(){
-  const myDonations=DB.donations.filter(d=>d.by===currentUser.id);
-  const myExpenses=DB.expenses.filter(e=>e.by===currentUser.id);
+  // Show entries: by me, OR assigned to me by developer
+  // Developer sees: unassigned entries only (assigned ones move to assignee)
+  const isDevLogin=currentRole==='developer';
+  const myDonations=DB.donations.filter(d=>{
+    if(d.assignedTo) return d.assignedTo===currentUser.id; // assigned — show to assignee
+    return d.by===currentUser.id; // not assigned — show to original author
+  });
+  const myExpenses=DB.expenses.filter(e=>{
+    if(e.assignedTo) return e.assignedTo===currentUser.id;
+    return e.by===currentUser.id;
+  });
   let html=`<div class="card"><h3><span class="bi-title"><span class="bi-en">My Donation Entries</span><span class="bi-ur">میرے چندے</span></span></h3>`;
   if(myDonations.length===0)html+=`<p style="font-size:13px;color:#888">No entries found.</p>`;
   else myDonations.slice().reverse().forEach(d=>{
     const dn=DB.donors.find(x=>x.id===d.donorId)||{name:'?',area:''};
+    const donAssignee=d.assignedTo?DB.users.find(u=>u.id===d.assignedTo):null;
+    const donAssigner=d.assignedBy?DB.users.find(u=>u.id===d.assignedBy):null;
     html+=`<div class="entry-row">
-      <div style="flex:1"><div class="entry-name">${dn.name}</div><div class="entry-sub">${d.date} • ${d.desc}</div></div>
-      <div style="display:flex;align-items:center;gap:6px">
+      <div style="flex:1">
+        <div class="entry-name">${dn.name}</div>
+        <div class="entry-sub">${d.date} • ${d.desc}</div>
+        ${donAssignee?`<div style="font-size:10px;color:#185FA5;margin-top:2px">📤 Assigned to: ${donAssignee.name}${donAssigner?' (by '+donAssigner.name+')':''}</div>`:''}
+      </div>
+      <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end">
         <span class="entry-amt">Rs ${fmt(d.amount)}</span>
-        <button class="btn-xs" style="color:#185FA5;border-color:#185FA5;background:#E6F1FB" onclick="editDonation('${d.id}')">Edit</button>
-        <button class="btn-xs" style="color:#E24B4A;border-color:#E24B4A;background:#FCEBEB" onclick="deleteDonation('${d.id}')">Del</button>
+        ${currentRole==='developer'&&!d.assignedTo?`<button class="btn-xs" style="color:#fff;border:none;background:#185FA5;cursor:pointer" onclick="assignEntryPrompt('donation','${d.id}')">📤</button>`:''}
+        <button class="btn-xs" style="color:#185FA5;border-color:#185FA5;background:#E6F1FB" onclick="editDonation('${d.id}')">✏️</button>
+        <button class="btn-xs" style="color:#E24B4A;border-color:#E24B4A;background:#FCEBEB" onclick="deleteDonation('${d.id}')">🗑️</button>
       </div>
     </div>`;
   });
   html+=`</div><div class="card"><h3><span class="bi-title"><span class="bi-en">My Expense Entries</span><span class="bi-ur">میرے اخراجات</span></span></h3>`;
   if(myExpenses.length===0)html+=`<p style="font-size:13px;color:#888">No expenses yet.</p>`;
   else myExpenses.slice().reverse().forEach(e=>{
+    const expAssignee=e.assignedTo?DB.users.find(u=>u.id===e.assignedTo):null;
     html+=`<div class="entry-row">
-      <div style="flex:1"><div class="entry-name">${e.desc}</div><div class="entry-sub">${e.date} • ${e.area}</div></div>
-      <div style="display:flex;align-items:center;gap:6px">
+      <div style="flex:1">
+        <div class="entry-name">${e.desc}</div>
+        <div class="entry-sub">${e.date} • ${e.area}</div>
+        ${expAssignee?`<div style="font-size:10px;color:#185FA5;margin-top:2px">📤 Assigned to: ${expAssignee.name}</div>`:''}
+      </div>
+      <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end">
         <span style="font-size:13px;font-weight:500;color:#E24B4A">Rs ${fmt(e.amount)}</span>
-        <button class="btn-xs" style="color:#185FA5;border-color:#185FA5;background:#E6F1FB" onclick="editExpense('${e.id}')">Edit</button>
-        <button class="btn-xs" style="color:#E24B4A;border-color:#E24B4A;background:#FCEBEB" onclick="deleteExpense('${e.id}')">Del</button>
+        ${currentRole==='developer'&&!e.assignedTo?`<button class="btn-xs" style="color:#fff;border:none;background:#185FA5;cursor:pointer" onclick="assignEntryPrompt('expense','${e.id}')">📤</button>`:''}
+        <button class="btn-xs" style="color:#185FA5;border-color:#185FA5;background:#E6F1FB" onclick="editExpense('${e.id}')">✏️</button>
+        <button class="btn-xs" style="color:#E24B4A;border-color:#E24B4A;background:#FCEBEB" onclick="deleteExpense('${e.id}')">🗑️</button>
       </div>
     </div>`;
   });
@@ -2347,6 +2370,49 @@ function myEntriesHtml(){
 }
 T.myentries=function(){return myEntriesHtml(false);};function showAllEntries(){const el=document.getElementById('tabContent');if(el)el.innerHTML=myEntriesHtml(true);}
 
+function assignEntryPrompt(type,id){
+  const admins=DB.users.filter(u=>['admin','manager'].includes(u.role)&&u.approved&&!u.locked);
+  if(!admins.length){showPopup('⚠️','No Admins','No admin or manager found.');return;}
+  const box=document.querySelector('.popup-box');
+  document.getElementById('popupIcon').textContent='📤';
+  document.getElementById('popupTitle').textContent='Assign Entry';
+  document.getElementById('popupTitleUr').textContent='اندراج تفویض کریں';
+  document.getElementById('popupBtn').style.display='none';
+  const tu=document.getElementById('popupTitleUr');if(tu)tu.textContent='اندراج تفویض کریں';
+  if(box){
+    box.style.padding='16px';
+    box.innerHTML=`
+      <button onclick="closePopup()" style="position:absolute;top:10px;right:12px;background:none;border:none;font-size:20px;cursor:pointer;color:#aaa">✕</button>
+      <div style="font-size:15px;font-weight:700;margin-bottom:4px">📤 Assign to Admin/Manager</div>
+      <div style="font-size:11px;color:#888;margin-bottom:12px">Entry will appear in their account | ان کے اکاؤنٹ میں جائے گی</div>
+      ${admins.map(u=>`
+        <div onclick="doAssignEntry('${type}','${id}','${u.id}')" style="display:flex;align-items:center;gap:10px;padding:10px;background:#f9f9f9;border-radius:8px;margin-bottom:6px;cursor:pointer;border:1px solid #eee">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600">${u.name}</div>
+            <div style="font-size:11px;color:#888">${u.role} • ${u.area||'—'}</div>
+          </div>
+          <div style="font-size:18px">→</div>
+        </div>`).join('')}
+      <button onclick="closePopup()" style="width:100%;background:#f5f5f5;border:1px solid #ddd;padding:10px;border-radius:8px;font-size:13px;cursor:pointer;margin-top:4px">Cancel</button>`;
+  }
+  document.getElementById('popupOverlay').style.display='flex';
+}
+function doAssignEntry(type,id,toUserId){
+  const arr=type==='donation'?DB.donations:DB.expenses;
+  const entry=arr.find(x=>x.id===id);
+  if(!entry){closePopup();return;}
+  const toUser=DB.users.find(u=>u.id===toUserId);
+  entry.assignedTo=toUserId;
+  entry.assignedBy=currentUser.id;
+  entry.assignedDate=today();
+  FS.save(type==='donation'?'donations':'expenses',id,entry);
+  const al={by:currentUser.id,action:'Entry Assigned',target:entry.id,detail:'Assigned to: '+(toUser?toUser.name:toUserId),date:today()};
+  DB.auditLog.push(al);FS.save('auditLog','AL'+Date.now(),al);
+  addNotification('system','Entry Assigned',entry.id+' → '+(toUser?toUser.name:toUserId));
+  closePopup();
+  showPopup('✅','Assigned','Entry assigned to '+(toUser?toUser.name:toUserId)+'. | اندراج منتقل ہو گیا');
+  renderTab('myentries');
+}
 function editDonation(id){
   const d=DB.donations.find(x=>x.id===id);if(!d)return;
   const dn=DB.donors.find(x=>x.id===d.donorId)||{name:'?'};

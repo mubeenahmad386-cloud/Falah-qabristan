@@ -10,7 +10,6 @@
 body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;color:var(--text);background:var(--bg);min-height:100vh;padding-bottom:70px}
 /* SCREENS */
 .screen{display:none;padding:0;min-height:100vh}.screen.active{display:block}
-#fabBtn{transition:transform 0.15s,opacity 0.2s}
 .card{border-radius:14px;background:#fff;padding:16px;margin-bottom:12px;box-shadow:0 1px 6px rgba(0,0,0,0.07)}
 .inp-wrap{position:relative;display:flex;align-items:center;margin-bottom:8px}
 .inp-wrap input,.inp-wrap select{flex:1;padding:11px 12px 11px 36px;border:1.5px solid #e8e8e8;border-radius:10px;font-size:13px;background:#fafafa;transition:border 0.15s}
@@ -409,9 +408,7 @@ input[type=file]{padding:6px}
   </div>
   <div class="content-area" id="tabContent"></div>
   <!-- Floating Action Button -->
-  <div id="fabBtn" onclick="fabAction()" style="display:none;position:fixed;bottom:80px;right:16px;z-index:200;width:52px;height:52px;border-radius:50%;background:#1D9E75;color:#fff;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(29,158,117,0.5);font-size:22px;display:flex;align-items:center;justify-content:center;transition:transform 0.15s" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'" ontouchstart="this.style.transform='scale(0.9)'" ontouchend="this.style.transform='scale(1)'">
-    <span id="fabIcon">+</span>
-  </div>
+
   <div class="page-footer" id="dashFooter">
     <div class="footer-org" id="dashFooterOrg">Falah e Qabristan</div>
     <div class="footer-credit">Designed By: <a href="tel:03009084228">Asif Kanwal — 0300-9084228</a></div>
@@ -801,7 +798,7 @@ function finishReg(name,mobile,cnic,password,photo,signature){
   }
 }
 function logout(){clearSession();
-  const fab=document.getElementById('fabBtn');if(fab)fab.style.display='none';currentUser=null;currentRole=null;document.getElementById('devKey').value='';document.getElementById('loginMobile').value='';document.getElementById('loginPassword').value='';hideLoginError();showScreen('loginScreen');renderLoginExtras();}
+  currentUser=null;currentRole=null;document.getElementById('devKey').value='';document.getElementById('loginMobile').value='';document.getElementById('loginPassword').value='';hideLoginError();showScreen('loginScreen');renderLoginExtras();}
 function renderLoginExtras(){
   // Logo on login page
   const ll=document.getElementById('loginLogo');
@@ -4614,41 +4611,7 @@ function buildTabs(){
 
 // renderTab — main tab renderer
 // FAB config per tab
-const FAB_CONFIG={
-  dash:     null,  // no FAB on dashboard
-  search:   {icon:'✕',  action:()=>{const si=document.getElementById('searchInput');if(si){si.value='';doSearch();si.focus();}}},
-  donation: {icon:'💾', action:()=>submitDonation()},
-  deceased: {icon:'💾', action:()=>submitDeceased()},
-  expense:  {icon:'💾', action:()=>document.querySelector('[onclick="openExpenseSave()"]')?openExpenseSave():null},
-  deathcert:{icon:'🔍', action:()=>{const s=document.getElementById('dcSearch');if(s)s.focus();}},
-  slip:     {icon:'🔍', action:()=>{const s=document.getElementById('slipSearch');if(s){s.focus();generateSlip();}}},
-  donorlist:{icon:'🔍', action:()=>selectTab('search')},
-  ledger:   {icon:'📊', action:()=>generateLedger()},
-  area:     {icon:'📊', action:()=>selectTab('area')},
-  expreport:{icon:'📊', action:()=>genExpReport()},
-  balreport:{icon:'📊', action:()=>genBalReport()},
-  fundreport:{icon:'📊',action:()=>genFundReport()},
-  transfer: {icon:'💸', action:()=>doTransfer()},
-  myentries:{icon:'📋', action:()=>showAllEntries()},
-  profile:  {icon:'💾', action:()=>saveProfile()},
-  contacts: {icon:'🔍', action:()=>{const s=document.getElementById('contactSearch');if(s)s.focus();}},
-  notifications:{icon:'✓', action:()=>markAllNotifRead()},
-  areas:    {icon:'➕', action:()=>{const i=document.getElementById('newAreaInput');if(i){i.focus();}}},
-  professions:{icon:'➕', action:()=>{const i=document.getElementById('newProfInput');if(i)i.focus();}},
-  expcategories:{icon:'➕',action:()=>{const i=document.getElementById('newExpCatInput');if(i)i.focus();}},
-};
-function updateFab(key){
-  const fab=document.getElementById('fabBtn');
-  const fabI=document.getElementById('fabIcon');
-  if(!fab)return;
-  const cfg=FAB_CONFIG[key];
-  if(cfg){fab.style.display='flex';if(fabI)fabI.textContent=cfg.icon;}
-  else{fab.style.display='none';}
-}
-function fabAction(){
-  const cfg=FAB_CONFIG[currentTab];
-  if(cfg&&cfg.action)try{cfg.action();}catch(e){}
-}
+
 function renderTab(key){
   const c=document.getElementById('tabContent');
   if(T[key]){
@@ -4656,7 +4619,6 @@ function renderTab(key){
     populateAreas();populateProfs();
   }
   currentTab=key;
-  updateFab(key);
   window.scrollTo(0,0);
 }
 

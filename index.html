@@ -787,14 +787,17 @@ function finishReg(name,mobile,cnic,password,photo,signature){
   if(pendingRegRole==='user'){
     const nid=nextAllId();
     const nu={id:nid,name,cnic,mobile,password,area,profession,role:'user',approved:true,locked:false,photo,signature:null};
-    DB.users.push(nu);FS.save('users',nid,nu);
-    currentUser=DB.users[DB.users.length-1];currentRole='user';
+    DB.users.push(nu);
+    FS.save('users',nid,nu);
+    try{saveLocalCache();}catch(e){}
+    currentUser=nu;
+    currentRole='user';
     saveSession();
-    showPopup('✅','Success!','Account created. ID: '+nid,null,()=>loadDashboard());
+    showPopup('✅','Account Created!','Welcome '+name+'! ID: '+nid,null,()=>loadDashboard());
   } else {
     const pa={id:'PA'+Date.now(),name,cnic,mobile,password,area,profession,role:pendingRegRole,date:today(),photo,signature};
     DB.pendingApprovals.push(pa);FS.save('pendingApprovals',pa.id,pa);
-    showPopup('📤','Request Forward','Your request has been submitted. Login after developer approval.',null,()=>showScreen('loginScreen'));
+    showPopup('📤','Request Submitted','Your request has been submitted. Please login after developer approval.',null,()=>showScreen('loginScreen'));
   }
 }
 function logout(){clearSession();
@@ -928,7 +931,7 @@ function getTabs(){
   // Expense Entry: manager and developer only (NOT admin, NOT user)
   if(['manager','developer'].includes(currentRole)) t.splice(t.findIndex(x=>x.key==='expense'||x.key==='area'),0,{label:'Expense / اخراجات',key:'expense'});
   // My Entries: only user, admin, manager (NOT developer)
-  if(['user','admin','manager'].includes(currentRole)) t.splice(t.findIndex(x=>x.key==='area'),0,{label:'My Entries / میری اندراجات',key:'myentries'});
+  if(['admin','manager','developer'].includes(currentRole)) t.splice(t.findIndex(x=>x.key==='area'),0,{label:'My Entries / میری اندراجات',key:'myentries'});
   // Donor list, slip, top: not for user
   if(currentRole!=='user') t.push({label:'Donors / عطیہ دہندگان',key:'donorlist'},{label:'Slip / سلپ',key:'slip'},{label:'Top 10 / سرفہرست',key:'top'},{label:'Transfer / منتقلی',key:'transfer'});
   // Admin: deceased confirmation tab
@@ -944,20 +947,48 @@ const T={};
 
 // ---- DASHBOARD ----
 T.dash=function(){
-  const cash=calcCashInHand(currentUser.id);
-  const income=DB.donations.filter(d=>d.by===currentUser.id).reduce((s,d)=>s+d.amount,0);
-  const exp=DB.expenses.filter(e=>e.by===currentUser.id).reduce((s,e)=>s+e.amount,0);
-  const sent=DB.transfers.filter(t=>t.from===currentUser.id&&t.received).reduce((s,t)=>s+t.amount,0);
-  const myD=DB.donations.filter(d=>d.by===currentUser.id);
+  const isUser=currentRole==='user';
+  // For user: show their OWN donation history (as donor)
+  // For admin/manager/dev: show entries they recorded
+  let income,exp,cash,myD,sent;
+  if(isUser){
+    // Find donor record linked to this user's mobile
+    const myDonorRecord=DB.donors.find(d=>normMob(d.mobile)===normMob(currentUser.mobile))||null;
+    const myDonorId=myDonorRecord?myDonorRecord.id:null;
+    // My lifetime donations (as donor)
+    const myDons=myDonorId?DB.donations.filter(d=>d.donorId===myDonorId):[];
+    income=myDons.reduce((s,d)=>s+d.amount,0);
+    exp=0; // users don't have expenses
+    cash=0;
+    sent=0;
+    myD=myDons;
+  } else {
+    cash=calcCashInHand(currentUser.id);
+    income=DB.donations.filter(d=>d.assignedTo?d.assignedTo===currentUser.id:d.by===currentUser.id).reduce((s,d)=>s+d.amount,0);
+    exp=DB.expenses.filter(e=>e.assignedTo?e.assignedTo===currentUser.id:e.by===currentUser.id).reduce((s,e)=>s+e.amount,0);
+    sent=DB.transfers.filter(t=>t.from===currentUser.id&&t.received).reduce((s,t)=>s+t.amount,0);
+    myD=DB.donations.filter(d=>d.assignedTo?d.assignedTo===currentUser.id:d.by===currentUser.id);
+  }
   const pt=pendingTransfers();
   return `<div class="stat-grid">
-    <div class="stat-card"><div class="stat-label">My Income</div><div class="stat-val" style="color:#0F6E56">Rs ${fmt(income)}</div></div>
-    <div class="stat-card"><div class="stat-label">Expenses</div><div class="stat-val" style="color:#E24B4A">Rs ${fmt(exp)}</div></div>
-    <div class="stat-card"><div class="stat-label">Transfer Out</div><div class="stat-val" style="color:#BA7517">Rs ${fmt(sent)}</div></div>
-    <div class="stat-card"><div class="stat-label">Cash in Hand</div><div class="stat-val" style="color:#185FA5">Rs ${fmt(cash)}</div></div>
+    ${isUser?`
+      <div class="stat-card"><div class="stat-label">My Total Donations</div><div class="stat-val" style="color:#0F6E56">Rs ${fmt(income)}</div></div>
+      <div class="stat-card"><div class="stat-label">Total Count</div><div class="stat-val" style="color:#185FA5">${myD.length}</div></div>
+    `:`
+      <div class="stat-card"><div class="stat-label">My Income</div><div class="stat-val" style="color:#0F6E56">Rs ${fmt(income)}</div></div>
+      <div class="stat-card"><div class="stat-label">Expenses</div><div class="stat-val" style="color:#E24B4A">Rs ${fmt(exp)}</div></div>
+      <div class="stat-card"><div class="stat-label">Transfer Out</div><div class="stat-val" style="color:#BA7517">Rs ${fmt(sent)}</div></div>
+      <div class="stat-card"><div class="stat-label">Cash in Hand</div><div class="stat-val" style="color:#185FA5">Rs ${fmt(cash)}</div></div>
+    `}
   </div>
-  ${pt>0?`<div class="info-box warning">📩 ${pt} transfer(s) receive karni hain — Transfer tab dekhen.</div>`:''}
-  <div class="card" style="padding:10px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div style="font-size:11px;font-weight:700;color:#333">Recent Entries | حالیہ اندراجات</div><button onclick="selectTab('myentries')" style="font-size:10px;color:#1D9E75;background:none;border:none;cursor:pointer;font-weight:600">View All →</button></div>${myD.length===0?'<p style="font-size:11px;color:#888">No entries found.</p>':myD.slice(-5).reverse().map(d=>{const dn=DB.donors.find(x=>x.id===d.donorId)||{name:'Unknown',area:''};return `<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:0.5px solid #f5f5f5">${avatarHtml(dn.photo,dn.name,22)}<div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${dn.name}</div><div style="font-size:10px;color:#aaa">${d.date}</div></div><div style="font-size:11px;font-weight:700;color:#0F6E56;white-space:nowrap">+Rs ${fmt(d.amount)}</div></div>`;}).join('')}</div>`;
+  ${!isUser&&pt>0?`<div class="info-box warning">📩 ${pt} transfer(s) pending — Transfer tab dekhen.</div>`:''}
+  <div class="card" style="padding:10px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <div style="font-size:11px;font-weight:700;color:#333">${isUser?'My Donation History | میری اعانت':'Recent Entries | حالیہ اندراجات'}</div>
+      ${!isUser?`<button onclick="selectTab('myentries')" style="font-size:10px;color:#1D9E75;background:none;border:none;cursor:pointer;font-weight:600">View All →</button>`:''}
+    </div>
+    ${myD.length===0?'<p style="font-size:11px;color:#888">No entries found.</p>':myD.slice(-5).reverse().map(d=>{const dn=DB.donors.find(x=>x.id===d.donorId)||{name:currentUser.name,area:currentUser.area||''};return `<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:0.5px solid #f5f5f5">${avatarHtml(dn.photo,dn.name,22)}<div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${isUser?d.desc||'Donation':dn.name}</div><div style="font-size:10px;color:#aaa">${d.date}</div></div><div style="font-size:11px;font-weight:700;color:#0F6E56;white-space:nowrap">Rs ${fmt(d.amount)}</div></div>`;}).join('')}
+  </div>`;
 };
 
 // ---- DONATION ENTRY ----
@@ -4551,10 +4582,11 @@ function getMenuConfig(){
       {icon:'💡', label:'Send Suggestion / تجویز', tab:'suggestion'},
       {icon:'👤', label:'Add Donor / ڈونر شامل', tab:'adddonor'},
       {icon:'🔎', label:'Smart Search / ذہین تلاش', tab:'smartsearch'},
+      {icon:'🩸', label:'Blood Bank / بلڈ بینک', tab:'bloodbank'},
       {icon:'👤', label:'Profile / پروفائل', tab:'profile'},
     ]
   };
-  if(['user','admin','manager'].includes(currentRole)){
+  if(['admin','manager','developer'].includes(currentRole)){
     home.items.push({icon:'📋', label:'My Entries / میری اندراجات', tab:'myentries'});
   }
 
@@ -4798,8 +4830,8 @@ T.dash = function(){
     </div>
     <div style="height:0.5px;background:#eee;margin:6px 0 10px"></div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px">
-      <button onclick="openMyDonationsQuick()" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 2px 10px;border-radius:10px;border:0.5px solid #ddd;background:#f9f9f9;cursor:pointer"><span style="font-size:20px">📊</span><span style="font-size:9px;font-weight:500;color:#888">My Don.</span></button>
-      <button onclick="openMyExpensesQuick()" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 2px 10px;border-radius:10px;border:0.5px solid #ddd;background:#f9f9f9;cursor:pointer"><span style="font-size:20px">📑</span><span style="font-size:9px;font-weight:500;color:#888">My Exp.</span></button>
+      ${currentRole!=='user'?`<button onclick="openMyDonationsQuick()" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 2px 10px;border-radius:10px;border:0.5px solid #ddd;background:#f9f9f9;cursor:pointer"><span style="font-size:20px">📊</span><span style="font-size:9px;font-weight:500;color:#888">My Don.</span></button>`:'<span></span>'}
+      ${currentRole!=='user'?`<button onclick="openMyExpensesQuick()" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 2px 10px;border-radius:10px;border:0.5px solid #ddd;background:#f9f9f9;cursor:pointer"><span style="font-size:20px">📑</span><span style="font-size:9px;font-weight:500;color:#888">My Exp.</span></button>`:'<span></span>'}
       <button onclick="selectTab('search')" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 2px 10px;border-radius:10px;border:0.5px solid #185FA5;background:#E6F1FB;cursor:pointer"><span style="font-size:20px">🔍</span><span style="font-size:9px;font-weight:500;color:#185FA5">Search</span></button>
       <button onclick="selectTab('contacts')" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 2px 10px;border-radius:10px;border:0.5px solid #185FA5;background:#E6F1FB;cursor:pointer"><span style="font-size:20px">📒</span><span style="font-size:9px;font-weight:500;color:#185FA5">Contacts</span></button>
     </div>

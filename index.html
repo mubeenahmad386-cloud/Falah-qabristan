@@ -761,7 +761,7 @@ function submitReg(){
   const mobileDigits=normMob(mobile);
   if(mobileDigits.length!==11){showPopup('⚠️','Mobile Short','Mobile must be exactly 11 digits. Entered: '+mobileDigits.length);return;}
   const cnicDigits=normCnic(cnic);
-  if(cnicDigits.length!==13){showPopup('⚠️','CNIC Short','CNIC must be exactly 13 digits. Entered: '+cnicDigits.length);return;}
+  if(cnic&&cnicDigits.length!==13){showPopup('⚠️','CNIC Short','CNIC must be exactly 13 digits. Entered: '+cnicDigits.length);return;}
   if(password!==confirm){showPopup('⚠️','Mismatch','Passwords do not match.');return;}
   if(password.length<4){showPopup('⚠️','Weak','Password must be at least 4 characters.');return;}
   const allExisting=[...DB.users,...DB.pendingApprovals];
@@ -2117,7 +2117,8 @@ function openDonorFromSearch(id){
 function doSearch(){
   const q=(document.getElementById('searchInput').value||'').toLowerCase().trim();
   const res=document.getElementById('searchResults');
-  if(!q||q.length<2){res.innerHTML='<p style="font-size:13px;color:#888">Type at least 2 characters... | کم از کم 2 حروف لکھیں</p>';return;}
+  if(!q){res.innerHTML='<p style="font-size:13px;color:#888">Start typing to search... | تلاش شروع کریں</p>';return;}
+  if(q.length<2){res.innerHTML='<p style="font-size:13px;color:#888">Type at least 2 characters | کم از کم 2 حروف لکھیں</p>';return;}
   // null-safe search helpers
   const has=(v)=>(v||'').toLowerCase().includes(q);
   const hasMob=(v)=>normMob(v||'').includes(normMob(q));
@@ -2887,7 +2888,6 @@ T.bloodbank=function(){
       </div>
     </div>
     <div id="bbResults"></div>
-    <script>setTimeout(()=>filterBloodBank('All'),50);<\/script>
   </div>`;
 }
 function filterBloodBank(area){
@@ -2952,7 +2952,8 @@ function renderDPUList(donors,q){
     </div>`).join('');
 }
 function filterDPU(){
-  const q=(document.getElementById('dpuSearch')||{value:''}).value.trim();
+  const inp=document.getElementById('dpuSearch');
+  const q=inp?inp.value.trim():'';
   const el=document.getElementById('dpuList');
   if(!el)return;
   el.innerHTML=renderDPUList([...DB.donors].sort((a,b)=>(a.name||'').localeCompare(b.name||'')),q);
@@ -3649,9 +3650,9 @@ T.lockuser=function(){
     <div style="display:flex;gap:8px;margin-bottom:12px">
       <div class="inp-wrap" style="flex:1;margin-bottom:0">
         <span class="inp-icon">🔍</span>
-        <input type="text" id="lockUserSearch" placeholder="Search name, mobile, ID, area... | تلاش کریں" oninput="renderLockUserList()" style="font-size:13px">
+        <input type="text" id="lockUserSearch" placeholder="Search name, mobile, ID, area... | تلاش کریں" style="font-size:13px">
       </div>
-      <button onclick="document.getElementById('lockUserSearch').value='';renderLockUserList();" style="background:#f5f5f5;border:1px solid #ddd;border-radius:8px;padding:0 12px;font-size:12px;cursor:pointer;color:#666;white-space:nowrap">✕ Clear</button>
+      <button id="lockUserClearBtn" style="background:#f5f5f5;border:1px solid #ddd;border-radius:8px;padding:0 12px;font-size:12px;cursor:pointer;color:#666;white-space:nowrap">✕ Clear</button>
     </div>
     <div id="lockUserList">${renderLockUserListHtml(users,'')}</div>
   </div>`;
@@ -3676,7 +3677,15 @@ function renderLockUserListHtml(users,q){
     </div>`).join('');
 }
 function renderLockUserList(){
-  const q=(document.getElementById('lockUserSearch')||{value:''}).value.trim();
+  const inp=document.getElementById('lockUserSearch');
+  if(inp&&!inp._wired){
+    inp._wired=true;
+    inp.addEventListener('input',renderLockUserList);
+    inp.addEventListener('keyup',renderLockUserList);
+    const clearBtn=document.getElementById('lockUserClearBtn');
+    if(clearBtn)clearBtn.addEventListener('click',()=>{inp.value='';renderLockUserList();});
+  }
+  const q=inp?inp.value.trim():'';
   const el=document.getElementById('lockUserList');
   if(!el)return;
   el.innerHTML=renderLockUserListHtml(DB.users.filter(u=>u.role!=='developer'),q);
@@ -3986,6 +3995,8 @@ function addExpCat(){
 }
 
 T.contacts=function(){
+  // Reset area on fresh render
+  window._contactArea='All';
   const allUsers=[...DB.users,...DB.donors].filter(x=>x.mobile);
   const uniqueAreas=['All',...new Set(allUsers.map(u=>u.area||'').filter(Boolean)).values()].sort();
   return `<div style="position:sticky;top:0;z-index:10;background:var(--bg);padding:8px 0 4px">
@@ -4007,7 +4018,7 @@ function filterContacts(area){
   const allContacts=[...DB.users,...DB.donors].filter(x=>x.mobile);
   // Update area button styles
   const areas=['All',...new Set(allContacts.map(u=>u.area||'').filter(Boolean))];
-  const activeArea=area||window._contactArea||'All';
+  const activeArea=area!==undefined?area:(window._contactArea||'All');
   if(area)window._contactArea=area;
   areas.forEach(a=>{
     const btn=document.getElementById('areaBtn_'+a.replace(/\s/g,'_'));
@@ -4135,7 +4146,6 @@ T.smartsearch=function(){
       </div>
     </div>
     <div id="ssResults"></div>
-    <script>window._ssProf='All';setTimeout(()=>runSmartSearch(),50);<\/script>
   </div>`;
 }
 function ssSetProf(p){
@@ -4710,6 +4720,16 @@ function renderTab(key){
     </div>`:'';
     el.innerHTML=backBar+(T[key]()||'');
     populateAreas();populateProfs();
+    // Post-render init — run search functions after DOM is ready
+    const initMap={
+      contacts:()=>{window._contactArea='All';filterContacts('All');},
+      bloodbank:()=>{window._bbArea='All';filterBloodBank('All');},
+      smartsearch:()=>{window._ssProf='All';runSmartSearch();},
+      donorprofileupdate:()=>filterDPU(),
+      lockuser:()=>renderLockUserList(),
+      search:()=>{const si=document.getElementById('searchInput');if(si)si.focus();},
+    };
+    if(initMap[key])setTimeout(initMap[key],50);
   }
   currentTab=key;
   window.scrollTo(0,0);

@@ -967,12 +967,21 @@ T.donation=function(){
   }
   return `<div class="card"><h3><span class="bi-title"><span class="bi-en">Donation Entry</span><span class="bi-ur">چندہ درج کریں</span></span></h3>
     <div class="info-box info">Enter Personal ID or Mobile — existing donor data will auto-fill. | پرسنل ID یا موبائل درج کریں — ڈیٹا خودبخود آ جائے گا۔</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <div>
-        <label>Personal ID or Mobile No <span style="font-size:10px;color:#1D9E75">ID یا موبائل نمبر</span></label>
-        <div class="inp-wrap"><span class="inp-icon">🔍</span><input type="text" id="fetchById" placeholder="Enter ID (e.g. 10001) or Mobile (0300-1234567)" oninput="autoFetchDonorUnified(this.value)" onkeydown="blockSearchTabIfMobile(event,this)" maxlength="15" style="font-size:12px"></div>
-        <div id="unifiedFetchStatus" style="display:none;margin-top:4px"></div>
+    <div>
+      <label>Search Donor <span style="font-size:10px;color:#1D9E75">ID / موبائل / نام</span></label>
+      <div class="inp-wrap" style="margin-bottom:0">
+        <span class="inp-icon">🔍</span>
+        <input type="text" id="fetchById"
+          placeholder="Name, ID or Mobile | نام، ID یا موبائل"
+          oninput="autoFetchDonorUnified(this.value);showDonorSuggestions(this.value)"
+          onkeydown="blockSearchTabIfMobile(event,this)"
+          autocomplete="off"
+          maxlength="50"
+          style="font-size:13px;width:100%">
+        <button onclick="document.getElementById('fetchById').value='';autoFetchDonorUnified('');hideDonorSuggestions();" style="position:absolute;right:10px;background:none;border:none;font-size:16px;color:#aaa;cursor:pointer;padding:0;line-height:1">✕</button>
       </div>
+      <div id="unifiedFetchStatus" style="display:none;margin-top:4px"></div>
+      <div id="donorSuggestions" style="display:none;background:#fff;border:1px solid #ddd;border-radius:0 0 10px 10px;max-height:200px;overflow-y:auto;margin-top:-1px;box-shadow:0 4px 12px rgba(0,0,0,0.1);position:relative;z-index:50"></div>
     </div>
     <div id="donorFetchResult"></div>
 
@@ -1035,6 +1044,67 @@ function blockSearchTabIfMobile(event,input){
     }
   }
 }
+function showDonorSuggestions(val){
+  val=(val||'').trim();
+  const box=document.getElementById('donorSuggestions');
+  if(!box)return;
+  if(val.length<2){box.style.display='none';return;}
+  // Search by name (primary), ID, mobile
+  const digits=normMob(val);
+  const byName=[...DB.donors,...DB.users].filter(d=>
+    (d.name||'').toLowerCase().includes(val.toLowerCase())
+  );
+  const byId=[...DB.donors,...DB.users].filter(d=>
+    String(d.id).includes(val) && !(d.name||'').toLowerCase().includes(val.toLowerCase())
+  );
+  const byMob=digits.length>=4?[...DB.donors,...DB.users].filter(d=>
+    normMob(d.mobile||'').includes(digits) &&
+    !byName.find(x=>x.id===d.id) && !byId.find(x=>x.id===d.id)
+  ):[];
+  const results=[...byName,...byId,...byMob].slice(0,8);
+  // Remove duplicates
+  const seen=new Set();
+  const unique=results.filter(d=>{if(seen.has(d.id))return false;seen.add(d.id);return true;});
+  if(!unique.length){box.style.display='none';return;}
+  box.style.display='block';
+  box.innerHTML=unique.map(d=>`
+    <div onclick="selectDonorSuggestion('${d.id}')"
+      style="display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;border-bottom:0.5px solid #f5f5f5;transition:background 0.1s"
+      onmouseenter="this.style.background='#f0fff8'"
+      onmouseleave="this.style.background=''">
+      ${avatarHtml(d.photo,d.name,34)}
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.name}</div>
+        <div style="font-size:11px;color:#888;margin-top:1px">${d.id} • ${d.mobile||'—'} • ${d.area||'—'}</div>
+      </div>
+      ${d.totalDonation?`<div style="font-size:11px;font-weight:600;color:#0F6E56;white-space:nowrap">Rs ${fmt(d.totalDonation)}</div>`:''}
+    </div>`).join('');
+}
+function hideDonorSuggestions(){
+  const box=document.getElementById('donorSuggestions');
+  if(box)box.style.display='none';
+}
+function selectDonorSuggestion(id){
+  const found=[...DB.donors,...DB.users].find(d=>d.id===id);
+  if(!found)return;
+  // Put name/id in search box
+  const inp=document.getElementById('fetchById');
+  if(inp)inp.value=found.name;
+  hideDonorSuggestions();
+  // Fill donor fields
+  fillDonorFetch(found);
+  const statusEl=document.getElementById('unifiedFetchStatus');
+  if(statusEl){
+    statusEl.style.display='block';
+    statusEl.innerHTML=`<div style="background:#E1F5EE;border:1px solid #1D9E75;border-radius:6px;padding:6px 10px;font-size:12px;color:#0F6E56">✅ Found: <strong>${found.name}</strong> (${found.id}) — data auto-filled</div>`;
+  }
+}
+// Hide suggestions when clicking outside
+document.addEventListener('click',function(e){
+  const box=document.getElementById('donorSuggestions');
+  const inp=document.getElementById('fetchById');
+  if(box&&inp&&!box.contains(e.target)&&e.target!==inp){box.style.display='none';}
+});
 function autoFetchDonorUnified(val){
   val=(val||'').trim();
   const statusEl=document.getElementById('unifiedFetchStatus');
@@ -1065,9 +1135,11 @@ function autoFetchDonorUnified(val){
   // Don't trigger at 10 digits — wait for full 11
   const isMobile=digits.length===11||(val.startsWith('03')&&digits.length===11);
   const isId=!isMobile&&digits.length>=4&&digits.length<=6;
+  // Search: mobile exact, ID exact, or name exact match
   const found=isMobile
     ?[...DB.donors,...DB.users].find(d=>normMob(d.mobile)===digits)
-    :[...DB.donors,...DB.users].find(d=>String(d.id)===String(val));
+    :([...DB.donors,...DB.users].find(d=>String(d.id)===String(val))
+      ||[...DB.donors,...DB.users].find(d=>(d.name||'').toLowerCase()===val.toLowerCase()));
   if(found){
     fillDonorFetch(found);
     if(statusEl){

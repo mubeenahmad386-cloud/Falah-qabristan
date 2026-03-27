@@ -11,6 +11,39 @@ body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;color:var(--t
 /* SCREENS */
 .screen{display:none;padding:0;min-height:100vh}.screen.active{display:block}
 #fabBtn{transition:transform 0.15s,opacity 0.2s}
+.card{border-radius:14px;background:#fff;padding:16px;margin-bottom:12px;box-shadow:0 1px 6px rgba(0,0,0,0.07)}
+.inp-wrap{position:relative;display:flex;align-items:center;margin-bottom:8px}
+.inp-wrap input,.inp-wrap select{flex:1;padding:11px 12px 11px 36px;border:1.5px solid #e8e8e8;border-radius:10px;font-size:13px;background:#fafafa;transition:border 0.15s}
+.inp-wrap input:focus,.inp-wrap select:focus{border-color:#1D9E75;background:#fff;outline:none}
+.inp-icon{position:absolute;left:10px;font-size:15px;z-index:1;pointer-events:none}
+input:not(.inp-wrap input),select:not(.inp-wrap select),textarea{width:100%;padding:10px 12px;border:1.5px solid #e8e8e8;border-radius:10px;font-size:13px;background:#fafafa;box-sizing:border-box;margin-bottom:8px;transition:border 0.15s}
+input:focus,select:focus,textarea:focus{border-color:#1D9E75;background:#fff;outline:none}
+label{display:block;font-size:12px;font-weight:600;color:#444;margin-bottom:4px;margin-top:8px}
+.btn{display:block;width:100%;padding:12px;border-radius:12px;border:1.5px solid #ddd;font-size:13px;font-weight:600;cursor:pointer;background:#fff;transition:all 0.15s;text-align:center}
+.btn-primary{background:linear-gradient(135deg,#1D9E75,#0F6E56);color:#fff;border:none;box-shadow:0 3px 12px rgba(29,158,117,0.3)}
+.btn-outline{border-color:#1D9E75;color:#1D9E75}
+.btn-dev{background:linear-gradient(135deg,#993556,#6b1f3a);color:#fff;border:none}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600}
+.badge-admin{background:#E6F1FB;color:#185FA5}
+.badge-manager{background:#E1F5EE;color:#0F6E56}
+.badge-developer{background:#f5e8ff;color:#6b21a8}
+.badge-user{background:#f5f5f5;color:#666}
+.badge-donor{background:#E1F5EE;color:#0F6E56}
+.entry-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:0.5px solid #f0f0f0}
+.entry-name{font-size:13px;font-weight:600;color:#1a1a1a}
+.entry-sub{font-size:11px;color:#999;margin-top:2px}
+.entry-amt{font-size:13px;font-weight:700;color:#0F6E56}
+.id-badge{background:#E6F1FB;color:#185FA5;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700}
+.section-bi{font-size:11px;font-weight:700;color:#888;padding:8px 0 4px;border-bottom:1.5px solid #eee;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
+.stat-card{background:#f9f9f9;border-radius:12px;padding:12px;text-align:center;border:1px solid #eee}
+.stat-label{font-size:10px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.3px}
+.stat-val{font-size:22px;font-weight:800;margin-top:4px}
+.app-header{background:linear-gradient(135deg,var(--green),var(--green-dark));padding:12px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(15,110,86,0.3)}
+.content-area{padding:14px 14px 80px}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;cursor:pointer;flex:1;transition:all 0.15s;border-radius:10px;margin:4px 2px}
+.nav-item.active{background:rgba(29,158,117,0.12)}
+.nav-label{font-size:9px;font-weight:600;color:#888}
+.nav-item.active .nav-label{color:#1D9E75}
 /* APP HEADER */
 .app-header{background:var(--green);color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 2px 8px rgba(0,0,0,0.15)}
 .app-header-left{display:flex;align-items:center;gap:10px}
@@ -483,6 +516,8 @@ function showLoading(on){
 // Load all data from Firestore
 async function loadAllData(){
   showLoading(true);
+  // Load from local cache first (instant offline display)
+  loadLocalCache();
   try{
     const [u,pa,don,dec,donations,exp,trf,log,profs,sugg]=await Promise.all([
       FS.loadAll('users'),FS.loadAll('pendingApprovals'),FS.loadAll('donors'),
@@ -500,6 +535,7 @@ async function loadAllData(){
       // Merge custom profs into PROF_LIST if not there
       PROFESSIONS.forEach(pr=>{if(!PROF_LIST.find(p=>p.en===pr))PROF_LIST.push({en:pr,ur:''});});
     }
+    saveLocalCache(); // save fresh data to cache
     const txn=DB.donations.map(d=>parseInt((d.id||'0').replace(/[^0-9]/g,''))||0);
     txnCounter=txn.length?Math.max(...txn)+1:1;
     const bil=DB.expenses.map(e=>parseInt((e.billNo||'BILL-0000').replace('BILL-',''))||0);
@@ -534,6 +570,7 @@ const PROF_LIST=[
   {en:'Other',            ur:'دیگر'},
 ];
 let PROFESSIONS=PROF_LIST.map(p=>p.en);
+const BLOOD_GROUPS=['A+','A-','B+','B-','AB+','AB-','O+','O-'];
 const PROF_UR={};PROF_LIST.forEach(p=>{PROF_UR[p.en]=p.ur;});
 
 const DB={
@@ -549,6 +586,12 @@ const DB={
 };
 
 var currentUser=null,currentRole=null,pendingRegRole=null,txnCounter=1,expBillCounter=0;
+
+// ---- Offline Cache (localStorage) ----
+const CACHE_KEY='falah_db_cache';
+function saveLocalCache(){try{localStorage.setItem(CACHE_KEY,JSON.stringify({users:DB.users,donors:DB.donors,deceased:DB.deceased,donations:DB.donations,expenses:DB.expenses,transfers:DB.transfers,auditLog:DB.auditLog,suggestions:DB.suggestions,ts:Date.now()}));}catch(e){}}
+function loadLocalCache(){try{const d=JSON.parse(localStorage.getItem(CACHE_KEY)||'{}');if(d.donors){DB.users=d.users||[];DB.donors=d.donors||[];DB.deceased=d.deceased||[];DB.donations=d.donations||[];DB.expenses=d.expenses||[];DB.transfers=d.transfers||[];DB.auditLog=d.auditLog||[];DB.suggestions=d.suggestions||[];return true;}return false;}catch(e){return false;}}
+
 
 // ---- Global Config (editable by developer) ----
 var ORG_CONFIG={
@@ -956,6 +999,11 @@ T.donation=function(){
       <div id="donorMobileStatus" style="display:none;margin-top:4px;font-size:12px;padding:6px 10px;border-radius:6px"></div>
       <label>Area <span style="font-size:10px;color:#1D9E75;font-weight:500">علاقہ</span></label>
       <select id="donorArea" class="area-sel"></select>
+      <label>Blood Group <span style="font-size:10px;color:#E24B4A;font-weight:500">بلڈ گروپ</span></label>
+      <select id="donorBloodGroup">
+        <option value="">-- Select Blood Group (optional) --</option>
+        ${BLOOD_GROUPS.map(g=>`<option value="${g}">${g}</option>`).join('')}
+      </select>
       <script>setTimeout(()=>{const ae=document.getElementById('donorArea');if(ae&&currentUser&&currentUser.area){ae.value=currentUser.area;if(!ae.value){const o=document.createElement('option');o.value=currentUser.area;o.textContent=currentUser.area;o.selected=true;ae.insertBefore(o,ae.firstChild);}}},200);<\/script>
     </div>
     <!-- END NEW DONOR fields -->
@@ -1083,7 +1131,7 @@ function fillDonorFetch(found){
   },100);
   if(found.photo){const pi=document.getElementById('donorAvatarPreview');if(pi){pi.src=found.photo;pi.style.display='block';const ap=document.getElementById('donorAvatarPlus');if(ap)ap.style.display='none';}}
   const ad2=document.getElementById('autoIdDisplay');if(ad2)ad2.textContent=found.id;
-  if(res)res.innerHTML=`<div class="fetch-card" style="margin-bottom:8px">${avatarHtml(found.photo,found.name,42)}<div><div style="font-size:13px;font-weight:600">${found.name} <span class="id-badge">${found.id}</span></div><div style="font-size:11px;color:#888;margin-top:2px">${found.area||''} • Total: Rs ${fmt(found.totalDonation||0)}</div></div></div>`;
+  if(res)res.innerHTML=`<div class="fetch-card" style="margin-bottom:8px">${avatarHtml(found.photo,found.name,42)}<div><div style="font-size:13px;font-weight:600">${found.name} <span class="id-badge">${found.id}</span></div><div style="font-size:11px;color:#888;margin-top:2px">${found.area||''} • Total: Rs ${fmt(found.totalDonation||0)}${found.bloodGroup?' • <span style="color:#E24B4A;font-weight:600">🩸 '+found.bloodGroup+'</span>':''}</div></div></div>`;
   // Hide new donor fields, show only amount+desc
   const nf=document.getElementById('donorNewFields');if(nf)nf.style.display='none';
   const af=document.getElementById('donorAmountSection');if(af){af.style.display='block';const amtEl=af.querySelector('#donorAmount');if(amtEl)amtEl.focus();}
@@ -1297,7 +1345,8 @@ function finishDonation(name,amount,mobile,cnic,photo){
 
     if(DB.donors.find(d=>d.mobile.replace(/-/g,'')===mobile.replace(/-/g,''))){showPopup('⚠️','Duplicate Mobile','Is mobile se donor already exist karta hai.');return;}
     const nid=nextAllId();
-    donor={id:nid,name,mobile,cnic,area:document.getElementById('donorArea').value,profession:document.getElementById('donorProfession').value,totalDonation:0,photo:photo||null,entries:[]};
+    const bg=(document.getElementById('donorBloodGroup')||{value:''}).value;
+donor={id:nid,name,mobile,cnic,area:document.getElementById('donorArea').value,bloodGroup:bg||'',profession:(document.getElementById('donorProfession')||{value:''}).value,totalDonation:0,photo:photo||null,entries:[]};
     DB.donors.push(donor);FS.save('donors',donor.id,donor);
   }
   if(photo)donor.photo=photo;
@@ -1955,7 +2004,9 @@ function openEditDonorProfile(donorId){
       </div>
       <label>Name *</label><input type="text" id="donorEditName" value="${donor.name||''}" style="margin-bottom:8px">
       <label>Mobile *</label><input type="text" id="donorEditMobile" value="${donor.mobile||''}" maxlength="12" oninput="autoFormatMobile(this,null)" style="margin-bottom:8px">
-      <label>Area</label><select id="donorEditArea" style="margin-bottom:12px"><option value="">-- Select --</option>${AREAS.map(a=>`<option value="${a}" ${a===donor.area?'selected':''}>${a}</option>`).join('')}</select>
+      <label>Area</label><select id="donorEditArea" style="margin-bottom:8px"><option value="">-- Select --</option>${AREAS.map(a=>`<option value="${a}" ${a===donor.area?'selected':''}>${a}</option>`).join('')}</select>
+      <label>Blood Group <span style="font-size:10px;color:#E24B4A">بلڈ گروپ</span></label>
+      <select id="donorEditBloodGroup" style="margin-bottom:12px"><option value="">-- None --</option>${BLOOD_GROUPS.map(g=>`<option value="${g}" ${g===donor.bloodGroup?'selected':''}>${g}</option>`).join('')}</select>
       <input type="hidden" id="donorEditId" value="${donorId}">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <button onclick="closePopup()" style="background:#f5f5f5;color:#333;border:1px solid #ddd;padding:10px;border-radius:8px;font-size:13px;cursor:pointer">Cancel</button>
@@ -1972,7 +2023,8 @@ function saveDonorProfile(){
   const mobile=document.getElementById('donorEditMobile').value.trim();
   const area=document.getElementById('donorEditArea').value;
   if(!name||!mobile){showPopup('⚠️','Required','Name and mobile are required.');return;}
-  donor.name=name;donor.mobile=mobile;donor.area=area;
+  const bg=(document.getElementById('donorEditBloodGroup')||{value:donor.bloodGroup||''}).value;
+  donor.name=name;donor.mobile=mobile;donor.area=area;donor.bloodGroup=bg;
   const photoInp=document.getElementById('donorEditPhotoInp');
   function finish(){
     FS.save('donors',id,donor);
@@ -2237,7 +2289,7 @@ function generateSlip(){
 
 // ---- TOP DONORS ----
 T.top=function(){
-  const sorted=[...DB.donors].sort((a,b)=>b.totalDonation-a.totalDonation).slice(0,10);
+  const sorted=[...DB.donors].filter(d=>!(d.name||'').toLowerCase().startsWith('other')).sort((a,b)=>b.totalDonation-a.totalDonation).slice(0,10);
   const palettes=[
     {bg:'#FFFBEB',border:'#F59E0B',num:'#92400E'},{bg:'#F3F4F6',border:'#9CA3AF',num:'#374151'},
     {bg:'#FFF7ED',border:'#EA580C',num:'#7C2D12'},{bg:'#F0FDF4',border:'#22C55E',num:'#14532D'},
@@ -2258,7 +2310,7 @@ T.top=function(){
   <div id="topCertResult" style="margin-top:10px"></div>`;
 };
 function showTopCert(){
-  const sorted=[...DB.donors].sort((a,b)=>b.totalDonation-a.totalDonation).slice(0,10);
+  const sorted=[...DB.donors].filter(d=>!(d.name||'').toLowerCase().startsWith('other')).sort((a,b)=>b.totalDonation-a.totalDonation).slice(0,10);
   document.getElementById('topCertResult').innerHTML=`<div class="cert-wrap">
     <div class="cert-green-header"><div style="font-size:22px">🏆</div><div style="font-size:18px;font-weight:700;margin-top:4px">Top 10 Donors</div><div style="font-size:12px;opacity:0.85">${orgName()}</div><div style="font-size:11px;opacity:0.7;margin-top:4px">${new Date().toLocaleDateString('en-PK')}</div></div>
     <div class="cert-body">
@@ -2745,6 +2797,66 @@ function printExpenseBill(id){
 
 
 // ---- DONOR LIST (admin, manager, developer) ----
+T.bloodbank=function(){
+  const uniqueAreas=['All',...new Set(DB.donors.map(d=>d.area||'').filter(Boolean)).values()].sort();
+  return `<div>
+    <div style="background:linear-gradient(135deg,#E24B4A,#a01818);border-radius:14px;padding:14px;margin-bottom:12px;color:#fff">
+      <div style="font-size:16px;font-weight:800;margin-bottom:4px">🩸 Blood Bank</div>
+      <div style="font-size:12px;opacity:0.85">Search donors by blood group | بلڈ گروپ سے تلاش کریں</div>
+    </div>
+    <div class="card">
+      <label>Blood Group <span style="font-size:10px;color:#E24B4A">بلڈ گروپ</span></label>
+      <select id="bbBloodGroup" onchange="filterBloodBank()">
+        <option value="">-- All Blood Groups --</option>
+        ${BLOOD_GROUPS.map(g=>`<option value="${g}">${g}</option>`).join('')}
+      </select>
+      <div style="margin-top:10px;margin-bottom:6px">
+        <div style="font-size:11px;font-weight:600;color:#888;margin-bottom:6px">Area Filter | علاقہ</div>
+        <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px" id="bbAreaBtns">
+          ${uniqueAreas.map(a=>`<button onclick="filterBloodBank('${a}')" id="bbArea_${a.replace(/\s/g,'_')}" style="background:${a==='All'?'#E24B4A':'#f5f5f5'};color:${a==='All'?'#fff':'#333'};border:1px solid #ddd;padding:5px 12px;border-radius:20px;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0">${a}</button>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div id="bbResults"></div>
+    <script>setTimeout(()=>filterBloodBank('All'),50);<\/script>
+  </div>`;
+}
+function filterBloodBank(area){
+  const bg=(document.getElementById('bbBloodGroup')||{value:''}).value;
+  const activeArea=area||window._bbArea||'All';
+  if(area)window._bbArea=area;
+  // Update area button styles
+  const areas=['All',...new Set(DB.donors.map(d=>d.area||'').filter(Boolean))];
+  areas.forEach(a=>{
+    const btn=document.getElementById('bbArea_'+a.replace(/\s/g,'_'));
+    if(btn){btn.style.background=a===activeArea?'#E24B4A':'#f5f5f5';btn.style.color=a===activeArea?'#fff':'#333';}
+  });
+  let filtered=DB.donors.filter(d=>d.bloodGroup);
+  if(bg)filtered=filtered.filter(d=>d.bloodGroup===bg);
+  if(activeArea&&activeArea!=='All')filtered=filtered.filter(d=>(d.area||'')=== activeArea);
+  filtered.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const el=document.getElementById('bbResults');
+  if(!el)return;
+  if(!filtered.length){
+    el.innerHTML=`<div class="card" style="text-align:center;padding:20px;color:#888"><div style="font-size:32px;margin-bottom:8px">🩸</div><div style="font-size:13px">No donors found with ${bg||'any'} blood group${activeArea!=='All'?' in '+activeArea:''}.</div></div>`;
+    return;
+  }
+  el.innerHTML=`<div class="card">
+    <div style="font-size:12px;font-weight:600;color:#888;margin-bottom:10px">${filtered.length} donor${filtered.length!==1?'s':''} found | ملے</div>
+    ${filtered.map(d=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid #f5f5f5" onclick="openDonorProfile('${d.id}')" style="cursor:pointer">
+        <div style="flex-shrink:0">${avatarHtml(d.photo,d.name,50)}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700">${d.name}</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">📍 ${d.area||'—'}</div>
+          <div style="margin-top:4px">
+            <span style="background:#FCEBEB;color:#E24B4A;font-weight:700;font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid #E24B4A">🩸 ${d.bloodGroup}</span>
+          </div>
+        </div>
+        <a href="tel:${normMob(d.mobile||'')}" onclick="event.stopPropagation()" style="flex-shrink:0;width:40px;height:40px;background:#E24B4A;border-radius:50%;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:18px" title="${d.mobile}">📞</a>
+      </div>`).join('')}
+  </div>`;
+}
 T.donorprofileupdate=function(){
   const donors=[...DB.donors].sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   return `<div class="card">
@@ -3919,6 +4031,245 @@ function markNotifRead(id){
   renderTab('notifications');
 }
 
+T.smartsearch=function(){
+  const allPeople=[...DB.users,...DB.donors];
+  const uniqueAreas=['All',...new Set(allPeople.map(u=>u.area||'').filter(Boolean)).values()].sort();
+  const uniqueProfs=['All',...new Set(allPeople.map(u=>u.profession||'').filter(Boolean)).values()].sort((a,b)=>a.localeCompare(b));
+  return `<div>
+    <div style="background:linear-gradient(135deg,#185FA5,#0d3d6e);border-radius:14px;padding:14px;margin-bottom:12px;color:#fff">
+      <div style="font-size:16px;font-weight:800;margin-bottom:2px">🔎 Smart Search</div>
+      <div style="font-size:11px;opacity:0.8">Search by area, profession or blood group | علاقہ، پیشہ یا بلڈ گروپ سے تلاش</div>
+    </div>
+    <div class="card" style="padding:12px">
+      <div class="inp-wrap" style="margin-bottom:10px">
+        <span class="inp-icon">🔍</span>
+        <input type="text" id="ssQuery" placeholder="Name or mobile... | نام یا موبائل" oninput="runSmartSearch()" style="font-size:13px">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#888;margin-bottom:4px">AREA | علاقہ</div>
+          <select id="ssArea" onchange="runSmartSearch()" style="font-size:12px;padding:8px">
+            ${uniqueAreas.map(a=>`<option value="${a}">${a}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#888;margin-bottom:4px">BLOOD GROUP | بلڈ گروپ</div>
+          <select id="ssBlood" onchange="runSmartSearch()" style="font-size:12px;padding:8px">
+            <option value="All">All</option>
+            ${BLOOD_GROUPS.map(g=>`<option value="${g}">${g}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div style="font-size:10px;font-weight:700;color:#888;margin-bottom:6px">PROFESSION | پیشہ</div>
+      <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px" id="ssProfBtns">
+        ${uniqueProfs.map((p,pi)=>{const pid='ssProf_'+p.replace(/[^a-zA-Z0-9]/g,'_');return `<button onclick="ssSetProf(${JSON.stringify(p)})" id="${pid}" style="background:${p==='All'?'#185FA5':'#f5f5f5'};color:${p==='All'?'#fff':'#333'};border:1px solid #ddd;padding:5px 10px;border-radius:20px;font-size:10px;cursor:pointer;white-space:nowrap;flex-shrink:0">${p}</button>`;}).join('')}
+      </div>
+    </div>
+    <div id="ssResults"></div>
+    <script>window._ssProf='All';setTimeout(()=>runSmartSearch(),50);<\/script>
+  </div>`;
+}
+function ssSetProf(p){
+  window._ssProf=p;
+  // Update button styles
+  document.querySelectorAll('[id^="ssProf_"]').forEach(b=>{b.style.background='#f5f5f5';b.style.color='#333';});
+  const key='ssProf_'+p.replace(/[^a-zA-Z0-9]/g,'_');
+  const btn=document.getElementById(key);
+  if(btn){btn.style.background='#185FA5';btn.style.color='#fff';}
+  runSmartSearch();
+}
+function runSmartSearch(){
+  const q=(document.getElementById('ssQuery')||{value:''}).value.toLowerCase().trim();
+  const area=(document.getElementById('ssArea')||{value:'All'}).value;
+  const blood=(document.getElementById('ssBlood')||{value:'All'}).value;
+  const prof=window._ssProf||'All';
+  const all=[...DB.users,...DB.donors];
+  let res=all.filter(u=>{
+    if(area!=='All'&&(u.area||'')!==area)return false;
+    if(blood!=='All'&&(u.bloodGroup||'')!==blood)return false;
+    if(prof!=='All'&&(u.profession||'').toLowerCase()!==prof.toLowerCase())return false;
+    if(q){
+      const name=(u.name||'').toLowerCase();
+      const mob=normMob(u.mobile||'');
+      const id=(u.id||'').toLowerCase();
+      if(!name.includes(q)&&!mob.includes(normMob(q))&&!id.includes(q))return false;
+    }
+    return true;
+  });
+  // Remove duplicates (user may appear in both users and donors)
+  const seen=new Set();
+  res=res.filter(u=>{if(seen.has(u.id))return false;seen.add(u.id);return true;});
+  res.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const el=document.getElementById('ssResults');
+  if(!el)return;
+  if(!res.length){
+    el.innerHTML='<div class="card" style="text-align:center;padding:20px;color:#888"><div style="font-size:28px;margin-bottom:8px">🔎</div><div style="font-size:13px">No results found | کوئی نتیجہ نہیں</div></div>';
+    return;
+  }
+  el.innerHTML=`<div class="card" style="padding:12px">
+    <div style="font-size:11px;font-weight:700;color:#888;margin-bottom:10px">${res.length} result${res.length!==1?'s':''} | نتائج</div>
+    ${res.map(u=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid #f0f0f0">
+        <div style="flex-shrink:0">${avatarHtml(u.photo,u.name,46)}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+            ${u.name} <span class="id-badge">${u.id}</span>
+          </div>
+          <div style="font-size:11px;color:#888;margin-top:2px">📍 ${u.area||'—'}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
+            ${u.bloodGroup?`<span style="background:#FCEBEB;color:#E24B4A;font-size:10px;font-weight:700;padding:1px 7px;border-radius:20px;border:1px solid #E24B4A">🩸 ${u.bloodGroup}</span>`:''}
+            ${u.profession?`<span style="background:#E6F1FB;color:#185FA5;font-size:10px;padding:1px 7px;border-radius:20px;border:1px solid #185FA5">💼 ${u.profession}</span>`:''}
+            ${u.role?`<span class="badge badge-${u.role}">${u.role}</span>`:''}
+          </div>
+        </div>
+        <a href="tel:${normMob(u.mobile||'')}" style="flex-shrink:0;background:#1D9E75;color:#fff;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:18px;box-shadow:0 2px 8px rgba(29,158,117,0.3)" title="${u.mobile||''}">📞</a>
+      </div>`).join('')}
+  </div>`;
+}
+
+T.adddonor=function(){
+  return `<div class="card">
+    <h3><span class="bi-title"><span class="bi-en">Add Donor</span><span class="bi-ur">ڈونر شامل کریں</span></span></h3>
+    <p style="font-size:12px;color:#888;margin-bottom:14px">Enter mobile to check if donor exists | موبائل نمبر درج کریں</p>
+
+    <label>Mobile No * <span style="font-size:10px;color:#1D9E75">موبائل نمبر</span></label>
+    <div class="inp-wrap">
+      <span class="inp-icon">📱</span>
+      <input type="text" id="adMobile" placeholder="0300-1234567" maxlength="12"
+        oninput="autoFormatMobile(this,null);adCheckMobile(this.value)">
+    </div>
+    <div id="adMobileStatus" style="margin-top:6px"></div>
+
+    <div id="adExistingProfile" style="display:none"></div>
+
+    <div id="adNewFields" style="display:none">
+      <label>Full Name * <span style="font-size:10px;color:#1D9E75">پورا نام</span></label>
+      <div class="inp-wrap"><span class="inp-icon">👤</span><input type="text" id="adName" placeholder="Full name"></div>
+
+      <label>Area <span style="font-size:10px;color:#1D9E75">علاقہ</span></label>
+      <select id="adArea" class="area-sel"></select>
+
+      <label>Blood Group <span style="font-size:10px;color:#E24B4A">بلڈ گروپ</span></label>
+      <select id="adBloodGroup">
+        <option value="">-- Select (optional) --</option>
+        ${BLOOD_GROUPS.map(g=>`<option value="${g}">${g}</option>`).join('')}
+      </select>
+
+      <label>Profession <span style="font-size:10px;color:#1D9E75">پیشہ</span></label>
+      <select id="adProfession" class="prof-sel"></select>
+
+      <div style="margin-top:10px">
+        <label>Photo <span style="font-size:10px;color:#1D9E75">تصویر</span></label>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
+          <div class="avatar-box" style="width:60px;height:60px;cursor:pointer" onclick="document.getElementById('adPhotoInp').click()">
+            <img id="adPhotoPreview" src="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%">
+            <span id="adPhotoPlus" style="font-size:22px;color:#aaa">📸</span>
+          </div>
+          <div style="font-size:11px;color:#888">Tap to add photo | تصویر شامل کریں</div>
+          <input type="file" id="adPhotoInp" accept="image/*" style="display:none" onchange="previewImg('adPhotoInp','adPhotoPreview','adPhotoPlus')">
+        </div>
+      </div>
+
+      <button class="btn btn-primary" style="margin-top:14px" onclick="submitAddDonor()">
+        <span style="font-size:13px">Save Donor</span>
+        <span style="font-size:10px;opacity:0.85;display:block">ڈونر محفوظ کریں</span>
+      </button>
+    </div>
+  </div>`;
+}
+
+function adCheckMobile(val){
+  const digits=normMob(val);
+  const statusEl=document.getElementById('adMobileStatus');
+  const existDiv=document.getElementById('adExistingProfile');
+  const newDiv=document.getElementById('adNewFields');
+  if(digits.length<11){
+    if(statusEl)statusEl.innerHTML='';
+    if(existDiv)existDiv.style.display='none';
+    if(newDiv)newDiv.style.display='none';
+    return;
+  }
+  const found=[...DB.donors,...DB.users].find(x=>normMob(x.mobile)===digits);
+  if(found){
+    if(statusEl)statusEl.innerHTML='';
+    if(newDiv)newDiv.style.display='none';
+    if(existDiv){
+      existDiv.style.display='block';
+      const totalDon=DB.donations.filter(d=>d.donorId===found.id).reduce((s,d)=>s+d.amount,0);
+      existDiv.innerHTML=`
+        <div style="background:#E1F5EE;border:1px solid #1D9E75;border-radius:12px;padding:14px;margin-top:8px">
+          <div style="font-size:12px;font-weight:700;color:#0F6E56;margin-bottom:10px">✅ Donor already exists | ڈونر پہلے سے موجود ہے</div>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+            ${avatarHtml(found.photo,found.name,56)}
+            <div>
+              <div style="font-size:16px;font-weight:800">${found.name}</div>
+              <div style="font-size:12px;color:#555;margin-top:3px"><span class="id-badge">${found.id}</span></div>
+              <div style="font-size:12px;color:#888;margin-top:3px">📍 ${found.area||'—'}</div>
+              ${found.bloodGroup?`<div style="font-size:12px;color:#E24B4A;font-weight:600;margin-top:2px">🩸 ${found.bloodGroup}</div>`:''}
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+            <div style="background:#fff;border-radius:8px;padding:8px;text-align:center">
+              <div style="font-size:10px;color:#888">Total Donated</div>
+              <div style="font-size:16px;font-weight:700;color:#0F6E56">Rs ${fmt(totalDon)}</div>
+            </div>
+            <div style="background:#fff;border-radius:8px;padding:8px;text-align:center">
+              <div style="font-size:10px;color:#888">Donations</div>
+              <div style="font-size:16px;font-weight:700;color:#185FA5">${DB.donations.filter(d=>d.donorId===found.id).length}</div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <button onclick="openEditDonorProfile('${found.id}')" style="background:#1D9E75;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">✏️ Edit Profile</button>
+            <button onclick="closePopup();selectTab('donation');setTimeout(()=>{const inp=document.getElementById('fetchById');if(inp){inp.value='${found.id}';autoFetchDonorUnified('${found.id}');}},200)" style="background:#185FA5;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">💰 Donate</button>
+          </div>
+        </div>`;
+    }
+  } else {
+    if(existDiv)existDiv.style.display='none';
+    if(newDiv){
+      newDiv.style.display='block';
+      // Pre-fill mobile
+      const mob=document.getElementById('adMobile');
+      // Auto-set area from current user
+      setTimeout(()=>{const ae=document.getElementById('adArea');if(ae&&currentUser&&currentUser.area)ae.value=currentUser.area;},100);
+    }
+    if(statusEl)statusEl.innerHTML=`<div style="background:#f9f9f9;border:1px solid #ddd;border-radius:6px;padding:6px 10px;font-size:12px;color:#888">🆕 New donor — fill details below | نیا ڈونر</div>`;
+  }
+}
+
+function submitAddDonor(){
+  const mobile=(document.getElementById('adMobile').value||'').trim();
+  const name=(document.getElementById('adName').value||'').trim();
+  const area=(document.getElementById('adArea').value||'');
+  const bloodGroup=(document.getElementById('adBloodGroup').value||'');
+  const profession=(document.getElementById('adProfession').value||'');
+  if(!mobile||!name){showPopup('⚠️','Required','Name and mobile are required. | نام اور موبائل ضروری ہے');return;}
+  if(normMob(mobile).length!==11){showPopup('⚠️','Mobile','Please enter 11-digit mobile number.');return;}
+  const nid=nextAllId();
+  const fi=document.getElementById('adPhotoInp');
+  function finish(photo){
+    const donor={id:nid,name,mobile,cnic:'',area,bloodGroup,profession,totalDonation:0,photo:photo||null,entries:[]};
+    DB.donors.push(donor);
+    FS.save('donors',nid,donor);
+    const al={by:currentUser.id,action:'Donor Added',target:name,detail:'ID: '+nid+' | '+mobile,date:today()};
+    DB.auditLog.push(al);FS.save('auditLog','AL'+Date.now(),al);
+    addNotification('donation','New Donor Added',name+' ('+nid+') added by '+currentUser.name);
+    showPopup('✅','Donor Added',name+' added! ID: '+nid+' | ڈونر شامل ہو گیا',null,()=>{
+      // Reset form
+      ['adMobile','adName'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+      const ad=document.getElementById('adArea');if(ad)ad.value='';
+      const bg=document.getElementById('adBloodGroup');if(bg)bg.value='';
+      const ap=document.getElementById('adProfession');if(ap)ap.value='';
+      const pp=document.getElementById('adPhotoPreview');if(pp){pp.src='';pp.style.display='none';}
+      const pl=document.getElementById('adPhotoPlus');if(pl)pl.style.display='block';
+      const ed=document.getElementById('adExistingProfile');if(ed)ed.style.display='none';
+      const nd=document.getElementById('adNewFields');if(nd)nd.style.display='none';
+    });
+  }
+  if(fi&&fi.files[0]){const r=new FileReader();r.onload=e=>finish(e.target.result);r.readAsDataURL(fi.files[0]);}
+  else finish(null);
+}
+
 T.suggestion=function(){
   return `<div class="card">
     <h3><span class="bi-title"><span class="bi-en">Send Suggestion</span><span class="bi-ur">تجویز بھیجیں</span></span></h3>
@@ -4119,6 +4470,8 @@ function getMenuConfig(){
       {icon:'📒', label:'Contacts / رابطے', tab:'contacts'},
       {icon:'🔔', label:'Notifications / اطلاعات', tab:'notifications'},
       {icon:'💡', label:'Send Suggestion / تجویز', tab:'suggestion'},
+      {icon:'👤', label:'Add Donor / ڈونر شامل', tab:'adddonor'},
+      {icon:'🔎', label:'Smart Search / ذہین تلاش', tab:'smartsearch'},
       {icon:'👤', label:'Profile / پروفائل', tab:'profile'},
     ]
   };
@@ -4157,6 +4510,7 @@ function getMenuConfig(){
   if(currentRole!=='user'){
     donors.items.push(
       {icon:'👥', label:'Donors / عطیہ دہندگان', tab:'donorlist'},
+      {icon:'🩸', label:'Blood Bank / بلڈ بینک', tab:'bloodbank'},
       {icon:'✏️', label:'Donor Profile Update', tab:'donorprofileupdate'},
       {icon:'🧾', label:'Slip / سلپ', tab:'slip'},
       {icon:'🏆', label:'Top 10 / سرفہرست', tab:'top'},
@@ -4261,7 +4615,7 @@ function buildTabs(){
 // renderTab — main tab renderer
 // FAB config per tab
 const FAB_CONFIG={
-  dash:     {icon:'➕', action:()=>selectTab('donation')},
+  dash:     null,  // no FAB on dashboard
   search:   {icon:'✕',  action:()=>{const si=document.getElementById('searchInput');if(si){si.value='';doSearch();si.focus();}}},
   donation: {icon:'💾', action:()=>submitDonation()},
   deceased: {icon:'💾', action:()=>submitDeceased()},
@@ -4315,7 +4669,7 @@ const TAB_LABELS={
   donorlist:'Donor List',slip:'Donor Slip',top:'Top Donors',transfer:'Transfer',
   decconfirm:'Confirm Deceased',approvals:'Approvals',lockuser:'Login Management',
   userslist:'Users List',professions:'Professions',audit:'Audit Log',areas:'Areas',
-  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',contacts:'Contacts',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',suggestion:'Send Suggestion',suggestions:'Suggestions'
+  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',contacts:'Contacts',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',suggestion:'Send Suggestion',suggestions:'Suggestions'
 };
 
 // ============================================================
@@ -4350,21 +4704,22 @@ T.dash = function(){
     </div>
     ${myD.length===0?'<p style="font-size:11px;color:#888">No entries yet.</p>':myD.slice(-5).reverse().map(d=>{const dn=DB.donors.find(x=>x.id===d.donorId)||{name:'Unknown',area:''};return `<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:0.5px solid #f5f5f5">${avatarHtml(dn.photo,dn.name,22)}<div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${dn.name}</div><div style="font-size:10px;color:#aaa">${d.date}</div></div><div style="font-size:11px;font-weight:700;color:#0F6E56;white-space:nowrap">+Rs ${fmt(d.amount)}</div></div>`;}).join('')}
   </div>
-  <div style="background:linear-gradient(135deg,#1D9E75,#0a5e42);border-radius:16px;padding:14px 12px">
-    <div style="font-size:10px;font-weight:700;letter-spacing:1px;opacity:0.75;margin-bottom:10px;text-transform:uppercase;color:#fff">⚡ Quick Actions | فوری عمل</div>
+  <div style="background:#fff;border:0.5px solid #e8e8e8;border-radius:14px;padding:14px 12px">
+    <div style="font-size:10px;font-weight:500;color:#999;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px">Quick Actions | فوری عمل</div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:7px">
-      ${['admin','manager','developer'].includes(currentRole)?`<button onclick="selectTab('donation')" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.25);padding:11px 2px 9px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px"><span style="font-size:22px">💰</span><span style="font-size:9px;font-weight:700;opacity:0.9">Donation</span></button>`:'<span></span>'}
-      ${['admin','manager','developer'].includes(currentRole)?`<button onclick="selectTab('expense')" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.25);padding:11px 2px 9px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px"><span style="font-size:22px">📋</span><span style="font-size:9px;font-weight:700;opacity:0.9">Expense</span></button>`:'<span></span>'}
-      <button onclick="selectTab('deceased')" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.25);padding:11px 2px 9px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px"><span style="font-size:22px">🕌</span><span style="font-size:9px;font-weight:700;opacity:0.9">Deceased</span></button>
-      ${currentRole!=='user'?`<button onclick="selectTab('slip')" style="background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.25);padding:11px 2px 9px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px"><span style="font-size:22px">🧾</span><span style="font-size:9px;font-weight:700;opacity:0.9">Slip</span></button>`:'<span></span>'}
+      ${['admin','manager','developer'].includes(currentRole)?`<button onclick="selectTab('donation')" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 2px 10px;border-radius:10px;border:0.5px solid #0F6E56;background:#E1F5EE;cursor:pointer"><span style="font-size:20px">💰</span><span style="font-size:9px;font-weight:500;color:#0F6E56">Donation</span></button>`:'<span></span>'}
+      ${['admin','manager','developer'].includes(currentRole)?`<button onclick="selectTab('expense')" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 2px 10px;border-radius:10px;border:0.5px solid #0F6E56;background:#E1F5EE;cursor:pointer"><span style="font-size:20px">📋</span><span style="font-size:9px;font-weight:500;color:#0F6E56">Expense</span></button>`:'<span></span>'}
+      <button onclick="selectTab('deceased')" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 2px 10px;border-radius:10px;border:0.5px solid #0F6E56;background:#E1F5EE;cursor:pointer"><span style="font-size:20px">🕌</span><span style="font-size:9px;font-weight:500;color:#0F6E56">Deceased</span></button>
+      ${currentRole!=='user'?`<button onclick="selectTab('slip')" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 2px 10px;border-radius:10px;border:0.5px solid #0F6E56;background:#E1F5EE;cursor:pointer"><span style="font-size:20px">🧾</span><span style="font-size:9px;font-weight:500;color:#0F6E56">Slip</span></button>`:'<span></span>'}
     </div>
+    <div style="height:0.5px;background:#eee;margin:6px 0 10px"></div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px">
-      <button onclick="openMyDonationsQuick()" style="background:rgba(0,0,0,0.18);color:#fff;border:1px solid rgba(255,255,255,0.15);padding:11px 2px 9px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px"><span style="font-size:22px">📊</span><span style="font-size:9px;font-weight:700;opacity:0.9">My Don.</span></button>
-      <button onclick="openMyExpensesQuick()" style="background:rgba(0,0,0,0.18);color:#fff;border:1px solid rgba(255,255,255,0.15);padding:11px 2px 9px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px"><span style="font-size:22px">📑</span><span style="font-size:9px;font-weight:700;opacity:0.9">My Exp.</span></button>
-      <button onclick="selectTab('search')" style="background:rgba(0,0,0,0.18);color:#fff;border:1px solid rgba(255,255,255,0.15);padding:11px 2px 9px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px"><span style="font-size:22px">🔍</span><span style="font-size:9px;font-weight:700;opacity:0.9">Search</span></button>
-      <button onclick="selectTab('contacts')" style="background:rgba(0,0,0,0.18);color:#fff;border:1px solid rgba(255,255,255,0.15);padding:11px 2px 9px;border-radius:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px"><span style="font-size:22px">📒</span><span style="font-size:9px;font-weight:700;opacity:0.9">Contacts</span></button>
+      <button onclick="openMyDonationsQuick()" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 2px 10px;border-radius:10px;border:0.5px solid #ddd;background:#f9f9f9;cursor:pointer"><span style="font-size:20px">📊</span><span style="font-size:9px;font-weight:500;color:#888">My Don.</span></button>
+      <button onclick="openMyExpensesQuick()" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 2px 10px;border-radius:10px;border:0.5px solid #ddd;background:#f9f9f9;cursor:pointer"><span style="font-size:20px">📑</span><span style="font-size:9px;font-weight:500;color:#888">My Exp.</span></button>
+      <button onclick="selectTab('search')" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 2px 10px;border-radius:10px;border:0.5px solid #185FA5;background:#E6F1FB;cursor:pointer"><span style="font-size:20px">🔍</span><span style="font-size:9px;font-weight:500;color:#185FA5">Search</span></button>
+      <button onclick="selectTab('contacts')" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 2px 10px;border-radius:10px;border:0.5px solid #185FA5;background:#E6F1FB;cursor:pointer"><span style="font-size:20px">📒</span><span style="font-size:9px;font-weight:500;color:#185FA5">Contacts</span></button>
     </div>
-  </div>`;
+  </div>`
 };
 
 // Patch loadDashboard
@@ -4621,53 +4976,70 @@ function addDownloadBar(title, elementId){
 
 
 // ============================================================
-// SMS / REMINDER MODULE (In-app — no external API needed)
+// SMS / WhatsApp REMINDER MODULE
 // ============================================================
-function getSMSTemplate(type, data){
+function buildSMSMessage(type,donor,amount){
+  const org=orgName();
   if(type==='thanks')
-    return `Dear ${data.name}, Thank you for your donation of Rs ${fmt(data.amount)} to ${orgName()}. JazakAllah Khair! | ${orgName()} — ${data.date}`;
+    return `Dear ${donor.name}, JazakAllah! Your donation of Rs ${fmt(amount)} to ${org} has been received. May Allah reward you. | ${org}`;
   if(type==='reminder')
-    return `Dear ${data.name}, This is a reminder from ${orgName()}. Your donation of Rs ${fmt(data.amount||0)} is pending. Please contribute at your earliest convenience. | ${orgName()}`;
+    return `Dear ${donor.name}, Assalam o Alaikum! This is a reminder from ${org}. Your monthly donation is pending. Please contribute at your earliest. JazakAllah. | ${org}`;
+  if(type==='pending')
+    return `Dear ${donor.name}, Assalam o Alaikum! ${org} awaits your generous donation. Your last donation was Rs ${fmt(donor.totalDonation||0)}. Please send your contribution. JazakAllah.`;
   return '';
 }
 function openSMSReminders(){
-  // Get donors with recent donations (for thanks)
-  const recentDons=DB.donations.slice(-20).reverse();
-  // Get donors with no donation this month
   const thisMonth=today().substring(0,7);
-  const activeDonors=DB.donors.filter(d=>d.totalDonation>0);
+  const recentDons=DB.donations.slice(-20).reverse();
+  const activeDonors=DB.donors.filter(d=>d.totalDonation>0||DB.donations.some(x=>x.donorId===d.id));
   const pendingDonors=activeDonors.filter(d=>{
     const lastDon=DB.donations.filter(x=>x.donorId===d.id).sort((a,b)=>b.date.localeCompare(a.date))[0];
     return !lastDon||lastDon.date.substring(0,7)!==thisMonth;
   });
+
   const html=`
-    <div style="background:#fff;border-radius:14px;padding:16px;max-width:95vw;width:440px;max-height:80vh;overflow-y:auto">
+    <div style="background:#fff;border-radius:14px;padding:16px;max-width:95vw;width:460px;max-height:82vh;overflow-y:auto">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-        <div style="font-size:15px;font-weight:700">📱 SMS / Reminders</div>
-        <button onclick="closePopup()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#aaa">✕</button>
+        <div style="font-size:15px;font-weight:800">📱 SMS / WhatsApp Reminders</div>
+        <button onclick="closePopup()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#aaa">✕</button>
       </div>
-      <div style="font-size:12px;font-weight:600;color:#0F6E56;margin-bottom:8px">✅ Send Thanks (Recent Donations)</div>
+
+      <div style="font-size:12px;font-weight:700;color:#0F6E56;margin-bottom:8px">✅ Thanks — Recent Donations (${recentDons.length})</div>
       ${recentDons.slice(0,5).map(d=>{
         const donor=DB.donors.find(x=>x.id===d.donorId)||{name:'?',mobile:'0000'};
-        const msg=getSMSTemplate('thanks',{name:donor.name,amount:d.amount,date:d.date});
-        return `<div style="background:#E1F5EE;border-radius:8px;padding:8px;margin-bottom:6px">
-          <div style="font-size:12px;font-weight:600">${donor.name} — Rs ${fmt(d.amount)}</div>
-          <div style="font-size:10px;color:#888;margin:2px 0">${donor.mobile}</div>
-          <div style="font-size:11px;color:#555;margin-bottom:6px">${msg}</div>
-          <a href="sms:${normMob(donor.mobile)}?body=${encodeURIComponent(msg)}" style="display:inline-block;background:#1D9E75;color:#fff;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;text-decoration:none">📱 Send SMS</a>
+        const sms=buildSMSMessage('thanks',donor,d.amount);
+        const wa=encodeURIComponent(sms);
+        return `<div style="background:#E1F5EE;border-radius:10px;padding:10px;margin-bottom:8px;border:1px solid #1D9E75">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            ${avatarHtml(donor.photo,donor.name,36)}
+            <div><div style="font-size:12px;font-weight:700">${donor.name}</div>
+            <div style="font-size:10px;color:#888">Rs ${fmt(d.amount)} • ${d.date}</div></div>
+          </div>
+          <div style="font-size:10px;color:#555;background:#fff;padding:6px 8px;border-radius:6px;margin-bottom:8px;line-height:1.4">${sms}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+            <a href="sms:${normMob(donor.mobile||'')}?body=${encodeURIComponent(sms)}" style="display:block;background:#1D9E75;color:#fff;padding:7px;border-radius:7px;font-size:11px;font-weight:600;text-decoration:none;text-align:center">📱 SMS</a>
+            <a href="https://wa.me/92${normMob(donor.mobile||'').slice(1)}?text=${wa}" target="_blank" style="display:block;background:#25D366;color:#fff;padding:7px;border-radius:7px;font-size:11px;font-weight:600;text-decoration:none;text-align:center">💬 WhatsApp</a>
+          </div>
         </div>`;
       }).join('')}
-      <div style="font-size:12px;font-weight:600;color:#E24B4A;margin:12px 0 8px">⏰ Send Reminders (Pending This Month)</div>
-      ${pendingDonors.slice(0,5).map(d=>{
-        const msg=getSMSTemplate('reminder',{name:d.name,amount:0});
-        return `<div style="background:#FAEEDA;border-radius:8px;padding:8px;margin-bottom:6px">
-          <div style="font-size:12px;font-weight:600">${d.name}</div>
-          <div style="font-size:10px;color:#888;margin:2px 0">${d.mobile}</div>
-          <div style="font-size:11px;color:#555;margin-bottom:6px">${msg}</div>
-          <a href="sms:${normMob(d.mobile)}?body=${encodeURIComponent(msg)}" style="display:inline-block;background:#BA7517;color:#fff;padding:5px 12px;border-radius:6px;font-size:11px;font-weight:600;text-decoration:none">📱 Send Reminder</a>
+
+      <div style="font-size:12px;font-weight:700;color:#E24B4A;margin:14px 0 8px">⏰ Pending This Month (${pendingDonors.length})</div>
+      ${pendingDonors.length===0?'<p style="font-size:12px;color:#888">All donors donated this month! 🎉</p>':pendingDonors.slice(0,6).map(d=>{
+        const sms=buildSMSMessage('reminder',d,0);
+        const wa=encodeURIComponent(sms);
+        return `<div style="background:#FEF3F2;border-radius:10px;padding:10px;margin-bottom:8px;border:1px solid #E24B4A">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            ${avatarHtml(d.photo,d.name,36)}
+            <div><div style="font-size:12px;font-weight:700">${d.name}</div>
+            <div style="font-size:10px;color:#888">📍 ${d.area||'—'} • Last: Rs ${fmt(d.totalDonation||0)}</div></div>
+          </div>
+          <div style="font-size:10px;color:#555;background:#fff;padding:6px 8px;border-radius:6px;margin-bottom:8px;line-height:1.4">${sms}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+            <a href="sms:${normMob(d.mobile||'')}?body=${encodeURIComponent(sms)}" style="display:block;background:#E24B4A;color:#fff;padding:7px;border-radius:7px;font-size:11px;font-weight:600;text-decoration:none;text-align:center">📱 SMS</a>
+            <a href="https://wa.me/92${normMob(d.mobile||'').slice(1)}?text=${wa}" target="_blank" style="display:block;background:#25D366;color:#fff;padding:7px;border-radius:7px;font-size:11px;font-weight:600;text-decoration:none;text-align:center">💬 WhatsApp</a>
+          </div>
         </div>`;
       }).join('')}
-      ${pendingDonors.length===0?'<p style="font-size:12px;color:#888">All donors have donated this month! 🎉</p>':''}
     </div>`;
   document.getElementById('popupMsg').innerHTML='';
   document.getElementById('popupMsgUr').innerHTML='';
@@ -4676,87 +5048,8 @@ function openSMSReminders(){
   document.getElementById('popupTitleUr').textContent='';
   document.getElementById('popupBtn').style.display='none';
   const box=document.querySelector('.popup-box');
-  if(box){box.style.maxWidth='95vw';box.innerHTML=html;}
+  if(box){box.style.maxWidth='95vw';box.style.padding='0';box.innerHTML=html;}
   document.getElementById('popupOverlay').style.display='flex';
-}
-// ============================================================
-// EXCEL BACKUP & UPLOAD
-// ============================================================
-function exportToExcel(){
-  // Build workbook data
-  const wb={SheetNames:[],Sheets:{}};
-  // Donors sheet
-  const donors=DB.donors.map(d=>({ID:d.id,Name:d.name,Mobile:d.mobile,Area:d.area||'',TotalDonation:d.totalDonation||0}));
-  // Donations sheet
-  const donations=DB.donations.map(d=>{const dn=DB.donors.find(x=>x.id===d.donorId)||{name:'?'};return{TxnID:d.id,DonorID:d.donorId,DonorName:dn.name,Amount:d.amount,Date:d.date,Description:d.desc||'',By:d.by};});
-  // Expenses sheet
-  const expenses=DB.expenses.map(e=>({BillNo:e.billNo,Description:e.desc,Amount:e.amount,Date:e.date,Category:e.category||'',Area:e.area||'',By:e.by}));
-  // Users sheet
-  const users=DB.users.map(u=>({ID:u.id,Name:u.name,Mobile:u.mobile,Role:u.role,Area:u.area||'',Status:u.locked?'Locked':'Active'}));
-
-  function arrToSheet(arr){
-    if(!arr.length)return{};
-    const keys=Object.keys(arr[0]);
-    const ws={};
-    keys.forEach((k,ci)=>{ws[XLSX.utils.encode_cell({r:0,c:ci})]={v:k,t:'s'};});
-    arr.forEach((row,ri)=>{keys.forEach((k,ci)=>{const v=row[k];ws[XLSX.utils.encode_cell({r:ri+1,c:ci})]={v:v,t:typeof v==='number'?'n':'s'};});});
-    const range={s:{r:0,c:0},e:{r:arr.length,c:keys.length-1}};
-    ws['!ref']=XLSX.utils.encode_range(range);
-    return ws;
-  }
-  wb.SheetNames=['Donors','Donations','Expenses','Users'];
-  wb.Sheets['Donors']=arrToSheet(donors);
-  wb.Sheets['Donations']=arrToSheet(donations);
-  wb.Sheets['Expenses']=arrToSheet(expenses);
-  wb.Sheets['Users']=arrToSheet(users);
-  const wbout=XLSX.write(wb,{bookType:'xlsx',type:'binary'});
-  const buf=new ArrayBuffer(wbout.length);
-  const view=new Uint8Array(buf);
-  for(let i=0;i<wbout.length;i++)view[i]=wbout.charCodeAt(i)&0xFF;
-  const blob=new Blob([buf],{type:'application/octet-stream'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;a.download=orgName()+'_backup_'+today()+'.xlsx';
-  a.click();URL.revokeObjectURL(url);
-  showPopup('✅','Downloaded','Excel backup downloaded! | ایکسل بیک اپ ڈاؤن لوڈ ہو گیا');
-}
-
-function importFromExcel(file){
-  if(!file)return;
-  const r=new FileReader();
-  r.onload=function(e){
-    try{
-      const data=new Uint8Array(e.target.result);
-      const wb=XLSX.read(data,{type:'array'});
-      let imported=0;
-      // Import Donors
-      if(wb.Sheets['Donors']){
-        const rows=XLSX.utils.sheet_to_json(wb.Sheets['Donors']);
-        rows.forEach(row=>{
-          if(!row.Name||!row.Mobile)return;
-          const existing=DB.donors.find(d=>normMob(d.mobile)===normMob(String(row.Mobile)));
-          if(!existing){
-            const nd={id:nextAllId(),name:row.Name,mobile:String(row.Mobile),area:row.Area||'',totalDonation:row.TotalDonation||0,photo:null,entries:[]};
-            DB.donors.push(nd);FS.save('donors',nd.id,nd);imported++;
-          }
-        });
-      }
-      // Import Donations
-      if(wb.Sheets['Donations']){
-        const rows=XLSX.utils.sheet_to_json(wb.Sheets['Donations']);
-        rows.forEach(row=>{
-          if(!row.DonorID||!row.Amount)return;
-          const exists=DB.donations.find(d=>d.id===row.TxnID);
-          if(!exists){
-            const nd={id:row.TxnID||'TXN'+Date.now(),donorId:row.DonorID,amount:Number(row.Amount)||0,date:row.Date||today(),by:row.By||currentUser.id,desc:row.Description||''};
-            DB.donations.push(nd);FS.save('donations',nd.id,nd);imported++;
-          }
-        });
-      }
-      showPopup('✅','Imported',imported+' records imported. | '+imported+' ریکارڈ درآمد ہوئے');
-    }catch(err){showPopup('❌','Error','Import failed: '+err.message);}
-  };
-  r.readAsArrayBuffer(file);
 }
 
 async function appInit(){

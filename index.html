@@ -10,35 +10,58 @@
 body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;color:var(--text);background:var(--bg);min-height:100vh;padding-bottom:70px}
 /* SCREENS */
 .screen{display:none;padding:0;min-height:100vh}.screen.active{display:block}
-.card{border-radius:14px;background:#fff;padding:16px;margin-bottom:12px;box-shadow:0 1px 6px rgba(0,0,0,0.07)}
+.bi-field{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;margin-top:10px}
+.bi-field .en{font-size:12px;font-weight:600;color:#1a1a1a}
+.bi-field .ur{font-size:11px;color:#888;direction:rtl}
+.nav-label{font-size:9px;font-weight:600;color:#888;margin-top:1px;text-align:center}
+.nav-label-ur{font-size:8px;color:#aaa;direction:rtl;text-align:center}
+.nav-item.active .nav-label{color:#1D9E75}
+.nav-item.active .nav-label-ur{color:#1D9E75}
+.qa-btn-new{display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;cursor:pointer;border:0.5px solid var(--border-color,#ddd)}
+.qa-en{font-size:9px;font-weight:600}
+.qa-ur{font-size:8px;direction:rtl;opacity:0.8}
+.stat-card-bi{background:#f9f9f9;border-radius:12px;padding:11px 12px;border:1px solid #eee}
+.stat-label-bi{display:flex;justify-content:space-between}
+.stat-label-bi .en{font-size:9px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.4px}
+.stat-label-bi .ur{font-size:9px;color:#aaa;direction:rtl}
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.section-header .en{font-size:11px;font-weight:700;color:#1a1a1a;text-transform:uppercase;letter-spacing:0.4px}
+.section-header .ur{font-size:11px;color:#888;direction:rtl}
+.card{border-radius:16px;background:#fff;padding:15px;margin-bottom:10px;border:0.5px solid #ebebeb}
 .inp-wrap{position:relative;display:flex;align-items:center;margin-bottom:8px}
-.inp-wrap input,.inp-wrap select{flex:1;padding:11px 12px 11px 36px;border:1.5px solid #e8e8e8;border-radius:10px;font-size:13px;background:#fafafa;transition:border 0.15s}
-.inp-wrap input:focus,.inp-wrap select:focus{border-color:#1D9E75;background:#fff;outline:none}
-.inp-icon{position:absolute;left:10px;font-size:15px;z-index:1;pointer-events:none}
-input:not(.inp-wrap input),select:not(.inp-wrap select),textarea{width:100%;padding:10px 12px;border:1.5px solid #e8e8e8;border-radius:10px;font-size:13px;background:#fafafa;box-sizing:border-box;margin-bottom:8px;transition:border 0.15s}
-input:focus,select:focus,textarea:focus{border-color:#1D9E75;background:#fff;outline:none}
-label{display:block;font-size:12px;font-weight:600;color:#444;margin-bottom:4px;margin-top:8px}
-.btn{display:block;width:100%;padding:12px;border-radius:12px;border:1.5px solid #ddd;font-size:13px;font-weight:600;cursor:pointer;background:#fff;transition:all 0.15s;text-align:center}
-.btn-primary{background:linear-gradient(135deg,#1D9E75,#0F6E56);color:#fff;border:none;box-shadow:0 3px 12px rgba(29,158,117,0.3)}
+.inp-wrap input,.inp-wrap select{flex:1;padding:12px 12px 12px 38px;border:1.5px solid #e8e8e8;border-radius:12px;font-size:14px;background:#fafafa;transition:border 0.2s,background 0.2s;color:#1a1a1a}
+.inp-wrap input:focus,.inp-wrap select:focus{border-color:#1D9E75;background:#fff;outline:none;box-shadow:0 0 0 3px rgba(29,158,117,0.08)}
+.inp-icon{position:absolute;left:11px;font-size:16px;z-index:1;pointer-events:none}
+input:not(.inp-wrap input),select:not(.inp-wrap select),textarea{width:100%;padding:12px 14px;border:1.5px solid #e8e8e8;border-radius:12px;font-size:14px;background:#fafafa;box-sizing:border-box;margin-bottom:8px;transition:border 0.2s;color:#1a1a1a;-webkit-appearance:none}
+input:focus,select:focus,textarea:focus{border-color:#1D9E75;background:#fff;outline:none;box-shadow:0 0 0 3px rgba(29,158,117,0.08)}
+label{display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:5px;margin-top:10px}
+.btn{display:block;width:100%;padding:14px;border-radius:14px;border:1.5px solid #e0e0e0;font-size:14px;font-weight:600;cursor:pointer;background:#fff;transition:all 0.15s;text-align:center;-webkit-tap-highlight-color:transparent}
+.btn:active{transform:scale(0.98);opacity:0.9}
+.btn-primary{background:#0F6E56;color:#fff;border:none}
+.btn-primary:active{background:#085041}
 .btn-outline{border-color:#1D9E75;color:#1D9E75}
-.btn-dev{background:linear-gradient(135deg,#993556,#6b1f3a);color:#fff;border:none}
-.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600}
+.btn-dev{background:#7c2d48;color:#fff;border:none}
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:0.1px}
 .badge-admin{background:#E6F1FB;color:#185FA5}
 .badge-manager{background:#E1F5EE;color:#0F6E56}
 .badge-developer{background:#f5e8ff;color:#6b21a8}
 .badge-user{background:#f5f5f5;color:#666}
 .badge-donor{background:#E1F5EE;color:#0F6E56}
-.entry-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:0.5px solid #f0f0f0}
+.entry-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:0.5px solid #f5f5f5}
 .entry-name{font-size:13px;font-weight:600;color:#1a1a1a}
 .entry-sub{font-size:11px;color:#999;margin-top:2px}
 .entry-amt{font-size:13px;font-weight:700;color:#0F6E56}
 .id-badge{background:#E6F1FB;color:#185FA5;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700}
 .section-bi{font-size:11px;font-weight:700;color:#888;padding:8px 0 4px;border-bottom:1.5px solid #eee;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
-.stat-card{background:#f9f9f9;border-radius:12px;padding:12px;text-align:center;border:1px solid #eee}
-.stat-label{font-size:10px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.3px}
-.stat-val{font-size:22px;font-weight:800;margin-top:4px}
-.app-header{background:linear-gradient(135deg,var(--green),var(--green-dark));padding:12px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(15,110,86,0.3)}
-.content-area{padding:14px 14px 80px;min-height:100vh}
+.stat-card{background:#f5f5f5;border-radius:14px;padding:13px;text-align:center;border:none}
+.stat-card-bi{background:#f5f5f5;border-radius:14px;padding:13px;border:none}
+.stat-label{font-size:10px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.4px}
+.stat-label-bi{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px}
+.stat-label-bi .en{font-size:9px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:0.4px}
+.stat-label-bi .ur{font-size:9px;color:#bbb;direction:rtl}
+.stat-val{font-size:21px;font-weight:800;margin-top:4px;letter-spacing:-0.5px}
+.app-header{background:#0F6E56;padding:13px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
+.content-area{padding:12px 12px 90px;min-height:100vh}
 .nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;cursor:pointer;flex:1;transition:all 0.15s;border-radius:10px;margin:4px 2px}
 .nav-item.active{background:rgba(29,158,117,0.12)}
 .nav-label{font-size:9px;font-weight:600;color:#888}
@@ -48,7 +71,7 @@ label{display:block;font-size:12px;font-weight:600;color:#444;margin-bottom:4px;
 .app-header-left{display:flex;align-items:center;gap:10px}
 .app-title{font-size:16px;font-weight:700;color:#fff}
 .app-subtitle{font-size:11px;opacity:0.85;color:#fff;margin-top:1px}
-.header-avatar{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;overflow:hidden;flex-shrink:0;border:1.5px solid rgba(255,255,255,0.4)}
+.header-avatar{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;overflow:hidden;flex-shrink:0;border:2px solid rgba(255,255,255,0.45)}
 .btn-logout{background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer}
 /* CONTENT WRAPPER */
 .content-area{padding:16px}
@@ -112,7 +135,7 @@ input[type=file]{padding:6px}
 .info-box.info{background:#E6F1FB;color:#185FA5;border:1px solid #378ADD}
 .info-box.danger{background:#FCEBEB;color:#A32D2D;border:1px solid #E24B4A}
 /* ENTRIES */
-.entry-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:0.5px solid #f0f0f0}
+.entry-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:0.5px solid #f5f5f5}
 .entry-row:last-child{border-bottom:none}
 .entry-name{font-size:13px;font-weight:600}
 .entry-sub{font-size:11px;color:var(--muted);margin-top:2px}
@@ -186,8 +209,8 @@ input[type=file]{padding:6px}
 .divider-line{flex:1;height:1px;background:#eee}
 .divider-text{font-size:12px;color:#aaa;font-weight:500}
 /* ROLE BUTTONS */
-.role-select-btn{display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;border:1.5px solid #ddd;background:#fff;cursor:pointer;margin-bottom:10px;width:100%;text-align:left;transition:all 0.15s}
-.role-select-btn:active{background:#f5f5f5}
+.role-select-btn{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:14px;border:1px solid #e8e8e8;background:#fff;cursor:pointer;margin-bottom:10px;width:100%;text-align:left;transition:all 0.15s;-webkit-tap-highlight-color:transparent}
+.role-select-btn:active{transform:scale(0.98)}
 .role-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
 /* APPROVAL ITEM */
 .approval-item{display:flex;align-items:center;gap:8px;padding:12px;background:#f9f9f9;border-radius:10px;margin-bottom:8px;border:1px solid #eee}
@@ -200,12 +223,15 @@ input[type=file]{padding:6px}
 .footer-credit{font-size:11px;color:#aaa}
 .footer-credit a{color:#1D9E75;text-decoration:none;font-weight:600}
 /* LOGIN PAGE */
-.login-hero{background:linear-gradient(160deg,var(--green),var(--green-dark));padding:40px 20px 30px;text-align:center;color:#fff}
+.login-hero{background:#0F6E56;padding:52px 24px 50px;text-align:center;color:#fff;position:relative;overflow:hidden}.login-hero::before{content:'';position:absolute;top:-50px;right:-50px;width:180px;height:180px;background:rgba(255,255,255,0.07);border-radius:50%}.login-hero::after{content:'';position:absolute;bottom:-40px;left:-40px;width:130px;height:130px;background:rgba(255,255,255,0.05);border-radius:50%}.login-hero-dot{position:absolute;top:30px;left:24px;width:60px;height:60px;background:rgba(255,255,255,0.04);border-radius:50%}
 .login-logo-wrap{margin-bottom:12px}
-.login-org-name{font-size:24px;font-weight:800;letter-spacing:0.5px}
-.login-org-sub{font-size:14px;opacity:0.85;margin-top:4px}
+.login-logo-box{width:76px;height:76px;background:rgba(255,255,255,0.15);border-radius:22px;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;border:2px solid rgba(255,255,255,0.25);font-size:38px}
+.login-org-name{font-size:28px;font-weight:800;letter-spacing:-0.5px;line-height:1.15;color:#fff}
+.login-org-ur{font-size:16px;color:rgba(255,255,255,0.8);direction:rtl;margin-top:6px;font-weight:600}
+.login-org-sub{font-size:12px;color:rgba(255,255,255,0.55);margin-top:8px;letter-spacing:0.3px}
+.login-org-addr{font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px}
 .login-address{font-size:12px;opacity:0.75;margin-top:6px}
-.login-card{background:#fff;border-radius:20px 20px 0 0;margin-top:-16px;padding:24px 20px;min-height:calc(100vh - 180px)}
+.login-card{background:#fff;border-radius:28px 28px 0 0;margin-top:-24px;padding:28px 20px 30px;min-height:calc(100vh - 220px)}
 /* MISC */
 .prof-tag{display:inline-block;padding:2px 8px;background:#E6F1FB;color:#185FA5;border-radius:20px;font-size:11px;margin:2px}
 /* STATUS BOXES */
@@ -221,40 +247,86 @@ input[type=file]{padding:6px}
 <!-- LOGIN SCREEN -->
 <div id="loginScreen" class="screen active">
   <div class="login-hero">
-    <div class="login-logo-wrap" id="loginLogo"><span style="font-size:48px">🕌</span></div>
+    <div class="login-hero-dot"></div>
+    <div class="login-logo-box" id="loginLogo"><span style="font-size:38px">🕌</span></div>
     <div id="loginOrgNameUrdu" class="login-org-name">فلاح قبرستان</div>
-    <div id="loginOrgName" class="login-org-sub">Falah e Qabristan</div>
-    <div id="loginOrgAddress" class="login-address" style="display:none"></div>
+    <div id="loginOrgName" class="login-org-ur">Falah e Qabristan</div>
+    <div id="loginOrgAddress" class="login-org-addr" style="display:none"></div>
   </div>
   <div id="socialLinksRow" style="display:none;justify-content:center;gap:10px;padding:14px 16px 0;flex-wrap:wrap;background:#fff"></div>
   <div class="login-card">
-    <h2 style="margin-bottom:14px"><span style="font-size:14px">Sign In</span><span style="font-size:10px;color:rgba(255,255,255,0.75);display:block;margin-top:1px">لاگ ان کریں</span></h2>
-    <label>Mobile Number <span style="font-size:10px;color:#1D9E75;font-weight:500">موبائل نمبر</span></label>
-    <div class="inp-wrap"><span class="inp-icon">📱</span><input type="tel" id="loginMobile" placeholder="0300-1234567" maxlength="12" oninput="autoFormatMobile(this,null)"></div>
-    <label>Password</label>
-    <div class="inp-wrap" style="position:relative"><span class="inp-icon">🔒</span><input type="password" id="loginPassword" placeholder="Enter password" style="padding-right:42px;padding-left:38px"><span onclick="togglePwd('loginPassword',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:16px;color:#aaa">👁</span></div>
-    <div id="loginError" style="display:none;margin-top:8px"></div>
-    <button class="btn btn-primary" style="margin-top:16px;padding:13px;font-size:14px;border-radius:12px" onclick="doLogin()"><span style="font-size:14px">Sign In</span><span style="font-size:10px;color:rgba(255,255,255,0.75);display:block;margin-top:1px">لاگ ان کریں</span></button>
-    <div class="divider"><div class="divider-line"></div><div class="divider-text">or</div><div class="divider-line"></div></div>
-    <button class="btn btn-outline" onclick="showScreen('regRoleScreen')"><span style="font-size:13px">Create Account</span><span style="font-size:10px;color:#1D9E75;display:block;margin-top:1px">نیا اکاؤنٹ بنائیں</span></button>
-    <div id="historyBtnWrap" style="display:none;margin-top:8px">
-      <button class="btn" style="background:#f0fff8;color:#0F6E56;border-color:#1D9E75;font-weight:600" onclick="showScreen('historyScreen')">📖 View Our History</button>
+
+    <!-- Sign In heading -->
+    <div style="margin-bottom:20px">
+      <div style="font-size:22px;font-weight:800;color:#0F6E56;letter-spacing:-0.5px">Sign In</div>
+      <div style="font-size:13px;color:#aaa;margin-top:3px;direction:rtl">اپنا اکاؤنٹ کھولیں</div>
     </div>
-    <div id="bankBtnWrap" style="display:none;margin-top:8px">
-      <button class="btn" style="background:#E6F1FB;color:#185FA5;border-color:#185FA5;font-weight:600" onclick="showScreen('bankScreen')">🏦 Fund Transfer Accounts</button>
-    </div>
-    <div id="contactBtnWrap" style="display:none;margin-top:8px">
-      <button class="btn" style="background:#f0f4ff;color:#3730a3;border-color:#6366f1;font-weight:600" onclick="showScreen('contactScreen')">📞 Contact Us | ہم سے رابطہ</button>
-    </div>
-    <div style="margin-top:16px;padding:14px;background:#f9f0f5;border-radius:12px;border:1.5px solid #993556">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-        <div style="font-size:22px">⚙️</div>
-        <div><div style="font-size:14px;font-weight:700">Developer</div><div style="font-size:11px;color:#888">Login with master key</div></div>
+
+    <!-- Fields -->
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:12px;font-weight:600;color:#444">Mobile Number</span>
+        <span style="font-size:11px;color:#aaa;direction:rtl">موبائل نمبر</span>
       </div>
-      <button class="btn btn-dev" style="margin-top:0" onclick="showScreen('devKeyScreen')"><span style="font-size:13px">Developer Login</span><span style="font-size:10px;color:rgba(255,255,255,0.7);display:block;margin-top:1px">ڈیولپر لاگ ان</span></button>
+      <div class="inp-wrap" style="margin-bottom:0">
+        <span class="inp-icon">📱</span>
+        <input type="tel" id="loginMobile" placeholder="0300-1234567" maxlength="12" oninput="autoFormatMobile(this,null)" style="font-size:15px">
+      </div>
     </div>
-    <div class="page-footer" style="margin-top:20px;padding:14px 0 0;border-top:1px solid #f0f0f0">
-      <div class="footer-org" id="footerOrgName">Falah e Qabristan</div>
+    <div style="margin-bottom:4px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:12px;font-weight:600;color:#444">Password</span>
+        <span style="font-size:11px;color:#aaa;direction:rtl">پاس ورڈ</span>
+      </div>
+      <div class="inp-wrap" style="position:relative;margin-bottom:0">
+        <span class="inp-icon">🔒</span>
+        <input type="password" id="loginPassword" placeholder="••••••••" style="padding-right:42px;padding-left:38px;font-size:15px">
+        <span onclick="togglePwd('loginPassword',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:16px;color:#bbb">👁</span>
+      </div>
+    </div>
+    <div id="loginError" style="display:none;margin-top:8px"></div>
+
+    <!-- Sign In button -->
+    <button class="btn btn-primary" style="margin-top:18px;padding:15px;font-size:15px;letter-spacing:0.2px" onclick="doLogin()">
+      Sign In
+      <span style="font-size:11px;color:rgba(255,255,255,0.7);display:block;margin-top:2px;direction:rtl;letter-spacing:0">لاگ ان کریں</span>
+    </button>
+
+    <!-- Divider -->
+    <div class="divider" style="margin:18px 0"><div class="divider-line"></div><div class="divider-text">or | یا</div><div class="divider-line"></div></div>
+
+    <!-- Create Account -->
+    <button class="btn btn-outline" style="padding:14px;font-size:14px" onclick="showScreen('regRoleScreen')">
+      Create Account
+      <span style="font-size:11px;color:#1D9E75;display:block;margin-top:2px;direction:rtl">نیا اکاؤنٹ بنائیں</span>
+    </button>
+
+    <!-- Extra buttons row -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px">
+      <div id="historyBtnWrap" style="display:none">
+        <button class="btn" style="background:#f0fff8;color:#085041;border-color:#9FE1CB;font-size:11px;padding:10px 6px;width:100%" onclick="showScreen('historyScreen')">📖<span style="display:block;margin-top:2px">History</span></button>
+      </div>
+      <div id="bankBtnWrap" style="display:none">
+        <button class="btn" style="background:#E6F1FB;color:#0C447C;border-color:#B5D4F4;font-size:11px;padding:10px 6px;width:100%" onclick="showScreen('bankScreen')">🏦<span style="display:block;margin-top:2px">Accounts</span></button>
+      </div>
+      <div id="contactBtnWrap" style="display:none">
+        <button class="btn" style="background:#f0f4ff;color:#3730a3;border-color:#c7d2fe;font-size:11px;padding:10px 6px;width:100%" onclick="showScreen('contactScreen')">📞<span style="display:block;margin-top:2px">Contact</span></button>
+      </div>
+    </div>
+
+    <!-- Developer section -->
+    <button onclick="showScreen('devKeyScreen')" style="display:flex;align-items:center;gap:12px;width:100%;margin-top:12px;background:#fdf4f7;border:1px solid #f0c8d8;border-radius:14px;padding:12px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;text-align:left">
+      <div style="width:36px;height:36px;background:#993556;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">⚙️</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:#7c2d48">Developer Access</div>
+        <div style="font-size:11px;color:#b06080;margin-top:1px;direction:rtl">ماسٹر کی سے لاگ ان</div>
+      </div>
+      <span style="color:#b06080;font-size:16px">→</span>
+    </button>
+
+    <!-- Footer -->
+    <div class="page-footer" style="margin-top:24px;padding:16px 0 0;border-top:1px solid #f0f0f0;text-align:center">
+      <div class="footer-org" id="footerOrgName" style="font-size:13px;font-weight:700;color:#0F6E56;margin-bottom:4px">Falah e Qabristan</div>
       <div class="footer-credit">Designed By: <a href="tel:03009084228">Asif Kanwal — 0300-9084228</a></div>
     </div>
   </div>
@@ -324,11 +396,39 @@ input[type=file]{padding:6px}
   </div>
   <div class="content-area">
     <div class="card">
-      <p style="font-size:13px;color:#888;margin-bottom:14px">Select your role to register:</p>
-      <button class="role-select-btn" onclick="openReg('user')"><div class="role-dot" style="background:#1D9E75"></div><div style="flex:1"><div style="font-size:13px;font-weight:700">User</div><div style="font-size:11px;color:#888">Direct login — no approval needed | براہ راست لاگ ان</div></div><span style="color:#aaa">→</span></button>
-      <button class="role-select-btn" onclick="openReg('admin')"><div class="role-dot" style="background:#185FA5"></div><div style="flex:1"><div style="font-size:13px;font-weight:700">Admin</div><div style="font-size:11px;color:#888">Login after developer approval | منظوری کے بعد</div></div><span style="color:#aaa">→</span></button>
-      <button class="role-select-btn" onclick="openReg('manager')"><div class="role-dot" style="background:#BA7517"></div><div style="flex:1"><div style="font-size:13px;font-weight:700">Manager</div><div style="font-size:11px;color:#888">Login after developer approval | منظوری کے بعد</div></div><span style="color:#aaa">→</span></button>
-      <button class="role-select-btn" onclick="openReg('developer')"><div class="role-dot" style="background:#993556"></div><div style="flex:1"><div style="font-size:13px;font-weight:700">Developer</div><div style="font-size:11px;color:#888">Approved via master key | ماسٹر کی سے</div></div><span style="color:#aaa">→</span></button>
+      <p style="font-size:13px;color:#888;margin-bottom:14px">Select your account type | اکاؤنٹ کی قسم منتخب کریں:</p>
+      <button type="button" class="role-select-btn" onclick="openReg('user')" style="border-color:#1D9E75">
+        <div class="role-dot" style="background:#1D9E75"></div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700;color:#0F6E56">User | صارف</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">Direct login — no approval needed | فوری لاگ ان</div>
+        </div>
+        <span style="color:#1D9E75;font-size:18px">→</span>
+      </button>
+      <button type="button" class="role-select-btn" onclick="openReg('admin')">
+        <div class="role-dot" style="background:#185FA5"></div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700">Admin | ایڈمن</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">Login after developer approval | منظوری کے بعد</div>
+        </div>
+        <span style="color:#aaa;font-size:18px">→</span>
+      </button>
+      <button type="button" class="role-select-btn" onclick="openReg('manager')">
+        <div class="role-dot" style="background:#BA7517"></div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700">Manager | منیجر</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">Login after developer approval | منظوری کے بعد</div>
+        </div>
+        <span style="color:#aaa;font-size:18px">→</span>
+      </button>
+      <button type="button" class="role-select-btn" onclick="openReg('developer')">
+        <div class="role-dot" style="background:#993556"></div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700">Developer | ڈیولپر</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">Approved via master key | ماسٹر کی سے</div>
+        </div>
+        <span style="color:#aaa;font-size:18px">→</span>
+      </button>
     </div>
     <div class="page-footer"><div class="footer-credit">Designed By: <a href="tel:03009084228">Asif Kanwal — 0300-9084228</a></div></div>
   </div>
@@ -359,6 +459,14 @@ input[type=file]{padding:6px}
       <label>Confirm Password * <span style="font-size:10px;color:#1D9E75;font-weight:500">تصدیق</span></label><div class="inp-wrap"><span class="inp-icon">🔐</span><input type="password" id="regConfirmPassword" placeholder="Confirm password"></div>
       <label>Area <span style="font-size:10px;color:#1D9E75;font-weight:500">علاقہ</span></label><div class="inp-wrap"><span class="inp-icon">📍</span><select id="regArea" class="area-sel"></select></div>
       <label>Profession <span style="font-size:10px;color:#1D9E75;font-weight:500">پیشہ</span></label><div class="inp-wrap"><span class="inp-icon">💼</span><select id="regProfession" class="prof-sel"></select></div>
+      <label>Blood Group <span style="font-size:10px;color:#E24B4A;font-weight:500">بلڈ گروپ</span></label>
+      <div class="inp-wrap"><span class="inp-icon">🩸</span><select id="regBloodGroup">
+        <option value="">-- Select Blood Group (optional) --</option>
+        <option value="A+">A+</option><option value="A-">A-</option>
+        <option value="B+">B+</option><option value="B-">B-</option>
+        <option value="AB+">AB+</option><option value="AB-">AB-</option>
+        <option value="O+">O+</option><option value="O-">O-</option>
+      </select></div>
       <div id="regSignatureSection" style="display:none;margin-top:12px;background:#f9f9f9;border-radius:10px;padding:12px">
         <div style="font-size:13px;font-weight:600;margin-bottom:4px">Signature Upload</div>
         <div style="font-size:11px;color:#888;margin-bottom:8px">Your signature will appear on donor slips and death certificates</div>
@@ -396,15 +504,15 @@ input[type=file]{padding:6px}
 
 <!-- DASHBOARD SCREEN -->
 <div id="dashScreen" class="screen">
-  <div class="app-header">
-    <div class="app-header-left">
-      <div class="header-avatar" id="dashAvatar"></div>
+  <div class="app-header" style="padding:10px 14px">
+    <div class="app-header-left" style="gap:10px">
+      <div id="dashAvatar" class="header-avatar" style="width:38px;height:38px;font-size:15px;border:2px solid rgba(255,255,255,0.5)"></div>
       <div>
-        <div class="app-title"><span id="dashTitleEmoji" style="display:none">🕌</span> <span id="dashOrgName"></span></div>
-        <div class="app-subtitle" id="dashRole"></div>
+        <div style="font-size:14px;font-weight:700;color:#fff;line-height:1.2" id="dashRole"></div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.65);margin-top:1px" id="dashOrgName"></div>
       </div>
     </div>
-    <button class="btn-logout" onclick="logout()"><span style="font-size:11px">Logout</span><span style="font-size:9px;opacity:0.8;display:block">لاگ آؤٹ</span></button>
+    <button class="btn-logout" onclick="logout()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);padding:7px 12px;border-radius:10px;color:#fff;font-size:11px;font-weight:600">Logout</button>
   </div>
   <div class="content-area" id="tabContent"></div>
   <!-- Floating Action Button -->
@@ -418,19 +526,30 @@ input[type=file]{padding:6px}
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav" id="bottomNav" style="display:none">
   <div class="nav-item" id="navHome" onclick="openSubmenu('home')">
-    <span class="nav-icon">🏠</span><span class="nav-label"><span style="font-size:10px">Home</span><span style="font-size:9px;color:#1D9E75;display:block">ہوم</span></span>
+    <span style="font-size:20px">🏠</span>
+    <span class="nav-label">Home</span>
+    <span class="nav-label-ur">ہوم</span>
   </div>
   <div class="nav-item" id="navForms" onclick="openSubmenu('forms')">
-    <span class="nav-icon">📝</span><span class="nav-label"><span style="font-size:10px">Forms</span><span style="font-size:9px;color:#1D9E75;display:block">فارمز</span></span>
+    <span style="font-size:20px">📝</span>
+    <span class="nav-label">Forms</span>
+    <span class="nav-label-ur">فارمز</span>
   </div>
   <div class="nav-item" id="navReports" onclick="openSubmenu('reports')">
-    <span class="nav-icon">📊</span><span class="nav-label"><span style="font-size:10px">Reports</span><span style="font-size:9px;color:#1D9E75;display:block">رپورٹس</span></span>
+    <span style="font-size:20px">📊</span>
+    <span class="nav-label">Reports</span>
+    <span class="nav-label-ur">رپورٹس</span>
   </div>
-  <div class="nav-item" id="navDonors" onclick="openSubmenu('donors')" id="navDonorsItem">
-    <span class="nav-icon">👥</span><span class="nav-label"><span style="font-size:10px">Donors</span><span style="font-size:9px;color:#1D9E75;display:block">عطیہ دہندگان</span></span>
+  <div class="nav-item" id="navDonors" onclick="openSubmenu('donors')">
+    <span style="font-size:20px">👥</span>
+    <span class="nav-label">Donors</span>
+    <span class="nav-label-ur">ڈونر</span>
   </div>
   <div class="nav-item" id="navSettings" onclick="openSubmenu('settings')">
-    <span class="nav-icon" style="position:relative">⚙️<span class="nav-badge" id="settingsBadge" style="display:none"></span></span><span class="nav-label"><span style="font-size:10px">Settings</span><span style="font-size:9px;color:#1D9E75;display:block">ترتیبات</span></span>
+    <span style="font-size:20px">⚙️</span>
+    <span class="nav-label">Settings</span>
+    <span class="nav-label-ur">ترتیبات</span>
+    <span class="badge" id="settingsBadge" style="display:none;position:absolute;top:4px;right:8px;background:#E24B4A;color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:700;align-items:center;justify-content:center"></span>
   </div>
 </nav>
 
@@ -692,7 +811,7 @@ function avatarHtml(photo,name,size){
 // hideLoginError — see below
 function pendingTransfers(){return currentUser?DB.transfers.filter(t=>t.to===currentUser.id&&!t.received).length:0;}
 function today(){return new Date().toISOString().split('T')[0];}
-function fmt(n){return (n||0).toLocaleString();}
+function fmt(n){return (n||0).toLocaleString('en-PK');}
 
 // ---- Auth ----
 function doLogin(){
@@ -786,7 +905,8 @@ function finishReg(name,mobile,cnic,password,photo,signature){
   const profession=document.getElementById('regProfession').value;
   if(pendingRegRole==='user'){
     const nid=nextAllId();
-    const nu={id:nid,name,cnic,mobile,password,area,profession,role:'user',approved:true,locked:false,photo,signature:null};
+    const regBg=(document.getElementById('regBloodGroup')||{value:''}).value;
+    const nu={id:nid,name,cnic,mobile,password,area,profession,bloodGroup:regBg,role:'user',approved:true,locked:false,photo,signature:null};
     DB.users.push(nu);
     FS.save('users',nid,nu);
     try{saveLocalCache();}catch(e){}
@@ -795,7 +915,8 @@ function finishReg(name,mobile,cnic,password,photo,signature){
     saveSession();
     showPopup('✅','Account Created!','Welcome '+name+'! ID: '+nid,null,()=>loadDashboard());
   } else {
-    const pa={id:'PA'+Date.now(),name,cnic,mobile,password,area,profession,role:pendingRegRole,date:today(),photo,signature};
+    const regBg2=(document.getElementById('regBloodGroup')||{value:''}).value;
+    const pa={id:'PA'+Date.now(),name,cnic,mobile,password,area,profession,bloodGroup:regBg2,role:pendingRegRole,date:today(),photo,signature};
     DB.pendingApprovals.push(pa);FS.save('pendingApprovals',pa.id,pa);
     showPopup('📤','Request Submitted','Your request has been submitted. Please login after developer approval.',null,()=>showScreen('loginScreen'));
   }
@@ -970,24 +1091,27 @@ T.dash=function(){
     myD=DB.donations.filter(d=>d.assignedTo?d.assignedTo===currentUser.id:d.by===currentUser.id);
   }
   const pt=pendingTransfers();
-  return `<div class="stat-grid">
+  const statStyle="display:flex;flex-direction:column;cursor:pointer;-webkit-tap-highlight-color:transparent";
+  return `<div class="stat-grid" style="grid-template-columns:1fr 1fr 1fr">
     ${isUser?`
-      <div class="stat-card"><div class="stat-label">My Total Donations</div><div class="stat-val" style="color:#0F6E56">Rs ${fmt(income)}</div></div>
-      <div class="stat-card"><div class="stat-label">Total Count</div><div class="stat-val" style="color:#185FA5">${myD.length}</div></div>
+      <div class="stat-card-bi" onclick="openMyDonationsQuick()" style="${statStyle}"><div class="stat-label-bi"><span class="en">Donated</span><span class="ur">اعانت</span></div><div class="stat-val" style="color:#0F6E56;font-size:15px;font-weight:800;margin-top:4px;letter-spacing:-0.3px">${fmt(income)}</div></div>
+      <div class="stat-card-bi" style="${statStyle}"><div class="stat-label-bi"><span class="en">Count</span><span class="ur">تعداد</span></div><div class="stat-val" style="color:#185FA5;font-size:19px;font-weight:800;margin-top:4px">${myD.length}</div></div>
     `:`
-      <div class="stat-card"><div class="stat-label">My Income</div><div class="stat-val" style="color:#0F6E56">Rs ${fmt(income)}</div></div>
-      <div class="stat-card"><div class="stat-label">Expenses</div><div class="stat-val" style="color:#E24B4A">Rs ${fmt(exp)}</div></div>
-      <div class="stat-card"><div class="stat-label">Transfer Out</div><div class="stat-val" style="color:#BA7517">Rs ${fmt(sent)}</div></div>
-      <div class="stat-card"><div class="stat-label">Cash in Hand</div><div class="stat-val" style="color:#185FA5">Rs ${fmt(cash)}</div></div>
+      <div class="stat-card-bi" onclick="selectTab('myentries')" style="${statStyle}"><div class="stat-label-bi"><span class="en">Income</span><span class="ur">آمدنی</span></div><div class="stat-val" style="color:#0F6E56;font-size:14px;font-weight:800;margin-top:4px;letter-spacing:-0.3px">${fmt(income)}</div><div style="font-size:9px;color:#1D9E75;margin-top:3px;font-weight:600">tap to view →</div></div>
+      <div class="stat-card-bi" onclick="selectTab('myentries')" style="${statStyle}"><div class="stat-label-bi"><span class="en">Expenses</span><span class="ur">اخراجات</span></div><div class="stat-val" style="color:#E24B4A;font-size:14px;font-weight:800;margin-top:4px;letter-spacing:-0.3px">${fmt(exp)}</div><div style="font-size:9px;color:#E24B4A;margin-top:3px;font-weight:600">tap to view →</div></div>
+      <div class="stat-card-bi" onclick="selectTab('ledger')" style="${statStyle}"><div class="stat-label-bi"><span class="en">Cash</span><span class="ur">نقد</span></div><div class="stat-val" style="color:#185FA5;font-size:14px;font-weight:800;margin-top:4px;letter-spacing:-0.3px">${fmt(cash)}</div><div style="font-size:9px;color:#185FA5;margin-top:3px;font-weight:600">tap to view →</div></div>
     `}
   </div>
   ${!isUser&&pt>0?`<div class="info-box warning">📩 ${pt} transfer(s) pending — Transfer tab dekhen.</div>`:''}
   <div class="card" style="padding:10px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-      <div style="font-size:11px;font-weight:700;color:#333">${isUser?'My Donation History | میری اعانت':'Recent Entries | حالیہ اندراجات'}</div>
-      ${!isUser?`<button onclick="selectTab('myentries')" style="font-size:10px;color:#1D9E75;background:none;border:none;cursor:pointer;font-weight:600">View All →</button>`:''}
+        <div class="section-header" style="margin-bottom:0">
+        <span class="en">${isUser?'My Donations':'Recent Entries'}</span>
+        <span class="ur">${isUser?'میری اعانت':'حالیہ اندراجات'}</span>
+      </div>
+      ${!isUser?`<button onclick="selectTab('myentries')" style="font-size:10px;color:#1D9E75;background:none;border:none;cursor:pointer;font-weight:600;margin-top:4px">View All →</button>`:''}
     </div>
-    ${myD.length===0?'<p style="font-size:11px;color:#888">No entries found.</p>':myD.slice(-5).reverse().map(d=>{const dn=DB.donors.find(x=>x.id===d.donorId)||{name:currentUser.name,area:currentUser.area||''};return `<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:0.5px solid #f5f5f5">${avatarHtml(dn.photo,dn.name,22)}<div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${isUser?d.desc||'Donation':dn.name}</div><div style="font-size:10px;color:#aaa">${d.date}</div></div><div style="font-size:11px;font-weight:700;color:#0F6E56;white-space:nowrap">Rs ${fmt(d.amount)}</div></div>`;}).join('')}
+    ${myD.length===0?'<p style="font-size:11px;color:#888">No entries found.</p>':myD.slice(-5).reverse().map(d=>{const dn=DB.donors.find(x=>x.id===d.donorId)||{name:currentUser.name,area:currentUser.area||''};return `<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:0.5px solid #f5f5f5">${avatarHtml(dn.photo,dn.name,22)}<div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${isUser?d.desc||'Donation':dn.name}</div><div style="font-size:10px;color:#aaa">${d.date}</div></div><div style="font-size:11px;font-weight:700;color:#0F6E56;white-space:nowrap">${fmt(d.amount)}</div></div>`;}).join('')}
   </div>`;
 };
 
@@ -1108,7 +1232,7 @@ function showDonorSuggestions(val){
         <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.name}</div>
         <div style="font-size:11px;color:#888;margin-top:1px">${d.id} • ${d.mobile||'—'} • ${d.area||'—'}</div>
       </div>
-      ${d.totalDonation?`<div style="font-size:11px;font-weight:600;color:#0F6E56;white-space:nowrap">Rs ${fmt(d.totalDonation)}</div>`:''}
+      ${d.totalDonation?`<div style="font-size:11px;font-weight:600;color:#0F6E56;white-space:nowrap">${fmt(d.totalDonation)}</div>`:''}
     </div>`).join('');
 }
 function hideDonorSuggestions(){
@@ -1224,14 +1348,14 @@ function fillDonorFetch(found){
   document.getElementById('donorMobile').value=found.mobile;
   if(document.getElementById('donorCnic'))document.getElementById('donorCnic').value=found.cnic||'';
   const ad=document.getElementById('autoIdDisplay');if(ad)ad.textContent=found.id;
-  if(res)res.innerHTML=`<div class="fetch-card">${avatarHtml(found.photo,found.name,42)}<div><div style="font-size:13px;font-weight:600">${found.name} <span class="id-badge">${found.id}</span></div><div style="font-size:11px;color:#888;margin-top:2px">${found.area||''} • Total: Rs ${fmt(found.totalDonation||0)}</div></div></div>`;
+  if(res)res.innerHTML=`<div class="fetch-card">${avatarHtml(found.photo,found.name,42)}<div><div style="font-size:13px;font-weight:600">${found.name} <span class="id-badge">${found.id}</span></div><div style="font-size:11px;color:#888;margin-top:2px">${found.area||''} • Total: ${fmt(found.totalDonation||0)}</div></div></div>`;
   setTimeout(()=>{
     const ae=document.getElementById('donorArea');if(ae)ae.value=found.area||'';
     const pe=document.getElementById('donorProfession');if(pe)pe.value=found.profession||'';
   },100);
   if(found.photo){const pi=document.getElementById('donorAvatarPreview');if(pi){pi.src=found.photo;pi.style.display='block';const ap=document.getElementById('donorAvatarPlus');if(ap)ap.style.display='none';}}
   const ad2=document.getElementById('autoIdDisplay');if(ad2)ad2.textContent=found.id;
-  if(res)res.innerHTML=`<div class="fetch-card" style="margin-bottom:8px">${avatarHtml(found.photo,found.name,42)}<div><div style="font-size:13px;font-weight:600">${found.name} <span class="id-badge">${found.id}</span></div><div style="font-size:11px;color:#888;margin-top:2px">${found.area||''} • Total: Rs ${fmt(found.totalDonation||0)}${found.bloodGroup?' • <span style="color:#E24B4A;font-weight:600">🩸 '+found.bloodGroup+'</span>':''}</div></div></div>`;
+  if(res)res.innerHTML=`<div class="fetch-card" style="margin-bottom:8px">${avatarHtml(found.photo,found.name,42)}<div><div style="font-size:13px;font-weight:600">${found.name} <span class="id-badge">${found.id}</span></div><div style="font-size:11px;color:#888;margin-top:2px">${found.area||''} • Total: ${fmt(found.totalDonation||0)}${found.bloodGroup?' • <span style="color:#E24B4A;font-weight:600">🩸 '+found.bloodGroup+'</span>':''}</div></div></div>`;
   // Hide new donor fields, show only amount+desc
   const nf=document.getElementById('donorNewFields');if(nf)nf.style.display='none';
   const af=document.getElementById('donorAmountSection');if(af){af.style.display='block';const amtEl=af.querySelector('#donorAmount');if(amtEl)amtEl.focus();}
@@ -1629,21 +1753,21 @@ T.area=function(){
   return `<div id="areaReport">${dlBarArea}<div class="card">
     <button onclick="openSMSReminders()" style="width:100%;background:linear-gradient(135deg,#1D9E75,#0F6E56);color:#fff;border:none;padding:10px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:10px">📱 SMS Reminders | یاد دہانی</button>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
-      <div class="stat-card"><div class="stat-label">Total Income</div><div class="stat-val" style="color:#0F6E56;font-size:15px">Rs ${fmt(gi)}</div></div>
-      <div class="stat-card"><div class="stat-label">Total Expenses</div><div class="stat-val" style="color:#E24B4A;font-size:15px">Rs ${fmt(ge)}</div></div>
-      <div class="stat-card"><div class="stat-label">Cash in Hand</div><div class="stat-val" style="color:#185FA5;font-size:15px">Rs ${fmt(gi-ge)}</div></div>
+      <div class="stat-card"><div class="stat-label">Total Income</div><div class="stat-val" style="color:#0F6E56;font-size:15px">${fmt(gi)}</div></div>
+      <div class="stat-card"><div class="stat-label">Total Expenses</div><div class="stat-val" style="color:#E24B4A;font-size:15px">${fmt(ge)}</div></div>
+      <div class="stat-card"><div class="stat-label">Cash in Hand</div><div class="stat-val" style="color:#185FA5;font-size:15px">${fmt(gi-ge)}</div></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 75px 75px 75px;gap:4px 6px;font-size:11px;font-weight:600;color:#888;padding:4px 0;border-bottom:1px solid #ddd">
       <span>Area</span><span style="text-align:right">Income</span><span style="text-align:right">Expenses</span><span style="text-align:right">Cash</span>
     </div>
     ${AREAS.filter(a=>byArea[a].income>0||byArea[a].expense>0).map(a=>`<div style="display:grid;grid-template-columns:1fr 75px 75px 75px;gap:4px 6px;padding:6px 0;border-bottom:0.5px solid #f0f0f0;font-size:12px">
       <span style="font-weight:500">${a}</span>
-      <span style="text-align:right;color:#0F6E56">Rs ${fmt(byArea[a].income)}</span>
-      <span style="text-align:right;color:#E24B4A">Rs ${fmt(byArea[a].expense)}</span>
-      <span style="text-align:right;color:#185FA5;font-weight:600">Rs ${fmt(byArea[a].income-byArea[a].expense)}</span>
+      <span style="text-align:right;color:#0F6E56">${fmt(byArea[a].income)}</span>
+      <span style="text-align:right;color:#E24B4A">${fmt(byArea[a].expense)}</span>
+      <span style="text-align:right;color:#185FA5;font-weight:600">${fmt(byArea[a].income-byArea[a].expense)}</span>
     </div>`).join('')}
     <div style="display:grid;grid-template-columns:1fr 75px 75px 75px;gap:4px 6px;padding:8px 0 0;font-size:13px;font-weight:600;border-top:2px solid #ddd;margin-top:4px">
-      <span>Total</span><span style="text-align:right;color:#0F6E56">Rs ${fmt(gi)}</span><span style="text-align:right;color:#E24B4A">Rs ${fmt(ge)}</span><span style="text-align:right;color:#185FA5">Rs ${fmt(gi-ge)}</span>
+      <span>Total</span><span style="text-align:right;color:#0F6E56">${fmt(gi)}</span><span style="text-align:right;color:#E24B4A">${fmt(ge)}</span><span style="text-align:right;color:#185FA5">${fmt(gi-ge)}</span>
     </div>
   </div>`;
 };
@@ -1698,7 +1822,7 @@ function genExpReport(allTime){
           ${e.hardcopyImg?`<div style="margin-top:4px"><img src="${e.hardcopyImg}" style="width:48px;height:36px;object-fit:cover;border-radius:4px;border:1px solid #ddd;cursor:pointer" onclick="viewBillImg('${e.id}')" title="Bill dekhen"></div>`:''}
         </div>
         <div style="text-align:right;flex-shrink:0">
-          <div style="font-size:13px;font-weight:600;color:#E24B4A">Rs ${fmt(e.amount)}</div>
+          <div style="font-size:13px;font-weight:600;color:#E24B4A">${fmt(e.amount)}</div>
           <button style="font-size:10px;background:#185FA5;color:#fff;border:none;padding:2px 7px;border-radius:4px;cursor:pointer;margin-top:3px" onclick="printExpenseBill('${e.id}')">Print</button>
         </div>
       </div>`;
@@ -1714,7 +1838,7 @@ function genExpReport(allTime){
           </div>
         </div>
         <div style="text-align:right;flex-shrink:0">
-          <div style="font-size:13px;font-weight:700;color:#E24B4A">Rs ${fmt(data.total)}</div>
+          <div style="font-size:13px;font-weight:700;color:#E24B4A">${fmt(data.total)}</div>
           <div style="font-size:11px;color:#888">${data.entries.length} entries • ${pct}%</div>
         </div>
       </div>
@@ -1722,7 +1846,7 @@ function genExpReport(allTime){
         ${entriesHtml}
         <div style="padding:8px 0 2px;display:flex;justify-content:space-between;font-size:12px;font-weight:600">
           <span style="color:#666">${cat} Total:</span>
-          <span style="color:#E24B4A">Rs ${fmt(data.total)}</span>
+          <span style="color:#E24B4A">${fmt(data.total)}</span>
         </div>
       </div>
     </div>`;
@@ -1735,7 +1859,7 @@ function genExpReport(allTime){
         <div style="font-size:12px;color:#A32D2D;font-weight:600">Total Expenses</div>
         <div style="font-size:11px;color:#A32D2D;margin-top:1px">${rangeLabel} • ${filtered.length} entries</div>
       </div>
-      <div style="font-size:26px;font-weight:700;color:#E24B4A">Rs ${fmt(total)}</div>
+      <div style="font-size:26px;font-weight:700;color:#E24B4A">${fmt(total)}</div>
     </div>
     ${sortedCats.length===0?'<div class="card"><p style="font-size:13px;color:#888">Is range mein koi expense nahi.</p></div>':catRows}`;
 }
@@ -1790,15 +1914,15 @@ function generateLedger(){
   const cb=ob+ri-re;let run=ob;
   document.getElementById('ledgerResult').innerHTML=`<div class="card" id="ledgerContent">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h3>Ledger: ${from} — ${to}</h3><div style="display:flex;gap:6px"><button onclick="downloadReport('ledgerContent','ledger','pdf')" style="background:#E24B4A;color:#fff;border:none;padding:5px 10px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer">📄 PDF</button><button onclick="downloadReport('ledgerContent','ledger','image')" style="background:#185FA5;color:#fff;border:none;padding:5px 10px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer">🖼️ IMG</button></div></div>
-    <div style="background:#E6F1FB;border-radius:8px;padding:8px 12px;display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px"><span style="font-weight:600">Opening Balance</span><span style="color:#185FA5;font-weight:600">Rs ${fmt(ob)}</span></div>
+    <div style="background:#E6F1FB;border-radius:8px;padding:8px 12px;display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px"><span style="font-weight:600">Opening Balance</span><span style="color:#185FA5;font-weight:600">${fmt(ob)}</span></div>
     <div class="ledger-hdr"><span>Date</span><span>Description</span><span style="text-align:right">Income</span><span style="text-align:right">Expense</span><span style="text-align:right">Balance</span></div>
-    ${inR.length===0?'<p style="font-size:13px;color:#888;padding:8px 0">No entries found.</p>':inR.map(t=>{run+=t.credit-t.debit;return `<div class="ledger-row"><span style="color:#888">${t.date}</span><span>${t.desc}</span><span style="text-align:right;color:${t.credit>0?'#0F6E56':'#ccc'}">${t.credit>0?'Rs '+fmt(t.credit):'—'}</span><span style="text-align:right;color:${t.debit>0?'#E24B4A':'#ccc'}">${t.debit>0?'Rs '+fmt(t.debit):'—'}</span><span style="text-align:right;font-weight:600;color:${run>=0?'#185FA5':'#E24B4A'}">Rs ${fmt(run)}</span></div>`;}).join('')}
-    <div style="display:grid;grid-template-columns:76px 1fr 78px 78px 80px;gap:4px;padding:8px 0 0;font-size:12px;font-weight:600;border-top:2px solid #ddd;margin-top:4px"><span>Total</span><span></span><span style="text-align:right;color:#0F6E56">Rs ${fmt(ri)}</span><span style="text-align:right;color:#E24B4A">Rs ${fmt(re)}</span><span></span></div>
-    <div style="background:#E1F5EE;border-radius:8px;padding:8px 12px;display:flex;justify-content:space-between;margin-top:6px;font-size:13px;font-weight:600"><span>Closing Balance</span><span style="color:#0F6E56">Rs ${fmt(cb)}</span></div>
+    ${inR.length===0?'<p style="font-size:13px;color:#888;padding:8px 0">No entries found.</p>':inR.map(t=>{run+=t.credit-t.debit;return `<div class="ledger-row"><span style="color:#888">${t.date}</span><span>${t.desc}</span><span style="text-align:right;color:${t.credit>0?'#0F6E56':'#ccc'}">${t.credit>0?'Rs '+fmt(t.credit):'—'}</span><span style="text-align:right;color:${t.debit>0?'#E24B4A':'#ccc'}">${t.debit>0?'Rs '+fmt(t.debit):'—'}</span><span style="text-align:right;font-weight:600;color:${run>=0?'#185FA5':'#E24B4A'}">${fmt(run)}</span></div>`;}).join('')}
+    <div style="display:grid;grid-template-columns:76px 1fr 78px 78px 80px;gap:4px;padding:8px 0 0;font-size:12px;font-weight:600;border-top:2px solid #ddd;margin-top:4px"><span>Total</span><span></span><span style="text-align:right;color:#0F6E56">${fmt(ri)}</span><span style="text-align:right;color:#E24B4A">${fmt(re)}</span><span></span></div>
+    <div style="background:#E1F5EE;border-radius:8px;padding:8px 12px;display:flex;justify-content:space-between;margin-top:6px;font-size:13px;font-weight:600"><span>Closing Balance</span><span style="color:#0F6E56">${fmt(cb)}</span></div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px">
-      <div class="stat-card"><div class="stat-label">Opening</div><div class="stat-val" style="color:#185FA5;font-size:14px">Rs ${fmt(ob)}</div></div>
-      <div class="stat-card"><div class="stat-label">Net Change</div><div class="stat-val" style="color:${ri-re>=0?'#0F6E56':'#E24B4A'};font-size:14px">Rs ${fmt(ri-re)}</div></div>
-      <div class="stat-card"><div class="stat-label">Closing</div><div class="stat-val" style="color:#0F6E56;font-size:14px">Rs ${fmt(cb)}</div></div>
+      <div class="stat-card"><div class="stat-label">Opening</div><div class="stat-val" style="color:#185FA5;font-size:14px">${fmt(ob)}</div></div>
+      <div class="stat-card"><div class="stat-label">Net Change</div><div class="stat-val" style="color:${ri-re>=0?'#0F6E56':'#E24B4A'};font-size:14px">${fmt(ri-re)}</div></div>
+      <div class="stat-card"><div class="stat-label">Closing</div><div class="stat-val" style="color:#0F6E56;font-size:14px">${fmt(cb)}</div></div>
     </div>
   </div>`;
 }
@@ -1846,34 +1970,34 @@ T.balreport=function(){
           const dn=DB.donors.find(x=>x.id===d.donorId)||{name:'Unknown',area:''};
           return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid #f0f0f0;font-size:12px">
             <span style="color:#555">${d.date} — ${dn.name} (${dn.area})</span>
-            <span style="color:#0F6E56;font-weight:600">+Rs ${fmt(d.amount)}</span>
+            <span style="color:#0F6E56;font-weight:600">+${fmt(d.amount)}</span>
           </div>`;
         }).join('')}
         ${f.donations.length>5?`<div style="font-size:11px;color:#aaa;padding:4px 0">...aur ${f.donations.length-5} entries</div>`:''}
         ${f.recvT.length>0?`<div style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase;margin:8px 0 4px">Received Transfers</div>`:''}
-        ${f.recvT.map(t=>{const fu=DB.users.find(x=>x.id===t.from)||{name:'?'};return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid #f0f0f0;font-size:12px"><span style="color:#555">${t.date} — From: ${fu.name}</span><span style="color:#0F6E56;font-weight:600">+Rs ${fmt(t.amount)}</span></div>`;}).join('')}
+        ${f.recvT.map(t=>{const fu=DB.users.find(x=>x.id===t.from)||{name:'?'};return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid #f0f0f0;font-size:12px"><span style="color:#555">${t.date} — From: ${fu.name}</span><span style="color:#0F6E56;font-weight:600">+${fmt(t.amount)}</span></div>`;}).join('')}
 
         <div style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase;margin:10px 0 6px">Expenses</div>
         ${f.expenses.length===0?'<p style="font-size:12px;color:#aaa;margin-bottom:8px">No expenses yet.</p>':f.expenses.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(e=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid #f0f0f0;font-size:12px">
             <span style="color:#555">${e.date} — ${e.desc} <span style="font-size:10px;color:#aaa">(${e.area})</span></span>
-            <span style="color:#E24B4A;font-weight:600">-Rs ${fmt(e.amount)}</span>
+            <span style="color:#E24B4A;font-weight:600">-${fmt(e.amount)}</span>
           </div>`).join('')}
 
         ${f.sentT.length>0?`<div style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase;margin:10px 0 6px">Sent Transfers</div>`:''}
-        ${f.sentT.map(t=>{const tu=DB.users.find(x=>x.id===t.to)||{name:'?'};return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid #f0f0f0;font-size:12px"><span style="color:#555">${t.date} — To: ${tu.name}</span><span style="color:#E24B4A;font-weight:600">-Rs ${fmt(t.amount)}</span></div>`;}).join('')}
+        ${f.sentT.map(t=>{const tu=DB.users.find(x=>x.id===t.to)||{name:'?'};return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid #f0f0f0;font-size:12px"><span style="color:#555">${t.date} — To: ${tu.name}</span><span style="color:#E24B4A;font-weight:600">-${fmt(t.amount)}</span></div>`;}).join('')}
 
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:12px;padding-top:10px;border-top:1px solid #eee">
           <div style="background:#E1F5EE;border-radius:8px;padding:8px;text-align:center">
             <div style="font-size:10px;color:#0F6E56;font-weight:600">Total Income</div>
-            <div style="font-size:14px;font-weight:700;color:#0F6E56">Rs ${fmt(f.inc)}</div>
+            <div style="font-size:14px;font-weight:700;color:#0F6E56">${fmt(f.inc)}</div>
           </div>
           <div style="background:#FCEBEB;border-radius:8px;padding:8px;text-align:center">
             <div style="font-size:10px;color:#A32D2D;font-weight:600">Total Expenses</div>
-            <div style="font-size:14px;font-weight:700;color:#E24B4A">Rs ${fmt(f.exp)}</div>
+            <div style="font-size:14px;font-weight:700;color:#E24B4A">${fmt(f.exp)}</div>
           </div>
           <div style="background:${isNeg?'#FCEBEB':'#E6F1FB'};border-radius:8px;padding:8px;text-align:center;border:${isNeg?'1.5px solid #E24B4A':'none'}">
             <div style="font-size:10px;color:${isNeg?'#A32D2D':'#185FA5'};font-weight:600">Cash in Hand</div>
-            <div style="font-size:14px;font-weight:700;color:${isNeg?'#E24B4A':'#185FA5'}">Rs ${fmt(f.cash)}</div>
+            <div style="font-size:14px;font-weight:700;color:${isNeg?'#E24B4A':'#185FA5'}">${fmt(f.cash)}</div>
           </div>
         </div>
       </div>`;
@@ -1892,7 +2016,7 @@ T.balreport=function(){
           <div style="font-size:11px;color:#888;margin-top:3px">${u.area||'—'} • ${u.profession||'—'}</div>
         </div>
         <div style="text-align:right;flex-shrink:0">
-          <div style="font-size:15px;font-weight:700;color:${isNeg?'#E24B4A':'#185FA5'}">Rs ${fmt(f.cash)}</div>
+          <div style="font-size:15px;font-weight:700;color:${isNeg?'#E24B4A':'#185FA5'}">${fmt(f.cash)}</div>
           <div style="font-size:10px;color:#888;margin-top:1px">Cash in Hand</div>
         </div>
       </div>
@@ -1909,15 +2033,15 @@ T.balreport=function(){
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
         <div style="background:rgba(255,255,255,0.15);border-radius:8px;padding:10px;text-align:center">
           <div style="font-size:10px;opacity:0.8;margin-bottom:3px">Total Income</div>
-          <div style="font-size:18px;font-weight:700">Rs ${fmt(grandInc)}</div>
+          <div style="font-size:18px;font-weight:700">${fmt(grandInc)}</div>
         </div>
         <div style="background:rgba(255,255,255,0.15);border-radius:8px;padding:10px;text-align:center">
           <div style="font-size:10px;opacity:0.8;margin-bottom:3px">Total Expenses</div>
-          <div style="font-size:18px;font-weight:700">Rs ${fmt(grandExp)}</div>
+          <div style="font-size:18px;font-weight:700">${fmt(grandExp)}</div>
         </div>
         <div style="background:rgba(255,255,255,0.2);border-radius:8px;padding:10px;text-align:center;border:1.5px solid rgba(255,255,255,0.4)">
           <div style="font-size:10px;opacity:0.8;margin-bottom:3px">Total Cash</div>
-          <div style="font-size:18px;font-weight:700">Rs ${fmt(grandCash)}</div>
+          <div style="font-size:18px;font-weight:700">${fmt(grandCash)}</div>
         </div>
       </div>
       <div style="display:flex;gap:10px;margin-top:10px;font-size:12px;opacity:0.85">
@@ -1927,7 +2051,7 @@ T.balreport=function(){
     </div>
     ${negativeUsers.length>0?`<div style="background:#FCEBEB;border:1.5px solid #E24B4A;border-radius:10px;padding:10px 14px;margin-bottom:12px">
       <div style="font-size:12px;font-weight:700;color:#A32D2D;margin-bottom:6px">⚠️ Negative Balance Users</div>
-      ${negativeUsers.map(u=>{const f=userFinancials(u);return `<div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0"><span style="font-weight:500">${u.name} (${u.role})</span><span style="color:#E24B4A;font-weight:700">Rs ${fmt(f.cash)}</span></div>`;}).join('')}
+      ${negativeUsers.map(u=>{const f=userFinancials(u);return `<div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0"><span style="font-weight:500">${u.name} (${u.role})</span><span style="color:#E24B4A;font-weight:700">${fmt(f.cash)}</span></div>`;}).join('')}
     </div>`:''}
     <div style="font-size:12px;font-weight:600;color:#666;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">Detail — Click to Expand</div>
     ${allUsers.length===0?'<div class="card"><p style="font-size:13px;color:#888">No users found.</p></div>':userCards}`;
@@ -2066,14 +2190,14 @@ function openDonorProfile(donorId){
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
         <div style="background:#E1F5EE;border-radius:10px;padding:10px;text-align:center">
           <div style="font-size:11px;color:#0F6E56;font-weight:700">Total Donated</div>
-          <div style="font-size:20px;font-weight:800;color:#0F6E56">Rs ${fmt(totalDon)}</div>
+          <div style="font-size:20px;font-weight:800;color:#0F6E56">${fmt(totalDon)}</div>
         </div>
         <div style="background:#E6F1FB;border-radius:10px;padding:10px;text-align:center">
           <div style="font-size:11px;color:#185FA5;font-weight:700">Donations</div>
           <div style="font-size:20px;font-weight:800;color:#185FA5">${lastDons.length}</div>
         </div>
       </div>
-      ${lastDons.length?'<div style="font-size:12px;font-weight:700;margin-bottom:6px">Recent Entries</div>'+lastDons.map(d=>`<div style="display:flex;justify-content:space-between;padding:6px 8px;background:#f9f9f9;border-radius:6px;margin-bottom:4px;font-size:12px"><span>${d.date} — ${d.desc||'Donation'}</span><span style="font-weight:600;color:#0F6E56">Rs ${fmt(d.amount)}</span></div>`).join(''):''}
+      ${lastDons.length?'<div style="font-size:12px;font-weight:700;margin-bottom:6px">Recent Entries</div>'+lastDons.map(d=>`<div style="display:flex;justify-content:space-between;padding:6px 8px;background:#f9f9f9;border-radius:6px;margin-bottom:4px;font-size:12px"><span>${d.date} — ${d.desc||'Donation'}</span><span style="font-weight:600;color:#0F6E56">${fmt(d.amount)}</span></div>`).join(''):''}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
         <button onclick="closePopup();openEditDonorProfile('${donorId}')" style="background:#1D9E75;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">✏️ Edit Profile</button>
         <button onclick="closePopup();selectTab('donation');setTimeout(()=>{const inp=document.getElementById('fetchById');if(inp){inp.value='${donorId}';autoFetchDonorUnified('${donorId}');}},200)" style="background:#185FA5;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">💰 Donate</button>
@@ -2282,7 +2406,7 @@ function genFundReport(){
       <div style="background:#E1F5EE;border:1.5px solid #1D9E75;border-radius:10px;padding:12px;text-align:center">
         <div style="font-size:11px;color:#0F6E56;font-weight:700;margin-bottom:4px">RECEIVED ✓</div>
         <div style="font-size:22px;font-weight:700;color:#0F6E56">${receivedCount}</div>
-        <div style="font-size:11px;color:#0F6E56;margin-top:2px">Rs ${fmt(totalReceived)}</div>
+        <div style="font-size:11px;color:#0F6E56;margin-top:2px">${fmt(totalReceived)}</div>
       </div>
       <div style="background:#FAEEDA;border:1.5px solid #EF9F27;border-radius:10px;padding:12px;text-align:center">
         <div style="font-size:11px;color:#854F0B;font-weight:700;margin-bottom:4px">PENDING ⏳</div>
@@ -2362,19 +2486,19 @@ function generateSlip(){
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
         <div style="background:#E6F1FB;border:2px solid #185FA5;border-radius:12px;padding:12px;text-align:center">
           <div style="font-size:11px;color:#185FA5;font-weight:700;margin-bottom:4px">CURRENT DONATION</div>
-          <div style="font-size:24px;font-weight:700;color:#185FA5">Rs ${fmt(lastAmt)}</div>
+          <div style="font-size:24px;font-weight:700;color:#185FA5">${fmt(lastAmt)}</div>
           <div style="font-size:10px;color:#185FA5;margin-top:2px">${last5.length>0?last5[0].date:''}</div>
         </div>
         <div style="background:#E1F5EE;border:2px solid #1D9E75;border-radius:12px;padding:12px;text-align:center">
           <div style="font-size:11px;color:#1D9E75;font-weight:700;margin-bottom:4px">LIFE TIME TOTAL</div>
-          <div style="font-size:24px;font-weight:700;color:#1D9E75">Rs ${fmt(donor.totalDonation)}</div>
+          <div style="font-size:24px;font-weight:700;color:#1D9E75">${fmt(donor.totalDonation)}</div>
           <div style="font-size:10px;color:#1D9E75;margin-top:2px">Shukriya!</div>
         </div>
       </div>
       <div style="font-size:12px;font-weight:700;color:#333;margin-bottom:8px;text-transform:uppercase">Last ${last5.length} Entries</div>
       ${last5.map((e,i)=>`<div style="display:flex;justify-content:space-between;padding:6px 8px;border-radius:7px;margin-bottom:3px;background:${i===0?'#E6F1FB':'#f9f9f9'};font-size:11px">
         <span style="color:${i===0?'#185FA5':'#666'}">${e.date} — ${e.desc||'Donation'}</span>
-        <span style="font-weight:600;color:${i===0?'#185FA5':'#0F6E56'}">Rs ${fmt(e.amount)}</span>
+        <span style="font-weight:600;color:${i===0?'#185FA5':'#0F6E56'}">${fmt(e.amount)}</span>
       </div>`).join('')}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;margin-bottom:8px">
         <button onclick="downloadReport('donorSlipWrap','donor_slip_${donor.id}','pdf')" style="background:#E24B4A;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🖨️ Print/PDF</button>
@@ -2404,7 +2528,7 @@ T.top=function(){
       ${medal?`<div style="font-size:22px;min-width:32px;text-align:center">${medal}</div>`:`<div style="width:28px;height:28px;border-radius:50%;background:${p.border};color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">${i+1}</div>`}
       ${avatarHtml(d.photo,d.name,36)}
       <div style="flex:1"><div style="font-size:13px;font-weight:600;color:${p.num}">${d.name}</div><div style="font-size:11px;color:${p.num};opacity:0.75;margin-top:2px">${d.id} • ${d.area}</div></div>
-      <div style="font-size:14px;font-weight:700;color:${p.num}">Rs ${fmt(d.totalDonation)}</div>
+      <div style="font-size:14px;font-weight:700;color:${p.num}">${fmt(d.totalDonation)}</div>
     </div>`;}).join('')}
   </div>
   <button class="btn btn-info" onclick="showTopCert()">Top 10 Certificate</button>
@@ -2419,7 +2543,7 @@ function showTopCert(){
         <div style="font-size:17px;min-width:28px;text-align:center">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}</div>
         ${avatarHtml(d.photo,d.name,32)}
         <div style="flex:1"><div style="font-size:12px;font-weight:600">${d.name}</div><div style="font-size:11px;color:#888">${d.id} • ${d.area}</div></div>
-        <div style="font-size:13px;font-weight:700;color:#0F6E56">Rs ${fmt(d.totalDonation)}</div>
+        <div style="font-size:13px;font-weight:700;color:#0F6E56">${fmt(d.totalDonation)}</div>
       </div>`).join('')}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;text-align:center;margin-top:14px;padding-top:12px;border-top:1px dashed #ccc">
         <div><div style="height:35px;border-bottom:1px solid #999;margin-bottom:4px"></div><div style="font-size:10px;color:#888">Manager / Admin</div></div>
@@ -2435,7 +2559,7 @@ T.transfer=function(){
   const sent=DB.transfers.filter(t=>t.from===currentUser.id);
   const pendingRecv=DB.transfers.filter(t=>t.to===currentUser.id&&!t.received);
   const recvd=DB.transfers.filter(t=>t.to===currentUser.id&&t.received);
-  return `<div class="cash-box"><div><div style="font-size:12px;color:#0F6E56;font-weight:600">Cash in Hand (before transfer)</div><div style="font-size:11px;color:#0F6E56;margin-top:2px">Updated balance shown after entering amount</div></div><div style="font-size:20px;font-weight:700;color:#0F6E56">Rs ${fmt(cash)}</div></div>
+  return `<div class="cash-box"><div><div style="font-size:12px;color:#0F6E56;font-weight:600">Cash in Hand (before transfer)</div><div style="font-size:11px;color:#0F6E56;margin-top:2px">Updated balance shown after entering amount</div></div><div style="font-size:20px;font-weight:700;color:#0F6E56">${fmt(cash)}</div></div>
   <div class="card"><h3>Make Transfer</h3>
     <label>Recipient <span style="font-size:10px;color:#1D9E75;font-weight:500">وصول کنندہ</span></label><div class="inp-wrap"><span class="inp-icon">👥</span><select id="transferTo"></div><option value="">-- Select Manager | منیجر منتخب کریں --</option>${DB.users.filter(u=>u.id!==currentUser.id&&u.approved&&!u.locked&&u.role==='manager').map(u=>`<option value="${u.id}">${u.name} (${u.role}) — ${u.area||''}</option>`).join('')}</select>
     <label>Amount (Rs)</label><input type="number" id="transferAmt" oninput="updateAfterTransfer(${cash})">
@@ -2444,15 +2568,15 @@ T.transfer=function(){
     <button class="btn btn-primary" onclick="doTransfer()">Transfer</button>
   </div>
   ${pendingRecv.length>0?`<div class="card"><h3>Confirm Received (${pendingRecv.length})</h3>
-    ${pendingRecv.map(t=>{const fu=DB.users.find(u=>u.id===t.from)||{name:'?',role:'?'};return `<div class="transfer-inbox-item"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:600">${fu.name} <span class="badge badge-${fu.role}">${fu.role}</span></div><div style="font-size:11px;color:#888;margin-top:2px">${t.date} • ${t.note||''}</div></div><div style="text-align:right"><div style="font-size:18px;font-weight:700;color:#1D9E75;margin-bottom:4px">+Rs ${fmt(t.amount)}</div><button style="background:#1D9E75;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600" onclick="markReceived('${t.id}')">Received ✓</button></div></div></div>`;}).join('')}
+    ${pendingRecv.map(t=>{const fu=DB.users.find(u=>u.id===t.from)||{name:'?',role:'?'};return `<div class="transfer-inbox-item"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:600">${fu.name} <span class="badge badge-${fu.role}">${fu.role}</span></div><div style="font-size:11px;color:#888;margin-top:2px">${t.date} • ${t.note||''}</div></div><div style="text-align:right"><div style="font-size:18px;font-weight:700;color:#1D9E75;margin-bottom:4px">+${fmt(t.amount)}</div><button style="background:#1D9E75;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600" onclick="markReceived('${t.id}')">Received ✓</button></div></div></div>`;}).join('')}
   </div>`:''}
-  ${sent.length>0?`<div class="card"><h3><span class="bi-title"><span class="bi-en">Sent History</span><span class="bi-ur">بھیجنے کی تاریخ</span></span></h3>${sent.map(t=>{const tu=DB.users.find(u=>u.id===t.to)||{name:'?'};return `<div class="entry-row"><div><div class="entry-name">${tu.name}</div><div class="entry-sub">${t.date} • ${t.note||''} • ${t.received?'<span style="color:#0F6E56">✓ Received</span>':'<span style="color:#BA7517">Pending</span>'}</div></div><div style="color:#E24B4A;font-size:13px;font-weight:600">-Rs ${fmt(t.amount)}</div></div>`;}).join('')}</div>`:''}
-  ${recvd.length>0?`<div class="card"><h3><span class="bi-title"><span class="bi-en">Received History</span><span class="bi-ur">وصول کی تاریخ</span></span></h3>${recvd.map(t=>{const fu=DB.users.find(u=>u.id===t.from)||{name:'?'};return `<div class="entry-row"><div><div class="entry-name">${fu.name}</div><div class="entry-sub">${t.date}</div></div><div class="entry-amt">+Rs ${fmt(t.amount)}</div></div>`;}).join('')}</div>`:''}`;
+  ${sent.length>0?`<div class="card"><h3><span class="bi-title"><span class="bi-en">Sent History</span><span class="bi-ur">بھیجنے کی تاریخ</span></span></h3>${sent.map(t=>{const tu=DB.users.find(u=>u.id===t.to)||{name:'?'};return `<div class="entry-row"><div><div class="entry-name">${tu.name}</div><div class="entry-sub">${t.date} • ${t.note||''} • ${t.received?'<span style="color:#0F6E56">✓ Received</span>':'<span style="color:#BA7517">Pending</span>'}</div></div><div style="color:#E24B4A;font-size:13px;font-weight:600">-${fmt(t.amount)}</div></div>`;}).join('')}</div>`:''}
+  ${recvd.length>0?`<div class="card"><h3><span class="bi-title"><span class="bi-en">Received History</span><span class="bi-ur">وصول کی تاریخ</span></span></h3>${recvd.map(t=>{const fu=DB.users.find(u=>u.id===t.from)||{name:'?'};return `<div class="entry-row"><div><div class="entry-name">${fu.name}</div><div class="entry-sub">${t.date}</div></div><div class="entry-amt">+${fmt(t.amount)}</div></div>`;}).join('')}</div>`:''}`;
 };
 function updateAfterTransfer(cash){
   const amt=parseInt(document.getElementById('transferAmt').value)||0;
   const box=document.getElementById('afterTransferBox');
-  if(amt>0){const af=cash-amt;box.style.display='block';box.innerHTML=`Cash in Hand after transfer: <strong>Rs ${fmt(af)}</strong>${af<0?' ⚠️ Insufficient!':''}`;box.style.background=af<0?'#FCEBEB':'#FAEEDA';box.style.color=af<0?'#A32D2D':'#854F0B';}
+  if(amt>0){const af=cash-amt;box.style.display='block';box.innerHTML=`Cash in Hand after transfer: <strong>${fmt(af)}</strong>${af<0?' ⚠️ Insufficient!':''}`;box.style.background=af<0?'#FCEBEB':'#FAEEDA';box.style.color=af<0?'#A32D2D':'#854F0B';}
   else box.style.display='none';
 }
 function doTransfer(){
@@ -2496,7 +2620,7 @@ function openMyDonationsQuick(){
             <div style="font-size:12px;font-weight:600">${dn.name}</div>
             <div style="font-size:10px;color:#888">${d.date} • ${d.desc||'Donation'}</div>
           </div>
-          <span style="font-size:13px;font-weight:700;color:#0F6E56">Rs ${fmt(d.amount)}</span>
+          <span style="font-size:13px;font-weight:700;color:#0F6E56">${fmt(d.amount)}</span>
           <button onclick="closePopup();editDonation('${d.id}')" style="background:#185FA5;color:#fff;border:none;padding:4px 7px;border-radius:5px;cursor:pointer;font-size:11px">✏️</button>
           <button onclick="closePopup();deleteDonation('${d.id}')" style="background:#E24B4A;color:#fff;border:none;padding:4px 7px;border-radius:5px;cursor:pointer;font-size:11px">🗑️</button>
         </div>`;
@@ -2523,7 +2647,7 @@ function openMyExpensesQuick(){
             <div style="font-size:12px;font-weight:600">${e.desc}</div>
             <div style="font-size:10px;color:#888">${e.date} • ${e.billNo}</div>
           </div>
-          <span style="font-size:13px;font-weight:700;color:#E24B4A">Rs ${fmt(e.amount)}</span>
+          <span style="font-size:13px;font-weight:700;color:#E24B4A">${fmt(e.amount)}</span>
           <button onclick="closePopup();editExpense('${e.id}')" style="background:#185FA5;color:#fff;border:none;padding:4px 7px;border-radius:5px;cursor:pointer;font-size:11px">✏️</button>
           <button onclick="closePopup();deleteExpense('${e.id}')" style="background:#E24B4A;color:#fff;border:none;padding:4px 7px;border-radius:5px;cursor:pointer;font-size:11px">🗑️</button>
         </div>`).join('')}
@@ -2556,7 +2680,7 @@ function myEntriesHtml(){
         ${donAssignee?`<div style="font-size:10px;color:#185FA5;margin-top:2px">📤 Assigned to: ${donAssignee.name}${donAssigner?' (by '+donAssigner.name+')':''}</div>`:''}
       </div>
       <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end">
-        <span class="entry-amt">Rs ${fmt(d.amount)}</span>
+        <span class="entry-amt">${fmt(d.amount)}</span>
         ${currentRole==='developer'&&!d.assignedTo?`<button class="btn-xs" style="color:#fff;border:none;background:#185FA5;cursor:pointer" onclick="assignEntryPrompt('donation','${d.id}')">📤</button>`:''}
         <button class="btn-xs" style="color:#185FA5;border-color:#185FA5;background:#E6F1FB" onclick="editDonation('${d.id}')">✏️</button>
         <button class="btn-xs" style="color:#E24B4A;border-color:#E24B4A;background:#FCEBEB" onclick="deleteDonation('${d.id}')">🗑️</button>
@@ -2574,7 +2698,7 @@ function myEntriesHtml(){
         ${expAssignee?`<div style="font-size:10px;color:#185FA5;margin-top:2px">📤 Assigned to: ${expAssignee.name}</div>`:''}
       </div>
       <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end">
-        <span style="font-size:13px;font-weight:500;color:#E24B4A">Rs ${fmt(e.amount)}</span>
+        <span style="font-size:13px;font-weight:500;color:#E24B4A">${fmt(e.amount)}</span>
         ${currentRole==='developer'&&!e.assignedTo?`<button class="btn-xs" style="color:#fff;border:none;background:#185FA5;cursor:pointer" onclick="assignEntryPrompt('expense','${e.id}')">📤</button>`:''}
         <button class="btn-xs" style="color:#185FA5;border-color:#185FA5;background:#E6F1FB" onclick="editExpense('${e.id}')">✏️</button>
         <button class="btn-xs" style="color:#E24B4A;border-color:#E24B4A;background:#FCEBEB" onclick="deleteExpense('${e.id}')">🗑️</button>
@@ -2713,7 +2837,7 @@ T.expense=function(){
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
       <div style="background:#E1F5EE;border:1.5px solid #1D9E75;border-radius:10px;padding:10px 12px">
         <div style="font-size:11px;color:#0F6E56;font-weight:600;margin-bottom:3px">Cash in Hand</div>
-        <div style="font-size:20px;font-weight:700;color:#0F6E56">Rs ${fmt(cash)}</div>
+        <div style="font-size:20px;font-weight:700;color:#0F6E56">${fmt(cash)}</div>
         <div style="font-size:10px;color:#0F6E56;margin-top:2px">Balance will decrease after expense</div>
       </div>
       <div style="background:#FAEEDA;border:1.5px solid #EF9F27;border-radius:10px;padding:10px 12px">
@@ -2764,7 +2888,7 @@ T.expense=function(){
           <div class="entry-sub">${e.date} • ${e.vendor||'—'} • ${e.category||'—'} • ${e.area}</div>
         </div>
         <div style="display:flex;align-items:center;gap:6px">
-          <span style="font-size:13px;font-weight:500;color:#E24B4A">Rs ${fmt(e.amount)}</span>
+          <span style="font-size:13px;font-weight:500;color:#E24B4A">${fmt(e.amount)}</span>
           <button class="btn-xs" style="background:#185FA5;color:#fff;border:none" onclick="printExpenseBill('${e.id}')">Print</button>
           <button class="btn-xs" style="background:#1D9E75;color:#fff;border:none" onclick="editExpense('${e.id}')">Edit</button>
           <button class="btn-xs" style="background:#E24B4A;color:#fff;border:none" onclick="deleteExpense('${e.id}')">Del</button>
@@ -2858,7 +2982,7 @@ function printExpenseBill(id){
 
   <div class="amount-box">
     <div style="font-size:12px;color:#0F6E56;margin-bottom:4px">TOTAL AMOUNT</div>
-    <div class="amount-big">Rs ${fmt(e.amount)}</div>
+    <div class="amount-big">${fmt(e.amount)}</div>
   </div>
 
   <div class="section">
@@ -3008,7 +3132,7 @@ T.donorlist=function(){
           <div style="font-size:11px;color:#888">${d.cnic||'—'}</div>
         </div>
         <div style="text-align:right;flex-shrink:0">
-          <div style="font-size:13px;font-weight:700;color:#0F6E56">Rs ${fmt(d.totalDonation)}</div>
+          <div style="font-size:13px;font-weight:700;color:#0F6E56">${fmt(d.totalDonation)}</div>
           <div style="font-size:10px;color:#888;margin-bottom:4px">${d.entries.length} entries</div>
           <button style="font-size:11px;background:#185FA5;color:#fff;border:none;padding:3px 10px;border-radius:6px;cursor:pointer" onclick="showDonorSlipInline('${d.id}')">Slip</button>
         </div>
@@ -3027,17 +3151,17 @@ function showDonorSlipInline(id){
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
       <div style="background:#E6F1FB;border:1.5px solid #185FA5;border-radius:8px;padding:8px;text-align:center">
         <div style="font-size:10px;color:#185FA5;font-weight:700">CURRENT DONATION</div>
-        <div style="font-size:16px;font-weight:700;color:#185FA5">Rs ${fmt(lastAmt)}</div>
+        <div style="font-size:16px;font-weight:700;color:#185FA5">${fmt(lastAmt)}</div>
       </div>
       <div style="background:#E1F5EE;border:1.5px solid #1D9E75;border-radius:8px;padding:8px;text-align:center">
         <div style="font-size:10px;color:#0F6E56;font-weight:700">LIFE TIME TOTAL</div>
-        <div style="font-size:16px;font-weight:700;color:#0F6E56">Rs ${fmt(donor.totalDonation)}</div>
+        <div style="font-size:16px;font-weight:700;color:#0F6E56">${fmt(donor.totalDonation)}</div>
       </div>
     </div>
     <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:5px">LAST ${last5.length} ENTRIES</div>
     ${last5.map((e,i)=>`<div style="display:flex;justify-content:space-between;padding:5px 8px;border-radius:5px;background:${i===0?'#E6F1FB':'#fff'};margin-bottom:3px;font-size:12px">
       <span style="color:${i===0?'#185FA5':'#666'}">${e.date} — ${e.desc||'Donation'}</span>
-      <span style="font-weight:600;color:${i===0?'#185FA5':'#0F6E56'}">Rs ${fmt(e.amount)}</span>
+      <span style="font-weight:600;color:${i===0?'#185FA5':'#0F6E56'}">${fmt(e.amount)}</span>
     </div>`).join('')}
   </div>`;
 }
@@ -3492,29 +3616,51 @@ function saveEditBank(){
 T.profile=function(){
   const u=currentUser;
   return `<div class="card">
-    <h3><span class="bi-title"><span class="bi-en">Update My Profile</span><span class="bi-ur">میری پروفائل</span></span></h3>
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #f0f0f0">
+    <h3><span class="bi-title"><span class="bi-en">My Profile</span><span class="bi-ur">میری پروفائل</span></span></h3>
+    <!-- Avatar + Info header -->
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;padding:14px;background:#f0fff8;border-radius:12px;border:1px solid #c8f0e0">
       <div style="position:relative">
-        <div class="avatar-box" onclick="document.getElementById('profPhotoInput').click()" style="width:72px;height:72px">
-          <img id="profAvatarPreview" src="${u.photo||''}" style="display:${u.photo?'block':'none'};width:100%;height:100%;object-fit:cover">
-          <span id="profAvatarPlus" style="font-size:22px;color:#aaa;display:${u.photo?'none':'block'}">+</span>
+        <div class="avatar-box" onclick="document.getElementById('profPhotoInput').click()" style="width:76px;height:76px;border:2px solid #1D9E75">
+          <img id="profAvatarPreview" src="${u.photo||''}" style="display:${u.photo?'block':'none'};width:100%;height:100%;object-fit:cover;border-radius:50%">
+          <span id="profAvatarPlus" style="font-size:24px;color:#1D9E75;display:${u.photo?'none':'block'}">📸</span>
         </div>
+        <div style="position:absolute;bottom:0;right:0;background:#1D9E75;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer" onclick="document.getElementById('profPhotoInput').click()">✏️</div>
         <input type="file" accept="image/*" id="profPhotoInput" style="display:none" onchange="previewImg('profPhotoInput','profAvatarPreview','profAvatarPlus')">
       </div>
-      <div>
-        <div style="font-size:15px;font-weight:700">${u.name}</div>
-        <div style="font-size:12px;color:#888;margin-top:2px"><span class="badge badge-${u.role}">${u.role}</span> ${u.id}</div>
+      <div style="flex:1">
+        <div style="font-size:16px;font-weight:800">${u.name}</div>
+        <div style="margin-top:4px"><span class="badge badge-${u.role}">${u.role}</span> <span class="id-badge">${u.id}</span></div>
+        ${u.area?`<div style="font-size:11px;color:#888;margin-top:4px">📍 ${u.area}</div>`:''}
+        ${u.bloodGroup?`<div style="font-size:11px;color:#E24B4A;font-weight:600;margin-top:2px">🩸 ${u.bloodGroup}</div>`:''}
       </div>
     </div>
-    <label>Name</label><div class="inp-wrap"><span class="inp-icon">👤</span><input type="text" id="profName"</div> value="${u.name||''}">
-    <label>Mobile No</label>
-    <input type="text" id="profMobile" value="${u.mobile||''}" maxlength="12" oninput="autoFormatMobile(this,'profMobileStatus')">
+    <!-- Personal Info -->
+    <div style="font-size:11px;font-weight:700;color:#888;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:10px">Personal Info | ذاتی معلومات</div>
+    <label>Full Name * <span style="font-size:10px;color:#1D9E75">پورا نام</span></label>
+    <div class="inp-wrap"><span class="inp-icon">👤</span><input type="text" id="profName" value="${u.name||''}" placeholder="Full name"></div>
+    <label>Mobile No * <span style="font-size:10px;color:#1D9E75">موبائل نمبر</span></label>
+    <input type="text" id="profMobile" value="${u.mobile||''}" maxlength="12" oninput="autoFormatMobile(this,'profMobileStatus')" placeholder="0300-1234567">
     <div id="profMobileStatus" style="display:none;margin-top:4px;font-size:12px;padding:6px 10px;border-radius:6px"></div>
-    <label>CNIC No <span style="font-size:10px;color:#1D9E75;font-weight:500">شناختی کارڈ</span></label>
-    <input type="text" id="profCnic" value="${u.cnic||''}" maxlength="15" oninput="autoFormatCnic(this,'profCnicStatus')">
+    <label>CNIC No <span style="font-size:10px;color:#888">شناختی کارڈ (optional)</span></label>
+    <input type="text" id="profCnic" value="${u.cnic||''}" maxlength="15" oninput="autoFormatCnic(this,'profCnicStatus')" placeholder="00000-0000000-0">
     <div id="profCnicStatus" style="display:none;margin-top:4px;font-size:12px;padding:6px 10px;border-radius:6px"></div>
-    <label>Area <span style="font-size:10px;color:#1D9E75;font-weight:500">علاقہ</span></label><select id="profArea" class="area-sel"></select>
-    <label>Profession <span style="font-size:10px;color:#1D9E75;font-weight:500">پیشہ</span></label><select id="profProfession" class="prof-sel"></select>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div>
+        <label>Area <span style="font-size:10px;color:#1D9E75">علاقہ</span></label>
+        <select id="profArea" class="area-sel"></select>
+      </div>
+      <div>
+        <label>Blood Group <span style="font-size:10px;color:#E24B4A">بلڈ گروپ</span></label>
+        <select id="profBloodGroup">
+          <option value="">-- Select --</option>
+          ${BLOOD_GROUPS.map(g=>`<option value="${g}" ${g===u.bloodGroup?'selected':''}>${g}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <label>Profession <span style="font-size:10px;color:#1D9E75">پیشہ</span></label>
+    <select id="profProfession" class="prof-sel"></select>
+    <label>Address / Additional Info <span style="font-size:10px;color:#888">پتہ</span></label>
+    <input type="text" id="profAddress" value="${u.address||''}" placeholder="Address or additional info (optional)">
     ${['admin','manager','developer'].includes(currentRole)?`
     <div style="margin-top:12px;background:#f9f9f9;border-radius:8px;padding:12px">
       <div style="font-size:13px;font-weight:600;margin-bottom:4px">Update Signature</div>
@@ -3591,10 +3737,15 @@ function saveProfile(){
     if(cnic)currentUser.cnic=cnic;
     currentUser.area=document.getElementById('profArea').value||currentUser.area;
     currentUser.profession=document.getElementById('profProfession').value||currentUser.profession;
+    const bg=(document.getElementById('profBloodGroup')||{value:''}).value;
+    if(bg)currentUser.bloodGroup=bg;
+    const addr=(document.getElementById('profAddress')||{value:''}).value.trim();
+    if(addr)currentUser.address=addr;
     if(photo)currentUser.photo=photo;
     if(sig)currentUser.signature=sig;
     if(newPwd){currentUser.password=newPwd;}
     FS.save('users',currentUser.id,currentUser);
+    try{saveLocalCache();}catch(e){}
     DB.auditLog.push({by:currentUser.id,action:'Profile Updated',target:currentUser.name,detail:'Self profile update',date:today()});
     // Update header avatar
     const av=document.getElementById('dashAvatar');
@@ -4321,7 +4472,7 @@ function adCheckMobile(val){
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
             <div style="background:#fff;border-radius:8px;padding:8px;text-align:center">
               <div style="font-size:10px;color:#888">Total Donated</div>
-              <div style="font-size:16px;font-weight:700;color:#0F6E56">Rs ${fmt(totalDon)}</div>
+              <div style="font-size:16px;font-weight:700;color:#0F6E56">${fmt(totalDon)}</div>
             </div>
             <div style="background:#fff;border-radius:8px;padding:8px;text-align:center">
               <div style="font-size:10px;color:#888">Donations</div>
@@ -4806,10 +4957,10 @@ T.dash = function(){
     <div style="font-size:16px;color:${roleColors[currentRole]||'#888'};font-weight:600">${currentUser.name} <span class="badge badge-${currentRole}">${currentRole}</span></div>
   </div>
   <div class="stat-grid">
-    <div class="stat-card"><div class="stat-label">My Income</div><div class="stat-val" style="color:#0F6E56">Rs ${fmt(income)}</div></div>
-    <div class="stat-card"><div class="stat-label">Expenses</div><div class="stat-val" style="color:#E24B4A">Rs ${fmt(exp)}</div></div>
-    <div class="stat-card"><div class="stat-label">Transfer Out</div><div class="stat-val" style="color:#BA7517">Rs ${fmt(sent)}</div></div>
-    <div class="stat-card"><div class="stat-label">Cash in Hand</div><div class="stat-val" style="color:#185FA5">Rs ${fmt(cash)}</div></div>
+    <div class="stat-card"><div class="stat-label">My Income</div><div class="stat-val" style="color:#0F6E56">${fmt(income)}</div></div>
+    <div class="stat-card"><div class="stat-label">Expenses</div><div class="stat-val" style="color:#E24B4A">${fmt(exp)}</div></div>
+    <div class="stat-card"><div class="stat-label">Transfer Out</div><div class="stat-val" style="color:#BA7517">${fmt(sent)}</div></div>
+    <div class="stat-card"><div class="stat-label">Cash in Hand</div><div class="stat-val" style="color:#185FA5">${fmt(cash)}</div></div>
   </div>
   ${pt>0?`<div class="info-box warning">📩 ${pt} transfer(s) pending — go to Transfer tab to confirm.</div>`:''}
   ${currentRole==='developer'&&DB.pendingApprovals.length>0?`<div class="info-box warning">⚠️ ${DB.pendingApprovals.length} account approval(s) pending.</div>`:''}
@@ -4818,22 +4969,22 @@ T.dash = function(){
       <div style="font-size:11px;font-weight:700;color:#333">Recent Entries | حالیہ اندراجات</div>
       <button onclick="selectTab('myentries')" style="font-size:10px;color:#1D9E75;background:none;border:none;cursor:pointer;font-weight:600">View All →</button>
     </div>
-    ${myD.length===0?'<p style="font-size:11px;color:#888">No entries yet.</p>':myD.slice(-5).reverse().map(d=>{const dn=DB.donors.find(x=>x.id===d.donorId)||{name:'Unknown',area:''};return `<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:0.5px solid #f5f5f5">${avatarHtml(dn.photo,dn.name,22)}<div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${dn.name}</div><div style="font-size:10px;color:#aaa">${d.date}</div></div><div style="font-size:11px;font-weight:700;color:#0F6E56;white-space:nowrap">+Rs ${fmt(d.amount)}</div></div>`;}).join('')}
+    ${myD.length===0?'<p style="font-size:11px;color:#888">No entries yet.</p>':myD.slice(-5).reverse().map(d=>{const dn=DB.donors.find(x=>x.id===d.donorId)||{name:'Unknown',area:''};return `<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:0.5px solid #f5f5f5">${avatarHtml(dn.photo,dn.name,22)}<div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${dn.name}</div><div style="font-size:10px;color:#aaa">${d.date}</div></div><div style="font-size:11px;font-weight:700;color:#0F6E56;white-space:nowrap">+${fmt(d.amount)}</div></div>`;}).join('')}
   </div>
   <div style="background:#fff;border:0.5px solid #e8e8e8;border-radius:14px;padding:14px 12px">
     <div style="font-size:10px;font-weight:500;color:#999;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px">Quick Actions | فوری عمل</div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:7px">
-      ${['admin','manager','developer'].includes(currentRole)?`<button onclick="selectTab('donation')" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 2px 10px;border-radius:10px;border:0.5px solid #0F6E56;background:#E1F5EE;cursor:pointer"><span style="font-size:20px">💰</span><span style="font-size:9px;font-weight:500;color:#0F6E56">Donation</span></button>`:'<span></span>'}
-      ${['admin','manager','developer'].includes(currentRole)?`<button onclick="selectTab('expense')" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 2px 10px;border-radius:10px;border:0.5px solid #0F6E56;background:#E1F5EE;cursor:pointer"><span style="font-size:20px">📋</span><span style="font-size:9px;font-weight:500;color:#0F6E56">Expense</span></button>`:'<span></span>'}
-      <button onclick="selectTab('deceased')" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 2px 10px;border-radius:10px;border:0.5px solid #0F6E56;background:#E1F5EE;cursor:pointer"><span style="font-size:20px">🕌</span><span style="font-size:9px;font-weight:500;color:#0F6E56">Deceased</span></button>
-      ${currentRole!=='user'?`<button onclick="selectTab('slip')" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 2px 10px;border-radius:10px;border:0.5px solid #0F6E56;background:#E1F5EE;cursor:pointer"><span style="font-size:20px">🧾</span><span style="font-size:9px;font-weight:500;color:#0F6E56">Slip</span></button>`:'<span></span>'}
+      ${['admin','manager','developer'].includes(currentRole)?`<button onclick="selectTab('donation')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #0F6E56;background:#E1F5EE;cursor:pointer"><span style="font-size:19px">💰</span><span style="font-size:9px;font-weight:600;color:#085041">Donation</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">چندہ</span></button>`:'<span></span>'}
+      ${['admin','manager','developer'].includes(currentRole)?`<button onclick="selectTab('expense')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #0F6E56;background:#E1F5EE;cursor:pointer"><span style="font-size:19px">📋</span><span style="font-size:9px;font-weight:600;color:#085041">Expense</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">اخراجات</span></button>`:'<span></span>'}
+      <button onclick="selectTab('deceased')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #0F6E56;background:#E1F5EE;cursor:pointer"><span style="font-size:19px">🕌</span><span style="font-size:9px;font-weight:600;color:#085041">Deceased</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">وفات</span></button>
+      ${currentRole!=='user'?`<button onclick="selectTab('slip')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #0F6E56;background:#E1F5EE;cursor:pointer"><span style="font-size:19px">🧾</span><span style="font-size:9px;font-weight:600;color:#085041">Slip</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">سلپ</span></button>`:'<span></span>'}
     </div>
     <div style="height:0.5px;background:#eee;margin:6px 0 10px"></div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px">
-      ${currentRole!=='user'?`<button onclick="openMyDonationsQuick()" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 2px 10px;border-radius:10px;border:0.5px solid #ddd;background:#f9f9f9;cursor:pointer"><span style="font-size:20px">📊</span><span style="font-size:9px;font-weight:500;color:#888">My Don.</span></button>`:'<span></span>'}
-      ${currentRole!=='user'?`<button onclick="openMyExpensesQuick()" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 2px 10px;border-radius:10px;border:0.5px solid #ddd;background:#f9f9f9;cursor:pointer"><span style="font-size:20px">📑</span><span style="font-size:9px;font-weight:500;color:#888">My Exp.</span></button>`:'<span></span>'}
-      <button onclick="selectTab('search')" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 2px 10px;border-radius:10px;border:0.5px solid #185FA5;background:#E6F1FB;cursor:pointer"><span style="font-size:20px">🔍</span><span style="font-size:9px;font-weight:500;color:#185FA5">Search</span></button>
-      <button onclick="selectTab('contacts')" style="display:flex;flex-direction:column;align-items:center;gap:5px;padding:12px 2px 10px;border-radius:10px;border:0.5px solid #185FA5;background:#E6F1FB;cursor:pointer"><span style="font-size:20px">📒</span><span style="font-size:9px;font-weight:500;color:#185FA5">Contacts</span></button>
+      ${currentRole!=='user'?`<button onclick="openMyDonationsQuick()" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #ddd;background:#f5f5f5;cursor:pointer"><span style="font-size:19px">📊</span><span style="font-size:9px;font-weight:600;color:#555">My Don.</span><span style="font-size:8px;color:#555;opacity:0.75;direction:rtl">میرا چندہ</span></button>`:'<span></span>'}
+      ${currentRole!=='user'?`<button onclick="openMyExpensesQuick()" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #ddd;background:#f5f5f5;cursor:pointer"><span style="font-size:19px">📑</span><span style="font-size:9px;font-weight:600;color:#555">My Exp.</span><span style="font-size:8px;color:#555;opacity:0.75;direction:rtl">میرے اخراج</span></button>`:'<span></span>'}
+      <button onclick="selectTab('bloodbank')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #F09595;background:#FCEBEB;cursor:pointer"><span style="font-size:19px">🩸</span><span style="font-size:9px;font-weight:600;color:#A32D2D">Blood Bank</span><span style="font-size:8px;color:#A32D2D;opacity:0.75;direction:rtl">بلڈ بینک</span></button>
+      <button onclick="selectTab('search')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #185FA5;background:#E6F1FB;cursor:pointer"><span style="font-size:19px">🔍</span><span style="font-size:9px;font-weight:600;color:#0C447C">Search</span><span style="font-size:8px;color:#0C447C;opacity:0.75;direction:rtl">تلاش</span></button>
     </div>
   </div>`
 };
@@ -4844,11 +4995,11 @@ function loadDashboard(){
     showScreen('dashScreen');
     addNotification('login','Logged In',currentUser.name+' ('+currentRole+') logged in at '+new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'}));
     const dashRoleEl=document.getElementById('dashRole');
-    if(dashRoleEl) dashRoleEl.innerHTML=`<span style="color:rgba(255,255,255,0.8)">${currentRole.charAt(0).toUpperCase()+currentRole.slice(1)}</span> — <span style="color:#fff;font-weight:600">${currentUser.name}</span>`;
+    if(dashRoleEl) dashRoleEl.innerHTML=`<span style="color:#fff;font-weight:700;font-size:15px">${currentUser.name}</span> <span style="background:rgba(255,255,255,0.2);color:rgba(255,255,255,0.9);font-size:9px;font-weight:600;padding:2px 7px;border-radius:20px;vertical-align:middle;letter-spacing:0.3px">${currentRole}</span>`;
     const av=document.getElementById('dashAvatar');
     if(av){
       if(currentUser.photo)av.innerHTML=`<img src="${currentUser.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-      else av.textContent=currentUser.name.charAt(0);
+      else {av.textContent=currentUser.name.charAt(0).toUpperCase();av.style.fontSize='16px';av.style.fontWeight='800';}
     }
     try{renderLoginExtras();}catch(e){console.error('RLE:',e);}
     try{updateFooterOrgName();}catch(e){}
@@ -5129,7 +5280,7 @@ function openSMSReminders(){
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
             ${avatarHtml(donor.photo,donor.name,36)}
             <div><div style="font-size:12px;font-weight:700">${donor.name}</div>
-            <div style="font-size:10px;color:#888">Rs ${fmt(d.amount)} • ${d.date}</div></div>
+            <div style="font-size:10px;color:#888">${fmt(d.amount)} • ${d.date}</div></div>
           </div>
           <div style="font-size:10px;color:#555;background:#fff;padding:6px 8px;border-radius:6px;margin-bottom:8px;line-height:1.4">${sms}</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">

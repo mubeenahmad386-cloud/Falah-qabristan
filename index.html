@@ -1135,7 +1135,7 @@ T.dash=function(){
       </div>
 
       <!-- Right: logout only -->
-      <button onclick="logout()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:8px;color:#fff;font-size:11px;font-weight:700;padding:7px 12px;cursor:pointer;flex-shrink:0;letter-spacing:0.3px" title="Logout">OUT →</button>
+      <button onclick="logout()" style="background:#E24B4A;border:none;border-radius:8px;color:#fff;font-size:11px;font-weight:700;padding:7px 14px;cursor:pointer;flex-shrink:0">Logout</button>
     </div>
   </div>
   <!-- STATS -->
@@ -3251,12 +3251,13 @@ T.bloodbank=function(){
       <div style="font-size:12px;opacity:0.85">Search donors by blood group | بلڈ گروپ سے تلاش کریں</div>
     </div>
     <div class="card">
-      <label>Blood Group <span style="font-size:10px;color:#E24B4A">بلڈ گروپ</span></label>
-      <select id="bbBloodGroup" onchange="filterBloodBank()">
-        <option value="">-- All Blood Groups --</option>
-        ${BLOOD_GROUPS.map(g=>`<option value="${g}">${g}</option>`).join('')}
-      </select>
-      <div style="margin-top:10px;margin-bottom:6px">
+      <div style="font-size:11px;font-weight:600;color:#888;margin-bottom:8px">Blood Group | بلڈ گروپ</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+        <button onclick="selectBBBloodGroup('')" id="bbBG_ALL" style="background:#E24B4A;color:#fff;border:1px solid #E24B4A;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">All | سب</button>
+        ${BLOOD_GROUPS.map(g=>`<button onclick="selectBBBloodGroup('${g}')" id="bbBG_${g.replace('+','plus').replace('-','minus')}" style="background:#FCEBEB;color:#A32D2D;border:1px solid #F09595;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">${g}</button>`).join('')}
+      </div>
+      <input type="hidden" id="bbBloodGroup" value="">
+      <div style="margin-bottom:6px">
         <div style="font-size:11px;font-weight:600;color:#888;margin-bottom:6px">Area Filter | علاقہ</div>
         <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px" id="bbAreaBtns">
           ${uniqueAreas.map(a=>`<button onclick="filterBloodBank('${a}')" id="bbArea_${a.replace(/\s/g,'_')}" style="background:${a==='All'?'#E24B4A':'#f5f5f5'};color:${a==='All'?'#fff':'#333'};border:1px solid #ddd;padding:5px 12px;border-radius:20px;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0">${a}</button>`).join('')}
@@ -3265,6 +3266,19 @@ T.bloodbank=function(){
     </div>
     <div id="bbResults"></div>
   </div>`;
+}
+function selectBBBloodGroup(g){
+  // Update hidden input
+  const inp=document.getElementById('bbBloodGroup');
+  if(inp)inp.value=g;
+  // Highlight selected button
+  const allBtn=document.getElementById('bbBG_ALL');
+  if(allBtn){allBtn.style.background=g===''?'#E24B4A':'#FCEBEB';allBtn.style.color=g===''?'#fff':'#A32D2D';allBtn.style.borderColor=g===''?'#E24B4A':'#F09595';}
+  BLOOD_GROUPS.forEach(bg=>{
+    const btn=document.getElementById('bbBG_'+bg.replace('+','plus').replace('-','minus'));
+    if(btn){btn.style.background=bg===g?'#E24B4A':'#FCEBEB';btn.style.color=bg===g?'#fff':'#A32D2D';btn.style.borderColor=bg===g?'#E24B4A':'#F09595';}
+  });
+  filterBloodBank();
 }
 function filterBloodBank(area){
   const bg=(document.getElementById('bbBloodGroup')||{value:''}).value;
@@ -3277,7 +3291,7 @@ function filterBloodBank(area){
     if(btn){btn.style.background=a===activeArea?'#E24B4A':'#f5f5f5';btn.style.color=a===activeArea?'#fff':'#333';}
   });
   let filtered=DB.donors.filter(d=>d.bloodGroup);
-  if(bg)filtered=filtered.filter(d=>d.bloodGroup===bg);
+  if(bg)filtered=filtered.filter(d=>(d.bloodGroup||'').toUpperCase()===bg.toUpperCase());
   if(activeArea&&activeArea!=='All')filtered=filtered.filter(d=>(d.area||'')=== activeArea);
   filtered.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   const el=document.getElementById('bbResults');
@@ -4056,15 +4070,15 @@ T.lockuser=function(){
     <div style="display:flex;gap:8px;margin-bottom:12px">
       <div class="inp-wrap" style="flex:1;margin-bottom:0">
         <span class="inp-icon">🔍</span>
-        <input type="text" id="lockUserSearch" placeholder="Search name, mobile, ID, area... | تلاش کریں" oninput="renderLockUserList()" onkeyup="renderLockUserList()" style="font-size:13px">
+        <input type="text" id="lockUserSearch" placeholder="Search by name, mobile or ID | نام، موبائل یا ID" oninput="renderLockUserList()" onkeyup="renderLockUserList()" style="font-size:13px">
       </div>
       <button id="lockUserClearBtn" onclick="document.getElementById('lockUserSearch').value='';renderLockUserList();" style="background:#f5f5f5;border:1px solid #ddd;border-radius:8px;padding:0 12px;font-size:12px;cursor:pointer;color:#666;white-space:nowrap">✕ Clear</button>
     </div>
-    <div id="lockUserList">${renderLockUserListHtml(users,'')}</div>
+    <div id="lockUserList">${renderLockUserListHtml(DB.users.filter(u=>u.role!=='developer'),'')}</div>
   </div>`;
 }
 function renderLockUserListHtml(users,q){
-  const filtered=q?users.filter(u=>(u.name||'').toLowerCase().includes(q.toLowerCase())||normMob(u.mobile||'').includes(normMob(q))||(u.id||'').toLowerCase().includes(q.toLowerCase())||(u.area||'').toLowerCase().includes(q.toLowerCase())):users;
+  const ql=(q||'').toLowerCase();const filtered=ql?users.filter(u=>(u.name||'').toLowerCase().includes(ql)||normMob(u.mobile||'').includes(normMob(q))||(u.id||'').toLowerCase().includes(ql)):users;
   if(!filtered.length)return '<p style="font-size:13px;color:#888">No users found.</p>';
   const roles=['user','admin','manager'];
   return filtered.map(u=>`
@@ -5172,9 +5186,11 @@ function renderTab(key){
       logout_action:()=>{if(confirm('Are you sure you want to logout? | کیا آپ واقعی لاگ آؤٹ کرنا چاہتے ہیں؟'))logout();},
       donorprofileupdate:()=>filterDPU(),
       lockuser:()=>{
-        renderLockUserList();
-        const inp=document.getElementById('lockUserSearch');
-        if(inp){inp.oninput=renderLockUserList;inp.onkeyup=renderLockUserList;}
+        setTimeout(()=>{
+          renderLockUserList();
+          const inp=document.getElementById('lockUserSearch');
+          if(inp){inp.oninput=renderLockUserList;inp.onkeyup=renderLockUserList;}
+        },30);
       },
       search:()=>{
         window._searchFilter='name';

@@ -1058,22 +1058,15 @@ const T={};
 
 // ---- DASHBOARD ----
 T.dash=function(){
-  const orgLogo=ORG_CONFIG.logo?`<img src="${ORG_CONFIG.logo}" style="width:40px;height:40px;object-fit:contain;border-radius:10px">`:'<span style="font-size:28px">🪦</span>';
+  const orgLogo=ORG_CONFIG.logo?`<img src="${ORG_CONFIG.logo}" style="width:40px;height:40px;object-fit:contain;border-radius:10px">`:'<span style="font-size:26px">🪦</span>';
   const isUser=currentRole==='user';
-  // For user: show their OWN donation history (as donor)
-  // For admin/manager/dev: show entries they recorded
   let income,exp,cash,myD,sent;
   if(isUser){
-    // Find donor record linked to this user's mobile
     const myDonorRecord=DB.donors.find(d=>normMob(d.mobile)===normMob(currentUser.mobile))||null;
     const myDonorId=myDonorRecord?myDonorRecord.id:null;
-    // My lifetime donations (as donor)
     const myDons=myDonorId?DB.donations.filter(d=>d.donorId===myDonorId):[];
     income=myDons.reduce((s,d)=>s+d.amount,0);
-    exp=0; // users don't have expenses
-    cash=0;
-    sent=0;
-    myD=myDons;
+    exp=0; cash=0; sent=0; myD=myDons;
   } else {
     cash=calcCashInHand(currentUser.id);
     income=DB.donations.filter(d=>d.assignedTo?d.assignedTo===currentUser.id:d.by===currentUser.id).reduce((s,d)=>s+d.amount,0);
@@ -1084,55 +1077,78 @@ T.dash=function(){
   const pt=pendingTransfers();
   const statStyle="display:flex;flex-direction:column;cursor:pointer;-webkit-tap-highlight-color:transparent";
   return `
-  <div style="background:#0F6E56;border-radius:0 0 20px 20px;padding:16px 16px 20px;margin:-16px -12px 14px;position:relative;overflow:hidden">
+  <!-- HEADER: user info | org name+logo | logout -->
+  <div style="background:#0F6E56;border-radius:0 0 20px 20px;padding:14px 14px 18px;margin:-16px -12px 12px;position:relative;overflow:hidden">
     <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:rgba(255,255,255,0.06);border-radius:50%"></div>
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:1">
+    <div style="display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1">
+      <!-- Left: user photo + name + role -->
       <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;overflow:hidden;border:2px solid rgba(255,255,255,0.4);flex-shrink:0">
+        <div style="width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;overflow:hidden;border:2px solid rgba(255,255,255,0.35);flex-shrink:0">
           ${currentUser.photo?`<img src="${currentUser.photo}" style="width:100%;height:100%;object-fit:cover">`:(currentUser.name||'?')[0].toUpperCase()}
         </div>
         <div>
-          <div style="font-size:15px;font-weight:700;color:#fff">${currentUser.name}</div>
+          <div style="font-size:14px;font-weight:700;color:#fff;line-height:1.2">${currentUser.name}</div>
           <span style="background:rgba(255,255,255,0.18);color:rgba(255,255,255,0.9);font-size:9px;font-weight:600;padding:2px 8px;border-radius:20px">${currentRole}</span>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="text-align:right">
-          <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.9)">${ORG_CONFIG.name||'Falah e Qabristan'}</div>
-          <div style="font-size:9px;color:rgba(255,255,255,0.55);direction:rtl">${ORG_CONFIG.nameUrdu||'فلاح قبرستان'}</div>
-        </div>
-        <div style="width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;overflow:hidden;border:1.5px solid rgba(255,255,255,0.25)">
-          ${ORG_CONFIG.logo?`<img src="${ORG_CONFIG.logo}" style="width:40px;height:40px;object-fit:contain;border-radius:10px">`:'<span style="font-size:26px">🪦</span>'}
-        </div>
+      <!-- Middle: org name -->
+      <div style="text-align:center;flex:1;padding:0 6px">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.95)">${ORG_CONFIG.name||'Falah e Qabristan'}</div>
+        <div style="font-size:9px;color:rgba(255,255,255,0.55);direction:rtl">${ORG_CONFIG.nameUrdu||'فلاح قبرستان'}</div>
       </div>
+      <!-- Right: logout only -->
+      <button onclick="logout()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:8px;color:#fff;font-size:11px;font-weight:600;padding:7px 14px;cursor:pointer;white-space:nowrap;flex-shrink:0">🚪 Logout</button>
     </div>
-    <button onclick="logout()" style="position:absolute;top:12px;right:58px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:rgba(255,255,255,0.85);font-size:10px;padding:4px 10px;cursor:pointer;z-index:2">Logout</button>
   </div>
+  <!-- STATS -->
   <div class="stat-grid" style="grid-template-columns:1fr 1fr 1fr">
     ${isUser?`
-      <div class="stat-card-bi" onclick="openMyDonationsQuick()" style="${statStyle}"><div class="stat-label-bi"><span class="en">Donated</span><span class="ur">اعانت</span></div><div class="stat-val" style="color:#0F6E56;font-size:15px;font-weight:800;margin-top:4px;letter-spacing:-0.3px">${fmt(income)}</div></div>
+      <div class="stat-card-bi" onclick="openMyDonationsQuick()" style="${statStyle}"><div class="stat-label-bi"><span class="en">Donated</span><span class="ur">اعانت</span></div><div class="stat-val" style="color:#0F6E56;font-size:15px;font-weight:800;margin-top:4px">${fmt(income)}</div></div>
       <div class="stat-card-bi" style="${statStyle}"><div class="stat-label-bi"><span class="en">Count</span><span class="ur">تعداد</span></div><div class="stat-val" style="color:#185FA5;font-size:19px;font-weight:800;margin-top:4px">${myD.length}</div></div>
     `:`
-      <div class="stat-card-bi" onclick="selectTab('myentries')" style="${statStyle}"><div class="stat-label-bi"><span class="en">Income</span><span class="ur">آمدنی</span></div><div class="stat-val" style="color:#0F6E56;font-size:14px;font-weight:800;margin-top:4px;letter-spacing:-0.3px">${fmt(income)}</div><div style="font-size:9px;color:#1D9E75;margin-top:3px;font-weight:600">tap to view →</div></div>
-      <div class="stat-card-bi" onclick="selectTab('myentries')" style="${statStyle}"><div class="stat-label-bi"><span class="en">Expenses</span><span class="ur">اخراجات</span></div><div class="stat-val" style="color:#E24B4A;font-size:14px;font-weight:800;margin-top:4px;letter-spacing:-0.3px">${fmt(exp)}</div><div style="font-size:9px;color:#E24B4A;margin-top:3px;font-weight:600">tap to view →</div></div>
-      <div class="stat-card-bi" onclick="selectTab('ledger')" style="${statStyle}"><div class="stat-label-bi"><span class="en">Cash</span><span class="ur">نقد</span></div><div class="stat-val" style="color:#185FA5;font-size:14px;font-weight:800;margin-top:4px;letter-spacing:-0.3px">${fmt(cash)}</div><div style="font-size:9px;color:#185FA5;margin-top:3px;font-weight:600">tap to view →</div></div>
+      <div class="stat-card-bi" onclick="selectTab('myentries')" style="${statStyle}"><div class="stat-label-bi"><span class="en">Income</span><span class="ur">آمدنی</span></div><div class="stat-val" style="color:#0F6E56;font-size:14px;font-weight:800;margin-top:4px">${fmt(income)}</div><div style="font-size:9px;color:#1D9E75;margin-top:3px;font-weight:600">tap to view →</div></div>
+      <div class="stat-card-bi" onclick="selectTab('myentries')" style="${statStyle}"><div class="stat-label-bi"><span class="en">Expenses</span><span class="ur">اخراجات</span></div><div class="stat-val" style="color:#E24B4A;font-size:14px;font-weight:800;margin-top:4px">${fmt(exp)}</div><div style="font-size:9px;color:#E24B4A;margin-top:3px;font-weight:600">tap to view →</div></div>
+      <div class="stat-card-bi" onclick="selectTab('ledger')" style="${statStyle}"><div class="stat-label-bi"><span class="en">Cash</span><span class="ur">نقد</span></div><div class="stat-val" style="color:#185FA5;font-size:14px;font-weight:800;margin-top:4px">${fmt(cash)}</div><div style="font-size:9px;color:#185FA5;margin-top:3px;font-weight:600">tap to view →</div></div>
     `}
   </div>
-  ${!isUser&&pt>0?`<div class="info-box warning">📩 ${pt} transfer(s) pending — Transfer tab dekhen.</div>`:''}
-  <div class="card" style="padding:10px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <div class="section-header" style="margin-bottom:0">
+  ${!isUser&&pt>0?`<div class="info-box warning">📩 ${pt} pending transfer(s) — check Transfer tab.</div>`:''}
+  <!-- RECENT ENTRIES -->
+  <div class="card" style="padding:10px;margin-bottom:10px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div class="section-header" style="margin-bottom:0">
         <span class="en">${isUser?'My Donations':'Recent Entries'}</span>
         <span class="ur">${isUser?'میری اعانت':'حالیہ اندراجات'}</span>
       </div>
-      ${!isUser?`<button onclick="selectTab('myentries')" style="font-size:10px;color:#1D9E75;background:none;border:none;cursor:pointer;font-weight:600;margin-top:4px">View All →</button>`:''}
+      ${!isUser?`<button onclick="selectTab('myentries')" style="font-size:10px;color:#1D9E75;background:none;border:none;cursor:pointer;font-weight:600">View All →</button>`:''}
     </div>
-    ${myD.length===0?'<p style="font-size:11px;color:#888">No entries found.</p>':myD.slice(-5).reverse().map(d=>{const dn=DB.donors.find(x=>x.id===d.donorId)||{name:currentUser.name,area:currentUser.area||''};return `<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:0.5px solid #f5f5f5">${avatarHtml(dn.photo,dn.name,22)}<div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${isUser?d.desc||'Donation':dn.name}</div><div style="font-size:10px;color:#aaa">${d.date}</div></div><div style="font-size:11px;font-weight:700;color:#0F6E56;white-space:nowrap">${fmt(d.amount)}</div></div>`;}).join('')}
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
-      <button onclick="openSMSReminders('received')" style="background:#E1F5EE;color:#085041;border:1px solid #9FE1CB;padding:10px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;width:100%">✅ Received<span style="display:block;font-size:9px;direction:rtl;margin-top:1px">وصول شدہ</span></button>
-      <button onclick="openSMSReminders('pending')" style="background:#FCEBEB;color:#A32D2D;border:1px solid #F09595;padding:10px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer;width:100%">⏰ Pending<span style="display:block;font-size:9px;direction:rtl;margin-top:1px">باقی ہے</span></button>
+    ${myD.length===0?'<p style="font-size:11px;color:#888">No entries found.</p>':myD.slice(-2).reverse().map(d=>{const dn=DB.donors.find(x=>x.id===d.donorId)||{name:currentUser.name,area:currentUser.area||''};return `<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:0.5px solid #f5f5f5">${avatarHtml(dn.photo,dn.name,22)}<div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${isUser?d.desc||'Donation':dn.name}</div><div style="font-size:10px;color:#aaa">${d.date}</div></div><div style="font-size:11px;font-weight:700;color:#0F6E56;white-space:nowrap">${fmt(d.amount)}</div></div>`;}).join('')}
+  </div>
+  <!-- QUICK ACTIONS -->
+  ${!isUser?`
+  <div class="card" style="padding:10px;margin-bottom:10px">
+    <div class="section-header"><span class="en">Quick Actions</span><span class="ur">فوری عمل</span></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px">
+      <button onclick="selectTab('donation')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #1D9E75;background:#E1F5EE;cursor:pointer"><span style="font-size:19px">💰</span><span style="font-size:9px;font-weight:600;color:#085041">Donation</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">چندہ</span></button>
+      <button onclick="selectTab('expense')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #BA7517;background:#FAEEDA;cursor:pointer"><span style="font-size:19px">📋</span><span style="font-size:9px;font-weight:600;color:#633806">Expense</span><span style="font-size:8px;color:#633806;opacity:0.75;direction:rtl">اخراجات</span></button>
+      <button onclick="selectTab('deceased')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #0F6E56;background:#E1F5EE;cursor:pointer"><span style="font-size:19px">🪦</span><span style="font-size:9px;font-weight:600;color:#085041">Deceased</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">وفات</span></button>
+      <button onclick="selectTab('slip')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #185FA5;background:#E6F1FB;cursor:pointer"><span style="font-size:19px">🧾</span><span style="font-size:9px;font-weight:600;color:#0C447C">Slip</span><span style="font-size:8px;color:#0C447C;opacity:0.75;direction:rtl">سلپ</span></button>
     </div>
-  </div>`;
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+      <button onclick="selectTab('myentries')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #ddd;background:#f5f5f5;cursor:pointer"><span style="font-size:19px">📊</span><span style="font-size:9px;font-weight:600;color:#444">My Don.</span><span style="font-size:8px;color:#444;opacity:0.75;direction:rtl">میرا چندہ</span></button>
+      <button onclick="selectTab('myentries')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #ddd;background:#f5f5f5;cursor:pointer"><span style="font-size:19px">📑</span><span style="font-size:9px;font-weight:600;color:#444">My Exp.</span><span style="font-size:8px;color:#444;opacity:0.75;direction:rtl">میرے اخراج</span></button>
+      <button onclick="selectTab('bloodbank')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #E24B4A;background:#FCEBEB;cursor:pointer"><span style="font-size:19px">🩸</span><span style="font-size:9px;font-weight:600;color:#A32D2D">Blood Bank</span><span style="font-size:8px;color:#A32D2D;opacity:0.75;direction:rtl">بلڈ بینک</span></button>
+      <button onclick="selectTab('search')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #185FA5;background:#E6F1FB;cursor:pointer"><span style="font-size:19px">🔍</span><span style="font-size:9px;font-weight:600;color:#0C447C">Search</span><span style="font-size:8px;color:#0C447C;opacity:0.75;direction:rtl">تلاش</span></button>
+    </div>
+  </div>
+  `:`
+  <div class="card" style="padding:10px;margin-bottom:10px">
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+      <button onclick="selectTab('bloodbank')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 2px;border-radius:10px;border:0.5px solid #E24B4A;background:#FCEBEB;cursor:pointer"><span style="font-size:22px">🩸</span><span style="font-size:10px;font-weight:600;color:#A32D2D">Blood Bank</span><span style="font-size:9px;color:#A32D2D;opacity:0.75;direction:rtl">بلڈ بینک</span></button>
+      <button onclick="selectTab('search')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 2px;border-radius:10px;border:0.5px solid #185FA5;background:#E6F1FB;cursor:pointer"><span style="font-size:22px">🔍</span><span style="font-size:10px;font-weight:600;color:#0C447C">Search</span><span style="font-size:9px;color:#0C447C;opacity:0.75;direction:rtl">تلاش</span></button>
+    </div>
+  </div>
+  `}
+  `;
 };
 
 // ---- DONATION ENTRY ----
@@ -4169,7 +4185,7 @@ T.datamanager=function(){
         <div style="font-size:13px;font-weight:700">💰 Donations (${DB.donations.length})</div>
         <button onclick="devDeleteAll('donations')" style="background:#E24B4A;color:#fff;border:none;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">🗑️ Delete All</button>
       </div>
-      ${DB.donations.slice(-5).reverse().map(d=>{const dn=DB.donors.find(x=>x.id===d.donorId)||{name:'Unknown'};return `
+      ${DB.donations.slice(-2).reverse().map(d=>{const dn=DB.donors.find(x=>x.id===d.donorId)||{name:'Unknown'};return `
         <div class="entry-row">
           <div><div class="entry-name">${dn.name} — Rs ${fmt(d.amount)}</div><div class="entry-sub">${d.date} • ${d.id}</div></div>
           <button onclick="devDeleteOne('donations','${d.id}')" style="background:#E24B4A;color:#fff;border:none;padding:4px 8px;border-radius:5px;font-size:11px;cursor:pointer">🗑️</button>
@@ -4183,7 +4199,7 @@ T.datamanager=function(){
         <div style="font-size:13px;font-weight:700">📋 Expenses (${DB.expenses.length})</div>
         <button onclick="devDeleteAll('expenses')" style="background:#E24B4A;color:#fff;border:none;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">🗑️ Delete All</button>
       </div>
-      ${DB.expenses.slice(-5).reverse().map(e=>`
+      ${DB.expenses.slice(-2).reverse().map(e=>`
         <div class="entry-row">
           <div><div class="entry-name">${e.desc} — Rs ${fmt(e.amount)}</div><div class="entry-sub">${e.date} • ${e.billNo}</div></div>
           <button onclick="devDeleteOne('expenses','${e.id}')" style="background:#E24B4A;color:#fff;border:none;padding:4px 8px;border-radius:5px;font-size:11px;cursor:pointer">🗑️</button>
@@ -4880,6 +4896,7 @@ function getMenuConfig(){
       {icon:'📱', label:'SMS Reminders / یاد دہانی', tab:'smsreminders'},
       {icon:'🩸', label:'Blood Bank / بلڈ بینک', tab:'bloodbank'},
       {icon:'👤', label:'Profile / پروفائل', tab:'profile'},
+      {icon:'🚪', label:'Logout / لاگ آؤٹ', tab:'logout_action'},
     ]
   };
 
@@ -4888,7 +4905,6 @@ function getMenuConfig(){
   if(['manager','developer'].includes(currentRole)) forms.items.push({icon:'📋', label:'Expense / اخراجات', tab:'expense'});
   forms.items.push({icon:'⚰️', label:'Deceased / وفات', tab:'deceased'});
   if(currentRole==='admin') forms.items.push({icon:'✅', label:'Confirm / تصدیق', tab:'decconfirm'});
-  if(['admin','manager','developer'].includes(currentRole)) forms.items.push({icon:'📊', label:'My Entries / میری اندراجات', tab:'myentries'});
 
   const reports = {
     key:'reports', title:'Reports / رپورٹس',
@@ -5054,6 +5070,7 @@ function renderTab(key){
         if(el)el.innerHTML='<div style="text-align:center;padding:24px;color:#aaa"><div style="font-size:28px;margin-bottom:8px">🔎</div><div style="font-size:12px">Type to search | تلاش کے لیے لکھیں</div></div>';
       },
       smsreminders:()=>{},
+      logout_action:()=>{if(confirm('Are you sure you want to logout? | کیا آپ واقعی لاگ آؤٹ کرنا چاہتے ہیں؟'))logout();},
       donorprofileupdate:()=>filterDPU(),
       lockuser:()=>renderLockUserList(),
       search:()=>{
@@ -5117,51 +5134,7 @@ const TAB_LABELS={
 // ENGLISH UI OVERRIDES — override existing functions
 // ============================================================
 
-// T.dash — English dashboard
-T.dash = function(){
-  const cash=calcCashInHand(currentUser.id);
-  const income=DB.donations.filter(d=>d.by===currentUser.id).reduce((s,d)=>s+d.amount,0);
-  const exp=DB.expenses.filter(e=>e.by===currentUser.id).reduce((s,e)=>s+e.amount,0);
-  const sent=DB.transfers.filter(t=>t.from===currentUser.id&&t.received).reduce((s,t)=>s+t.amount,0);
-  const myD=DB.donations.filter(d=>d.by===currentUser.id);
-  const pt=pendingTransfers();
-  const roleColors={user:'#0F6E56',admin:'#185FA5',manager:'#BA7517',developer:'#993556'};
-  return `<div style="margin-bottom:14px">
-    <div style="font-size:20px;font-weight:700">Welcome back,</div>
-    <div style="font-size:16px;color:${roleColors[currentRole]||'#888'};font-weight:600">${currentUser.name} <span class="badge badge-${currentRole}">${currentRole}</span></div>
-  </div>
-  <div class="stat-grid">
-    <div class="stat-card"><div class="stat-label">My Income</div><div class="stat-val" style="color:#0F6E56">${fmt(income)}</div></div>
-    <div class="stat-card"><div class="stat-label">Expenses</div><div class="stat-val" style="color:#E24B4A">${fmt(exp)}</div></div>
-    <div class="stat-card"><div class="stat-label">Transfer Out</div><div class="stat-val" style="color:#BA7517">${fmt(sent)}</div></div>
-    <div class="stat-card"><div class="stat-label">Cash in Hand</div><div class="stat-val" style="color:#185FA5">${fmt(cash)}</div></div>
-  </div>
-  ${pt>0?`<div class="info-box warning">📩 ${pt} transfer(s) pending — go to Transfer tab to confirm.</div>`:''}
-  ${currentRole==='developer'&&DB.pendingApprovals.length>0?`<div class="info-box warning">⚠️ ${DB.pendingApprovals.length} account approval(s) pending.</div>`:''}
-  <div class="card" style="padding:10px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-      <div style="font-size:11px;font-weight:700;color:#333">Recent Entries | حالیہ اندراجات</div>
-      <button onclick="selectTab('myentries')" style="font-size:10px;color:#1D9E75;background:none;border:none;cursor:pointer;font-weight:600">View All →</button>
-    </div>
-    ${myD.length===0?'<p style="font-size:11px;color:#888">No entries yet.</p>':myD.slice(-5).reverse().map(d=>{const dn=DB.donors.find(x=>x.id===d.donorId)||{name:'Unknown',area:''};return `<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:0.5px solid #f5f5f5">${avatarHtml(dn.photo,dn.name,22)}<div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${dn.name}</div><div style="font-size:10px;color:#aaa">${d.date}</div></div><div style="font-size:11px;font-weight:700;color:#0F6E56;white-space:nowrap">+${fmt(d.amount)}</div></div>`;}).join('')}
-  </div>
-  <div style="background:#fff;border:0.5px solid #e8e8e8;border-radius:14px;padding:14px 12px">
-    <div style="font-size:10px;font-weight:500;color:#999;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px">Quick Actions | فوری عمل</div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:7px">
-      ${['admin','manager','developer'].includes(currentRole)?`<button onclick="selectTab('donation')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #0F6E56;background:#E1F5EE;cursor:pointer"><span style="font-size:19px">💰</span><span style="font-size:9px;font-weight:600;color:#085041">Donation</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">چندہ</span></button>`:'<span></span>'}
-      ${['admin','manager','developer'].includes(currentRole)?`<button onclick="selectTab('expense')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #0F6E56;background:#E1F5EE;cursor:pointer"><span style="font-size:19px">📋</span><span style="font-size:9px;font-weight:600;color:#085041">Expense</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">اخراجات</span></button>`:'<span></span>'}
-      <button onclick="selectTab('deceased')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #0F6E56;background:#E1F5EE;cursor:pointer"><span style="font-size:19px">🪦</span><span style="font-size:9px;font-weight:600;color:#085041">Deceased</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">وفات</span></button>
-      ${currentRole!=='user'?`<button onclick="selectTab('slip')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #0F6E56;background:#E1F5EE;cursor:pointer"><span style="font-size:19px">🧾</span><span style="font-size:9px;font-weight:600;color:#085041">Slip</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">سلپ</span></button>`:'<span></span>'}
-    </div>
-    <div style="height:0.5px;background:#eee;margin:6px 0 10px"></div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px">
-      ${currentRole!=='user'?`<button onclick="openMyDonationsQuick()" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #ddd;background:#f5f5f5;cursor:pointer"><span style="font-size:19px">📊</span><span style="font-size:9px;font-weight:600;color:#555">My Don.</span><span style="font-size:8px;color:#555;opacity:0.75;direction:rtl">میرا چندہ</span></button>`:'<span></span>'}
-      ${currentRole!=='user'?`<button onclick="openMyExpensesQuick()" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #ddd;background:#f5f5f5;cursor:pointer"><span style="font-size:19px">📑</span><span style="font-size:9px;font-weight:600;color:#555">My Exp.</span><span style="font-size:8px;color:#555;opacity:0.75;direction:rtl">میرے اخراج</span></button>`:'<span></span>'}
-      <button onclick="selectTab('bloodbank')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #F09595;background:#FCEBEB;cursor:pointer"><span style="font-size:19px">🩸</span><span style="font-size:9px;font-weight:600;color:#A32D2D">Blood Bank</span><span style="font-size:8px;color:#A32D2D;opacity:0.75;direction:rtl">بلڈ بینک</span></button>
-      <button onclick="selectTab('search')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #185FA5;background:#E6F1FB;cursor:pointer"><span style="font-size:19px">🔍</span><span style="font-size:9px;font-weight:600;color:#0C447C">Search</span><span style="font-size:8px;color:#0C447C;opacity:0.75;direction:rtl">تلاش</span></button>
-    </div>
-  </div>`
-};
+// T.dash — English dashboard;
 
 // Patch loadDashboard
 function loadDashboard(){

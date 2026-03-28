@@ -2363,13 +2363,19 @@ function doSearch(){
   const hasBlood=(v)=>(v||'').toLowerCase()===ql||(v||'').toLowerCase().includes(ql);
 
   // Filter function per record type
+  // ALL filters REQUIRE q — never show results without a search query
+  if(!ql){
+    res.innerHTML='<p style="font-size:12px;color:#aaa;text-align:center;padding:20px 0">🔍 Start typing to search | تلاش شروع کریں</p>';
+    return;
+  }
+
   function matchDonor(d){
     if(filter==='name')   return has(d.name);
     if(filter==='id')     return hasId(d.id);
     if(filter==='mobile') return hasMob(d.mobile);
     if(filter==='area')   return has(d.area);
     if(filter==='blood')  return hasBlood(d.bloodGroup);
-    // all
+    // all — must match at least one field
     return has(d.name)||hasMob(d.mobile)||hasId(d.id)||has(d.area)||hasBlood(d.bloodGroup)||has(d.profession);
   }
   function matchUser(u){

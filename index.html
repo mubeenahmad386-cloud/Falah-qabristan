@@ -4075,12 +4075,13 @@ T.lockuser=function(){
   return `<div class="card">
     <h3><span class="bi-title"><span class="bi-en">Login Management</span><span class="bi-ur">لاگ ان کنٹرول</span></span></h3>
     <div style="display:flex;gap:8px;margin-bottom:12px">
-      <div class="inp-wrap" style="flex:1;margin-bottom:0">
-        <span class="inp-icon">🔍</span>
-        <input type="text" id="lockUserSearch" placeholder="Search by name, mobile or ID | نام، موبائل یا ID" oninput="renderLockUserList()" onkeyup="renderLockUserList()" style="font-size:13px">
-      </div>
-      <button id="lockUserClearBtn" onclick="document.getElementById('lockUserSearch').value='';renderLockUserList();" style="background:#f5f5f5;border:1px solid #ddd;border-radius:8px;padding:0 12px;font-size:12px;cursor:pointer;color:#666;white-space:nowrap">✕ Clear</button>
-    </div>
+       <div class="inp-wrap" style="flex:1;margin-bottom:0">
+         <span class="inp-icon">🔍</span>
+         <input type="text" id="lockUserSearch" placeholder="Name, mobile ya ID likhein..." onkeydown="if(event.key==='Enter')runLockSearch();" style="font-size:13px">
+       </div>
+       <button onclick="runLockSearch()" style="background:#1D9E75;border:none;border-radius:8px;padding:0 16px;font-size:16px;cursor:pointer;color:#fff">🔍</button>
+       <button onclick="document.getElementById('lockUserSearch').value='';renderLockUserList();" style="background:#f5f5f5;border:1px solid #ddd;border-radius:8px;padding:0 12px;font-size:12px;cursor:pointer;color:#666">✕</button>
+     </div>
     <div id="lockUserList"><p style="font-size:13px;color:#888">Loading...</p></div>
   </div>`;
 }
@@ -4120,20 +4121,27 @@ function changeUserRole(id, newRole){
   renderLockUserList();
   showPopup('✅','Role Updated',u.name+' is now '+newRole+'.');
 }
-function renderLockUserList(){
+function runLockSearch(){
   const inp=document.getElementById('lockUserSearch');
   const q=inp?inp.value.trim():'';
   const el=document.getElementById('lockUserList');
   if(!el)return;
   const allUsers=DB.users.filter(u=>u.role!=='developer');
+  if(!q){el.innerHTML=renderLockUserListHtml(allUsers,'');return;}
   const qLow=q.toLowerCase();
-  const shown=qLow?allUsers.filter(u=>{
+  const shown=allUsers.filter(u=>{
     const nameMatch=(u.name||'').toLowerCase().indexOf(qLow)!==-1;
     const mobMatch=normMob(u.mobile||'').indexOf(normMob(q))!==-1;
     const idMatch=(u.id||'').toLowerCase().indexOf(qLow)!==-1;
     return nameMatch||mobMatch||idMatch;
-  }):allUsers;
+  });
   el.innerHTML=renderLockUserListHtml(shown,'');
+}
+function renderLockUserList(){
+  const el=document.getElementById('lockUserList');
+  if(!el)return;
+  const allUsers=DB.users.filter(u=>u.role!=='developer');
+  el.innerHTML=renderLockUserListHtml(allUsers,'');
 }
 function toggleLock(id){
   const u=DB.users.find(x=>x.id===id);

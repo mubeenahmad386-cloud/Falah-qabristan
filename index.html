@@ -257,7 +257,7 @@ input[type=file]{padding:6px}
     <div class="login-logo-wrap">
       <div class="login-logo-box" id="loginLogo2"><span style="font-size:38px">🪦</span></div>
     </div>
-    <div style="font-size:17px;font-weight:800;color:#fff;margin-top:4px;padding-bottom:10px" id="loginOrgName2">Falah e Qabristan</div>
+    <div style="font-size:17px;font-weight:800;color:#fff;margin-top:4px" id="loginOrgName2">Falah e Qabristan</div>
     <div style="display:none" id="loginOrgNameUrdu2">فلاح قبرستان</div>
     <div id="loginOrgAddress2" style="display:none;font-size:11px;color:rgba(255,255,255,0.6);margin-top:4px"></div>
   </div>
@@ -936,7 +936,16 @@ function renderLoginExtras(){
   if(ll2){ll2.innerHTML=ORG_CONFIG.logo?`<img src="${ORG_CONFIG.logo}" style="max-height:72px;max-width:160px;object-fit:contain;border-radius:12px">`:'<span style="font-size:42px">🪦</span>';}
   const on2=document.getElementById('loginOrgName2');if(on2)on2.textContent=ORG_CONFIG.name||'Falah e Qabristan';
   const ou2=document.getElementById('loginOrgNameUrdu2');if(ou2)ou2.textContent=ORG_CONFIG.nameUrdu||'فلاح قبرستان';
-  const oa2=document.getElementById('loginOrgAddress2');if(oa2){if(ORG_CONFIG.address){oa2.textContent='📍 '+ORG_CONFIG.address;oa2.style.display='block';}else oa2.style.display='none';}
+  const oa2=document.getElementById('loginOrgAddress2');if(oa2){if(ORG_CONFIG.address){
+    oa2.textContent='📍 '+ORG_CONFIG.address;
+    oa2.style.display='block';
+    oa2.style.paddingBottom='10px';
+    if(on2)on2.style.paddingBottom='0';
+  }else{
+    oa2.style.display='none';
+    oa2.style.paddingBottom='0';
+    if(on2)on2.style.paddingBottom='10px';
+  }}
   // Logo on history screen
   const hli=document.getElementById('historyLogoImg');const hle=document.getElementById('historyLogoEmoji');const hls=document.getElementById('historyLogoSrc');
   if(hli&&hle&&hls){if(ORG_CONFIG.logo){hls.src=ORG_CONFIG.logo;hli.style.display='block';hle.style.display='none';}else{hli.style.display='none';hle.style.display='block';}}
@@ -1119,14 +1128,15 @@ T.dash=function(){
     </div>
   </div>
   <!-- STATS -->
-  <div class="stat-grid" style="grid-template-columns:1fr 1fr 1fr">
+  <div class="stat-grid" style="grid-template-columns:1fr 1fr">
     ${isUser?`
       <div class="stat-card-bi" onclick="openMyDonationsQuick()" style="${statStyle}"><div class="stat-label-bi"><span class="en">Donated</span><span class="ur">اعانت</span></div><div class="stat-val" style="color:#0F6E56;font-size:15px;font-weight:800;margin-top:4px">${fmt(income)}</div></div>
       <div class="stat-card-bi" style="${statStyle}"><div class="stat-label-bi"><span class="en">Count</span><span class="ur">تعداد</span></div><div class="stat-val" style="color:#185FA5;font-size:19px;font-weight:800;margin-top:4px">${myD.length}</div></div>
     `:`
-      <div class="stat-card-bi" onclick="selectTab('myentries')" style="${statStyle}"><div class="stat-label-bi"><span class="en">Income</span><span class="ur">آمدنی</span></div><div class="stat-val" style="color:#0F6E56;font-size:14px;font-weight:800;margin-top:4px">${fmt(income)}</div><div style="font-size:9px;color:#1D9E75;margin-top:3px;font-weight:600">tap to view →</div></div>
+      <div class="stat-card-bi" onclick="selectTab('myentries')" style="${statStyle}"><div class="stat-label-bi"><span class="en">My Income</span><span class="ur">آمدنی</span></div><div class="stat-val" style="color:#0F6E56;font-size:14px;font-weight:800;margin-top:4px">${fmt(income)}</div><div style="font-size:9px;color:#1D9E75;margin-top:3px;font-weight:600">tap to view →</div></div>
       <div class="stat-card-bi" onclick="selectTab('myentries')" style="${statStyle}"><div class="stat-label-bi"><span class="en">Expenses</span><span class="ur">اخراجات</span></div><div class="stat-val" style="color:#E24B4A;font-size:14px;font-weight:800;margin-top:4px">${fmt(exp)}</div><div style="font-size:9px;color:#E24B4A;margin-top:3px;font-weight:600">tap to view →</div></div>
-      <div class="stat-card-bi" onclick="selectTab('ledger')" style="${statStyle}"><div class="stat-label-bi"><span class="en">Cash</span><span class="ur">نقد</span></div><div class="stat-val" style="color:#185FA5;font-size:14px;font-weight:800;margin-top:4px">${fmt(cash)}</div><div style="font-size:9px;color:#185FA5;margin-top:3px;font-weight:600">tap to view →</div></div>
+      <div class="stat-card-bi" onclick="selectTab('transfer')" style="${statStyle}"><div class="stat-label-bi"><span class="en">Transfer Out</span><span class="ur">منتقلی</span></div><div class="stat-val" style="color:#BA7517;font-size:14px;font-weight:800;margin-top:4px">${fmt(sent)}</div><div style="font-size:9px;color:#BA7517;margin-top:3px;font-weight:600">tap to view →</div></div>
+      <div class="stat-card-bi" onclick="selectTab('ledger')" style="${statStyle}"><div class="stat-label-bi"><span class="en">Cash in Hand</span><span class="ur">نقد</span></div><div class="stat-val" style="color:#185FA5;font-size:14px;font-weight:800;margin-top:4px">${fmt(cash)}</div><div style="font-size:9px;color:#185FA5;margin-top:3px;font-weight:600">tap to view →</div></div>
     `}
   </div>
   ${!isUser&&pt>0?`<div class="info-box warning">📩 ${pt} pending transfer(s) — check Transfer tab.</div>`:''}

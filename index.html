@@ -1114,13 +1114,16 @@ T.dash=function(){
           ${currentUser.photo?`<img src="${currentUser.photo}" style="width:100%;height:100%;object-fit:cover">`:(currentUser.name||'?')[0].toUpperCase()}
         </div>
         <div>
-          <div style="font-size:14px;font-weight:700;color:#fff;line-height:1.2">${currentUser.name}</div>
-          <span style="background:rgba(255,255,255,0.18);color:rgba(255,255,255,0.9);font-size:9px;font-weight:600;padding:2px 8px;border-radius:20px">${currentRole}</span>
+          <div style="font-size:14px;font-weight:700;color:#fff;line-height:1.3">${currentUser.name}</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.8);margin-top:2px;display:flex;align-items:center;gap:5px">
+            <span>${currentUser.id||''}</span>
+            <span style="background:rgba(255,255,255,0.18);padding:1px 7px;border-radius:20px;font-size:9px;font-weight:600">${currentRole}</span>
+          </div>
         </div>
       </div>
 
       <!-- Right: logout only -->
-      <button onclick="logout()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:8px;color:#fff;font-size:11px;font-weight:600;padding:7px 14px;cursor:pointer;white-space:nowrap;flex-shrink:0">🚪 Logout</button>
+      <button onclick="logout()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:8px;color:#fff;font-size:20px;padding:6px 11px;cursor:pointer;flex-shrink:0;line-height:1" title="Logout">⏻</button>
     </div>
   </div>
   <!-- STATS -->
@@ -1166,9 +1169,14 @@ T.dash=function(){
   </div>
   `:`
   <div class="card" style="padding:10px;margin-bottom:10px">
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
-      <button onclick="selectTab('bloodbank')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 2px;border-radius:10px;border:0.5px solid #E24B4A;background:#FCEBEB;cursor:pointer"><span style="font-size:22px">🩸</span><span style="font-size:10px;font-weight:600;color:#A32D2D">Blood Bank</span><span style="font-size:9px;color:#A32D2D;opacity:0.75;direction:rtl">بلڈ بینک</span></button>
-      <button onclick="selectTab('search')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 2px;border-radius:10px;border:0.5px solid #185FA5;background:#E6F1FB;cursor:pointer"><span style="font-size:22px">🔍</span><span style="font-size:10px;font-weight:600;color:#0C447C">Search</span><span style="font-size:9px;color:#0C447C;opacity:0.75;direction:rtl">تلاش</span></button>
+    <div class="section-header"><span class="en">Quick Actions</span><span class="ur">فوری عمل</span></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+      <button onclick="selectTab('bloodbank')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:0.5px solid #E24B4A;background:#FCEBEB;cursor:pointer"><span style="font-size:20px">🩸</span><span style="font-size:9px;font-weight:600;color:#A32D2D">Blood Bank</span><span style="font-size:8px;color:#A32D2D;opacity:0.75;direction:rtl">بلڈ بینک</span></button>
+      <button onclick="selectTab('search')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:0.5px solid #185FA5;background:#E6F1FB;cursor:pointer"><span style="font-size:20px">🔍</span><span style="font-size:9px;font-weight:600;color:#0C447C">Search</span><span style="font-size:8px;color:#0C447C;opacity:0.75;direction:rtl">تلاش</span></button>
+      <button onclick="selectTab('contacts')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:0.5px solid #1D9E75;background:#E1F5EE;cursor:pointer"><span style="font-size:20px">📒</span><span style="font-size:9px;font-weight:600;color:#085041">Contacts</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">رابطے</span></button>
+      <button onclick="selectTab('suggestion')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:0.5px solid #BA7517;background:#FAEEDA;cursor:pointer"><span style="font-size:20px">💡</span><span style="font-size:9px;font-weight:600;color:#633806">Suggestion</span><span style="font-size:8px;color:#633806;opacity:0.75;direction:rtl">تجویز</span></button>
+      <button onclick="selectTab('balreport')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:0.5px solid #185FA5;background:#E6F1FB;cursor:pointer"><span style="font-size:20px">💼</span><span style="font-size:9px;font-weight:600;color:#0C447C">Balance</span><span style="font-size:8px;color:#0C447C;opacity:0.75;direction:rtl">بیلنس</span></button>
+      <button onclick="selectTab('adddonor')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:0.5px solid #0F6E56;background:#E1F5EE;cursor:pointer"><span style="font-size:20px">👤</span><span style="font-size:9px;font-weight:600;color:#085041">Add Donor</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">ڈونر شامل</span></button>
     </div>
   </div>
   `}
@@ -2228,7 +2236,12 @@ T.search=function(){
     </div>
     <div id="bloodGroupQuick" style="display:none;margin-bottom:8px">
       <div style="display:flex;gap:5px;flex-wrap:wrap">
-        ${BLOOD_GROUPS.map(g=>`<button onclick="document.getElementById('searchInput').value='${g}';doSearch();" style="background:#FCEBEB;color:#A32D2D;border:1px solid #F09595;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer">${g}</button>`).join('')}
+        ${BLOOD_GROUPS.map(g=>`<button onclick="selectBloodGroupSearch('${g}')" id="bq_${g.replace('+','plus').replace('-','minus')}" style="background:#FCEBEB;color:#A32D2D;border:1px solid #F09595;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer">${g}</button>`).join('')}
+      </div>
+    </div>
+    <div id="professionQuick" style="display:none;margin-bottom:8px">
+      <div style="display:flex;gap:5px;flex-wrap:wrap">
+        ${PROF_LIST.map(p=>`<button onclick="selectProfessionSearch('${p.en}')" id="pq_${p.en.replace(/[^a-zA-Z0-9]/g,'_')}" style="background:#E6F1FB;color:#185FA5;border:1px solid #B5D4F4;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer">${p.en}</button>`).join('')}
       </div>
     </div>
     <div id="searchResults"><p style="font-size:12px;color:#aaa;text-align:center;padding:20px 0">🔍 Start typing to search | تلاش شروع کریں</p></div>
@@ -2264,10 +2277,30 @@ function setSearchFilter(f){
   });
   const bqk=document.getElementById('bloodGroupQuick');
   if(bqk)bqk.style.display=f==='blood'?'flex':'none';
+  const pqk=document.getElementById('professionQuick');
+  if(pqk)pqk.style.display=f==='profession'?'flex':'none';
   const si=document.getElementById('searchInput');
   if(si){si.value='';si.focus();}
   const res=document.getElementById('searchResults');
   if(res)res.innerHTML='<p style="font-size:12px;color:#aaa;text-align:center;padding:20px 0">🔍 Start typing to search | تلاش شروع کریں</p>';
+}
+function selectBloodGroupSearch(g){
+  BLOOD_GROUPS.forEach(bg=>{
+    const btn=document.getElementById('bq_'+bg.replace('+','plus').replace('-','minus'));
+    if(btn){btn.style.background=bg===g?'#E24B4A':'#FCEBEB';btn.style.color=bg===g?'#fff':'#A32D2D';}
+  });
+  const si=document.getElementById('searchInput');
+  if(si){si.value=g;}
+  doSearch();
+}
+function selectProfessionSearch(p){
+  PROF_LIST.forEach(pr=>{
+    const btn=document.getElementById('pq_'+pr.en.replace(/[^a-zA-Z0-9]/g,'_'));
+    if(btn){btn.style.background=pr.en===p?'#185FA5':'#E6F1FB';btn.style.color=pr.en===p?'#fff':'#185FA5';}
+  });
+  const si=document.getElementById('searchInput');
+  if(si){si.value=p;}
+  doSearch();
 }
 function clearSearch(){
   const si=document.getElementById('searchInput');
@@ -2406,21 +2439,21 @@ function doSearch(){
   const has=(v)=>(v||'').toLowerCase().includes(ql);
   const hasMob=(v)=>normMob(v||'').includes(normMob(q));
   const hasId=(v)=>String(v||'').toLowerCase().includes(ql);
-  const hasBlood=(v)=>(v||'').toLowerCase().includes(ql);
+  const hasBlood=(v)=>(v||'').toUpperCase()===(q||'').toUpperCase();
   function matchDonor(d){
     if(filter==='name')       return has(d.name);
     if(filter==='id')         return hasId(d.id);
     if(filter==='mobile')     return hasMob(d.mobile);
-    if(filter==='blood')      return hasBlood(d.bloodGroup);
-    if(filter==='profession') return has(d.profession);
+    if(filter==='blood')      return (d.bloodGroup||'').toUpperCase()===(q||'').toUpperCase();
+    if(filter==='profession') return (d.profession||'').toLowerCase()===(q||'').toLowerCase();
     return has(d.name)||hasMob(d.mobile)||hasId(d.id)||has(d.area)||hasBlood(d.bloodGroup)||has(d.profession);
   }
   function matchUser(u){
     if(filter==='name')       return has(u.name);
     if(filter==='id')         return hasId(u.id);
     if(filter==='mobile')     return hasMob(u.mobile);
-    if(filter==='blood')      return hasBlood(u.bloodGroup);
-    if(filter==='profession') return has(u.profession);
+    if(filter==='blood')      return (u.bloodGroup||'').toUpperCase()===(q||'').toUpperCase();
+    if(filter==='profession') return (u.profession||'').toLowerCase()===(q||'').toLowerCase();
     return has(u.name)||hasMob(u.mobile)||hasId(u.id)||has(u.area)||hasBlood(u.bloodGroup)||has(u.profession);
   }
   const donors=DB.donors.filter(matchDonor);
@@ -4011,9 +4044,9 @@ T.lockuser=function(){
     <div style="display:flex;gap:8px;margin-bottom:12px">
       <div class="inp-wrap" style="flex:1;margin-bottom:0">
         <span class="inp-icon">🔍</span>
-        <input type="text" id="lockUserSearch" placeholder="Search name, mobile, ID, area... | تلاش کریں" style="font-size:13px">
+        <input type="text" id="lockUserSearch" placeholder="Search name, mobile, ID, area... | تلاش کریں" oninput="renderLockUserList()" style="font-size:13px">
       </div>
-      <button id="lockUserClearBtn" style="background:#f5f5f5;border:1px solid #ddd;border-radius:8px;padding:0 12px;font-size:12px;cursor:pointer;color:#666;white-space:nowrap">✕ Clear</button>
+      <button id="lockUserClearBtn" onclick="document.getElementById('lockUserSearch').value='';renderLockUserList();" style="background:#f5f5f5;border:1px solid #ddd;border-radius:8px;padding:0 12px;font-size:12px;cursor:pointer;color:#666;white-space:nowrap">✕ Clear</button>
     </div>
     <div id="lockUserList">${renderLockUserListHtml(users,'')}</div>
   </div>`;
@@ -4039,17 +4072,11 @@ function renderLockUserListHtml(users,q){
 }
 function renderLockUserList(){
   const inp=document.getElementById('lockUserSearch');
-  if(inp&&!inp._wired){
-    inp._wired=true;
-    inp.addEventListener('input',renderLockUserList);
-    inp.addEventListener('keyup',renderLockUserList);
-    const clearBtn=document.getElementById('lockUserClearBtn');
-    if(clearBtn)clearBtn.addEventListener('click',()=>{inp.value='';renderLockUserList();});
-  }
   const q=inp?inp.value.trim():'';
   const el=document.getElementById('lockUserList');
   if(!el)return;
-  el.innerHTML=renderLockUserListHtml(DB.users.filter(u=>u.role!=='developer'),q);
+  const allUsers=DB.users.filter(u=>u.role!=='developer');
+  el.innerHTML=renderLockUserListHtml(allUsers,q);
 }
 function toggleLock(id){
   const u=DB.users.find(x=>x.id===id);
@@ -4920,7 +4947,6 @@ function getMenuConfig(){
       {icon:'📱', label:'SMS Reminders / یاد دہانی', tab:'smsreminders'},
       {icon:'🩸', label:'Blood Bank / بلڈ بینک', tab:'bloodbank'},
       {icon:'👤', label:'Profile / پروفائل', tab:'profile'},
-      {icon:'🚪', label:'Logout / لاگ آؤٹ', tab:'logout_action'},
     ]
   };
 

@@ -629,15 +629,27 @@ async function loadAllData(){
   // Load from local cache first (instant offline display)
   loadLocalCache();
   try{
-    const [u,pa,don,dec,donations,exp,trf,log,profs,sugg]=await Promise.all([
+    const [u,pa,don,dec,donations,exp,trf,log,profs,sugg,fsNotifs]=await Promise.all([
       FS.loadAll('users'),FS.loadAll('pendingApprovals'),FS.loadAll('donors'),
       FS.loadAll('deceased'),FS.loadAll('donations'),FS.loadAll('expenses'),
       FS.loadAll('transfers'),FS.loadAll('auditLog'),FS.loadAll('professions'),
-      FS.loadAll('suggestions')
+      FS.loadAll('suggestions'),FS.loadAll('notifications')
     ]);
     DB.users=u;DB.pendingApprovals=pa;DB.donors=don;DB.deceased=dec;
     DB.donations=donations;DB.expenses=exp;DB.transfers=trf;DB.auditLog=log;
     DB.suggestions=sugg||[];
+    // Merge Firestore notifications for current user into local notifications
+    if(fsNotifs&&fsNotifs.length&&currentUser){
+      const myFsNotifs=fsNotifs.filter(n=>n.forUser===currentUser.id&&!n.read);
+      myFsNotifs.forEach(n=>{
+        if(!DB_NOTIFICATIONS.find(x=>x.id===n.id)){
+          DB_NOTIFICATIONS.unshift({id:n.id,type:n.type||'system',title:n.title,message:n.message,link:n.link||'',date:n.date,time:n.time||'',read:false});
+          // Mark as read in Firestore
+          FS.save('notifications',n.id,Object.assign({},n,{read:true}));
+        }
+      });
+      if(myFsNotifs.length)updateNotifBadge();
+    }
     // Load saved areas
     try{const areasDoc=await FS.loadAll('config');const aConf=areasDoc.find(x=>x.id==='areas');if(aConf&&aConf.list&&aConf.list.length>0)AREAS=aConf.list;}catch(e){}
     if(profs.length>0){
@@ -4054,21 +4066,38 @@ T.lockuser=function(){
 function renderLockUserListHtml(users,q){
   const filtered=q?users.filter(u=>(u.name||'').toLowerCase().includes(q.toLowerCase())||normMob(u.mobile||'').includes(normMob(q))||(u.id||'').toLowerCase().includes(q.toLowerCase())||(u.area||'').toLowerCase().includes(q.toLowerCase())):users;
   if(!filtered.length)return '<p style="font-size:13px;color:#888">No users found.</p>';
+  const roles=['user','admin','manager'];
   return filtered.map(u=>`
     <div style="background:#f9f9f9;border-radius:8px;padding:10px;margin-bottom:8px;border:1px solid #eee">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div style="flex:1">
           <div style="font-size:13px;font-weight:700">${u.name} <span class="badge badge-${u.role}">${u.role}</span></div>
           <div style="font-size:11px;color:#888;margin-top:2px">${u.mobile} • ${u.id} • ${u.area||'—'}</div>
           ${u.locked?'<span style="font-size:10px;color:#E24B4A;font-weight:600">🔒 Locked</span>':'<span style="font-size:10px;color:#1D9E75">🔓 Active</span>'}
+          <div style="margin-top:7px;display:flex;gap:4px;flex-wrap:wrap">
+            ${roles.map(r=>`<button onclick="changeUserRole('${u.id}','${r}')" style="font-size:9px;font-weight:600;padding:2px 8px;border-radius:20px;border:1.5px solid ${r==='user'?'#1D9E75':r==='admin'?'#185FA5':'#BA7517'};background:${u.role===r?(r==='user'?'#1D9E75':r==='admin'?'#185FA5':'#BA7517'):'transparent'};color:${u.role===r?'#fff':(r==='user'?'#1D9E75':r==='admin'?'#185FA5':'#BA7517')};cursor:pointer">${r}</button>`).join('')}
+          </div>
         </div>
-        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;margin-left:8px">
           <button class="btn-xs" style="background:${u.locked?'#1D9E75':'#E24B4A'};color:#fff;border:none;cursor:pointer" onclick="toggleLock('${u.id}')">${u.locked?'🔓 Unlock':'🔒 Lock'}</button>
           <button class="btn-xs" style="background:#185FA5;color:#fff;border:none;cursor:pointer" onclick="resetPwdPrompt('${u.id}')">🔑 Reset</button>
           <button class="btn-xs" style="background:#E24B4A;color:#fff;border:none;cursor:pointer" onclick="deleteUser('${u.id}')">🗑️ Delete</button>
         </div>
       </div>
     </div>`).join('');
+}
+function changeUserRole(id, newRole){
+  const u=DB.users.find(x=>x.id===id);
+  if(!u)return;
+  if(u.role===newRole)return;
+  const oldRole=u.role;
+  u.role=newRole;
+  FS.save('users',u.id,u);
+  const al={by:currentUser.id,action:'Role Changed',target:u.name,detail:oldRole+' → '+newRole,date:today()};
+  DB.auditLog.push(al);FS.save('auditLog','AL'+Date.now(),al);
+  addNotification('login','Role Changed',u.name+' changed from '+oldRole+' to '+newRole);
+  renderLockUserList();
+  showPopup('✅','Role Updated',u.name+' is now '+newRole+'.');
 }
 function renderLockUserList(){
   const inp=document.getElementById('lockUserSearch');
@@ -4805,8 +4834,28 @@ function submitSuggestion(){
   };
   DB.suggestions.push(sugg);
   FS.save('suggestions',sid,sugg);
-  // Notification
-  addNotification('system','Suggestion Sent','Your '+category+' has been sent to developer.');
+  // Notify current user
+  addNotification('system','Suggestion Sent','Your '+category+' has been submitted.');
+  // Send Firestore notification to all admins/managers/developers
+  const notifTargets=DB.users.filter(u=>['admin','manager','developer'].includes(u.role)&&u.id!==currentUser.id);
+  notifTargets.forEach(u=>{
+    const nid='NOTIF_SUGG_'+Date.now()+'_'+u.id;
+    const notifData={
+      id:nid,
+      forUser:u.id,
+      type:'system',
+      title:'💡 New Suggestion',
+      message:currentUser.name+' ('+currentUser.role+'): '+text.substring(0,60)+(text.length>60?'...':''),
+      category:category,
+      from:currentUser.id,
+      fromName:currentUser.name,
+      date:today(),
+      time:new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'}),
+      read:false,
+      link:'suggestions'
+    };
+    FS.save('notifications',nid,notifData);
+  });
   // Clear form
   document.getElementById('suggText').value='';
   if(statusEl){

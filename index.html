@@ -248,7 +248,7 @@ input[type=file]{padding:6px}
 <div id="loginScreen" class="screen active">
   <div class="login-hero">
     <div class="login-hero-dot"></div>
-    <div class="login-logo-box" id="loginLogo"><span style="font-size:38px">🕌</span></div>
+    <div class="login-logo-box" id="loginLogo"><span style="font-size:38px">🪦</span></div>
     <div id="loginOrgNameUrdu" class="login-org-name">فلاح قبرستان</div>
     <div id="loginOrgName" class="login-org-ur">Falah e Qabristan</div>
     <div id="loginOrgAddress" class="login-org-addr" style="display:none"></div>
@@ -504,16 +504,6 @@ input[type=file]{padding:6px}
 
 <!-- DASHBOARD SCREEN -->
 <div id="dashScreen" class="screen">
-  <div class="app-header" style="padding:10px 14px">
-    <div class="app-header-left" style="gap:10px">
-      <div id="dashAvatar" class="header-avatar" style="width:38px;height:38px;font-size:15px;border:2px solid rgba(255,255,255,0.5)"></div>
-      <div>
-        <div style="font-size:14px;font-weight:700;color:#fff;line-height:1.2" id="dashRole"></div>
-        <div style="font-size:10px;color:rgba(255,255,255,0.65);margin-top:1px" id="dashOrgName"></div>
-      </div>
-    </div>
-    <button class="btn-logout" onclick="logout()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);padding:7px 12px;border-radius:10px;color:#fff;font-size:11px;font-weight:600">Logout</button>
-  </div>
   <div class="content-area" id="tabContent"></div>
   <!-- Floating Action Button -->
 
@@ -625,7 +615,7 @@ function initFirebase(){
 // Loading overlay
 function showLoading(on){
   let el=document.getElementById('fbLoader');
-  if(!el&&on){el=document.createElement('div');el.id='fbLoader';el.innerHTML='<div style="font-size:40px;margin-bottom:10px">🕌</div><div style="font-size:15px;font-weight:600;color:#1D9E75">Loading...</div><div style="font-size:11px;color:#888;margin-top:4px">Syncing with server</div>';el.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:4px';document.body.appendChild(el);}
+  if(!el&&on){el=document.createElement('div');el.id='fbLoader';el.innerHTML='<div style="font-size:40px;margin-bottom:10px">🪦</div><div style="font-size:15px;font-weight:600;color:#1D9E75">Loading...</div><div style="font-size:11px;color:#888;margin-top:4px">Syncing with server</div>';el.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:4px';document.body.appendChild(el);}
   if(el)el.style.display=on?'flex':'none';
 }
 
@@ -744,7 +734,7 @@ function nextDecId(){
   return 'D'+(Math.max(1000,...nums)+1);
 }
 function nextEntryId(){return 'E'+String(Date.now()).slice(-6);}
-function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0);}
 // Bilingual popup messages
 const POPUP_UR={'Success!':'کامیابی!','Incomplete':'نامکمل','Duplicate':'ڈپلیکیٹ','Mismatch':'مطابقت نہیں','Weak Password':'کمزور پاس ورڈ','Weak':'کمزور','Mobile Short':'موبائل چھوٹا','CNIC Short':'شناختی کارڈ چھوٹا','Wrong Key':'غلط کی','User Not Found':'صارف نہیں ملا','Entry Saved':'اندراج محفوظ','Request Submitted':'درخواست جمع','Request Forward':'درخواست بھیجی','Bill Saved':'بل محفوظ','Transfer Sent':'رقم بھیجی گئی','Amount Received':'رقم موصول','Approved!':'منظور!','Rejected':'مسترد','Confirmed!':'تصدیق شدہ!','Locked':'بند','Unlocked':'کھلا','Deleted':'حذف','Updated':'اپ ڈیٹ','Saved':'محفوظ','Error':'خرابی','Insufficient Balance':'ناکافی بیلنس','Duplicate CNIC':'ڈپلیکیٹ شناختی کارڈ','Duplicate Mobile':'ڈپلیکیٹ موبائل','Account Created':'اکاؤنٹ بنایا','Submitted':'جمع کرایا','Password Reset':'پاس ورڈ ری سیٹ','Profile Updated':'پروفائل اپ ڈیٹ','Done':'مکمل','Required':'ضروری','Photo Added':'تصویر شامل','Logo Saved':'لوگو محفوظ'};
 const POPUP_MSG_UR={'Name, CNIC, mobile and password are required.':'نام، شناختی کارڈ، موبائل اور پاس ورڈ ضروری ہیں۔','Passwords do not match.':'پاس ورڈ مطابقت نہیں رکھتے۔','Password must be at least 4 characters.':'پاس ورڈ کم از کم 4 حروف کا ہونا چاہیے۔','An account with this mobile already exists.':'اس موبائل سے اکاؤنٹ پہلے سے موجود ہے۔','An account with this CNIC already exists.':'اس شناختی کارڈ سے اکاؤنٹ پہلے سے موجود ہے۔','Your request has been submitted. Login after developer approval.':'ڈیولپر کی منظوری کے بعد لاگ ان کر سکتے ہیں۔','Incorrect master key. Please try again.':'غلط ماسٹر کی۔ دوبارہ کوشش کریں۔','Name, mobile, CNIC and amount are required.':'نام، موبائل، شناختی کارڈ اور رقم ضروری ہے۔','Name is required.':'نام ضروری ہے۔','Please select a date range.':'براہ کرم تاریخ کی حد منتخب کریں۔','Please select a month.':'براہ کرم مہینہ منتخب کریں۔','Receiver and amount are required.':'وصول کنندہ اور رقم ضروری ہے۔','Description, amount and date are required.':'تفصیل، رقم اور تاریخ ضروری ہے۔','Address saved.':'پتہ محفوظ ہو گیا۔','Organization name saved!':'ادارے کا نام محفوظ ہو گیا!','Please enter an area name.':'براہ کرم علاقے کا نام درج کریں۔','Title, bank and account number are required.':'عنوان، بینک اور اکاؤنٹ نمبر ضروری ہے۔','Please select a photo first.':'پہلے تصویر منتخب کریں۔'};
@@ -926,7 +916,7 @@ function logout(){clearSession();
 function renderLoginExtras(){
   // Logo on login page
   const ll=document.getElementById('loginLogo');
-  if(ll){ll.innerHTML=ORG_CONFIG.logo?`<img src="${ORG_CONFIG.logo}" style="max-height:80px;max-width:180px;object-fit:contain;border-radius:10px">`:'<span style="font-size:38px">🕌</span>';}
+  if(ll){ll.innerHTML=ORG_CONFIG.logo?`<img src="${ORG_CONFIG.logo}" style="max-height:80px;max-width:180px;object-fit:contain;border-radius:10px">`:'<span style="font-size:38px">🪦</span>';}
   // Logo on history screen
   const hli=document.getElementById('historyLogoImg');const hle=document.getElementById('historyLogoEmoji');const hls=document.getElementById('historyLogoSrc');
   if(hli&&hle&&hls){if(ORG_CONFIG.logo){hls.src=ORG_CONFIG.logo;hli.style.display='block';hle.style.display='none';}else{hli.style.display='none';hle.style.display='block';}}
@@ -1068,6 +1058,7 @@ const T={};
 
 // ---- DASHBOARD ----
 T.dash=function(){
+  const orgLogo=ORG_CONFIG.logo?`<img src="${ORG_CONFIG.logo}" style="width:44px;height:44px;object-fit:contain;border-radius:12px">`:'<span style="font-size:30px">🪦</span>';
   const isUser=currentRole==='user';
   // For user: show their OWN donation history (as donor)
   // For admin/manager/dev: show entries they recorded
@@ -1092,7 +1083,33 @@ T.dash=function(){
   }
   const pt=pendingTransfers();
   const statStyle="display:flex;flex-direction:column;cursor:pointer;-webkit-tap-highlight-color:transparent";
-  return `<div class="stat-grid" style="grid-template-columns:1fr 1fr 1fr">
+  return `
+  <div style="background:#0F6E56;border-radius:0 0 20px 20px;padding:16px 16px 20px;margin:-16px -12px 14px;position:relative;overflow:hidden">
+    <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:rgba(255,255,255,0.06);border-radius:50%"></div>
+    <div style="position:absolute;bottom:-20px;left:-20px;width:80px;height:80px;background:rgba(255,255,255,0.04);border-radius:50%"></div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:1">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div id="dashAvatarInline" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;overflow:hidden;border:2px solid rgba(255,255,255,0.4);flex-shrink:0">
+          ${currentUser.photo?`<img src="${currentUser.photo}" style="width:100%;height:100%;object-fit:cover">`:(currentUser.name||'?')[0].toUpperCase()}
+        </div>
+        <div>
+          <div style="font-size:15px;font-weight:700;color:#fff">${currentUser.name}</div>
+          <span style="background:rgba(255,255,255,0.18);color:rgba(255,255,255,0.9);font-size:9px;font-weight:600;padding:2px 8px;border-radius:20px;letter-spacing:0.3px">${currentRole}</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="text-align:right">
+          <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.9)">${ORG_CONFIG.name||'Falah e Qabristan'}</div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.55);margin-top:1px;direction:rtl">${ORG_CONFIG.nameUrdu||'فلاح قبرستان'}</div>
+        </div>
+        <div style="width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;overflow:hidden;border:1.5px solid rgba(255,255,255,0.25)">${orgLogo}</div>
+      </div>
+    </div>
+    <div style="position:relative;z-index:1">
+      <button onclick="logout()" style="position:absolute;top:-36px;right:0;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:rgba(255,255,255,0.85);font-size:10px;padding:4px 10px;cursor:pointer">Logout</button>
+    </div>
+  </div>
+  <div class="stat-grid" style="grid-template-columns:1fr 1fr 1fr">
     ${isUser?`
       <div class="stat-card-bi" onclick="openMyDonationsQuick()" style="${statStyle}"><div class="stat-label-bi"><span class="en">Donated</span><span class="ur">اعانت</span></div><div class="stat-val" style="color:#0F6E56;font-size:15px;font-weight:800;margin-top:4px;letter-spacing:-0.3px">${fmt(income)}</div></div>
       <div class="stat-card-bi" style="${statStyle}"><div class="stat-label-bi"><span class="en">Count</span><span class="ur">تعداد</span></div><div class="stat-val" style="color:#185FA5;font-size:19px;font-weight:800;margin-top:4px">${myD.length}</div></div>
@@ -1624,7 +1641,7 @@ T.deceased=function(){
     <div class="section-bi"><span class="bi-en">Witness 2</span><span class="bi-ur">گواہ دوم</span></div>
     <label>Name</label><div class="inp-wrap"><span class="inp-icon">👤</span><input type="text" id="w2name"></div><label>Father</label><div class="inp-wrap"><span class="inp-icon">👨</span><input type="text" id="w2father"></div><label>Mobile No</label><div class="inp-wrap"><span class="inp-icon">📱</span><input type="text" id="w2mobile"></div>
     <div class="section-bi" style="margin-top:12px"><span class="bi-en">Imam / Clergy</span><span class="bi-ur">امام / مولوی</span></div>
-    <label>Imam Name <span style="font-size:10px;color:#1D9E75">امام کا نام</span></label><div class="inp-wrap"><span class="inp-icon">🕌</span><input type="text" id="imamName" placeholder="Imam / Maulvi name"></div>
+    <label>Imam Name <span style="font-size:10px;color:#1D9E75">امام کا نام</span></label><div class="inp-wrap"><span class="inp-icon">🪦</span><input type="text" id="imamName" placeholder="Imam / Maulvi name"></div>
     <label>Imam Mobile <span style="font-size:10px;color:#1D9E75">موبائل نمبر</span></label><div class="inp-wrap"><span class="inp-icon">📱</span><input type="text" id="imamMobile" placeholder="0300-1234567" maxlength="12" oninput="autoFormatMobile(this,null)"></div>
     <button class="btn btn-primary" style="margin-top:12px" onclick="submitDeceased()">Submit</button>
   </div>`;
@@ -1751,7 +1768,14 @@ T.area=function(){
   const gi=Object.values(byArea).reduce((s,v)=>s+v.income,0),ge=Object.values(byArea).reduce((s,v)=>s+v.expense,0);
   const dlBarArea=addDownloadBar('Area Report | علاقہ وار رپورٹ','areaReport');
   return `<div id="areaReport">${dlBarArea}<div class="card">
-    <button onclick="openSMSReminders()" style="width:100%;background:linear-gradient(135deg,#1D9E75,#0F6E56);color:#fff;border:none;padding:10px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:10px">📱 SMS Reminders | یاد دہانی</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <button onclick="openSMSReminders('received')" style="background:#E1F5EE;color:#085041;border:1px solid #9FE1CB;padding:10px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer">
+        ✅ Received<span style="display:block;font-size:9px;direction:rtl;margin-top:1px">وصول شدہ</span>
+      </button>
+      <button onclick="openSMSReminders('pending')" style="background:#FCEBEB;color:#A32D2D;border:1px solid #F09595;padding:10px;border-radius:10px;font-size:12px;font-weight:600;cursor:pointer">
+        ⏰ Pending<span style="display:block;font-size:9px;direction:rtl;margin-top:1px">باقی ہے</span>
+      </button>
+    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
       <div class="stat-card"><div class="stat-label">Total Income</div><div class="stat-val" style="color:#0F6E56;font-size:15px">${fmt(gi)}</div></div>
       <div class="stat-card"><div class="stat-label">Total Expenses</div><div class="stat-val" style="color:#E24B4A;font-size:15px">${fmt(ge)}</div></div>
@@ -2153,14 +2177,55 @@ function toggleReportGroup(id){
 
 // ---- SEARCH ----
 T.search=function(){
-  return `<div class="card"><h3><span class="bi-title"><span class="bi-en">Search</span><span class="bi-ur">تلاش</span></span></h3>
-    <div style="display:flex;gap:8px;margin-bottom:10px">
-      <div style="position:relative;flex:1"><span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:14px;color:#aaa">🔍</span><input type="text" placeholder="Mobile, name, area, ID... | تلاش کریں" id="searchInput" oninput="doSearch()" style="padding-left:30px;width:100%;padding:10px 10px 10px 34px;border:1px solid #ddd;border-radius:8px;font-size:13px"></div>
-      <button onclick="document.getElementById('searchInput').value='';doSearch();" style="background:#f5f5f5;border:1px solid #ddd;border-radius:8px;padding:0 12px;font-size:12px;cursor:pointer;color:#666;white-space:nowrap">✕ Clear</button>
+  const areas=['All',...new Set([...DB.donors,...DB.users].map(x=>x.area||'').filter(Boolean)).values()].sort();
+  return `<div class="card">
+    <h3><span class="bi-title"><span class="bi-en">Search</span><span class="bi-ur">تلاش</span></span></h3>
+    <!-- Main search bar -->
+    <div class="inp-wrap" style="margin-bottom:8px">
+      <span class="inp-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Name, ID, Mobile, Area, Blood Group... | تلاش کریں"
+        oninput="doSearch()" autocomplete="off" style="font-size:13px">
+      <button onclick="clearSearch()" style="position:absolute;right:10px;background:none;border:none;font-size:16px;color:#aaa;cursor:pointer;padding:0">✕</button>
     </div>
-    <div id="searchResults"><p style="font-size:13px;color:#888">Start typing...</p></div>
+    <!-- Filter chips row -->
+    <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px" id="searchFilterRow">
+      <button onclick="setSearchFilter('all')" id="sf_all" style="background:#1D9E75;color:#fff;border:1px solid #1D9E75;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">All | سب</button>
+      <button onclick="setSearchFilter('name')" id="sf_name" style="background:#f5f5f5;color:#333;border:1px solid #ddd;padding:4px 12px;border-radius:20px;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0">👤 Name | نام</button>
+      <button onclick="setSearchFilter('id')" id="sf_id" style="background:#f5f5f5;color:#333;border:1px solid #ddd;padding:4px 12px;border-radius:20px;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0">🪪 Personal ID</button>
+      <button onclick="setSearchFilter('mobile')" id="sf_mobile" style="background:#f5f5f5;color:#333;border:1px solid #ddd;padding:4px 12px;border-radius:20px;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0">📱 Mobile | موبائل</button>
+      <button onclick="setSearchFilter('area')" id="sf_area" style="background:#f5f5f5;color:#333;border:1px solid #ddd;padding:4px 12px;border-radius:20px;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0">📍 Area | علاقہ</button>
+      <button onclick="setSearchFilter('blood')" id="sf_blood" style="background:#f5f5f5;color:#333;border:1px solid #ddd;padding:4px 12px;border-radius:20px;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0">🩸 Blood Group | بلڈ گروپ</button>
+    </div>
+    <!-- Blood group quick filter (shown when blood filter active) -->
+    <div id="bloodGroupFilter" style="display:none;margin-bottom:8px">
+      <div style="display:flex;gap:5px;flex-wrap:wrap">
+        ${BLOOD_GROUPS.map(g=>`<button onclick="document.getElementById('searchInput').value='${g}';doSearch();" style="background:#FCEBEB;color:#A32D2D;border:1px solid #F09595;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer">${g}</button>`).join('')}
+      </div>
+    </div>
+    <div id="searchResults"><p style="font-size:12px;color:#aaa;text-align:center;padding:20px 0">🔍 Start typing to search | تلاش شروع کریں</p></div>
   </div>`;
 };
+
+window._searchFilter = 'all';
+function setSearchFilter(f){
+  window._searchFilter = f;
+  ['all','name','id','mobile','area','blood'].forEach(k=>{
+    const btn=document.getElementById('sf_'+k);
+    if(btn){btn.style.background=k===f?'#1D9E75':'#f5f5f5';btn.style.color=k===f?'#fff':'#333';btn.style.borderColor=k===f?'#1D9E75':'#ddd';}
+  });
+  const bgf=document.getElementById('bloodGroupFilter');
+  if(bgf)bgf.style.display=f==='blood'?'block':'none';
+  // Clear input when switching filter
+  const si=document.getElementById('searchInput');
+  if(si){si.value='';si.focus();}
+  const res=document.getElementById('searchResults');
+  if(res)res.innerHTML='<p style="font-size:12px;color:#aaa;text-align:center;padding:20px 0">🔍 Start typing to search | تلاش شروع کریں</p>';
+}
+function clearSearch(){
+  const si=document.getElementById('searchInput');
+  if(si){si.value='';si.focus();}
+  doSearch();
+}
 function openDonorProfile(donorId){
   const donor=[...DB.donors,...DB.users].find(x=>x.id===donorId);
   if(!donor){showPopup('⚠️','Error','Donor not found.');return;}
@@ -2228,9 +2293,21 @@ function openEditDonorProfile(donorId){
       </div>
       <label>Name *</label><input type="text" id="donorEditName" value="${donor.name||''}" style="margin-bottom:8px">
       <label>Mobile *</label><input type="text" id="donorEditMobile" value="${donor.mobile||''}" maxlength="12" oninput="autoFormatMobile(this,null)" style="margin-bottom:8px">
-      <label>Area</label><select id="donorEditArea" style="margin-bottom:8px"><option value="">-- Select --</option>${AREAS.map(a=>`<option value="${a}" ${a===donor.area?'selected':''}>${a}</option>`).join('')}</select>
-      <label>Blood Group <span style="font-size:10px;color:#E24B4A">بلڈ گروپ</span></label>
-      <select id="donorEditBloodGroup" style="margin-bottom:12px"><option value="">-- None --</option>${BLOOD_GROUPS.map(g=>`<option value="${g}" ${g===donor.bloodGroup?'selected':''}>${g}</option>`).join('')}</select>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div>
+          <label>Area <span style="font-size:9px;color:#1D9E75">علاقہ</span></label>
+          <select id="donorEditArea"><option value="">-- Select --</option>${AREAS.map(a=>`<option value="${a}" ${a===donor.area?'selected':''}>${a}</option>`).join('')}</select>
+        </div>
+        <div>
+          <label>Blood Group <span style="font-size:9px;color:#E24B4A">بلڈ گروپ</span></label>
+          <select id="donorEditBloodGroup"><option value="">-- None --</option>${BLOOD_GROUPS.map(g=>`<option value="${g}" ${g===donor.bloodGroup?'selected':''}>${g}</option>`).join('')}</select>
+        </div>
+      </div>
+      <label>Profession <span style="font-size:9px;color:#1D9E75">پیشہ</span></label>
+      <select id="donorEditProfession" style="margin-bottom:12px">
+        <option value="">-- Select Profession --</option>
+        ${PROF_LIST.map(p=>`<option value="${p.en}" ${p.en===(donor.profession||'')?'selected':''}>${p.en}${p.ur?' — '+p.ur:''}</option>`).join('')}
+      </select>
       <input type="hidden" id="donorEditId" value="${donorId}">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <button onclick="closePopup()" style="background:#f5f5f5;color:#333;border:1px solid #ddd;padding:10px;border-radius:8px;font-size:13px;cursor:pointer">Cancel</button>
@@ -2248,7 +2325,8 @@ function saveDonorProfile(){
   const area=document.getElementById('donorEditArea').value;
   if(!name||!mobile){showPopup('⚠️','Required','Name and mobile are required.');return;}
   const bg=(document.getElementById('donorEditBloodGroup')||{value:donor.bloodGroup||''}).value;
-  donor.name=name;donor.mobile=mobile;donor.area=area;donor.bloodGroup=bg;
+  const prof=(document.getElementById('donorEditProfession')||{value:donor.profession||''}).value;
+  donor.name=name;donor.mobile=mobile;donor.area=area;donor.bloodGroup=bg;donor.profession=prof;
   const photoInp=document.getElementById('donorEditPhotoInp');
   function finish(){
     FS.save('donors',id,donor);
@@ -2270,30 +2348,97 @@ function openDonorFromSearch(id){
   },200);
 }
 function doSearch(){
-  const q=(document.getElementById('searchInput').value||'').toLowerCase().trim();
+  const q=(document.getElementById('searchInput').value||'').trim();
+  const ql=q.toLowerCase();
   const res=document.getElementById('searchResults');
-  if(!q){res.innerHTML='<p style="font-size:13px;color:#888">Start typing to search... | تلاش شروع کریں</p>';return;}
-  if(q.length<2){res.innerHTML='<p style="font-size:13px;color:#888">Type at least 2 characters | کم از کم 2 حروف لکھیں</p>';return;}
-  // null-safe search helpers
-  const has=(v)=>(v||'').toLowerCase().includes(q);
+  if(!res)return;
+  if(!q||q.length<1){
+    res.innerHTML='<p style="font-size:12px;color:#aaa;text-align:center;padding:20px 0">🔍 Start typing to search | تلاش شروع کریں</p>';
+    return;
+  }
+  const filter=window._searchFilter||'all';
+  const has=(v)=>(v||'').toLowerCase().includes(ql);
   const hasMob=(v)=>normMob(v||'').includes(normMob(q));
-  const donors=DB.donors.filter(d=>has(d.name)||hasMob(d.mobile)||has(d.area)||has(d.id));
-  const deceased=DB.deceased.filter(d=>has(d.name)||has(d.area)||has(d.id)||has(d.fatherName));
-  const users=DB.users.filter(u=>has(u.name)||hasMob(u.mobile)||has(u.id)||has(u.role));
+  const hasId=(v)=>String(v||'').toLowerCase().includes(ql);
+  const hasBlood=(v)=>(v||'').toLowerCase()===ql||(v||'').toLowerCase().includes(ql);
+
+  // Filter function per record type
+  function matchDonor(d){
+    if(filter==='name')   return has(d.name);
+    if(filter==='id')     return hasId(d.id);
+    if(filter==='mobile') return hasMob(d.mobile);
+    if(filter==='area')   return has(d.area);
+    if(filter==='blood')  return hasBlood(d.bloodGroup);
+    // all
+    return has(d.name)||hasMob(d.mobile)||hasId(d.id)||has(d.area)||hasBlood(d.bloodGroup)||has(d.profession);
+  }
+  function matchUser(u){
+    if(filter==='name')   return has(u.name);
+    if(filter==='id')     return hasId(u.id);
+    if(filter==='mobile') return hasMob(u.mobile);
+    if(filter==='area')   return has(u.area);
+    if(filter==='blood')  return hasBlood(u.bloodGroup);
+    return has(u.name)||hasMob(u.mobile)||hasId(u.id)||has(u.area)||hasBlood(u.bloodGroup)||has(u.profession);
+  }
+  function matchDeceased(d){
+    if(filter==='name')   return has(d.name)||has(d.fatherName);
+    if(filter==='id')     return hasId(d.id);
+    if(filter==='area')   return has(d.area);
+    if(filter==='mobile'||filter==='blood') return false;
+    return has(d.name)||has(d.area)||hasId(d.id)||has(d.fatherName);
+  }
+
+  const donors  = DB.donors.filter(matchDonor);
+  const users   = DB.users.filter(matchUser);
+  const deceased= (filter==='blood'||filter==='mobile')
+                  ? [] : DB.deceased.filter(matchDeceased);
+
+  // Donor row with full info
+  const donorRow=(d)=>`
+    <div class="entry-row" onclick="openDonorProfile('${d.id}')" style="cursor:pointer">
+      <div style="display:flex;align-items:center;gap:8px;flex:1">
+        ${avatarHtml(d.photo,d.name,34)}
+        <div>
+          <div class="entry-name">${d.name} <span class="id-badge">${d.id}</span>
+            ${d.bloodGroup?`<span style="background:#FCEBEB;color:#A32D2D;font-size:9px;font-weight:700;padding:1px 6px;border-radius:20px;border:1px solid #F09595">${d.bloodGroup}</span>`:''}
+          </div>
+          <div class="entry-sub">📍 ${d.area||'—'} • 📱 ${callableNum(d.mobile)}</div>
+          ${d.profession?`<div style="font-size:10px;color:#185FA5">💼 ${d.profession}</div>`:''}
+        </div>
+      </div>
+      <div style="font-size:10px;color:#1D9E75;font-weight:600;flex-shrink:0">💰</div>
+    </div>`;
+
+  // User row with full info
+  const userRow=(u)=>`
+    <div class="entry-row" onclick="openDonorProfile('${u.id}')" style="cursor:pointer">
+      <div style="display:flex;align-items:center;gap:8px;flex:1">
+        ${avatarHtml(u.photo,u.name,34)}
+        <div>
+          <div class="entry-name">${u.name} <span class="id-badge">${u.id}</span>
+            ${u.bloodGroup?`<span style="background:#FCEBEB;color:#A32D2D;font-size:9px;font-weight:700;padding:1px 6px;border-radius:20px;border:1px solid #F09595">${u.bloodGroup}</span>`:''}
+            <span class="badge badge-${u.role||'user'}">${u.role||'user'}</span>
+          </div>
+          <div class="entry-sub">📍 ${u.area||'—'} • 📱 ${callableNum(u.mobile)}</div>
+          ${u.profession?`<div style="font-size:10px;color:#185FA5">💼 ${u.profession}</div>`:''}
+        </div>
+      </div>
+    </div>`;
+
   let html='';
   if(donors.length){
     html+=`<div class="section-bi"><span class="bi-en">Donors (${donors.length})</span><span class="bi-ur">عطیہ دہندگان</span></div>`;
-    donors.forEach(d=>{html+=`<div class="entry-row" onclick="openDonorProfile('${d.id}')" style="cursor:pointer"><div style="display:flex;align-items:center;gap:8px;flex:1">${avatarHtml(d.photo,d.name,30)}<div><div class="entry-name">${d.name} <span class="id-badge">${d.id}</span></div><div class="entry-sub">${callableNum(d.mobile)} • ${d.area||'—'}</div></div></div><div style="font-size:10px;color:#1D9E75;font-weight:600">💰 Donate</div></div>`;});
-  }
-  if(deceased.length){
-    html+=`<div class="section-bi"><span class="bi-en">Deceased (${deceased.length})</span><span class="bi-ur">مرحومین</span></div>`;
-    deceased.forEach(d=>{html+=`<div class="entry-row"><div><div class="entry-name">${d.name} <span class="badge badge-manager">${d.id}</span></div><div class="entry-sub">${d.area||'—'} • ${d.dateOfDeath||'—'}</div></div><span class="badge ${d.approved?'badge-user':'badge-pending'}">${d.approved?'✅':'⏳'}</span></div>`;});
+    html+=donors.map(donorRow).join('');
   }
   if(users.length){
     html+=`<div class="section-bi"><span class="bi-en">Users (${users.length})</span><span class="bi-ur">صارفین</span></div>`;
-    users.forEach(u=>{html+=`<div class="entry-row"><div style="display:flex;align-items:center;gap:8px">${avatarHtml(u.photo,u.name,30)}<div><div class="entry-name">${u.name} <span class="id-badge">${u.id}</span></div><div class="entry-sub">${u.role} • ${callableNum(u.mobile)}</div></div></div></div>`;});
+    html+=users.map(userRow).join('');
   }
-  if(!html)html='<p style="font-size:13px;color:#888">No results for "<strong>'+q+'</strong>"</p>';
+  if(deceased.length){
+    html+=`<div class="section-bi"><span class="bi-en">Deceased (${deceased.length})</span><span class="bi-ur">مرحومین</span></div>`;
+    deceased.forEach(d=>{html+=`<div class="entry-row"><div><div class="entry-name">${d.name} <span class="id-badge">${d.id}</span></div><div class="entry-sub">📍 ${d.area||'—'} • ${d.dateOfDeath||'—'}</div></div><span class="badge ${d.approved?'badge-admin':'badge-user'}">${d.approved?'✅':'⏳'}</span></div>`;});
+  }
+  if(!html)html=`<div style="text-align:center;padding:24px;color:#aaa"><div style="font-size:28px;margin-bottom:8px">🔍</div><div style="font-size:13px">No results for "<strong style="color:#333">${q}</strong>"</div></div>`;
   res.innerHTML=html;
 }
 
@@ -4332,7 +4477,6 @@ T.smartsearch=function(){
 }
 function ssSetProf(p){
   window._ssProf=p;
-  // Update button styles
   document.querySelectorAll('[id^="ssProf_"]').forEach(b=>{b.style.background='#f5f5f5';b.style.color='#333';});
   const key='ssProf_'+p.replace(/[^a-zA-Z0-9]/g,'_');
   const btn=document.getElementById(key);
@@ -4340,20 +4484,35 @@ function ssSetProf(p){
   runSmartSearch();
 }
 function runSmartSearch(){
-  const q=(document.getElementById('ssQuery')||{value:''}).value.toLowerCase().trim();
+  const q=(document.getElementById('ssQuery')||{value:''}).value.trim();
+  const ql=q.toLowerCase();
   const area=(document.getElementById('ssArea')||{value:'All'}).value;
   const blood=(document.getElementById('ssBlood')||{value:'All'}).value;
   const prof=window._ssProf||'All';
+  const el=document.getElementById('ssResults');
+
+  // If nothing entered and no filter set → show placeholder
+  const hasFilter=(area!=='All'||blood!=='All'||prof!=='All');
+  if(!q&&!hasFilter){
+    if(el)el.innerHTML='<div style="text-align:center;padding:24px;color:#aaa"><div style="font-size:28px;margin-bottom:8px">🔎</div><div style="font-size:12px">Type a name, or select a filter | نام لکھیں یا فلٹر منتخب کریں</div></div>';
+    return;
+  }
+  // Need at least 2 chars if typing
+  if(q&&q.length<2){
+    if(el)el.innerHTML='<p style="font-size:12px;color:#aaa;text-align:center;padding:16px">Type at least 2 characters | کم از کم 2 حروف لکھیں</p>';
+    return;
+  }
+
   const all=[...DB.users,...DB.donors];
   let res=all.filter(u=>{
     if(area!=='All'&&(u.area||'')!==area)return false;
     if(blood!=='All'&&(u.bloodGroup||'')!==blood)return false;
     if(prof!=='All'&&(u.profession||'').toLowerCase()!==prof.toLowerCase())return false;
-    if(q){
+    if(ql){
       const name=(u.name||'').toLowerCase();
       const mob=normMob(u.mobile||'');
       const id=(u.id||'').toLowerCase();
-      if(!name.includes(q)&&!mob.includes(normMob(q))&&!id.includes(q))return false;
+      if(!name.includes(ql)&&!mob.includes(normMob(q))&&!id.includes(ql))return false;
     }
     return true;
   });
@@ -4361,7 +4520,6 @@ function runSmartSearch(){
   const seen=new Set();
   res=res.filter(u=>{if(seen.has(u.id))return false;seen.add(u.id);return true;});
   res.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-  const el=document.getElementById('ssResults');
   if(!el)return;
   if(!res.length){
     el.innerHTML='<div class="card" style="text-align:center;padding:20px;color:#888"><div style="font-size:28px;margin-bottom:8px">🔎</div><div style="font-size:13px">No results found | کوئی نتیجہ نہیں</div></div>';
@@ -4737,46 +4895,45 @@ function getMenuConfig(){
       {icon:'👤', label:'Profile / پروفائل', tab:'profile'},
     ]
   };
-  if(['admin','manager','developer'].includes(currentRole)){
-    home.items.push({icon:'📋', label:'My Entries / میری اندراجات', tab:'myentries'});
-  }
+  // My Entries moved to Forms menu only
 
   const forms = {
     key:'forms', title:'Forms / فارمز',
-    items:[
-      {icon:'⚰️', label:'Deceased / وفات', tab:'deceased'},
-    ]
+    items:[]
   };
   if(['admin','manager','developer'].includes(currentRole)) forms.items.push({icon:'💰', label:'Donation / چندہ', tab:'donation'});
-  if(['manager','developer'].includes(currentRole)) forms.items.push({icon:'🧾', label:'Expense / اخراجات', tab:'expense'});
+  if(['manager','developer'].includes(currentRole)) forms.items.push({icon:'📋', label:'Expense / اخراجات', tab:'expense'});
+  forms.items.push({icon:'⚰️', label:'Deceased / وفات', tab:'deceased'});
   if(currentRole==='admin') forms.items.push({icon:'✅', label:'Confirm / تصدیق', tab:'decconfirm'});
+  if(['admin','manager','developer'].includes(currentRole)) forms.items.push({icon:'📊', label:'My Entries / میری اندراجات', tab:'myentries'});
 
   const reports = {
     key:'reports', title:'Reports / رپورٹس',
     items:[
       {icon:'🗺️', label:'Area / علاقہ', tab:'area'},
-      {icon:'📈', label:'Expense Rpt / اخراجات', tab:'expreport'},
+      {icon:'📈', label:'Expense / اخراجات', tab:'expreport'},
       {icon:'📒', label:'Ledger / کھاتہ', tab:'ledger'},
       {icon:'💼', label:'Balance / بیلنس', tab:'balreport'},
       ...(currentRole!=='user'?[{icon:'📅', label:'Fund / فنڈ', tab:'fundreport'}]:[]),
+      ...(currentRole!=='user'?[{icon:'📜', label:'Death Cert / وفات نامہ', tab:'deathcert'}]:[]),
+      ...(currentRole!=='user'?[{icon:'🧾', label:'Donor Slip / سلپ', tab:'slip'}]:[]),
+      ...(currentRole!=='user'?[{icon:'🏆', label:'Top 10 / سرفہرست', tab:'top'}]:[]),
     ]
   };
-  if(['manager','developer'].includes(currentRole)) reports.items.push({icon:'👥', label:'Users / صارفین', tab:'usersreport'});
+  if(['manager','developer'].includes(currentRole)) reports.items.push({icon:'👥', label:'Users Report / صارفین', tab:'usersreport'});
 
   const donors = {
     key:'donors', title:'Donors / عطیہ دہندگان',
     items:[
-      {icon:'📜', label:'Death Cert / وفات نامہ', tab:'deathcert'},
+      {icon:'👥', label:'Donors / عطیہ دہندگان', tab:'donorlist'},
+      {icon:'🩸', label:'Blood Bank / بلڈ بینک', tab:'bloodbank'},
     ]
   };
   if(currentRole!=='user'){
     donors.items.push(
-      {icon:'👥', label:'Donors / عطیہ دہندگان', tab:'donorlist'},
-      {icon:'🩸', label:'Blood Bank / بلڈ بینک', tab:'bloodbank'},
       {icon:'✏️', label:'Donor Profile Update', tab:'donorprofileupdate'},
-      {icon:'🧾', label:'Slip / سلپ', tab:'slip'},
-      {icon:'🏆', label:'Top 10 / سرفہرست', tab:'top'},
-      {icon:'💸', label:'Transfer / منتقلی', tab:'transfer'}
+      {icon:'💸', label:'Transfer / منتقلی', tab:'transfer'},
+      {icon:'👤', label:'Users / صارفین', tab:'usersreport'}
     );
   }
 
@@ -4784,16 +4941,20 @@ function getMenuConfig(){
     key:'settings', title:'Settings / ترتیبات',
     items:[]
   };
-  if(currentRole==='developer'){
+  if(['admin','manager','developer'].includes(currentRole)){
     settings.items.push(
-      {icon:'✅', label:'Approvals / منظوری', tab:'approvals', badge: DB.pendingApprovals.length},
-      {icon:'🔒', label:'Login / لاگ ان', tab:'lockuser'},
-      {icon:'👥', label:'Users / صارفین', tab:'userslist'},
-      {icon:'💼', label:'Profession / پیشہ', tab:'professions'},
+      {icon:'🏢', label:'Organization / ادارہ', tab:'orgsettings'},
       {icon:'🏘️', label:'Areas / علاقے', tab:'areas'},
       {icon:'📂', label:'Exp Categories', tab:'expcategories'},
-      {icon:'🏢', label:'Organization Settings', tab:'orgsettings'},
-      {icon:'📋', label:'Audit / لاگ', tab:'audit'},
+    );
+  }
+  if(currentRole==='developer'){
+    settings.items.push(
+      {icon:'💼', label:'Professions / پیشہ', tab:'professions'},
+      {icon:'✅', label:'Approvals / منظوری', tab:'approvals', badge: DB.pendingApprovals.length},
+      {icon:'🔒', label:'Login Mgmt / لاگ ان', tab:'lockuser'},
+      {icon:'👥', label:'Users List / صارفین', tab:'userslist'},
+      {icon:'📋', label:'Audit Log / لاگ', tab:'audit'},
       {icon:'🗄️', label:'Data Manager', tab:'datamanager'},
       {icon:'💡', label:'Suggestions', tab:'suggestions', badge:DB.suggestions.filter(s=>!s.read).length||0}
     );
@@ -4907,10 +5068,32 @@ function renderTab(key){
     const initMap={
       contacts:()=>{window._contactArea='All';filterContacts('All');},
       bloodbank:()=>{window._bbArea='All';filterBloodBank('All');},
-      smartsearch:()=>{window._ssProf='All';runSmartSearch();},
+      // smartsearch: do NOT auto-run — show placeholder until user types
+      smartsearch:()=>{
+        window._ssProf='All';
+        const el=document.getElementById('ssResults');
+        if(el)el.innerHTML='<div style="text-align:center;padding:24px;color:#aaa"><div style="font-size:28px;margin-bottom:8px">🔎</div><div style="font-size:12px">Type to search | تلاش کے لیے لکھیں</div></div>';
+        // reset profession buttons
+        const profBtns=document.querySelectorAll('[id^="ssProf_"]');
+        profBtns.forEach(b=>{b.style.background='#f5f5f5';b.style.color='#333';});
+        const allBtn=document.getElementById('ssProf_All');
+        if(allBtn){allBtn.style.background='#185FA5';allBtn.style.color='#fff';}
+      },
       donorprofileupdate:()=>filterDPU(),
       lockuser:()=>renderLockUserList(),
-      search:()=>{const si=document.getElementById('searchInput');if(si)si.focus();},
+      // search: just focus, do NOT run search
+      search:()=>{
+        const si=document.getElementById('searchInput');
+        if(si){si.value='';si.focus();}
+        const res=document.getElementById('searchResults');
+        if(res)res.innerHTML='<p style="font-size:12px;color:#aaa;text-align:center;padding:20px 0">🔍 Start typing to search | تلاش شروع کریں</p>';
+        window._searchFilter='all';
+        // reset filter chips
+        ['all','name','id','mobile','area','blood'].forEach(k=>{
+          const btn=document.getElementById('sf_'+k);
+          if(btn){btn.style.background=k==='all'?'#1D9E75':'#f5f5f5';btn.style.color=k==='all'?'#fff':'#333';btn.style.borderColor=k==='all'?'#1D9E75':'#ddd';}
+        });
+      },
     };
     if(initMap[key])setTimeout(initMap[key],50);
   }
@@ -4976,7 +5159,7 @@ T.dash = function(){
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:7px">
       ${['admin','manager','developer'].includes(currentRole)?`<button onclick="selectTab('donation')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #0F6E56;background:#E1F5EE;cursor:pointer"><span style="font-size:19px">💰</span><span style="font-size:9px;font-weight:600;color:#085041">Donation</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">چندہ</span></button>`:'<span></span>'}
       ${['admin','manager','developer'].includes(currentRole)?`<button onclick="selectTab('expense')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #0F6E56;background:#E1F5EE;cursor:pointer"><span style="font-size:19px">📋</span><span style="font-size:9px;font-weight:600;color:#085041">Expense</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">اخراجات</span></button>`:'<span></span>'}
-      <button onclick="selectTab('deceased')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #0F6E56;background:#E1F5EE;cursor:pointer"><span style="font-size:19px">🕌</span><span style="font-size:9px;font-weight:600;color:#085041">Deceased</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">وفات</span></button>
+      <button onclick="selectTab('deceased')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #0F6E56;background:#E1F5EE;cursor:pointer"><span style="font-size:19px">🪦</span><span style="font-size:9px;font-weight:600;color:#085041">Deceased</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">وفات</span></button>
       ${currentRole!=='user'?`<button onclick="selectTab('slip')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #0F6E56;background:#E1F5EE;cursor:pointer"><span style="font-size:19px">🧾</span><span style="font-size:9px;font-weight:600;color:#085041">Slip</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">سلپ</span></button>`:'<span></span>'}
     </div>
     <div style="height:0.5px;background:#eee;margin:6px 0 10px"></div>
@@ -4994,13 +5177,6 @@ function loadDashboard(){
   try{
     showScreen('dashScreen');
     addNotification('login','Logged In',currentUser.name+' ('+currentRole+') logged in at '+new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'}));
-    const dashRoleEl=document.getElementById('dashRole');
-    if(dashRoleEl) dashRoleEl.innerHTML=`<span style="color:#fff;font-weight:700;font-size:15px">${currentUser.name}</span> <span style="background:rgba(255,255,255,0.2);color:rgba(255,255,255,0.9);font-size:9px;font-weight:600;padding:2px 7px;border-radius:20px;vertical-align:middle;letter-spacing:0.3px">${currentRole}</span>`;
-    const av=document.getElementById('dashAvatar');
-    if(av){
-      if(currentUser.photo)av.innerHTML=`<img src="${currentUser.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-      else {av.textContent=currentUser.name.charAt(0).toUpperCase();av.style.fontSize='16px';av.style.fontWeight='800';}
-    }
     try{renderLoginExtras();}catch(e){console.error('RLE:',e);}
     try{updateFooterOrgName();}catch(e){}
     buildTabs();
@@ -5255,7 +5431,8 @@ function buildSMSMessage(type,donor,amount){
     return `Dear ${donor.name}, Assalam o Alaikum! ${org} awaits your generous donation. Your last donation was Rs ${fmt(donor.totalDonation||0)}. Please send your contribution. JazakAllah.`;
   return '';
 }
-function openSMSReminders(){
+function openSMSReminders(activeTab){
+  activeTab=activeTab||'pending';
   const thisMonth=today().substring(0,7);
   const recentDons=DB.donations.slice(-20).reverse();
   const activeDonors=DB.donors.filter(d=>d.totalDonation>0||DB.donations.some(x=>x.donorId===d.id));
@@ -5264,14 +5441,26 @@ function openSMSReminders(){
     return !lastDon||lastDon.date.substring(0,7)!==thisMonth;
   });
 
+  // Track reminder dates in localStorage
+  const remKey='falah_reminders';
+  let remDates={};try{remDates=JSON.parse(localStorage.getItem(remKey)||'{}');}catch(e){}
+  function markReminded(mobile){remDates[normMob(mobile)]=today();localStorage.setItem(remKey,JSON.stringify(remDates));}
+  function lastReminded(mobile){return remDates[normMob(mobile)]||null;}
+
+  const isReceived=activeTab==='received';
+
   const html=`
     <div style="background:#fff;border-radius:14px;padding:16px;max-width:95vw;width:460px;max-height:82vh;overflow-y:auto">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-        <div style="font-size:15px;font-weight:800">📱 SMS / WhatsApp Reminders</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:15px;font-weight:800">📱 SMS / WhatsApp</div>
         <button onclick="closePopup()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#aaa">✕</button>
       </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px">
+        <button onclick="closePopup();openSMSReminders('received')" style="padding:8px;border-radius:10px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:${isReceived?'#0F6E56':'#f5f5f5'};color:${isReceived?'#fff':'#555'}">✅ Received | وصول</button>
+        <button onclick="closePopup();openSMSReminders('pending')" style="padding:8px;border-radius:10px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:${!isReceived?'#E24B4A':'#f5f5f5'};color:${!isReceived?'#fff':'#555'}">⏰ Pending | باقی</button>
+      </div>
 
-      <div style="font-size:12px;font-weight:700;color:#0F6E56;margin-bottom:8px">✅ Thanks — Recent Donations (${recentDons.length})</div>
+      ${isReceived?`<div style="font-size:11px;font-weight:700;color:#0F6E56;margin-bottom:8px">✅ Thanks — Recent Donations (${recentDons.length})</div>`:''}
       ${recentDons.slice(0,5).map(d=>{
         const donor=DB.donors.find(x=>x.id===d.donorId)||{name:'?',mobile:'0000'};
         const sms=buildSMSMessage('thanks',donor,d.amount);
@@ -5290,23 +5479,26 @@ function openSMSReminders(){
         </div>`;
       }).join('')}
 
-      <div style="font-size:12px;font-weight:700;color:#E24B4A;margin:14px 0 8px">⏰ Pending This Month (${pendingDonors.length})</div>
-      ${pendingDonors.length===0?'<p style="font-size:12px;color:#888">All donors donated this month! 🎉</p>':pendingDonors.slice(0,6).map(d=>{
+      ${!isReceived?`<div style="font-size:11px;font-weight:700;color:#E24B4A;margin-bottom:8px">⏰ Pending This Month (${pendingDonors.length})</div>
+      ${pendingDonors.length===0?'<p style="font-size:12px;color:#888">All donors donated this month! 🎉</p>':pendingDonors.slice(0,8).map(d=>{
+        const lastRem=lastReminded(d.mobile||'');
         const sms=buildSMSMessage('reminder',d,0);
         const wa=encodeURIComponent(sms);
         return `<div style="background:#FEF3F2;border-radius:10px;padding:10px;margin-bottom:8px;border:1px solid #E24B4A">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
             ${avatarHtml(d.photo,d.name,36)}
-            <div><div style="font-size:12px;font-weight:700">${d.name}</div>
-            <div style="font-size:10px;color:#888">📍 ${d.area||'—'} • Last: Rs ${fmt(d.totalDonation||0)}</div></div>
+            <div style="flex:1"><div style="font-size:12px;font-weight:700">${d.name}</div>
+            <div style="font-size:10px;color:#888">📍 ${d.area||'—'} • Last: ${fmt(d.totalDonation||0)}</div>
+            ${lastRem?`<div style="font-size:10px;color:#E24B4A;margin-top:2px">🔔 Last reminded: ${lastRem}</div>`:'<div style="font-size:10px;color:#aaa">Not yet reminded</div>'}
+            </div>
           </div>
           <div style="font-size:10px;color:#555;background:#fff;padding:6px 8px;border-radius:6px;margin-bottom:8px;line-height:1.4">${sms}</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-            <a href="sms:${normMob(d.mobile||'')}?body=${encodeURIComponent(sms)}" style="display:block;background:#E24B4A;color:#fff;padding:7px;border-radius:7px;font-size:11px;font-weight:600;text-decoration:none;text-align:center">📱 SMS</a>
-            <a href="https://wa.me/92${normMob(d.mobile||'').slice(1)}?text=${wa}" target="_blank" style="display:block;background:#25D366;color:#fff;padding:7px;border-radius:7px;font-size:11px;font-weight:600;text-decoration:none;text-align:center">💬 WhatsApp</a>
+            <a href="sms:${normMob(d.mobile||'')}?body=${encodeURIComponent(sms)}" onclick="markReminded('${d.mobile||''}')" style="display:block;background:#E24B4A;color:#fff;padding:7px;border-radius:7px;font-size:11px;font-weight:600;text-decoration:none;text-align:center">📱 SMS</a>
+            <a href="https://wa.me/92${normMob(d.mobile||'').slice(1)}?text=${wa}" onclick="markReminded('${d.mobile||''}')" target="_blank" style="display:block;background:#25D366;color:#fff;padding:7px;border-radius:7px;font-size:11px;font-weight:600;text-decoration:none;text-align:center">💬 WhatsApp</a>
           </div>
         </div>`;
-      }).join('')}
+      }).join('')}`:''}
     </div>`;
   document.getElementById('popupMsg').innerHTML='';
   document.getElementById('popupMsgUr').innerHTML='';

@@ -1906,10 +1906,17 @@ T.search=function(){
       <input type="text" id="searchInput" placeholder="Name, ID, Mobile, Area, Blood Group..." oninput="doSearch()" autocomplete="off" style="font-size:13px">
       <button onclick="clearSearch()" style="position:absolute;right:10px;background:none;border:none;font-size:16px;color:#aaa;cursor:pointer;padding:0;top:50%;transform:translateY(-50%)">✕</button>
     </div>
-    <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px">
+    <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px">
       <button onclick="setSearchFilter('name')" id="sf_name" style="background:#1D9E75;color:#fff;border:1px solid #1D9E75;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">👤 Name | نام</button>
       <button onclick="setSearchFilter('id')" id="sf_id" style="background:#f5f5f5;color:#333;border:1px solid #ddd;padding:4px 12px;border-radius:20px;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0">🪪 Personal ID</button>
       <button onclick="setSearchFilter('mobile')" id="sf_mobile" style="background:#f5f5f5;color:#333;border:1px solid #ddd;padding:4px 12px;border-radius:20px;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0">📱 Mobile | موبائل</button>
+      <button onclick="setSearchFilter('blood')" id="sf_blood" style="background:#f5f5f5;color:#333;border:1px solid #ddd;padding:4px 12px;border-radius:20px;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0">🩸 Blood Group | بلڈ گروپ</button>
+      <button onclick="setSearchFilter('profession')" id="sf_profession" style="background:#f5f5f5;color:#333;border:1px solid #ddd;padding:4px 12px;border-radius:20px;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0">💼 Profession | پیشہ</button>
+    </div>
+    <div id="bloodGroupQuick" style="display:none;margin-bottom:8px">
+      <div style="display:flex;gap:5px;flex-wrap:wrap">
+        ${BLOOD_GROUPS.map(g=>`<button onclick="document.getElementById('searchInput').value='${g}';doSearch();" style="background:#FCEBEB;color:#A32D2D;border:1px solid #F09595;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer">${g}</button>`).join('')}
+      </div>
     </div>
     <div id="searchResults"><p style="font-size:12px;color:#aaa;text-align:center;padding:20px 0">🔍 Start typing to search | تلاش شروع کریں</p></div>
   </div>`;
@@ -1917,10 +1924,13 @@ T.search=function(){
 window._searchFilter='name';
 function setSearchFilter(f){
   window._searchFilter=f;
-  ['name','id','mobile'].forEach(k=>{
+  ['name','id','mobile','blood','profession'].forEach(k=>{
     const btn=document.getElementById('sf_'+k);
     if(btn){btn.style.background=k===f?'#1D9E75':'#f5f5f5';btn.style.color=k===f?'#fff':'#333';btn.style.borderColor=k===f?'#1D9E75':'#ddd';}
   });
+  // Show blood group quick buttons when blood filter is active
+  const bqk=document.getElementById('bloodGroupQuick');
+  if(bqk)bqk.style.display=f==='blood'?'flex':'none';
   const si=document.getElementById('searchInput');
   if(si){si.value='';si.focus();}
   const res=document.getElementById('searchResults');
@@ -2063,27 +2073,26 @@ function doSearch(){
   const hasId=(v)=>String(v||'').toLowerCase().includes(ql);
   const hasBlood=(v)=>(v||'').toLowerCase().includes(ql);
   function matchDonor(d){
-    if(filter==='name')   return has(d.name);
-    if(filter==='id')     return hasId(d.id);
-    if(filter==='mobile') return hasMob(d.mobile);
-    if(filter==='area')   return has(d.area);
-    if(filter==='blood')  return hasBlood(d.bloodGroup);
+    if(filter==='name')       return has(d.name);
+    if(filter==='id')         return hasId(d.id);
+    if(filter==='mobile')     return hasMob(d.mobile);
+    if(filter==='blood')      return hasBlood(d.bloodGroup);
+    if(filter==='profession') return has(d.profession);
     return has(d.name)||hasMob(d.mobile)||hasId(d.id)||has(d.area)||hasBlood(d.bloodGroup)||has(d.profession);
   }
   function matchUser(u){
-    if(filter==='name')   return has(u.name);
-    if(filter==='id')     return hasId(u.id);
-    if(filter==='mobile') return hasMob(u.mobile);
-    if(filter==='area')   return has(u.area);
-    if(filter==='blood')  return hasBlood(u.bloodGroup);
+    if(filter==='name')       return has(u.name);
+    if(filter==='id')         return hasId(u.id);
+    if(filter==='mobile')     return hasMob(u.mobile);
+    if(filter==='blood')      return hasBlood(u.bloodGroup);
+    if(filter==='profession') return has(u.profession);
     return has(u.name)||hasMob(u.mobile)||hasId(u.id)||has(u.area)||hasBlood(u.bloodGroup)||has(u.profession);
   }
   const donors=DB.donors.filter(matchDonor);
   const users=DB.users.filter(matchUser);
-  const deceased=(filter==='blood'||filter==='mobile')?[]:DB.deceased.filter(d=>{
+  const deceased=(filter==='blood'||filter==='mobile'||filter==='profession')?[]:DB.deceased.filter(d=>{
     if(filter==='name') return has(d.name)||has(d.fatherName);
     if(filter==='id')   return hasId(d.id);
-    if(filter==='area') return has(d.area);
     return has(d.name)||has(d.area)||hasId(d.id)||has(d.fatherName);
   });
   const donorRow=(d)=>`

@@ -1244,12 +1244,16 @@ T.donation=function(){
         <option value="">-- Select Blood Group (optional) --</option>
         ${BLOOD_GROUPS.map(g=>`<option value="${g}">${g}</option>`).join('')}
       </select>
+      <label>Profession <span style="font-size:10px;color:#1D9E75;font-weight:500">پیشہ</span></label>
+      <select id="donorProfession" class="prof-sel">
+        <option value="">-- Select Profession (optional) --</option>
+      </select>
       <script>setTimeout(()=>{const ae=document.getElementById('donorArea');if(ae&&currentUser&&currentUser.area){ae.value=currentUser.area;if(!ae.value){const o=document.createElement('option');o.value=currentUser.area;o.textContent=currentUser.area;o.selected=true;ae.insertBefore(o,ae.firstChild);}}},200);<\/script>
     </div>
     <!-- END NEW DONOR fields -->
 
     <input type="hidden" id="donorCnic" value="">
-    <input type="hidden" id="donorProfession" value="">
+
     <input type="hidden" id="donorBankAccount" value="">
 
     <!-- AMOUNT section — always shown after donor found/filled -->
@@ -4081,7 +4085,7 @@ T.lockuser=function(){
   </div>`;
 }
 function renderLockUserListHtml(users,q){
-  const ql=(q||'').toLowerCase();const filtered=ql?users.filter(u=>(u.name||'').toLowerCase().includes(ql)||normMob(u.mobile||'').includes(normMob(q))||(u.id||'').toLowerCase().includes(ql)):users;
+  const filtered=users;
   if(!filtered.length)return '<p style="font-size:13px;color:#888">No users found.</p>';
   const roles=['user','admin','manager'];
   return filtered.map(u=>`
@@ -4122,7 +4126,14 @@ function renderLockUserList(){
   const el=document.getElementById('lockUserList');
   if(!el)return;
   const allUsers=DB.users.filter(u=>u.role!=='developer');
-  el.innerHTML=renderLockUserListHtml(allUsers,q);
+  const qLow=q.toLowerCase();
+  const shown=qLow?allUsers.filter(u=>{
+    const nameMatch=(u.name||'').toLowerCase().indexOf(qLow)!==-1;
+    const mobMatch=normMob(u.mobile||'').indexOf(normMob(q))!==-1;
+    const idMatch=(u.id||'').toLowerCase().indexOf(qLow)!==-1;
+    return nameMatch||mobMatch||idMatch;
+  }):allUsers;
+  el.innerHTML=renderLockUserListHtml(shown,'');
 }
 function toggleLock(id){
   const u=DB.users.find(x=>x.id===id);

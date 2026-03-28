@@ -246,14 +246,21 @@ input[type=file]{padding:6px}
 
 <!-- LOGIN SCREEN -->
 <div id="loginScreen" class="screen active">
-  <div class="login-hero">
-    <div class="login-hero-dot"></div>
-    <div class="login-logo-box" id="loginLogo"><span style="font-size:38px">🪦</span></div>
-    <div id="loginOrgNameUrdu" class="login-org-name">فلاح قبرستان</div>
-    <div id="loginOrgName" class="login-org-ur">Falah e Qabristan</div>
-    <div id="loginOrgAddress" class="login-org-addr" style="display:none"></div>
+  <!-- Hidden elements for renderLoginExtras compatibility -->
+  <div style="display:none">
+    <div id="loginLogo"></div><div id="loginOrgName"></div>
+    <div id="loginOrgNameUrdu"></div><div id="loginOrgAddress"></div>
+    <div id="socialLinksRow"></div>
   </div>
-  <div id="socialLinksRow" style="display:none;justify-content:center;gap:10px;padding:14px 16px 0;flex-wrap:wrap;background:#fff"></div>
+  <!-- Green header with logo -->
+  <div style="background:#0F6E56;padding:28px 20px 22px;text-align:center">
+    <div class="login-logo-wrap">
+      <div class="login-logo-box" id="loginLogo2"><span style="font-size:38px">🪦</span></div>
+    </div>
+    <div style="font-size:17px;font-weight:800;color:#fff;margin-top:4px;padding-bottom:10px" id="loginOrgName2">Falah e Qabristan</div>
+    <div style="display:none" id="loginOrgNameUrdu2">فلاح قبرستان</div>
+    <div id="loginOrgAddress2" style="display:none;font-size:11px;color:rgba(255,255,255,0.6);margin-top:4px"></div>
+  </div>
   <div class="login-card">
 
     <!-- Sign In heading -->
@@ -286,30 +293,27 @@ input[type=file]{padding:6px}
     </div>
     <div id="loginError" style="display:none;margin-top:8px"></div>
 
-    <!-- Sign In button -->
-    <button class="btn btn-primary" style="margin-top:18px;padding:15px;font-size:15px;letter-spacing:0.2px" onclick="doLogin()">
-      Sign In
-      <span style="font-size:11px;color:rgba(255,255,255,0.7);display:block;margin-top:2px;direction:rtl;letter-spacing:0">لاگ ان کریں</span>
-    </button>
+    <!-- Sign In + Create Account inline 50/50 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px">
+      <button class="btn btn-primary" style="padding:14px 8px;font-size:14px;letter-spacing:0.2px" onclick="doLogin()">
+        Sign In
+        <span style="font-size:10px;color:rgba(255,255,255,0.7);display:block;margin-top:2px;direction:rtl;letter-spacing:0">لاگ ان کریں</span>
+      </button>
+      <button class="btn btn-outline" style="padding:14px 8px;font-size:14px" onclick="showScreen('regRoleScreen')">
+        Create Account
+        <span style="font-size:10px;color:#1D9E75;display:block;margin-top:2px;direction:rtl">نیا اکاؤنٹ بنائیں</span>
+      </button>
+    </div>
 
-    <!-- Divider -->
-    <div class="divider" style="margin:18px 0"><div class="divider-line"></div><div class="divider-text">or | یا</div><div class="divider-line"></div></div>
-
-    <!-- Create Account -->
-    <button class="btn btn-outline" style="padding:14px;font-size:14px" onclick="showScreen('regRoleScreen')">
-      Create Account
-      <span style="font-size:11px;color:#1D9E75;display:block;margin-top:2px;direction:rtl">نیا اکاؤنٹ بنائیں</span>
-    </button>
-
-    <!-- Extra buttons row -->
+    <!-- Extra buttons row — always visible -->
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px">
-      <div id="historyBtnWrap" style="display:none">
+      <div id="historyBtnWrap" style="display:block">
         <button class="btn" style="background:#f0fff8;color:#085041;border-color:#9FE1CB;font-size:11px;padding:10px 6px;width:100%" onclick="showScreen('historyScreen')">📖<span style="display:block;margin-top:2px">History</span></button>
       </div>
-      <div id="bankBtnWrap" style="display:none">
+      <div id="bankBtnWrap" style="display:block">
         <button class="btn" style="background:#E6F1FB;color:#0C447C;border-color:#B5D4F4;font-size:11px;padding:10px 6px;width:100%" onclick="showScreen('bankScreen')">🏦<span style="display:block;margin-top:2px">Accounts</span></button>
       </div>
-      <div id="contactBtnWrap" style="display:none">
+      <div id="contactBtnWrap" style="display:block">
         <button class="btn" style="background:#f0f4ff;color:#3730a3;border-color:#c7d2fe;font-size:11px;padding:10px 6px;width:100%" onclick="showScreen('contactScreen')">📞<span style="display:block;margin-top:2px">Contact</span></button>
       </div>
     </div>
@@ -591,7 +595,7 @@ const FS = {
   async del(col,id){if(!fdb)return;try{await fdb.collection(col).doc(String(id)).delete();}catch(e){}},
   async loadAll(col){if(!fdb)return[];try{const s=await fdb.collection(col).get();return s.docs.map(d=>({...d.data(),id:d.id}));}catch(e){console.error('FS.loadAll',e);return [];}},
   async saveConfig(){if(!fdb)return;try{await fdb.collection('config').doc('org').set(JSON.parse(JSON.stringify(ORG_CONFIG,(k,v)=>v===undefined?null:v)));}catch(e){}},
-  async loadConfig(){if(!fdb)return;try{const d=await fdb.collection('config').doc('org').get();if(d.exists)Object.assign(ORG_CONFIG,d.data());}catch(e){}}
+  async loadConfig(){if(!fdb)return;try{const d=await fdb.collection('config').doc('org').get();if(d.exists){Object.assign(ORG_CONFIG,d.data());try{renderLoginExtras();}catch(e){}}}catch(e){}}
 };
 
 function initFirebase(){
@@ -695,8 +699,8 @@ var currentUser=null,currentRole=null,pendingRegRole=null,txnCounter=1,expBillCo
 
 // ---- Offline Cache (localStorage) ----
 const CACHE_KEY='falah_db_cache';
-function saveLocalCache(){try{localStorage.setItem(CACHE_KEY,JSON.stringify({users:DB.users,donors:DB.donors,deceased:DB.deceased,donations:DB.donations,expenses:DB.expenses,transfers:DB.transfers,auditLog:DB.auditLog,suggestions:DB.suggestions,ts:Date.now()}));}catch(e){}}
-function loadLocalCache(){try{const d=JSON.parse(localStorage.getItem(CACHE_KEY)||'{}');if(d.donors){DB.users=d.users||[];DB.donors=d.donors||[];DB.deceased=d.deceased||[];DB.donations=d.donations||[];DB.expenses=d.expenses||[];DB.transfers=d.transfers||[];DB.auditLog=d.auditLog||[];DB.suggestions=d.suggestions||[];return true;}return false;}catch(e){return false;}}
+function saveLocalCache(){try{localStorage.setItem(CACHE_KEY,JSON.stringify({users:DB.users,donors:DB.donors,deceased:DB.deceased,donations:DB.donations,expenses:DB.expenses,transfers:DB.transfers,auditLog:DB.auditLog,suggestions:DB.suggestions,orgConfig:ORG_CONFIG,ts:Date.now()}));}catch(e){}}
+function loadLocalCache(){try{const d=JSON.parse(localStorage.getItem(CACHE_KEY)||'{}');if(d.donors){DB.users=d.users||[];DB.donors=d.donors||[];DB.deceased=d.deceased||[];DB.donations=d.donations||[];DB.expenses=d.expenses||[];DB.transfers=d.transfers||[];DB.auditLog=d.auditLog||[];DB.suggestions=d.suggestions||[];if(d.orgConfig)Object.assign(ORG_CONFIG,d.orgConfig);return true;}return false;}catch(e){return false;}}
 
 
 // ---- Global Config (editable by developer) ----
@@ -808,18 +812,27 @@ function doLogin(){
   const mobile=(document.getElementById('loginMobile').value||'').trim();
   const password=(document.getElementById('loginPassword').value||'').trim();
   if(!mobile||!password){showLoginError('Mobile number and password are required.');return;}
-  // Normalize both sides — strip all non-digits for comparison
+
   const mDig=normMob(mobile);
+  // Check all users including unapproved — better error messages
   const user=DB.users.find(u=>normMob(u.mobile)===mDig&&u.password===password&&u.approved);
   if(user){
     if(user.locked){showLoginError('Your login is locked. Contact the developer.');return;}
     hideLoginError();currentUser=user;currentRole=user.role;saveSession();loadDashboard();return;
   }
   const wrongPwd=DB.users.find(u=>normMob(u.mobile)===mDig&&u.approved);
-  if(wrongPwd){showLoginError('Incorrect password. Please try again.');return;}
+  if(wrongPwd){showLoginError('Incorrect password. Please try again. | پاس ورڈ غلط ہے');return;}
+  const wrongPwdUnapproved=DB.users.find(u=>normMob(u.mobile)===mDig&&!u.approved);
+  if(wrongPwdUnapproved){showLoginError('Account not approved yet. Contact the developer. | اکاؤنٹ منظور نہیں ہوا');return;}
   const pending=DB.pendingApprovals.find(u=>normMob(u.mobile)===mDig);
-  if(pending){showLoginError('Account approval pending hai.');return;}
-  showPopup('❌','User Not Found','No account found. Would you like to create one?','Create Account',()=>showScreen('regRoleScreen'));
+  if(pending){showLoginError('Account approval pending. Contact developer. | منظوری ابھی باقی ہے');return;}
+  // Try case-insensitive password match as fallback
+  const userCaseInsensitive=DB.users.find(u=>normMob(u.mobile)===mDig&&(u.password||'').toLowerCase()===(password||'').toLowerCase()&&u.approved);
+  if(userCaseInsensitive){
+    if(userCaseInsensitive.locked){showLoginError('Your login is locked.');return;}
+    hideLoginError();currentUser=userCaseInsensitive;currentRole=userCaseInsensitive.role;saveSession();loadDashboard();return;
+  }
+  showPopup('❌','User Not Found','No account found with this mobile number. | یہ موبائل نمبر رجسٹرڈ نہیں ہے','Create Account',()=>showScreen('regRoleScreen'));
 }
 function openReg(role){
   pendingRegRole=role;
@@ -912,11 +925,18 @@ function finishReg(name,mobile,cnic,password,photo,signature){
   }
 }
 function logout(){clearSession();
-  currentUser=null;currentRole=null;document.getElementById('devKey').value='';document.getElementById('loginMobile').value='';document.getElementById('loginPassword').value='';hideLoginError();showScreen('loginScreen');renderLoginExtras();}
+  currentUser=null;currentRole=null;document.getElementById('devKey').value='';document.getElementById('loginMobile').value='';document.getElementById('loginPassword').value='';hideLoginError();
+  const nav=document.getElementById('bottomNav');if(nav)nav.style.display='none';
+  showScreen('loginScreen');renderLoginExtras();}
 function renderLoginExtras(){
-  // Logo on login page
+  // Logo on login page (both hidden helper + visible header)
   const ll=document.getElementById('loginLogo');
   if(ll){ll.innerHTML=ORG_CONFIG.logo?`<img src="${ORG_CONFIG.logo}" style="max-height:80px;max-width:180px;object-fit:contain;border-radius:10px">`:'<span style="font-size:38px">🪦</span>';}
+  const ll2=document.getElementById('loginLogo2');
+  if(ll2){ll2.innerHTML=ORG_CONFIG.logo?`<img src="${ORG_CONFIG.logo}" style="max-height:72px;max-width:160px;object-fit:contain;border-radius:12px">`:'<span style="font-size:42px">🪦</span>';}
+  const on2=document.getElementById('loginOrgName2');if(on2)on2.textContent=ORG_CONFIG.name||'Falah e Qabristan';
+  const ou2=document.getElementById('loginOrgNameUrdu2');if(ou2)ou2.textContent=ORG_CONFIG.nameUrdu||'فلاح قبرستان';
+  const oa2=document.getElementById('loginOrgAddress2');if(oa2){if(ORG_CONFIG.address){oa2.textContent='📍 '+ORG_CONFIG.address;oa2.style.display='block';}else oa2.style.display='none';}
   // Logo on history screen
   const hli=document.getElementById('historyLogoImg');const hle=document.getElementById('historyLogoEmoji');const hls=document.getElementById('historyLogoSrc');
   if(hli&&hle&&hls){if(ORG_CONFIG.logo){hls.src=ORG_CONFIG.logo;hli.style.display='block';hle.style.display='none';}else{hli.style.display='none';hle.style.display='block';}}
@@ -953,15 +973,14 @@ function renderLoginExtras(){
       sl.innerHTML=links.map(([k,v])=>`<a href="${v}" target="_blank" style="display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;padding:8px 10px;background:#f5f5f5;border-radius:10px;border:1px solid #eee;min-width:52px"><span style="font-size:22px">${icons[k].emoji}</span><span style="font-size:10px;color:#666">${icons[k].label}</span></a>`).join('');
     } else sl.style.display='none';
   }
-  // History button
+  // History / Bank / Contact buttons — always visible
   const hb=document.getElementById('historyBtnWrap');
-  if(hb)hb.style.display=ORG_CONFIG.history?'block':'none';
-  // Bank button
+  if(hb)hb.style.display='block';
   const bb=document.getElementById('bankBtnWrap');
-  if(bb)bb.style.display=ORG_CONFIG.bankAccounts.length>0?'block':'none';
-  // Contact Us button
+  if(bb)bb.style.display='block';
   const cb=document.getElementById('contactBtnWrap');
-  if(cb)cb.style.display=(ORG_CONFIG.contactNumbers&&ORG_CONFIG.contactNumbers.length>0)||Object.values(ORG_CONFIG.socialLinks||{}).some(v=>v)?'block':'none';
+  if(cb)cb.style.display='block';
+  if(false)cb.style.display='none';//:'none';
   // Update contact screen
   const cnl=document.getElementById('contactNumbersList');
   const csl=document.getElementById('contactSocialLinks');
@@ -1078,9 +1097,8 @@ T.dash=function(){
   const statStyle="display:flex;flex-direction:column;cursor:pointer;-webkit-tap-highlight-color:transparent";
   return `
   <!-- HEADER: user info | org name+logo | logout -->
-  <div style="background:#0F6E56;border-radius:0 0 20px 20px;padding:14px 14px 18px;margin:-16px -12px 12px;position:relative;overflow:hidden">
-    <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:rgba(255,255,255,0.06);border-radius:50%"></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1">
+  <div style="background:#0F6E56;border-radius:0 0 20px 20px;padding:14px 14px 18px;margin:-16px -12px 12px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
       <!-- Left: user photo + name + role -->
       <div style="display:flex;align-items:center;gap:10px">
         <div style="width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;overflow:hidden;border:2px solid rgba(255,255,255,0.35);flex-shrink:0">
@@ -5463,6 +5481,8 @@ function openSMSReminders(activeTab){
 
 async function appInit(){
   initFirebase();
+  // Hide bottom nav until logged in
+  const nav=document.getElementById('bottomNav');if(nav)nav.style.display='none';
   try{await loadAllData();}catch(e){console.error('Data load error:',e);}
   try{safeInit();}catch(e){console.error('safeInit error:',e);}
   // Restore session after data is loaded

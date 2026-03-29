@@ -7,7 +7,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--green:#1D9E75;--green-dark:#0F6E56;--blue:#185FA5;--amber:#BA7517;--red:#E24B4A;--purple:#993556;--bg:#f0f4f3;--card:#fff;--border:#e0e0e0;--text:#1a1a1a;--muted:#888;--radius:12px}
-body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;color:var(--text);background:var(--bg);min-height:100vh;padding-bottom:60px}
+body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;color:var(--text);background:var(--bg);min-height:100vh;padding-bottom:60px}body.dark-dash{background:linear-gradient(160deg,#042C1E 0%,#063d2a 50%,#085041 100%);min-height:100vh}
 /* SCREENS */
 .screen{display:none;padding:0;min-height:100vh}.screen.active{display:block}
 .bi-field{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;margin-top:10px}
@@ -47,7 +47,7 @@ label{display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:5px;
 .badge-developer{background:#f5e8ff;color:#6b21a8}
 .badge-user{background:#f5f5f5;color:#666}
 .badge-donor{background:#E1F5EE;color:#0F6E56}
-.entry-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:0.5px solid #f5f5f5}
+.entry-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:0.5px solid rgba(255,255,255,0.08)}
 .entry-name{font-size:13px;font-weight:600;color:#1a1a1a}
 .entry-sub{font-size:11px;color:#999;margin-top:2px}
 .entry-amt{font-size:13px;font-weight:700;color:#0F6E56}
@@ -135,7 +135,7 @@ input[type=file]{padding:6px}
 .info-box.info{background:#E6F1FB;color:#185FA5;border:1px solid #378ADD}
 .info-box.danger{background:#FCEBEB;color:#A32D2D;border:1px solid #E24B4A}
 /* ENTRIES */
-.entry-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:0.5px solid #f5f5f5}
+.entry-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:0.5px solid rgba(255,255,255,0.08)}
 .entry-row:last-child{border-bottom:none}
 .entry-name{font-size:13px;font-weight:600}
 .entry-sub{font-size:11px;color:var(--muted);margin-top:2px}
@@ -218,10 +218,10 @@ input[type=file]{padding:6px}
 .approval-name{font-size:13px;font-weight:600}
 .approval-sub{font-size:11px;color:#888;margin-top:2px}
 /* FOOTER */
-.page-footer{background:#fff;border-top:1px solid #eee;padding:20px 16px 60px;text-align:center}
-.footer-org{font-size:12px;color:#888;margin-bottom:4px}
-.footer-credit{font-size:11px;color:#aaa}
-.footer-credit a{color:#1D9E75;text-decoration:none;font-weight:600}
+.page-footer{background:transparent;border-top:1px solid rgba(255,255,255,0.08);padding:20px 16px 60px;text-align:center}
+.footer-org{font-size:13px;font-weight:700;color:rgba(255,255,255,0.55);margin-bottom:6px}
+.footer-credit{font-size:12px;color:rgba(255,255,255,0.35)}
+.footer-credit a{color:#4ade80;text-decoration:none;font-weight:600}
 /* LOGIN PAGE */
 .login-hero{background:#0F6E56;padding:52px 24px 50px;text-align:center;color:#fff;position:relative;overflow:hidden}.login-hero::before{content:'';position:absolute;top:-50px;right:-50px;width:180px;height:180px;background:rgba(255,255,255,0.07);border-radius:50%}.login-hero::after{content:'';position:absolute;bottom:-40px;left:-40px;width:130px;height:130px;background:rgba(255,255,255,0.05);border-radius:50%}.login-hero-dot{position:absolute;top:30px;left:24px;width:60px;height:60px;background:rgba(255,255,255,0.04);border-radius:50%}
 .login-logo-wrap{margin-bottom:12px}
@@ -330,7 +330,7 @@ input[type=file]{padding:6px}
 
     <!-- Footer -->
     <div class="page-footer" style="margin-top:24px;padding:16px 0 24px;border-top:1px solid #f0f0f0;text-align:center">
-      <div class="footer-org" id="footerOrgName" style="font-size:13px;font-weight:700;color:#0F6E56;margin-bottom:4px">Falah e Qabristan</div>
+      <div class="footer-org" id="footerOrgName">Falah e Qabristan</div>
       <div class="footer-credit">Designed By: <a href="tel:03009084228">Asif Kanwal — 0300-9084228</a></div>
       <div class="footer-credit">Developed By: <a href="tel:03184516464">Mubeen Ahmad — 0318-4516464</a></div>
     </div>
@@ -356,8 +356,8 @@ input[type=file]{padding:6px}
         <div id="historyPhotosGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"></div>
       </div>
     </div>
-    <div class="page-footer"><div class="footer-credit">Designed By: <a href="tel:03009084228">Asif Kanwal — 0300-9084228</a></div>
-      <div class="footer-credit">Developed By: <a href="tel:03184516464">Mubeen Ahmad — 0318-4516464</a></div></div>
+    <div style="padding:20px 16px 60px;text-align:center;border-top:1px solid rgba(255,255,255,0.08)"><div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:6px">Falah e Qabristan</div><div style="font-size:12px;color:rgba(255,255,255,0.4)">Designed By: <a href="tel:03009084228" style="color:#4ade80;text-decoration:none;font-weight:600">Asif Kanwal — 0300-9084228</a></div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:2px">Developed By: <a href="tel:03184516464" style="color:#4ade80;text-decoration:none;font-weight:600">Mubeen Ahmad — 0318-4516464</a></div></div>
   </div>
 </div>
 
@@ -369,8 +369,8 @@ input[type=file]{padding:6px}
   <div class="content-area">
     <div id="bankAccountsList"></div>
     <div id="bankEmpty" class="card"><p style="font-size:13px;color:#888;text-align:center;padding:10px 0">No accounts added yet.</p></div>
-    <div class="page-footer"><div class="footer-credit">Designed By: <a href="tel:03009084228">Asif Kanwal — 0300-9084228</a></div>
-      <div class="footer-credit">Developed By: <a href="tel:03184516464">Mubeen Ahmad — 0318-4516464</a></div></div>
+    <div style="padding:20px 16px 60px;text-align:center;border-top:1px solid rgba(255,255,255,0.08)"><div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:6px">Falah e Qabristan</div><div style="font-size:12px;color:rgba(255,255,255,0.4)">Designed By: <a href="tel:03009084228" style="color:#4ade80;text-decoration:none;font-weight:600">Asif Kanwal — 0300-9084228</a></div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:2px">Developed By: <a href="tel:03184516464" style="color:#4ade80;text-decoration:none;font-weight:600">Mubeen Ahmad — 0318-4516464</a></div></div>
   </div>
 </div>
 
@@ -437,8 +437,8 @@ input[type=file]{padding:6px}
         <span style="color:#aaa;font-size:18px">→</span>
       </button>
     </div>
-    <div class="page-footer"><div class="footer-credit">Designed By: <a href="tel:03009084228">Asif Kanwal — 0300-9084228</a></div>
-      <div class="footer-credit">Developed By: <a href="tel:03184516464">Mubeen Ahmad — 0318-4516464</a></div></div>
+    <div style="padding:20px 16px 60px;text-align:center;border-top:1px solid rgba(255,255,255,0.08)"><div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:6px">Falah e Qabristan</div><div style="font-size:12px;color:rgba(255,255,255,0.4)">Designed By: <a href="tel:03009084228" style="color:#4ade80;text-decoration:none;font-weight:600">Asif Kanwal — 0300-9084228</a></div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:2px">Developed By: <a href="tel:03184516464" style="color:#4ade80;text-decoration:none;font-weight:600">Mubeen Ahmad — 0318-4516464</a></div></div>
   </div>
 </div>
 
@@ -489,8 +489,8 @@ input[type=file]{padding:6px}
       </div>
       <button class="btn btn-primary" style="margin-top:16px;padding:13px" onclick="submitReg()"><span style="font-size:13px">Submit</span><span style="font-size:10px;color:rgba(255,255,255,0.8);display:block;margin-top:1px">جمع کرائیں</span></button>
     </div>
-    <div class="page-footer"><div class="footer-credit">Designed By: <a href="tel:03009084228">Asif Kanwal — 0300-9084228</a></div>
-      <div class="footer-credit">Developed By: <a href="tel:03184516464">Mubeen Ahmad — 0318-4516464</a></div></div>
+    <div style="padding:20px 16px 60px;text-align:center;border-top:1px solid rgba(255,255,255,0.08)"><div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:6px">Falah e Qabristan</div><div style="font-size:12px;color:rgba(255,255,255,0.4)">Designed By: <a href="tel:03009084228" style="color:#4ade80;text-decoration:none;font-weight:600">Asif Kanwal — 0300-9084228</a></div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:2px">Developed By: <a href="tel:03184516464" style="color:#4ade80;text-decoration:none;font-weight:600">Mubeen Ahmad — 0318-4516464</a></div></div>
   </div>
 </div>
 
@@ -507,8 +507,8 @@ input[type=file]{padding:6px}
       <div style="position:relative"><span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:18px">🗝️</span><input type="password" id="devKey" placeholder="••••" style="text-align:center;font-size:22px;letter-spacing:8px;border-radius:12px;padding-left:38px"></div>
       <button class="btn btn-dev" style="margin-top:14px;padding:13px" onclick="checkDevKey()">Login</button>
     </div>
-    <div class="page-footer"><div class="footer-credit">Designed By: <a href="tel:03009084228">Asif Kanwal — 0300-9084228</a></div>
-      <div class="footer-credit">Developed By: <a href="tel:03184516464">Mubeen Ahmad — 0318-4516464</a></div></div>
+    <div style="padding:20px 16px 60px;text-align:center;border-top:1px solid rgba(255,255,255,0.08)"><div style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.6);margin-bottom:6px">Falah e Qabristan</div><div style="font-size:12px;color:rgba(255,255,255,0.4)">Designed By: <a href="tel:03009084228" style="color:#4ade80;text-decoration:none;font-weight:600">Asif Kanwal — 0300-9084228</a></div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:2px">Developed By: <a href="tel:03184516464" style="color:#4ade80;text-decoration:none;font-weight:600">Mubeen Ahmad — 0318-4516464</a></div></div>
   </div>
 </div>
 
@@ -1117,25 +1117,22 @@ T.dash=function(){
   const pt=pendingTransfers();
   const statStyle="display:flex;flex-direction:column;cursor:pointer;-webkit-tap-highlight-color:transparent";
   return `
-  <!-- HEADER: user info | org name+logo | logout -->
-  <div style="background:#0F6E56;border-radius:0 0 20px 20px;padding:14px 14px 18px;margin:-16px -12px 12px">
+  <!-- HEADER: user info | logout -->
+  <div style="padding:4px 0 18px">
     <div style="display:flex;align-items:center;justify-content:space-between">
-      <!-- Left: user photo + name + role -->
       <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;overflow:hidden;border:2px solid rgba(255,255,255,0.35);flex-shrink:0">
+        <div style="width:44px;height:44px;border-radius:50%;background:rgba(29,158,117,0.25);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;overflow:hidden;border:2px solid rgba(29,158,117,0.5);flex-shrink:0">
           ${currentUser.photo?`<img src="${currentUser.photo}" style="width:100%;height:100%;object-fit:cover">`:(currentUser.name||'?')[0].toUpperCase()}
         </div>
         <div>
           <div style="font-size:14px;font-weight:700;color:#fff;line-height:1.3">${currentUser.name}</div>
-          <div style="font-size:10px;color:rgba(255,255,255,0.8);margin-top:2px;display:flex;align-items:center;gap:5px">
+          <div style="font-size:10px;color:rgba(255,255,255,0.45);margin-top:2px;display:flex;align-items:center;gap:5px">
             <span>${currentUser.id||''}</span>
-            <span style="background:rgba(255,255,255,0.18);padding:1px 7px;border-radius:20px;font-size:9px;font-weight:600">${currentRole}</span>
+            <span style="background:rgba(29,158,117,0.3);color:#4ade80;padding:1px 7px;border-radius:20px;font-size:9px;font-weight:700;border:1px solid rgba(29,158,117,0.4)">${currentRole}</span>
           </div>
         </div>
       </div>
-
-      <!-- Right: logout only -->
-      <button onclick="logout()" style="background:#E24B4A;border:none;border-radius:8px;color:#fff;padding:6px 12px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;gap:5px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span style="font-size:11px;font-weight:700">Logout</span></button>
+      <button onclick="logout()" style="background:rgba(226,75,74,0.85);border:1px solid rgba(226,75,74,0.3);border-radius:8px;color:#fff;padding:6px 12px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;gap:5px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span style="font-size:11px;font-weight:700">Logout</span></button>
     </div>
   </div>
   <!-- STATS -->
@@ -1144,63 +1141,60 @@ T.dash=function(){
       <div class="stat-card-bi" onclick="openMyDonationsQuick()" style="${statStyle}"><div class="stat-label-bi"><span class="en">Donated</span><span class="ur">اعانت</span></div><div class="stat-val" style="color:#0F6E56;font-size:15px;font-weight:800;margin-top:4px">${fmt(income)}</div></div>
       <div class="stat-card-bi" style="${statStyle}"><div class="stat-label-bi"><span class="en">Count</span><span class="ur">تعداد</span></div><div class="stat-val" style="color:#185FA5;font-size:19px;font-weight:800;margin-top:4px">${myD.length}</div></div>
     `:`
-      <div class="stat-card-bi" onclick="selectTab('myentries')" style="${statStyle}"><div class="stat-label-bi"><span class="en">My Income</span><span class="ur">آمدنی</span></div><div class="stat-val" style="color:#0F6E56;font-size:14px;font-weight:800;margin-top:4px">${fmt(income)}</div><div style="font-size:9px;color:#1D9E75;margin-top:3px;font-weight:600">tap to view →</div></div>
-      <div class="stat-card-bi" onclick="selectTab('myentries')" style="${statStyle}"><div class="stat-label-bi"><span class="en">Expenses</span><span class="ur">اخراجات</span></div><div class="stat-val" style="color:#E24B4A;font-size:14px;font-weight:800;margin-top:4px">${fmt(exp)}</div><div style="font-size:9px;color:#E24B4A;margin-top:3px;font-weight:600">tap to view →</div></div>
-      <div class="stat-card-bi" onclick="selectTab('transfer')" style="${statStyle}"><div class="stat-label-bi"><span class="en">Transfer Out</span><span class="ur">منتقلی</span></div><div class="stat-val" style="color:#BA7517;font-size:14px;font-weight:800;margin-top:4px">${fmt(sent)}</div><div style="font-size:9px;color:#BA7517;margin-top:3px;font-weight:600">tap to view →</div></div>
-      <div class="stat-card-bi" onclick="selectTab('ledger')" style="${statStyle}"><div class="stat-label-bi"><span class="en">Cash in Hand</span><span class="ur">نقد</span></div><div class="stat-val" style="color:#185FA5;font-size:14px;font-weight:800;margin-top:4px">${fmt(cash)}</div><div style="font-size:9px;color:#185FA5;margin-top:3px;font-weight:600">tap to view →</div></div>
+      <div onclick="selectTab('myentries')" style="${statStyle};background:rgba(29,158,117,0.12);border:1px solid rgba(29,158,117,0.25);border-radius:12px;padding:12px 13px"><div style="font-size:9px;font-weight:700;color:#4ade80;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">My Income</div><div style="font-size:19px;font-weight:800;color:#fff">${fmt(income)}</div><div style="font-size:9px;color:rgba(255,255,255,0.35);margin-top:3px">tap to view →</div></div>
+      <div onclick="selectTab('myentries')" style="${statStyle};background:rgba(226,75,74,0.12);border:1px solid rgba(226,75,74,0.25);border-radius:12px;padding:12px 13px"><div style="font-size:9px;font-weight:700;color:#fca5a5;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Expenses</div><div style="font-size:19px;font-weight:800;color:#FFB3B3">${fmt(exp)}</div><div style="font-size:9px;color:rgba(255,255,255,0.35);margin-top:3px">tap to view →</div></div>
+      <div onclick="selectTab('transfer')" style="${statStyle};background:rgba(186,117,23,0.12);border:1px solid rgba(186,117,23,0.25);border-radius:12px;padding:12px 13px"><div style="font-size:9px;font-weight:700;color:#fcd34d;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Transfer Out</div><div style="font-size:19px;font-weight:800;color:#FFD980">${fmt(sent)}</div><div style="font-size:9px;color:rgba(255,255,255,0.35);margin-top:3px">tap to view →</div></div>
+      <div onclick="selectTab('ledger')" style="${statStyle};background:rgba(55,138,221,0.12);border:1px solid rgba(55,138,221,0.25);border-radius:12px;padding:12px 13px"><div style="font-size:9px;font-weight:700;color:#93C5FD;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Cash in Hand</div><div style="font-size:19px;font-weight:800;color:#93C5FD">${fmt(cash)}</div><div style="font-size:9px;color:rgba(255,255,255,0.35);margin-top:3px">tap to view →</div></div>
     `}
   </div>
   ${!isUser&&pt>0?`<div class="info-box warning">📩 ${pt} pending transfer(s) — check Transfer tab.</div>`:''}
   <!-- RECENT ENTRIES -->
-  <div class="card" style="padding:10px;margin-bottom:10px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <div class="section-header" style="margin-bottom:0">
-        <span class="en">${isUser?'My Donations':'Recent Entries'}</span>
-        <span class="ur">${isUser?'میری اعانت':'حالیہ اندراجات'}</span>
-      </div>
-      ${!isUser?`<button onclick="selectTab('myentries')" style="font-size:10px;color:#1D9E75;background:none;border:none;cursor:pointer;font-weight:600">View All →</button>`:''}
+  <div style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:14px;margin-bottom:10px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:0.5px">${isUser?'My Donations':'Recent Entries'}</div>
+      ${!isUser?`<button onclick="selectTab('myentries')" style="font-size:11px;color:#4ade80;background:none;border:none;cursor:pointer;font-weight:600">View All →</button>`:''}
     </div>
-    ${myD.length===0?'<p style="font-size:11px;color:#888">No entries found.</p>':myD.slice(-2).reverse().map(d=>{const dn=DB.donors.find(x=>x.id===d.donorId)||{name:currentUser.name,area:currentUser.area||''};return `<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:0.5px solid #f5f5f5">${avatarHtml(dn.photo,dn.name,22)}<div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${isUser?d.desc||'Donation':dn.name}</div><div style="font-size:10px;color:#aaa">${d.date}</div></div><div style="font-size:11px;font-weight:700;color:#0F6E56;white-space:nowrap">${fmt(d.amount)}</div></div>`;}).join('')}
+    ${myD.length===0?'<p style="font-size:11px;color:#888">No entries found.</p>':myD.slice(-2).reverse().map(d=>{const dn=DB.donors.find(x=>x.id===d.donorId)||{name:currentUser.name,area:currentUser.area||''};return `<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:0.5px solid rgba(255,255,255,0.08)">${avatarHtml(dn.photo,dn.name,22)}<div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,0.8)">${isUser?d.desc||'Donation':dn.name}</div><div style="font-size:10px;color:rgba(255,255,255,0.4)">${d.date}</div></div><div style="font-size:11px;font-weight:700;color:#4ade80;white-space:nowrap">${fmt(d.amount)}</div></div>`;}).join('')}
   </div>
   <!-- QUICK ACTIONS -->
   ${!isUser?`
-  <div class="card" style="padding:10px;margin-bottom:10px">
-    <div class="section-header"><span class="en">Quick Actions</span><span class="ur">فوری عمل</span></div>
+  <div style="background:rgba(255,255,255,0.07);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.13);border-radius:18px;padding:14px;margin-bottom:10px">
+    <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">Quick Actions <span style="font-family:serif;font-size:9px;color:rgba(255,255,255,0.3)">فوری عمل</span></div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px">
-      <button onclick="selectTab('donation')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #1D9E75;background:#E1F5EE;cursor:pointer"><span style="font-size:19px">💰</span><span style="font-size:9px;font-weight:600;color:#085041">Donation</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">چندہ</span></button>
-      <button onclick="selectTab('expense')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #BA7517;background:#FAEEDA;cursor:pointer"><span style="font-size:19px">📋</span><span style="font-size:9px;font-weight:600;color:#633806">Expense</span><span style="font-size:8px;color:#633806;opacity:0.75;direction:rtl">اخراجات</span></button>
-      <button onclick="selectTab('deceased')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #0F6E56;background:#E1F5EE;cursor:pointer"><span style="font-size:19px">🪦</span><span style="font-size:9px;font-weight:600;color:#085041">Deceased</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">وفات</span></button>
-      <button onclick="selectTab('slip')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #185FA5;background:#E6F1FB;cursor:pointer"><span style="font-size:19px">🧾</span><span style="font-size:9px;font-weight:600;color:#0C447C">Slip</span><span style="font-size:8px;color:#0C447C;opacity:0.75;direction:rtl">سلپ</span></button>
+      <button onclick="selectTab('donation')" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:14px 4px;border-radius:12px;cursor:pointer;position:relative;border:none;background:rgba(29,158,117,0.18);border:1px solid rgba(29,158,117,0.35)"><span style="font-size:22px">💰</span><span style="font-size:10px;font-weight:700;color:#4ade80">Donation</span><span style="font-size:8px;color:#4ade80;opacity:0.7;direction:rtl">چندہ</span></button>
+      <button onclick="selectTab('expense')" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:14px 4px;border-radius:12px;cursor:pointer;position:relative;border:none;background:rgba(226,75,74,0.18);border:1px solid rgba(226,75,74,0.35)"><span style="font-size:22px">📋</span><span style="font-size:10px;font-weight:700;color:#ef4444">Expense</span><span style="font-size:8px;color:#ef4444;opacity:0.8;direction:rtl">اخراجات</span></button>
+      <button onclick="selectTab('deceased')" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:14px 4px;border-radius:12px;cursor:pointer;position:relative;border:none;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.14)"><span style="font-size:22px">🪦</span><span style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.7)">Deceased</span><span style="font-size:8px;color:rgba(255,255,255,0.45);direction:rtl">وفات</span></button>
+      <button onclick="selectTab('slip')" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:14px 4px;border-radius:12px;cursor:pointer;position:relative;border:none;background:rgba(55,138,221,0.18);border:1px solid rgba(55,138,221,0.35)"><span style="font-size:22px">🧾</span><span style="font-size:10px;font-weight:700;color:#93C5FD">Slip</span><span style="font-size:8px;color:#93C5FD;opacity:0.7;direction:rtl">سلپ</span></button>
     </div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px">
-      <button onclick="selectTab('myentries')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #ddd;background:#f5f5f5;cursor:pointer"><span style="font-size:19px">📊</span><span style="font-size:9px;font-weight:600;color:#444">My Don.</span><span style="font-size:8px;color:#444;opacity:0.75;direction:rtl">میرا چندہ</span></button>
-      <button onclick="selectTab('myentries')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #ddd;background:#f5f5f5;cursor:pointer"><span style="font-size:19px">📑</span><span style="font-size:9px;font-weight:600;color:#444">My Exp.</span><span style="font-size:8px;color:#444;opacity:0.75;direction:rtl">میرے اخراج</span></button>
-      <button onclick="selectTab('suggestions')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #BA7517;background:#FAEEDA;cursor:pointer;position:relative">
-        <span style="font-size:19px">💡</span>
-        <span style="font-size:9px;font-weight:600;color:#633806">Suggestions</span>
-        <span style="font-size:8px;color:#633806;opacity:0.75;direction:rtl">تجاویز</span>
-        ${(()=>{const cnt=DB.suggestions.filter(s=>s.type!=='complaint'&&!s.read).length;return cnt>0?`<span style="position:absolute;top:4px;right:4px;background:#BA7517;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:20px">${cnt}</span>`:'';})()}
+      <button onclick="selectTab('myentries')" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:14px 4px;border-radius:12px;cursor:pointer;position:relative;border:none;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12)"><span style="font-size:22px">📊</span><span style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.65)">My Don.</span><span style="font-size:8px;color:rgba(255,255,255,0.4);direction:rtl">میرا چندہ</span></button>
+      <button onclick="selectTab('myentries')" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:14px 4px;border-radius:12px;cursor:pointer;position:relative;border:none;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12)"><span style="font-size:22px">📑</span><span style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.65)">My Exp.</span><span style="font-size:8px;color:rgba(255,255,255,0.4);direction:rtl">میرا اخراج</span></button>
+      <button onclick="selectTab('suggestions')" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:14px 4px;border-radius:12px;cursor:pointer;position:relative;border:none;background:rgba(132,204,22,0.18);border:1px solid rgba(132,204,22,0.35)">
+        <span style="font-size:22px">💡</span>
+        <span style="font-size:10px;font-weight:700;color:#bef264">Suggestions</span>
+        <span style="font-size:8px;color:#bef264;opacity:0.7;direction:rtl">تجاویز</span>
+                ${(()=>{const cnt=DB.suggestions.filter(s=>s.type!=='complaint'&&!s.read).length;return cnt>0?`<span style="position:absolute;top:4px;right:4px;background:#BA7517;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:20px">${cnt}</span>`:'';})()}
       </button>
-      <button onclick="selectTab('complaints')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #E24B4A;background:#FCEBEB;cursor:pointer;position:relative">
-        <span style="font-size:19px">⚠️</span>
-        <span style="font-size:9px;font-weight:600;color:#A32D2D">Complaints</span>
-        <span style="font-size:8px;color:#A32D2D;opacity:0.75;direction:rtl">شکایات</span>
-        ${(()=>{const cnt=DB.suggestions.filter(s=>s.type==='complaint'&&!s.read).length;return cnt>0?`<span style="position:absolute;top:4px;right:4px;background:#E24B4A;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:20px">${cnt}</span>`:'';})()}
+      <button onclick="selectTab('complaints')" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:14px 4px;border-radius:12px;cursor:pointer;position:relative;border:none;background:rgba(226,75,74,0.18);border:1px solid rgba(226,75,74,0.35)">
+        <span style="font-size:22px">⚠️</span>
+        <span style="font-size:10px;font-weight:700;color:#ef4444">Complaints</span>
+        <span style="font-size:8px;color:#ef4444;opacity:0.8;direction:rtl">شکایات</span>
+                ${(()=>{const cnt=DB.suggestions.filter(s=>s.type==='complaint'&&!s.read).length;return cnt>0?`<span style="position:absolute;top:4px;right:4px;background:#E24B4A;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:20px">${cnt}</span>`:'';})()}
       </button>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <button onclick="selectTab('search')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:0.5px solid #185FA5;background:#E6F1FB;cursor:pointer">
+      <button onclick="selectTab('search')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;background:rgba(55,138,221,0.15);border:1px solid rgba(55,138,221,0.3);cursor:pointer">
         <span style="font-size:22px">🔍</span>
         <div style="flex:1;text-align:left">
-          <div style="font-size:11px;font-weight:700;color:#0C447C">Search / تلاش</div>
-          <div style="font-size:10px;color:#0C447C;opacity:0.8">Search donors & users</div>
+          <div style="font-size:11px;font-weight:700;color:#93C5FD">Search / تلاش</div>
+          <div style="font-size:10px;color:rgba(147,197,253,0.6)">Search donors & users</div>
         </div>
       </button>
-      <button onclick="selectTab('bloodbank')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:0.5px solid #E24B4A;background:#FCEBEB;cursor:pointer">
+      <button onclick="selectTab('bloodbank')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;background:rgba(226,75,74,0.18);border:1px solid rgba(226,75,74,0.35);cursor:pointer">
         <span style="font-size:22px">🩸</span>
         <div style="flex:1;text-align:left">
-          <div style="font-size:11px;font-weight:700;color:#A32D2D">Blood Bank / بلڈ بینک</div>
-          <div style="font-size:10px;color:#A32D2D;opacity:0.8">Search by blood group</div>
+          <div style="font-size:11px;font-weight:700;color:#ef4444">Blood Bank / بلڈ بینک</div>
+          <div style="font-size:10px;color:rgba(239,68,68,0.7)">Search by blood group</div>
         </div>
       </button>
     </div>
@@ -1209,13 +1203,13 @@ T.dash=function(){
   <div class="card" style="padding:10px;margin-bottom:10px">
     <div class="section-header"><span class="en">Quick Actions</span><span class="ur">فوری عمل</span></div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
-      <button onclick="selectTab('bloodbank')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:0.5px solid #E24B4A;background:#FCEBEB;cursor:pointer"><span style="font-size:20px">🩸</span><span style="font-size:9px;font-weight:600;color:#A32D2D">Blood Bank</span><span style="font-size:8px;color:#A32D2D;opacity:0.75;direction:rtl">بلڈ بینک</span></button>
-      <button onclick="selectTab('search')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:0.5px solid #185FA5;background:#E6F1FB;cursor:pointer"><span style="font-size:20px">🔍</span><span style="font-size:9px;font-weight:600;color:#0C447C">Search</span><span style="font-size:8px;color:#0C447C;opacity:0.75;direction:rtl">تلاش</span></button>
-      <button onclick="selectTab('contacts')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:0.5px solid #1D9E75;background:#E1F5EE;cursor:pointer"><span style="font-size:20px">📒</span><span style="font-size:9px;font-weight:600;color:#085041">Contacts</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">رابطے</span></button>
-      <button onclick="selectTab('suggestion')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:0.5px solid #BA7517;background:#FAEEDA;cursor:pointer"><span style="font-size:20px">💡</span><span style="font-size:9px;font-weight:600;color:#633806">Give Suggestion</span><span style="font-size:8px;color:#633806;opacity:0.75;direction:rtl">تجویز دیں</span></button>
-      <button onclick="selectTab('complaint')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:0.5px solid #E24B4A;background:#FCEBEB;cursor:pointer"><span style="font-size:20px">⚠️</span><span style="font-size:9px;font-weight:600;color:#A32D2D">Send Complaint</span><span style="font-size:8px;color:#A32D2D;opacity:0.75;direction:rtl">شکایت بھیجیں</span></button>
-      <button onclick="selectTab('balreport')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:0.5px solid #185FA5;background:#E6F1FB;cursor:pointer"><span style="font-size:20px">💼</span><span style="font-size:9px;font-weight:600;color:#0C447C">Balance</span><span style="font-size:8px;color:#0C447C;opacity:0.75;direction:rtl">بیلنس</span></button>
-      <button onclick="selectTab('adddonor')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:0.5px solid #0F6E56;background:#E1F5EE;cursor:pointer"><span style="font-size:20px">👤</span><span style="font-size:9px;font-weight:600;color:#085041">Add Donor</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">ڈونر شامل</span></button>
+      <button onclick="selectTab('bloodbank')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:1px solid rgba(226,75,74,0.4);background:rgba(226,75,74,0.15);cursor:pointer"><span style="font-size:20px">🩸</span><span style="font-size:9px;font-weight:600;color:#A32D2D">Blood Bank</span><span style="font-size:8px;color:#A32D2D;opacity:0.75;direction:rtl">بلڈ بینک</span></button>
+      <button onclick="selectTab('search')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:1px solid rgba(55,138,221,0.3);background:rgba(55,138,221,0.15);cursor:pointer"><span style="font-size:20px">🔍</span><span style="font-size:9px;font-weight:600;color:#0C447C">Search</span><span style="font-size:8px;color:#0C447C;opacity:0.75;direction:rtl">تلاش</span></button>
+      <button onclick="selectTab('contacts')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:1px solid rgba(29,158,117,0.4);background:rgba(29,158,117,0.15);cursor:pointer"><span style="font-size:20px">📒</span><span style="font-size:9px;font-weight:600;color:#085041">Contacts</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">رابطے</span></button>
+      <button onclick="selectTab('suggestion')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:1px solid rgba(186,117,23,0.4);background:rgba(186,117,23,0.15);cursor:pointer"><span style="font-size:20px">💡</span><span style="font-size:9px;font-weight:600;color:#633806">Give Suggestion</span><span style="font-size:8px;color:#633806;opacity:0.75;direction:rtl">تجویز دیں</span></button>
+      <button onclick="selectTab('complaint')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:1px solid rgba(226,75,74,0.4);background:rgba(226,75,74,0.15);cursor:pointer"><span style="font-size:20px">⚠️</span><span style="font-size:9px;font-weight:600;color:#A32D2D">Send Complaint</span><span style="font-size:8px;color:#A32D2D;opacity:0.75;direction:rtl">شکایت بھیجیں</span></button>
+      <button onclick="selectTab('balreport')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:1px solid rgba(55,138,221,0.3);background:rgba(55,138,221,0.15);cursor:pointer"><span style="font-size:20px">💼</span><span style="font-size:9px;font-weight:600;color:#0C447C">Balance</span><span style="font-size:8px;color:#0C447C;opacity:0.75;direction:rtl">بیلنس</span></button>
+      <button onclick="selectTab('adddonor')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);cursor:pointer"><span style="font-size:20px">👤</span><span style="font-size:9px;font-weight:600;color:#085041">Add Donor</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">ڈونر شامل</span></button>
     </div>
   </div>
   `}
@@ -1334,7 +1328,7 @@ function showDonorSuggestions(val){
   box.style.display='block';
   box.innerHTML=unique.map(d=>`
     <div onclick="selectDonorSuggestion('${d.id}')"
-      style="display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;border-bottom:0.5px solid #f5f5f5;transition:background 0.1s"
+      style="display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;border-bottom:0.5px solid rgba(255,255,255,0.08);transition:background 0.1s"
       onmouseenter="this.style.background='#f0fff8'"
       onmouseleave="this.style.background=''">
       ${avatarHtml(d.photo,d.name,34)}
@@ -3337,7 +3331,7 @@ function filterBloodBank(area){
   el.innerHTML=`<div class="card">
     <div style="font-size:12px;font-weight:600;color:#888;margin-bottom:10px">${filtered.length} donor${filtered.length!==1?'s':''} found | ملے</div>
     ${filtered.map(d=>`
-      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid #f5f5f5" onclick="openDonorProfile('${d.id}')" style="cursor:pointer">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid rgba(255,255,255,0.08)" onclick="openDonorProfile('${d.id}')" style="cursor:pointer">
         <div style="flex-shrink:0">${avatarHtml(d.photo,d.name,50)}</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:700">${d.name}</div>
@@ -4559,7 +4553,7 @@ function filterContacts(area){
     html+=`<div style="font-size:11px;font-weight:700;color:#888;padding:8px 0 4px;border-bottom:1px solid #eee;margin-bottom:4px">${letter}</div>`;
     groups[letter].forEach(u=>{
       const isDonor=DB.donors.find(d=>d.id===u.id)?'donor':'user';
-      html+=`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid #f5f5f5" onclick="openDonorProfile('${u.id}')">
+      html+=`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid rgba(255,255,255,0.08)" onclick="openDonorProfile('${u.id}')">
         <div style="flex-shrink:0">${avatarHtml(u.photo,u.name,44)}</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.name} <span class="id-badge" style="font-size:10px">${u.id}</span></div>
@@ -5441,6 +5435,9 @@ function buildTabs(){
 // FAB config per tab
 
 function renderTab(key){
+  // Toggle dark dashboard background
+  if(key==='dash'){document.body.classList.add('dark-dash');}
+  else{document.body.classList.remove('dark-dash');}
   const el=document.getElementById('tabContent');
   if(T[key]){
     const isForm=FORM_TABS_SET&&FORM_TABS_SET.has(key);

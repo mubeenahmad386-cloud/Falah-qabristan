@@ -4083,7 +4083,7 @@ T.lockuser=function(){
       <button onclick="setLockFilter('mobile')" id="lf_mobile" style="background:#f5f5f5;color:#333;border:1px solid #ddd;padding:4px 12px;border-radius:20px;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0">📱 Mobile</button>
       <button onclick="setLockFilter('id')" id="lf_id" style="background:#f5f5f5;color:#333;border:1px solid #ddd;padding:4px 12px;border-radius:20px;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0">🪪 ID</button>
     </div>
-    <div id="lockUserList"><p style="font-size:12px;color:#aaa;text-align:center;padding:20px 0">🔍 Start typing to search</p></div>
+    <div id="lockUserList"><p style="font-size:12px;color:#aaa;text-align:center;padding:20px 0">Loading...</p></div>
   </div>`;
 }
 window._lockFilter='name';
@@ -4096,7 +4096,10 @@ function setLockFilter(f){
   const si=document.getElementById('lockUserSearch');
   if(si){si.value='';si.focus();}
   const el=document.getElementById('lockUserList');
-  if(el)el.innerHTML='<p style="font-size:12px;color:#aaa;text-align:center;padding:20px 0">🔍 Start typing to search</p>';
+  if(el){
+    const all=DB.users.filter(u=>u.role!=='developer');
+    el.innerHTML='<div style="font-size:11px;color:#888;font-weight:600;margin-bottom:8px">Total: '+all.length+' users | '+all.length+' صارفین</div>'+renderLockUserListHtml(all,'');
+  }
 }
 function renderLockUserListHtml(users,q){
   const filtered=users;
@@ -4142,7 +4145,7 @@ function runLockSearch(){
   if(!el)return;
   const allUsers=DB.users.filter(u=>u.role!=='developer');
   if(!q){
-    el.innerHTML='<p style="font-size:12px;color:#aaa;text-align:center;padding:20px 0">🔍 Start typing to search</p>';
+    el.innerHTML='<div style="font-size:11px;color:#888;font-weight:600;margin-bottom:8px">Total: '+allUsers.length+' users | '+allUsers.length+' صارفین</div>'+renderLockUserListHtml(allUsers,'');
     return;
   }
   const f=window._lockFilter||'name';
@@ -4159,7 +4162,7 @@ function runLockSearch(){
     el.innerHTML='<p style="font-size:13px;color:#888;text-align:center;padding:16px">No users found | کوئی صارف نہیں ملا</p>';
     return;
   }
-  el.innerHTML=renderLockUserListHtml(shown,'');
+  el.innerHTML='<div style="font-size:11px;color:#888;font-weight:600;margin-bottom:8px">'+shown.length+' result'+(shown.length!==1?'s':'')+'</div>'+renderLockUserListHtml(shown,'');
 }
 function renderLockUserList(){
   const el=document.getElementById('lockUserList');
@@ -5240,7 +5243,10 @@ function renderTab(key){
           if(btn){btn.style.background=k==='name'?'#1D9E75':'#f5f5f5';btn.style.color=k==='name'?'#fff':'#333';btn.style.borderColor=k==='name'?'#1D9E75':'#ddd';}
         });
         const el=document.getElementById('lockUserList');
-        if(el)el.innerHTML='<p style="font-size:12px;color:#aaa;text-align:center;padding:20px 0">🔍 Start typing to search</p>';
+        if(el){
+          const all=DB.users.filter(u=>u.role!=='developer');
+          el.innerHTML='<div style="font-size:11px;color:#888;font-weight:600;margin-bottom:8px">Total: '+all.length+' users | '+all.length+' صارفین</div>'+renderLockUserListHtml(all,'');
+        }
       },
       search:()=>{
         window._searchFilter='name';

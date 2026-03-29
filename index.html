@@ -4071,19 +4071,32 @@ function approveDeceased(id){
 
 // ---- LOGIN MANAGEMENT (developer) ----
 T.lockuser=function(){
-  const users=DB.users.filter(u=>u.role!=='developer');
   return `<div class="card">
     <h3><span class="bi-title"><span class="bi-en">Login Management</span><span class="bi-ur">لاگ ان کنٹرول</span></span></h3>
-    <div style="display:flex;gap:8px;margin-bottom:12px">
-       <div class="inp-wrap" style="flex:1;margin-bottom:0">
-         <span class="inp-icon">🔍</span>
-         <input type="text" id="lockUserSearch" placeholder="Name, mobile ya ID likhein..." onkeydown="if(event.key==='Enter')runLockSearch();" style="font-size:13px">
-       </div>
-       <button onclick="runLockSearch()" style="background:#1D9E75;border:none;border-radius:8px;padding:0 16px;font-size:16px;cursor:pointer;color:#fff">🔍</button>
-       <button onclick="document.getElementById('lockUserSearch').value='';renderLockUserList();" style="background:#f5f5f5;border:1px solid #ddd;border-radius:8px;padding:0 12px;font-size:12px;cursor:pointer;color:#666">✕</button>
-     </div>
-    <div id="lockUserList"><p style="font-size:13px;color:#888">Loading...</p></div>
+    <div class="inp-wrap" style="margin-bottom:8px;position:relative">
+      <span class="inp-icon">🔍</span>
+      <input type="text" id="lockUserSearch" placeholder="Search name, mobile or ID..." oninput="runLockSearch()" autocomplete="off" style="font-size:13px">
+      <button onclick="document.getElementById('lockUserSearch').value='';runLockSearch();" style="position:absolute;right:10px;background:none;border:none;font-size:16px;color:#aaa;cursor:pointer;padding:0;top:50%;transform:translateY(-50%)">✕</button>
+    </div>
+    <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px">
+      <button onclick="setLockFilter('name')" id="lf_name" style="background:#1D9E75;color:#fff;border:1px solid #1D9E75;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">👤 Name | نام</button>
+      <button onclick="setLockFilter('mobile')" id="lf_mobile" style="background:#f5f5f5;color:#333;border:1px solid #ddd;padding:4px 12px;border-radius:20px;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0">📱 Mobile</button>
+      <button onclick="setLockFilter('id')" id="lf_id" style="background:#f5f5f5;color:#333;border:1px solid #ddd;padding:4px 12px;border-radius:20px;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0">🪪 ID</button>
+    </div>
+    <div id="lockUserList"><p style="font-size:12px;color:#aaa;text-align:center;padding:20px 0">🔍 Start typing to search</p></div>
   </div>`;
+}
+window._lockFilter='name';
+function setLockFilter(f){
+  window._lockFilter=f;
+  ['name','mobile','id'].forEach(k=>{
+    const btn=document.getElementById('lf_'+k);
+    if(btn){btn.style.background=k===f?'#1D9E75':'#f5f5f5';btn.style.color=k===f?'#fff':'#333';btn.style.borderColor=k===f?'#1D9E75':'#ddd';}
+  });
+  const si=document.getElementById('lockUserSearch');
+  if(si){si.value='';si.focus();}
+  const el=document.getElementById('lockUserList');
+  if(el)el.innerHTML='<p style="font-size:12px;color:#aaa;text-align:center;padding:20px 0">🔍 Start typing to search</p>';
 }
 function renderLockUserListHtml(users,q){
   const filtered=users;
@@ -4123,18 +4136,29 @@ function changeUserRole(id, newRole){
 }
 function runLockSearch(){
   const inp=document.getElementById('lockUserSearch');
-  const q=inp?inp.value.trim():'';
+  const raw=inp?inp.value:'';
+  const q=raw.trim().toLowerCase();
   const el=document.getElementById('lockUserList');
   if(!el)return;
   const allUsers=DB.users.filter(u=>u.role!=='developer');
-  if(!q){el.innerHTML=renderLockUserListHtml(allUsers,'');return;}
-  const qLow=q.toLowerCase();
-  const shown=allUsers.filter(u=>{
-    const nameMatch=(u.name||'').toLowerCase().indexOf(qLow)!==-1;
-    const mobMatch=normMob(u.mobile||'').indexOf(normMob(q))!==-1;
-    const idMatch=(u.id||'').toLowerCase().indexOf(qLow)!==-1;
-    return nameMatch||mobMatch||idMatch;
-  });
+  if(!q){
+    el.innerHTML='<p style="font-size:12px;color:#aaa;text-align:center;padding:20px 0">🔍 Start typing to search</p>';
+    return;
+  }
+  const f=window._lockFilter||'name';
+  const shown=[];
+  for(var i=0;i<allUsers.length;i++){
+    var u=allUsers[i];
+    var match=false;
+    if(f==='name')   match=(u.name||'').toLowerCase().indexOf(q)!==-1;
+    else if(f==='mobile') match=normMob(u.mobile||'').indexOf(normMob(raw))!==-1;
+    else if(f==='id')     match=(u.id||'').toLowerCase().indexOf(q)!==-1;
+    if(match)shown.push(u);
+  }
+  if(!shown.length){
+    el.innerHTML='<p style="font-size:13px;color:#888;text-align:center;padding:16px">No users found | کوئی صارف نہیں ملا</p>';
+    return;
+  }
   el.innerHTML=renderLockUserListHtml(shown,'');
 }
 function renderLockUserList(){
@@ -5208,7 +5232,15 @@ function renderTab(key){
       logout_action:()=>{if(confirm('Are you sure you want to logout? | کیا آپ واقعی لاگ آؤٹ کرنا چاہتے ہیں؟'))logout();},
       donorprofileupdate:()=>filterDPU(),
       lockuser:()=>{
-        renderLockUserList();
+        window._lockFilter='name';
+        const inp=document.getElementById('lockUserSearch');
+        if(inp){inp.value='';inp.oninput=runLockSearch;}
+        ['name','mobile','id'].forEach(k=>{
+          const btn=document.getElementById('lf_'+k);
+          if(btn){btn.style.background=k==='name'?'#1D9E75':'#f5f5f5';btn.style.color=k==='name'?'#fff':'#333';btn.style.borderColor=k==='name'?'#1D9E75':'#ddd';}
+        });
+        const el=document.getElementById('lockUserList');
+        if(el)el.innerHTML='<p style="font-size:12px;color:#aaa;text-align:center;padding:20px 0">🔍 Start typing to search</p>';
       },
       search:()=>{
         window._searchFilter='name';

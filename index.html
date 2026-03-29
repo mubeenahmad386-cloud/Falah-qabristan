@@ -643,6 +643,12 @@ async function loadAllData(){
       FS.loadAll('suggestions'),FS.loadAll('notifications')
     ]);
     DB.users=u;DB.pendingApprovals=pa;DB.donors=don;DB.deceased=dec;
+    // Patch photos back from localStorage into DB.users
+    DB.users.forEach(usr=>{
+      try{const p=localStorage.getItem('fq_photo_'+usr.id);if(p&&!usr.photo)usr.photo=p;}catch(e){}
+    });
+    // Update currentUser photo if loaded
+    if(currentUser){const cu=DB.users.find(x=>x.id===currentUser.id);if(cu&&cu.photo)currentUser.photo=cu.photo;}
     DB.donations=donations;DB.expenses=exp;DB.transfers=trf;DB.auditLog=log;
     DB.suggestions=sugg||[];
     // Merge Firestore notifications for current user into local notifications
@@ -1142,7 +1148,7 @@ T.dash=function(){
       </div>
 
       <!-- Right: logout only -->
-      <button onclick="logout()" style="background:#E24B4A;border:none;border-radius:8px;color:#fff;font-size:11px;font-weight:700;padding:7px 14px;cursor:pointer;flex-shrink:0">Logout</button>
+      <button onclick="logout()" style="background:#E24B4A;border:none;border-radius:8px;color:#fff;padding:6px 12px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;gap:5px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span style="font-size:11px;font-weight:700">Logout</span></button>
     </div>
   </div>
   <!-- STATS -->
@@ -4017,6 +4023,8 @@ function saveProfile(){
     if(uIdx>=0)DB.users[uIdx]=currentUser;
     FS.save('users',currentUser.id,JSON.parse(JSON.stringify(currentUser)));
     try{saveLocalCache();}catch(e){}
+    // Save photo separately in localStorage so it persists across cache refreshes
+    try{if(currentUser.photo)localStorage.setItem('fq_photo_'+currentUser.id,currentUser.photo);}catch(e){}
     var al={by:currentUser.id,action:'Profile Updated',target:currentUser.name,detail:'Self profile update',date:today()};
     DB.auditLog.push(al);FS.save('auditLog','AL'+Date.now(),al);
     showPopup('✅','Profile Updated! | پروفائل محفوظ','Your profile has been updated successfully.',null,function(){selectTab('dash');});
@@ -5046,7 +5054,7 @@ T.complaints=function(){
             <span style="font-size:10px;color:#aaa;white-space:nowrap">${s.date} ${s.time||''}</span>
           </div>
           <div style="font-size:13px;color:#1a1a1a;margin-bottom:6px;line-height:1.5">${s.text}</div>
-          <div style="font-size:11px;color:#888">— ${s.name||'Unknown'} (${s.by||''})</div>
+          <div style="font-size:11px;color:#888">— ${s.byName||s.name||'Unknown'} <span style="font-size:10px">(${s.by||''})</span> ${s.byRole?`<span style="background:#FCEBEB;color:#A32D2D;font-size:9px;padding:1px 6px;border-radius:20px;font-weight:600">${s.byRole}</span>`:''}</div>
         </div>`).join('')}
   </div>`;
 }
@@ -5061,6 +5069,17 @@ function markSuggRead(id){
 function markAllSuggRead(){
   DB.suggestions.forEach(s=>{if(!s.read){s.read=true;FS.save('suggestions',s.id,s);}});
   renderTab('suggestions');
+}
+function replyToComplaint(id){
+  const reply=(document.getElementById('replyInp_'+id)||{value:''}).value.trim();
+  if(!reply){showPopup('⚠️','Required','Please write a reply first.');return;}
+  const s=DB.suggestions.find(x=>x.id===id);
+  if(!s)return;
+  s.reply=reply;s.replyBy=currentUser.name;s.replyByRole=currentUser.role;s.read=true;
+  FS.save('suggestions',id,s);
+  showPopup('✅','Reply Sent','Reply sent to '+(s.byName||s.name||'user')+'.');
+  addNotification('system','Complaint Replied',(s.byName||'User')+': '+reply.slice(0,40));
+  renderTab('complaints');
 }
 function replyToSuggestion(id){
   const reply=(document.getElementById('replyInp_'+id)||{value:''}).value.trim();
@@ -5470,6 +5489,10 @@ async function restoreSession(){
     const u=DB.users.find(x=>x.id===s.id&&x.role===s.role);
     if(u&&!u.locked&&u.approved){
       currentUser=u;currentRole=u.role;
+      // Restore photo from localStorage if Firebase didn't return it
+      if(!currentUser.photo){
+        try{const p=localStorage.getItem('fq_photo_'+u.id);if(p)currentUser.photo=p;}catch(e){}
+      }
       return true;
     }
     clearSession();return false;

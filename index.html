@@ -1179,11 +1179,32 @@ T.dash=function(){
       <button onclick="selectTab('deceased')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #0F6E56;background:#E1F5EE;cursor:pointer"><span style="font-size:19px">🪦</span><span style="font-size:9px;font-weight:600;color:#085041">Deceased</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">وفات</span></button>
       <button onclick="selectTab('slip')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #185FA5;background:#E6F1FB;cursor:pointer"><span style="font-size:19px">🧾</span><span style="font-size:9px;font-weight:600;color:#0C447C">Slip</span><span style="font-size:8px;color:#0C447C;opacity:0.75;direction:rtl">سلپ</span></button>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px">
       <button onclick="selectTab('myentries')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #ddd;background:#f5f5f5;cursor:pointer"><span style="font-size:19px">📊</span><span style="font-size:9px;font-weight:600;color:#444">My Don.</span><span style="font-size:8px;color:#444;opacity:0.75;direction:rtl">میرا چندہ</span></button>
       <button onclick="selectTab('myentries')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #ddd;background:#f5f5f5;cursor:pointer"><span style="font-size:19px">📑</span><span style="font-size:9px;font-weight:600;color:#444">My Exp.</span><span style="font-size:8px;color:#444;opacity:0.75;direction:rtl">میرے اخراج</span></button>
       <button onclick="selectTab('suggestions')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #BA7517;background:#FAEEDA;cursor:pointer"><span style="font-size:19px">💡</span><span style="font-size:9px;font-weight:600;color:#633806">Suggestions</span><span style="font-size:8px;color:#633806;opacity:0.75;direction:rtl">تجاویز</span></button>
-      <button onclick="selectTab('search')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #185FA5;background:#E6F1FB;cursor:pointer"><span style="font-size:19px">🔍</span><span style="font-size:9px;font-weight:600;color:#0C447C">Search</span><span style="font-size:8px;color:#0C447C;opacity:0.75;direction:rtl">تلاش</span></button>
+      <button onclick="selectTab('suggestions')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #E24B4A;background:#FCEBEB;cursor:pointer;position:relative">
+        <span style="font-size:19px">⚠️</span>
+        <span style="font-size:9px;font-weight:600;color:#A32D2D">Complaints</span>
+        <span style="font-size:8px;color:#A32D2D;opacity:0.75;direction:rtl">شکایات</span>
+        ${(()=>{const cnt=DB.suggestions.filter(s=>s.type==='complaint'&&!s.read).length;return cnt>0?`<span style="position:absolute;top:4px;right:4px;background:#E24B4A;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:20px">${cnt}</span>`:'';})()}
+      </button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button onclick="selectTab('search')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:0.5px solid #185FA5;background:#E6F1FB;cursor:pointer">
+        <span style="font-size:22px">🔍</span>
+        <div style="flex:1;text-align:left">
+          <div style="font-size:11px;font-weight:700;color:#0C447C">Search / تلاش</div>
+          <div style="font-size:10px;color:#0C447C;opacity:0.8">Search donors & users</div>
+        </div>
+      </button>
+      <button onclick="selectTab('bloodbank')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:0.5px solid #E24B4A;background:#FCEBEB;cursor:pointer">
+        <span style="font-size:22px">🩸</span>
+        <div style="flex:1;text-align:left">
+          <div style="font-size:11px;font-weight:700;color:#A32D2D">Blood Bank / بلڈ بینک</div>
+          <div style="font-size:10px;color:#A32D2D;opacity:0.8">Search by blood group</div>
+        </div>
+      </button>
     </div>
   </div>
   `:`
@@ -4845,19 +4866,17 @@ function submitAddDonor(){
 T.suggestion=function(){
   return `<div class="card">
     <h3><span class="bi-title"><span class="bi-en">Send Suggestion</span><span class="bi-ur">تجویز بھیجیں</span></span></h3>
-    <p style="font-size:12px;color:#888;margin-bottom:14px">Share your ideas, feedback or issues with the developer. | اپنی تجاویز، رائے یا مسائل developer کو بھیجیں۔</p>
+    <p style="font-size:12px;color:#888;margin-bottom:14px">Share your ideas or feedback with the developer. | اپنی تجاویز یا رائے developer کو بھیجیں۔</p>
     <label>Category <span style="font-size:10px;color:#1D9E75">قسم</span></label>
     <select id="suggCategory">
       <option value="Feature Request">💡 Feature Request</option>
-      <option value="Bug Report">🐛 Bug Report</option>
       <option value="Improvement">⚡ Improvement</option>
-      <option value="Complaint">⚠️ Complaint</option>
       <option value="General Feedback">💬 General Feedback</option>
       <option value="Other">📌 Other</option>
     </select>
     <label style="margin-top:10px">Your Suggestion * <span style="font-size:10px;color:#1D9E75">آپ کی تجویز</span></label>
-    <textarea id="suggText" placeholder="Write your suggestion here... | یہاں لکھیں" rows="5" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;margin-top:4px"></textarea>
-    <button class="btn btn-primary" style="margin-top:12px" onclick="submitSuggestion()">
+    <textarea id="suggText" placeholder="Write your suggestion here... | یہاں لکھیں" rows="4" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;margin-top:4px"></textarea>
+    <button class="btn btn-primary" style="margin-top:12px" onclick="submitSuggestion('suggestion')">
       <span style="font-size:13px">Send Suggestion</span>
       <span style="font-size:10px;opacity:0.85;display:block">تجویز بھیجیں</span>
     </button>
@@ -4865,23 +4884,57 @@ T.suggestion=function(){
   </div>
   <div class="card" style="background:#f0fff8;border:1px solid #1D9E75">
     <div style="font-size:12px;font-weight:600;color:#0F6E56;margin-bottom:6px">My Suggestions | میری تجاویز</div>
-    ${DB.suggestions.filter(s=>s.by===currentUser.id).length===0
-      ?'<p style="font-size:12px;color:#888">No suggestions sent yet. | ابھی تک کوئی نہیں</p>'
-      :DB.suggestions.filter(s=>s.by===currentUser.id).sort((a,b)=>b.date.localeCompare(a.date)).map(s=>`
+    ${DB.suggestions.filter(s=>s.by===currentUser.id&&s.type!=='complaint').length===0
+      ?'<p style="font-size:12px;color:#888">No suggestions sent yet.</p>'
+      :DB.suggestions.filter(s=>s.by===currentUser.id&&s.type!=='complaint').sort((a,b)=>b.date.localeCompare(a.date)).map(s=>`
         <div style="padding:10px;background:#fff;border-radius:8px;margin-bottom:8px;border:1px solid #ddd">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
             <span style="font-size:11px;font-weight:700;color:#1D9E75">${s.category}</span>
             <span style="font-size:10px;color:#aaa">${s.date} ${s.time||''}</span>
           </div>
           <div style="font-size:12px;color:#333">${s.text}</div>
-          ${s.reply?`<div style="margin-top:6px;padding:6px 8px;background:#E1F5EE;border-radius:6px;font-size:11px;color:#0F6E56"><strong>Developer Reply:</strong> ${s.reply}</div>`:'<div style="margin-top:4px;font-size:10px;color:#aaa">⏳ Awaiting reply...</div>'}
+          ${s.reply?`<div style="margin-top:6px;padding:6px 8px;background:#E1F5EE;border-radius:6px;font-size:11px;color:#0F6E56"><strong>Reply:</strong> ${s.reply}</div>`:'<div style="margin-top:4px;font-size:10px;color:#aaa">⏳ Awaiting reply...</div>'}
         </div>`).join('')}
   </div>`;
 }
-function submitSuggestion(){
+T.complaint=function(){
+  return `<div class="card">
+    <h3><span class="bi-title"><span class="bi-en">File a Complaint</span><span class="bi-ur">شکایت درج کریں</span></span></h3>
+    <p style="font-size:12px;color:#888;margin-bottom:14px">Report any issue or complaint. | کوئی مسئلہ یا شکایت درج کریں۔</p>
+    <label>Complaint Type <span style="font-size:10px;color:#E24B4A">قسم</span></label>
+    <select id="complCategory">
+      <option value="Complaint">⚠️ General Complaint</option>
+      <option value="Bug Report">🐛 Bug / Error</option>
+      <option value="Urgent Issue">🚨 Urgent Issue</option>
+      <option value="Other">📌 Other</option>
+    </select>
+    <label style="margin-top:10px">Your Complaint * <span style="font-size:10px;color:#E24B4A">آپ کی شکایت</span></label>
+    <textarea id="complText" placeholder="Describe your complaint... | شکایت لکھیں" rows="4" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;margin-top:4px"></textarea>
+    <button class="btn" style="margin-top:12px;background:#E24B4A;color:#fff;border:none" onclick="submitSuggestion('complaint')">
+      <span style="font-size:13px">Submit Complaint</span>
+      <span style="font-size:10px;opacity:0.85;display:block">شکایت جمع کریں</span>
+    </button>
+    <div id="complStatus" style="display:none;margin-top:10px"></div>
+  </div>
+  <div class="card" style="background:#fff5f5;border:1px solid #E24B4A">
+    <div style="font-size:12px;font-weight:600;color:#A32D2D;margin-bottom:6px">My Complaints | میری شکایات</div>
+    ${DB.suggestions.filter(s=>s.by===currentUser.id&&s.type==='complaint').length===0
+      ?'<p style="font-size:12px;color:#888">No complaints filed yet.</p>'
+      :DB.suggestions.filter(s=>s.by===currentUser.id&&s.type==='complaint').sort((a,b)=>b.date.localeCompare(a.date)).map(s=>`
+        <div style="padding:10px;background:#fff;border-radius:8px;margin-bottom:8px;border:1px solid #ddd">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <span style="font-size:11px;font-weight:700;color:#E24B4A">${s.category}</span>
+            <span style="font-size:10px;color:#aaa">${s.date} ${s.time||''}</span>
+          </div>
+          <div style="font-size:12px;color:#333">${s.text}</div>
+          ${s.reply?`<div style="margin-top:6px;padding:6px 8px;background:#FCEBEB;border-radius:6px;font-size:11px;color:#A32D2D"><strong>Reply:</strong> ${s.reply}</div>`:'<div style="margin-top:4px;font-size:10px;color:#aaa">⏳ Awaiting reply...</div>'}
+        </div>`).join('')}
+  </div>`;
+}
+function submitSuggestion(type){
   const text=(document.getElementById('suggText').value||'').trim();
   const category=(document.getElementById('suggCategory').value||'General Feedback');
-  const statusEl=document.getElementById('suggStatus');
+  const statusEl=document.getElementById(statusId);
   if(!text){
     if(statusEl){statusEl.style.display='block';statusEl.innerHTML='<div style="background:#FCEBEB;border:1px solid #E24B4A;border-radius:6px;padding:8px 10px;font-size:12px;color:#A32D2D">⚠️ Please write your suggestion first. | پہلے تجویز لکھیں</div>';}
     return;
@@ -4927,7 +4980,7 @@ function submitSuggestion(){
     FS.save('notifications',nid,notifData);
   });
   // Clear form
-  document.getElementById('suggText').value='';
+  document.getElementById(textId).value='';
   if(statusEl){
     statusEl.style.display='block';
     statusEl.innerHTML='<div style="background:#E1F5EE;border:1px solid #1D9E75;border-radius:6px;padding:8px 10px;font-size:12px;color:#0F6E56">✅ Suggestion sent! Developer will review it. | تجویز بھیج دی گئی</div>';
@@ -5062,6 +5115,7 @@ function getMenuConfig(){
       {icon:'📒', label:'Contacts / رابطے', tab:'contacts'},
       {icon:'🔔', label:'Notifications / اطلاعات', tab:'notifications'},
       {icon:'💡', label:'Send Suggestion / تجویز', tab:'suggestion'},
+      {icon:'⚠️', label:'Complaint / شکایت', tab:'complaint'},
       {icon:'👤', label:'Add Donor / ڈونر شامل', tab:'adddonor'},
       {icon:'📱', label:'SMS Reminders / یاد دہانی', tab:'smsreminders'},
       {icon:'🩸', label:'Blood Bank / بلڈ بینک', tab:'bloodbank'},
@@ -5162,7 +5216,7 @@ function openSubmenu(key){
   currentSubmenu = key;
 }
 
-const FORM_TABS_SET=new Set(['donation','expense','deceased','adddonor','transfer','profile','suggestion','donorprofileupdate','orgsettings','areas','professions','expcategories','approvals','lockuser','userslist','audit','datamanager','suggestions','bloodbank','smartsearch','smsreminders','contacts','notifications']);
+const FORM_TABS_SET=new Set(['donation','expense','deceased','adddonor','transfer','profile','suggestion','donorprofileupdate','orgsettings','areas','professions','expcategories','approvals','lockuser','userslist','audit','datamanager','suggestions','bloodbank','smartsearch','smsreminders','complaint','contacts','notifications']);
 
 function selectTab(tab){
   renderTab(tab);
@@ -5309,7 +5363,7 @@ const TAB_LABELS={
   donorlist:'Donor List',slip:'Donor Slip',top:'Top Donors',transfer:'Transfer',
   decconfirm:'Confirm Deceased',approvals:'Approvals',lockuser:'Login Management',
   userslist:'Users List',professions:'Professions',audit:'Audit Log',areas:'Areas',
-  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',contacts:'Contacts',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Send Suggestion',suggestions:'Suggestions'
+  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',contacts:'Contacts',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Send Suggestion',complaint:'File a Complaint',suggestions:'Suggestions'
 };
 
 // ============================================================

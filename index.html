@@ -4885,7 +4885,7 @@ T.suggestion=function(){
             <span style="font-size:10px;color:#aaa">${s.date} ${s.time||''}</span>
           </div>
           <div style="font-size:12px;color:#333">${s.text}</div>
-          ${s.reply?`<div style="margin-top:6px;padding:6px 8px;background:#E1F5EE;border-radius:6px;font-size:11px;color:#0F6E56"><strong>Reply:</strong> ${s.reply}</div>`:'<div style="margin-top:4px;font-size:10px;color:#aaa">⏳ Awaiting reply...</div>'}
+          ${s.reply?`<div style="margin-top:6px;padding:6px 8px;background:#E1F5EE;border-radius:6px;font-size:11px;color:#0F6E56"><strong>${s.replyBy||'Reply'}:</strong> ${s.reply}</div>`:'<div style="margin-top:4px;font-size:10px;color:#aaa">⏳ Awaiting reply...</div>'}
         </div>`).join('')}
   </div>`;
 }
@@ -4919,7 +4919,7 @@ T.complaint=function(){
             <span style="font-size:10px;color:#aaa">${s.date} ${s.time||''}</span>
           </div>
           <div style="font-size:12px;color:#333">${s.text}</div>
-          ${s.reply?`<div style="margin-top:6px;padding:6px 8px;background:#FCEBEB;border-radius:6px;font-size:11px;color:#A32D2D"><strong>Reply:</strong> ${s.reply}</div>`:'<div style="margin-top:4px;font-size:10px;color:#aaa">⏳ Awaiting reply...</div>'}
+          ${s.reply?`<div style="margin-top:6px;padding:6px 8px;background:#FCEBEB;border-radius:6px;font-size:11px;color:#A32D2D"><strong>${s.replyBy||'Reply'}:</strong> ${s.reply}</div>`:'<div style="margin-top:4px;font-size:10px;color:#aaa">⏳ Awaiting reply...</div>'}
         </div>`).join('')}
   </div>`;
 }
@@ -5018,7 +5018,7 @@ T.suggestions=function(){
             </div>
           </div>
           ${s.reply
-            ?`<div style="margin-top:8px;padding:8px;background:#E6F1FB;border-radius:8px;font-size:12px;color:#185FA5"><strong>Your Reply:</strong> ${s.reply}</div>`
+            ?`<div style="margin-top:8px;padding:8px;background:#E6F1FB;border-radius:8px;font-size:12px;color:#185FA5"><strong>${s.replyBy||'Reply'}:</strong> ${s.reply}</div>`
             :`<div style="display:flex;gap:6px;margin-top:8px">
                 <input type="text" id="replyInp_${s.id}" placeholder="Reply to this suggestion... | جواب لکھیں" style="flex:1;padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:12px">
                 <button onclick="replyToSuggestion('${s.id}')" style="background:#1D9E75;color:#fff;border:none;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">Reply</button>
@@ -5067,7 +5067,7 @@ function replyToSuggestion(id){
   if(!reply){showPopup('⚠️','Required','Please write a reply first.');return;}
   const s=DB.suggestions.find(x=>x.id===id);
   if(!s)return;
-  s.reply=reply;s.read=true;
+  s.reply=reply;s.replyBy=currentUser.name;s.replyByRole=currentUser.role;s.read=true;
   FS.save('suggestions',id,s);
   showPopup('✅','Reply Sent','Reply sent to '+s.byName+'.');
   addNotification('system','Suggestion Replied',s.byName+': '+reply.slice(0,40));

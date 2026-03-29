@@ -7,7 +7,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--green:#1D9E75;--green-dark:#0F6E56;--blue:#185FA5;--amber:#BA7517;--red:#E24B4A;--purple:#993556;--bg:#f0f4f3;--card:#fff;--border:#e0e0e0;--text:#1a1a1a;--muted:#888;--radius:12px}
-body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;color:var(--text);background:var(--bg);min-height:100vh;padding-bottom:70px}
+body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;color:var(--text);background:var(--bg);min-height:100vh;padding-bottom:75px}
 /* SCREENS */
 .screen{display:none;padding:0;min-height:100vh}.screen.active{display:block}
 .bi-field{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;margin-top:10px}
@@ -98,13 +98,13 @@ input[type=file]{padding:6px}
 .btn-sm{width:auto;display:inline-block;padding:6px 14px;font-size:12px;margin-top:0;border-radius:8px}
 .btn-xs{width:auto;display:inline-block;padding:3px 8px;font-size:11px;margin-top:0;border-radius:6px;cursor:pointer;border:1px solid}
 /* BOTTOM NAV */
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e0e0e0;display:flex;z-index:100;box-shadow:0 -2px 12px rgba(0,0,0,0.08);transition:transform 0.25s ease}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#0F6E56;border-top:none;display:flex;z-index:100;box-shadow:0 -2px 12px rgba(0,0,0,0.15);transition:transform 0.25s ease}
 .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 4px 6px;cursor:pointer;position:relative;transition:all 0.15s}
-.nav-item.active .nav-icon{color:var(--green)}
-.nav-item.active .nav-label{color:var(--green);font-weight:600}
-.nav-item.active::after{content:'';position:absolute;top:0;left:20%;right:20%;height:2px;background:var(--green);border-radius:0 0 2px 2px}
-.nav-icon{font-size:20px;margin-bottom:2px;color:#999}
-.nav-label{font-size:10px;color:#999;font-weight:500}
+.nav-item.active .nav-icon{opacity:1}
+.nav-item.active .nav-label{color:#fff;font-weight:700;opacity:1}
+.nav-item.active{background:#085041}
+.nav-icon{font-size:22px;margin-bottom:1px;opacity:0.7;transition:opacity 0.15s}
+.nav-label{font-size:10px;color:#fff;font-weight:500;opacity:0.7}
 .nav-badge{position:absolute;top:4px;right:calc(50% - 18px);background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;min-width:14px;text-align:center}
 /* SUBMENU DRAWER */
 .submenu-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:80;display:none}
@@ -218,7 +218,7 @@ input[type=file]{padding:6px}
 .approval-name{font-size:13px;font-weight:600}
 .approval-sub{font-size:11px;color:#888;margin-top:2px}
 /* FOOTER */
-.page-footer{background:#fff;border-top:1px solid #eee;padding:14px 16px;text-align:center;margin-top:20px}
+.page-footer{background:#fff;border-top:1px solid #eee;padding:20px 16px 20px;text-align:center}
 .footer-org{font-size:12px;color:#888;margin-bottom:4px}
 .footer-credit{font-size:11px;color:#aaa}
 .footer-credit a{color:#1D9E75;text-decoration:none;font-weight:600}
@@ -329,7 +329,7 @@ input[type=file]{padding:6px}
     </button>
 
     <!-- Footer -->
-    <div class="page-footer" style="margin-top:24px;padding:16px 0 0;border-top:1px solid #f0f0f0;text-align:center">
+    <div class="page-footer" style="margin-top:24px;padding:16px 0 24px;border-top:1px solid #f0f0f0;text-align:center">
       <div class="footer-org" id="footerOrgName" style="font-size:13px;font-weight:700;color:#0F6E56;margin-bottom:4px">Falah e Qabristan</div>
       <div class="footer-credit">Designed By: <a href="tel:03009084228">Asif Kanwal — 0300-9084228</a></div>
       <div class="footer-credit">Developed By: <a href="tel:03184516464">Mubeen Ahmad — 0318-4516464</a></div>
@@ -529,28 +529,23 @@ input[type=file]{padding:6px}
    <div class="nav-item" id="navHome" onclick="openSubmenu('home')" style="position:relative">
     <span style="font-size:20px">🏠</span>
     <span class="nav-label">Home</span>
-    <span class="nav-label-ur">ہوم</span>
      <span class="notif-badge" style="display:none;position:absolute;top:4px;right:calc(50% - 18px);background:#E24B4A;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;min-width:14px;text-align:center;line-height:14px"></span>
    </div>
   <div class="nav-item" id="navForms" onclick="openSubmenu('forms')">
     <span style="font-size:20px">📝</span>
     <span class="nav-label">Forms</span>
-    <span class="nav-label-ur">فارمز</span>
   </div>
   <div class="nav-item" id="navReports" onclick="openSubmenu('reports')">
     <span style="font-size:20px">📊</span>
     <span class="nav-label">Reports</span>
-    <span class="nav-label-ur">رپورٹس</span>
   </div>
   <div class="nav-item" id="navDonors" onclick="openSubmenu('donors')">
     <span style="font-size:20px">👥</span>
     <span class="nav-label">Donors</span>
-    <span class="nav-label-ur">ڈونر</span>
   </div>
   <div class="nav-item" id="navSettings" onclick="openSubmenu('settings')">
     <span style="font-size:20px">⚙️</span>
     <span class="nav-label">Settings</span>
-    <span class="nav-label-ur">ترتیبات</span>
     <span class="badge" id="settingsBadge" style="display:none;position:absolute;top:4px;right:8px;background:#E24B4A;color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:700;align-items:center;justify-content:center"></span>
   </div>
 </nav>

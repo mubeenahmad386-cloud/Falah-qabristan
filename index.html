@@ -526,11 +526,12 @@ input[type=file]{padding:6px}
 
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav" id="bottomNav" style="display:none">
-  <div class="nav-item" id="navHome" onclick="openSubmenu('home')">
+   <div class="nav-item" id="navHome" onclick="openSubmenu('home')" style="position:relative">
     <span style="font-size:20px">🏠</span>
     <span class="nav-label">Home</span>
     <span class="nav-label-ur">ہوم</span>
-  </div>
+     <span class="notif-badge" style="display:none;position:absolute;top:4px;right:calc(50% - 18px);background:#E24B4A;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;min-width:14px;text-align:center;line-height:14px"></span>
+   </div>
   <div class="nav-item" id="navForms" onclick="openSubmenu('forms')">
     <span style="font-size:20px">📝</span>
     <span class="nav-label">Forms</span>
@@ -671,6 +672,7 @@ async function loadAllData(){
       PROFESSIONS.forEach(pr=>{if(!PROF_LIST.find(p=>p.en===pr))PROF_LIST.push({en:pr,ur:''});});
     }
     saveLocalCache(); // save fresh data to cache
+    try{updateNotifBadge();}catch(e){}
     const txn=DB.donations.map(d=>parseInt((d.id||'0').replace(/[^0-9]/g,''))||0);
     txnCounter=txn.length?Math.max(...txn)+1:1;
     const bil=DB.expenses.map(e=>parseInt((e.billNo||'BILL-0000').replace('BILL-',''))||0);
@@ -4601,6 +4603,13 @@ function updateNotifBadge(){
   const unread=DB_NOTIFICATIONS.filter(n=>!n.read).length;
   const badges=document.querySelectorAll('.notif-badge');
   badges.forEach(b=>{b.textContent=unread||'';b.style.display=unread?'flex':'none';});
+  // Update suggestions/complaints badge in admin quick actions (on dashboard)
+  if(['admin','manager','developer'].includes(currentRole)){
+    const suggUnread=DB.suggestions.filter(s=>s.type!=='complaint'&&!s.read).length;
+    const compUnread=DB.suggestions.filter(s=>s.type==='complaint'&&!s.read).length;
+    ['dashSuggBadge'].forEach(id=>{const el=document.getElementById(id);if(el){el.textContent=suggUnread||'';el.style.display=suggUnread?'inline':'none';}});
+    ['dashCompBadge'].forEach(id=>{const el=document.getElementById(id);if(el){el.textContent=compUnread||'';el.style.display=compUnread?'inline':'none';}});
+  }
 }
 function markAllNotifRead(){
   DB_NOTIFICATIONS.forEach(n=>n.read=true);
@@ -5197,6 +5206,9 @@ function getMenuConfig(){
       {icon:'⚠️', label:'Send Complaint / شکایت بھیجیں', tab:'complaint'}
     );
   }
+  // Add notification badges to home menu items
+  const notifIdx=homeItems.findIndex(x=>x.tab==='notifications');
+  if(notifIdx>=0)homeItems[notifIdx].badge=DB_NOTIFICATIONS.filter(n=>!n.read).length||0;
   const home = {key:'home', title:'Home / ہوم', items:homeItems};
 
   const forms = {key:'forms', title:'Forms / فارمز', items:[]};
@@ -5366,6 +5378,7 @@ function renderTab(key){
     populateAreas();populateProfs();
     // Post-render init — run search functions after DOM is ready
     const initMap={
+      notifications:()=>{updateNotifBadge();},
       contacts:()=>{window._contactArea='All';filterContacts('All');},
       bloodbank:()=>{window._bbArea='All';filterBloodBank('All');},
       smartsearch:()=>{

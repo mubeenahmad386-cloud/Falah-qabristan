@@ -5117,8 +5117,33 @@ function replyToComplaint(id){
   if(!s)return;
   s.reply=reply;s.replyBy=currentUser.name;s.replyById=currentUser.id;s.replyByRole=currentUser.role;s.read=true;
   FS.save('suggestions',id,s);
-  showPopup('✅','Reply Sent','Reply sent to '+(s.byName||s.name||'user')+'.');
-  addNotification('system','Complaint Replied',(s.byName||'User')+': '+reply.slice(0,40));
+  const _ts=Date.now();
+  const _byName=s.byName||s.name||'user';
+  // Always notify original sender
+  FS.save('notifications','NOTIF_R_'+_ts+'_'+s.by,{
+    id:'NOTIF_R_'+_ts+'_'+s.by,forUser:s.by,type:'system',
+    title:'⚠️ Reply to your Complaint',
+    message:currentUser.name+' replied: '+reply.slice(0,60)+(reply.length>60?'...':''),
+    date:today(),time:new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'}),read:false,link:'complaint'
+  });
+  // If developer replied — notify sender + developer (local)
+  if(currentUser.role==='developer'){
+    addNotification('system','Reply Sent',_byName+': '+reply.slice(0,40));
+  }
+  // If non-developer replied — notify developer(s) AND the replier too
+  if(currentUser.role!=='developer'){
+    DB.users.filter(u=>u.role==='developer').forEach(dev=>{
+      FS.save('notifications','NOTIF_R_DEV_'+_ts+'_'+dev.id,{
+        id:'NOTIF_R_DEV_'+_ts+'_'+dev.id,forUser:dev.id,type:'system',
+        title:'⚠️ Complaint Replied by '+currentUser.role,
+        message:currentUser.name+' replied to '+_byName+': '+reply.slice(0,50),
+        date:today(),time:new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'}),read:false,link:'complaints'
+      });
+    });
+    // Also notify the replier themselves (confirmation)
+    addNotification('system','Complaint Reply Sent',_byName+': '+reply.slice(0,40));
+  }
+  showPopup('✅','Reply Sent','Reply sent to '+_byName+'.');
   renderTab('complaints');
 }
 function replyToSuggestion(id){
@@ -5128,8 +5153,33 @@ function replyToSuggestion(id){
   if(!s)return;
   s.reply=reply;s.replyBy=currentUser.name;s.replyById=currentUser.id;s.replyByRole=currentUser.role;s.read=true;
   FS.save('suggestions',id,s);
-  showPopup('✅','Reply Sent','Reply sent to '+s.byName+'.');
-  addNotification('system','Suggestion Replied',s.byName+': '+reply.slice(0,40));
+  const _ts=Date.now();
+  const _byName=s.byName;
+  // Always notify original sender
+  FS.save('notifications','NOTIF_R_'+_ts+'_'+s.by,{
+    id:'NOTIF_R_'+_ts+'_'+s.by,forUser:s.by,type:'system',
+    title:'💡 Reply to your Suggestion',
+    message:currentUser.name+' replied: '+reply.slice(0,60)+(reply.length>60?'...':''),
+    date:today(),time:new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'}),read:false,link:'suggestion'
+  });
+  // If developer replied — notify sender + developer (local)
+  if(currentUser.role==='developer'){
+    addNotification('system','Reply Sent',_byName+': '+reply.slice(0,40));
+  }
+  // If non-developer replied — notify developer(s) AND the replier too
+  if(currentUser.role!=='developer'){
+    DB.users.filter(u=>u.role==='developer').forEach(dev=>{
+      FS.save('notifications','NOTIF_R_DEV_'+_ts+'_'+dev.id,{
+        id:'NOTIF_R_DEV_'+_ts+'_'+dev.id,forUser:dev.id,type:'system',
+        title:'💡 Suggestion Replied by '+currentUser.role,
+        message:currentUser.name+' replied to '+_byName+': '+reply.slice(0,50),
+        date:today(),time:new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'}),read:false,link:'suggestions'
+      });
+    });
+    // Also notify the replier themselves (confirmation)
+    addNotification('system','Suggestion Reply Sent',_byName+': '+reply.slice(0,40));
+  }
+  showPopup('✅','Reply Sent','Reply sent to '+_byName+'.');
   renderTab('suggestions');
 }
 

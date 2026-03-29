@@ -5014,7 +5014,7 @@ T.suggestions=function(){
               ${!s.read?'<span style="font-size:10px;color:#E24B4A;font-weight:700">● New</span>':''}
             </div>
             <span style="font-size:10px;color:#999;font-weight:500">${s.date}${s.time?' '+s.time:''}</span>
-              ${currentRole==='developer'?`<button onclick="deleteSuggestion('${s.id}','suggestions')" style="background:none;border:none;cursor:pointer;color:#E24B4A;font-size:15px;font-weight:700;padding:0 4px" title="Delete">&times;</button>`:''}
+              ${currentRole==='developer'?`<button onclick="deleteSuggestion('${s.id}','suggestions')" style="background:none;border:none;cursor:pointer;color:#444;font-size:15px;font-weight:700;padding:0 4px" title="Delete">&times;</button>`:''}
           </div>
           <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1.5px solid #f0f0f0;cursor:pointer" onclick="markSuggRead('${s.id}')">
             ${(()=>{const su=DB.users.find(u=>u.id===s.by)||{};const ph=su.photo||null;return ph?`<img src="${ph}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #1D9E75">`:`<div style="width:40px;height:40px;border-radius:50%;background:#1D9E75;color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0">${(s.byName||'?')[0].toUpperCase()}</div>`;})()}
@@ -5063,7 +5063,7 @@ T.complaints=function(){
               ${!s.read?'<span style="font-size:10px;color:#E24B4A;font-weight:700">● New</span>':''}
             </div>
             <span style="font-size:10px;color:#999;font-weight:500">${s.date}${s.time?' '+s.time:''}</span>
-              ${currentRole==='developer'?`<button onclick="deleteSuggestion('${s.id}','complaints')" style="background:none;border:none;cursor:pointer;color:#E24B4A;font-size:15px;font-weight:700;padding:0 4px" title="Delete">&times;</button>`:''}
+              ${currentRole==='developer'?`<button onclick="deleteSuggestion('${s.id}','complaints')" style="background:none;border:none;cursor:pointer;color:#444;font-size:15px;font-weight:700;padding:0 4px" title="Delete">&times;</button>`:''}
           </div>
           <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1.5px solid #f0f0f0;cursor:pointer" onclick="markSuggRead('${s.id}')">
             ${(()=>{const su=DB.users.find(u=>u.id===s.by)||{};const ph=su.photo||null;return ph?`<img src="${ph}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #E24B4A">`:`<div style="width:40px;height:40px;border-radius:50%;background:#E24B4A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0">${(s.byName||'?')[0].toUpperCase()}</div>`;})()}
@@ -5424,7 +5424,8 @@ function buildTabs(){
   if(currentUser){
     FS.loadAll('notifications').then(function(fsNotifs){
       if(fsNotifs&&fsNotifs.length){
-        const mine=fsNotifs.filter(function(n){return n.forUser===currentUser.id&&!n.read;});
+        // Exclude new suggestion/complaint notifications — badge handles those
+        const mine=fsNotifs.filter(function(n){return n.forUser===currentUser.id&&!n.read&&n.title!=='💡 New Suggestion'&&!n.title.startsWith('💡 New ')&&!n.title.startsWith('⚠️ New ');});
         mine.forEach(function(n){
           if(!DB_NOTIFICATIONS.find(function(x){return x.id===n.id;})){
             DB_NOTIFICATIONS.unshift({id:n.id,type:n.type||'system',title:n.title,message:n.message,link:n.link||'',date:n.date,time:n.time||'',read:false});
@@ -5899,7 +5900,8 @@ async function appInit(){
     if(restored){
       // Now currentUser is set — load notifications
       if(window._rawFsNotifs&&window._rawFsNotifs.length&&currentUser){
-        const myFsNotifs=window._rawFsNotifs.filter(n=>n.forUser===currentUser.id&&!n.read);
+        // Exclude new suggestion/complaint notifications — only show replies
+      const myFsNotifs=window._rawFsNotifs.filter(n=>n.forUser===currentUser.id&&!n.read&&n.title!=='💡 New Suggestion'&&n.title!=='⚠️ New Complaint'&&!n.title.startsWith('💡 New ')&&!n.title.startsWith('⚠️ New '));
         myFsNotifs.forEach(n=>{
           if(!DB_NOTIFICATIONS.find(x=>x.id===n.id)){
             DB_NOTIFICATIONS.unshift({id:n.id,type:n.type||'system',title:n.title,message:n.message,link:n.link||'',date:n.date,time:n.time||'',read:false});

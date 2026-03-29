@@ -3988,62 +3988,40 @@ function checkProfCnic(val){
 }
 
 function saveProfile(){
-  const name=document.getElementById('profName').value.trim();
-  const mobile=document.getElementById('profMobile').value.trim();
-  const cnic=document.getElementById('profCnic').value.trim();
-  const newPwd=document.getElementById('profNewPwd').value.trim();
-  const confirmPwd=document.getElementById('profConfirmPwd').value.trim();
-  if(!name){showPopup('⚠️','Incomplete','Name is required.');return;}
-  const mDig=normMob(mobile);
-  if(mDig.length>0&&mDig.length!==11){showPopup('⚠️','Mobile Short','Mobile must be exactly 11 digits.');return;}
-  const cDig=normCnic(cnic);
-  if(cDig.length>0&&cDig.length!==13){showPopup('⚠️','CNIC Short','CNIC must be exactly 13 digits.');return;}
-  if(newPwd&&newPwd!==confirmPwd){showPopup('⚠️','Mismatch','Passwords do not match.');return;}
-  if(newPwd&&newPwd.length<4){showPopup('⚠️','Weak','Password must be at least 4 characters.');return;}
-  // Check duplicates (exclude self)
-  const others=[...DB.users,...DB.pendingApprovals].filter(u=>u.id!==currentUser.id);
-  if(mobile&&others.find(u=>u.mobile.replace(/[-\s]/g,'')===mDig)){showPopup('⚠️','Duplicate Mobile','An account with this mobile already exists.');return;}
-  if(cnic&&others.find(u=>u.cnic.replace(/[-\s]/g,'')===cDig)){showPopup('⚠️','Duplicate CNIC','An account with this CNIC already exists.');return;}
-
-  const doSave=(photo,sig)=>{
+  const name=(document.getElementById('profName')||{value:''}).value.trim();
+  const mobile=(document.getElementById('profMobile')||{value:''}).value.trim();
+  const cnic=(document.getElementById('profCnic')||{value:''}).value.trim();
+  const newPwd=(document.getElementById('profNewPwd')||{value:''}).value.trim();
+  const confirmPwd=(document.getElementById('profConfirmPwd')||{value:''}).value.trim();
+  if(!name){alert('Name is required | نام ضروری ہے');return;}
+  if(newPwd&&newPwd!==confirmPwd){alert('Passwords do not match | پاس ورڈ مماثل نہیں');return;}
+  if(newPwd&&newPwd.length<4){alert('Password too short (min 4 chars)');return;}
+  function doSave(photo){
     currentUser.name=name;
     if(mobile)currentUser.mobile=mobile;
     if(cnic)currentUser.cnic=cnic;
-    currentUser.area=document.getElementById('profArea').value||currentUser.area;
-    currentUser.profession=document.getElementById('profProfession').value||currentUser.profession;
-    const bg=(document.getElementById('profBloodGroup')||{value:''}).value;
-    if(bg)currentUser.bloodGroup=bg;
-    const addr=(document.getElementById('profAddress')||{value:''}).value.trim();
-    if(addr)currentUser.address=addr;
+    var ar=document.getElementById('profArea');if(ar&&ar.value)currentUser.area=ar.value;
+    var pr=document.getElementById('profProfession');if(pr&&pr.value)currentUser.profession=pr.value;
+    var bg=document.getElementById('profBloodGroup');if(bg&&bg.value)currentUser.bloodGroup=bg.value;
+    var addr=document.getElementById('profAddress');if(addr)currentUser.address=addr.value.trim();
     if(photo)currentUser.photo=photo;
-    if(sig)currentUser.signature=sig;
-    if(newPwd){currentUser.password=newPwd;}
-    // Update in DB.users array too
-    const uIdx=DB.users.findIndex(u=>u.id===currentUser.id);
+    if(newPwd)currentUser.password=newPwd;
+    var uIdx=DB.users.findIndex(function(u){return u.id===currentUser.id;});
     if(uIdx>=0)DB.users[uIdx]=currentUser;
-    FS.save('users',currentUser.id,currentUser);
+    FS.save('users',currentUser.id,JSON.parse(JSON.stringify(currentUser)));
     try{saveLocalCache();}catch(e){}
-    DB.auditLog.push({by:currentUser.id,action:'Profile Updated',target:currentUser.name,detail:'Self profile update',date:today()});
-    // Update header avatar
-    const av=document.getElementById('dashAvatar');
-    if(currentUser.photo)av.innerHTML=`<img src="${currentUser.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-    else av.textContent=currentUser.name.charAt(0);
-    // Update dashboard header name too
-    const hn=document.getElementById('dashHeaderName');
-    if(hn)hn.textContent=currentUser.name;
-    showPopup('✅','Profile Updated! | پروفائل محفوظ','Your profile has been updated successfully.',null,()=>{selectTab('dash');});
-  };
-
-  const fi=document.getElementById('profPhotoInput');
-  const si=document.getElementById('profSigInput');
-  if(fi.files[0]){
-    const r=new FileReader();r.onload=e=>{
-      if(si&&si.files[0]){const r2=new FileReader();r2.onload=e2=>doSave(e.target.result,e2.target.result);r2.readAsDataURL(si.files[0]);}
-      else doSave(e.target.result,null);
-    };r.readAsDataURL(fi.files[0]);
-  } else if(si&&si.files[0]){
-    const r=new FileReader();r.onload=e=>doSave(null,e.target.result);r.readAsDataURL(si.files[0]);
-  } else doSave(null,null);
+    var al={by:currentUser.id,action:'Profile Updated',target:currentUser.name,detail:'Self profile update',date:today()};
+    DB.auditLog.push(al);FS.save('auditLog','AL'+Date.now(),al);
+    showPopup('✅','Profile Updated! | پروفائل محفوظ','Your profile has been updated successfully.',null,function(){selectTab('dash');});
+  }
+  var fi=document.getElementById('profPhotoInput');
+  if(fi&&fi.files&&fi.files[0]){
+    var r=new FileReader();
+    r.onload=function(e){doSave(e.target.result);};
+    r.readAsDataURL(fi.files[0]);
+  } else {
+    doSave(currentUser.photo||null);
+  }
 }
 
 
@@ -5155,7 +5133,6 @@ function getMenuConfig(){
       {icon:'👤', label:'Add Donor / ڈونر شامل', tab:'adddonor'},
       {icon:'📱', label:'SMS Reminders / یاد دہانی', tab:'smsreminders'},
       {icon:'🩸', label:'Blood Bank / بلڈ بینک', tab:'bloodbank'},
-      {icon:'👤', label:'Profile / پروفائل', tab:'profile'},
     ];
   if(currentRole!=='user'){
     homeItems.push(
@@ -5202,6 +5179,8 @@ function getMenuConfig(){
   }
 
   const settings = {key:'settings', title:'Settings / ترتیبات', items:[]};
+  // Profile always in settings for all roles
+  settings.items.push({icon:'👤', label:'My Profile / پروفائل', tab:'profile'});
   if(['admin','manager','developer'].includes(currentRole)){
     settings.items.push(
       {icon:'🏢', label:'Organization / ادارہ', tab:'orgsettings'},
@@ -5210,6 +5189,8 @@ function getMenuConfig(){
       {icon:'⚠️', label:'Complaints / شکایات', tab:'complaints', badge:DB.suggestions.filter(s=>s.type==='complaint'&&!s.read).length||0}
     );
   }
+  // Profile for all roles in settings
+  settings.items.push({icon:'👤', label:'My Profile / پروفائل', tab:'profile'});
   if(currentRole==='developer'){
     settings.items.push(
       {icon:'💼', label:'Professions / پیشہ', tab:'professions'},
@@ -5222,6 +5203,10 @@ function getMenuConfig(){
     );
   }
 
+  // Ensure all users have profile in settings
+  if(!settings.items.find(x=>x.tab==='profile')){
+    settings.items.push({icon:'👤', label:'My Profile / پروفائل', tab:'profile'});
+  }
   return {home, forms, reports, donors, settings};
 }
 

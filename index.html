@@ -5045,7 +5045,7 @@ T.suggestions=function(){
             </div>
           </div>
           ${s.reply
-            ?`<div style="margin-top:8px;padding:8px;background:#E6F1FB;border-radius:8px;font-size:12px;color:#185FA5"><strong>${s.replyBy||'Reply'}:</strong> ${s.reply}</div>`
+             ?`<div style="margin-top:8px;padding:8px;background:#E6F1FB;border-radius:8px;font-size:12px;color:#185FA5;display:flex;align-items:flex-start;gap:8px">${(()=>{const ru=DB.users.find(u=>u.name===s.replyBy)||DB.users.find(u=>u.id===s.replyById)||null;return ru&&ru.photo?`<img src="${ru.photo}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid #185FA5">`:`<div style="width:28px;height:28px;border-radius:50%;background:#185FA5;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${(s.replyBy||'?')[0].toUpperCase()}</div>`;})()}<div><div style="font-size:11px;font-weight:700;margin-bottom:2px">${s.replyBy||'Reply'} ${s.replyByRole?`<span class="badge badge-${s.replyByRole}">${s.replyByRole}</span>`:''}</div><div>${s.reply}</div></div></div>`
             :`<div style="display:flex;gap:6px;margin-top:8px">
                 <input type="text" id="replyInp_${s.id}" placeholder="Reply to this suggestion... | جواب لکھیں" style="flex:1;padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:12px">
                 <button onclick="replyToSuggestion('${s.id}')" style="background:#1D9E75;color:#fff;border:none;padding:7px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">Reply</button>
@@ -5081,7 +5081,7 @@ T.complaints=function(){
             </div>
           </div>
            ${s.reply
-             ?`<div style="margin-top:8px;padding:8px;background:#FCEBEB;border-radius:8px;font-size:12px;color:#A32D2D"><strong>${s.replyBy||'Reply'}:</strong> ${s.reply}</div>`
+             ?`<div style="margin-top:8px;padding:8px;background:#FCEBEB;border-radius:8px;font-size:12px;color:#A32D2D;display:flex;align-items:flex-start;gap:8px">${(()=>{const ru=DB.users.find(u=>u.name===s.replyBy)||DB.users.find(u=>u.id===s.replyById)||null;return ru&&ru.photo?`<img src="${ru.photo}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid #E24B4A">`:`<div style="width:28px;height:28px;border-radius:50%;background:#E24B4A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${(s.replyBy||'?')[0].toUpperCase()}</div>`;})()}<div><div style="font-size:11px;font-weight:700;margin-bottom:2px">${s.replyBy||'Reply'} ${s.replyByRole?`<span class="badge badge-${s.replyByRole}">${s.replyByRole}</span>`:''}</div><div>${s.reply}</div></div></div>`
              :(['admin','manager','developer'].includes(currentRole)?`<div style="margin-top:8px;display:flex;gap:6px">
                  <input id="replyInp_${s.id}" type="text" placeholder="Reply to complaint..." style="flex:1;padding:6px 10px;border:1px solid #E24B4A;border-radius:6px;font-size:12px;outline:none">
                  <button onclick="replyToComplaint('${s.id}')" style="background:#E24B4A;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer">Reply</button>
@@ -5106,7 +5106,7 @@ function replyToComplaint(id){
   if(!reply){showPopup('⚠️','Required','Please write a reply first.');return;}
   const s=DB.suggestions.find(x=>x.id===id);
   if(!s)return;
-  s.reply=reply;s.replyBy=currentUser.name;s.replyByRole=currentUser.role;s.read=true;
+  s.reply=reply;s.replyBy=currentUser.name;s.replyById=currentUser.id;s.replyByRole=currentUser.role;s.read=true;
   FS.save('suggestions',id,s);
   showPopup('✅','Reply Sent','Reply sent to '+(s.byName||s.name||'user')+'.');
   addNotification('system','Complaint Replied',(s.byName||'User')+': '+reply.slice(0,40));
@@ -5117,7 +5117,7 @@ function replyToSuggestion(id){
   if(!reply){showPopup('⚠️','Required','Please write a reply first.');return;}
   const s=DB.suggestions.find(x=>x.id===id);
   if(!s)return;
-  s.reply=reply;s.replyBy=currentUser.name;s.replyByRole=currentUser.role;s.read=true;
+  s.reply=reply;s.replyBy=currentUser.name;s.replyById=currentUser.id;s.replyByRole=currentUser.role;s.read=true;
   FS.save('suggestions',id,s);
   showPopup('✅','Reply Sent','Reply sent to '+s.byName+'.');
   addNotification('system','Suggestion Replied',s.byName+': '+reply.slice(0,40));

@@ -4000,8 +4000,10 @@ function saveProfile(){
     currentUser.name=name;
     if(mobile)currentUser.mobile=mobile;
     if(cnic)currentUser.cnic=cnic;
-    var ar=document.getElementById('profArea');if(ar&&ar.value)currentUser.area=ar.value;
-    var pr=document.getElementById('profProfession');if(pr&&pr.value)currentUser.profession=pr.value;
+    var ar=document.getElementById('profArea');
+    if(ar){if(ar.value)currentUser.area=ar.value;}
+    var pr=document.getElementById('profProfession');
+    if(pr){if(pr.value)currentUser.profession=pr.value;}
     var bg=document.getElementById('profBloodGroup');if(bg&&bg.value)currentUser.bloodGroup=bg.value;
     var addr=document.getElementById('profAddress');if(addr)currentUser.address=addr.value.trim();
     if(photo)currentUser.photo=photo;
@@ -5189,8 +5191,6 @@ function getMenuConfig(){
       {icon:'⚠️', label:'Complaints / شکایات', tab:'complaints', badge:DB.suggestions.filter(s=>s.type==='complaint'&&!s.read).length||0}
     );
   }
-  // Profile for all roles in settings
-  settings.items.push({icon:'👤', label:'My Profile / پروفائل', tab:'profile'});
   if(currentRole==='developer'){
     settings.items.push(
       {icon:'💼', label:'Professions / پیشہ', tab:'professions'},
@@ -5323,6 +5323,17 @@ function renderTab(key){
       smsreminders:()=>{},
       logout_action:()=>{if(confirm('Are you sure you want to logout? | کیا آپ واقعی لاگ آؤٹ کرنا چاہتے ہیں؟'))logout();},
       donorprofileupdate:()=>filterDPU(),
+      profile:()=>{
+        setTimeout(()=>{
+          const u=currentUser;
+          const ar=document.getElementById('profArea');
+          if(ar){Array.from(ar.options).forEach(o=>{if(o.value===u.area)o.selected=true;});}
+          const pr=document.getElementById('profProfession');
+          if(pr){Array.from(pr.options).forEach(o=>{if(o.value===u.profession)o.selected=true;});}
+          const bg=document.getElementById('profBloodGroup');
+          if(bg){Array.from(bg.options).forEach(o=>{if(o.value===u.bloodGroup)o.selected=true;});}
+        },80);
+      },
       lockuser:()=>{
         window._lockFilter='name';
         const inp=document.getElementById('lockUserSearch');

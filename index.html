@@ -4980,28 +4980,8 @@ function submitSuggestion(type){
   };
   DB.suggestions.push(sugg);
   FS.save('suggestions',sid,sugg);
-  // Notify current user
-  addNotification('system','Suggestion Sent','Your '+category+' has been submitted.');
-  // Send Firestore notification to all admins/managers/developers
-  const notifTargets=DB.users.filter(u=>['admin','manager','developer'].includes(u.role)&&u.id!==currentUser.id);
-  notifTargets.forEach(u=>{
-    const nid='NOTIF_SUGG_'+Date.now()+'_'+u.id;
-    const notifData={
-      id:nid,
-      forUser:u.id,
-      type:'system',
-      title:'💡 New Suggestion',
-      message:currentUser.name+' ('+currentUser.role+'): '+text.substring(0,60)+(text.length>60?'...':''),
-      category:category,
-      from:currentUser.id,
-      fromName:currentUser.name,
-      date:today(),
-      time:new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'}),
-      read:false,
-      link:'suggestions'
-    };
-    FS.save('notifications',nid,notifData);
-  });
+  // Only notify sender locally — badge updates from DB.suggestions
+  addNotification('system','Submission Sent','Your '+category+' has been submitted.');
   // Clear form
   document.getElementById(textId).value='';
   if(statusEl){

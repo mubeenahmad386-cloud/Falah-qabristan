@@ -652,18 +652,8 @@ async function loadAllData(){
     if(currentUser){const cu=DB.users.find(x=>x.id===currentUser.id);if(cu&&cu.photo)currentUser.photo=cu.photo;}
     DB.donations=donations;DB.expenses=exp;DB.transfers=trf;DB.auditLog=log;
     DB.suggestions=sugg||[];
-    // Merge Firestore notifications for current user into local notifications
-    if(fsNotifs&&fsNotifs.length&&currentUser){
-      const myFsNotifs=fsNotifs.filter(n=>n.forUser===currentUser.id&&!n.read);
-      myFsNotifs.forEach(n=>{
-        if(!DB_NOTIFICATIONS.find(x=>x.id===n.id)){
-          DB_NOTIFICATIONS.unshift({id:n.id,type:n.type||'system',title:n.title,message:n.message,link:n.link||'',date:n.date,time:n.time||'',read:false});
-          // Mark as read in Firestore
-          FS.save('notifications',n.id,Object.assign({},n,{read:true}));
-        }
-      });
-      if(myFsNotifs.length)updateNotifBadge();
-    }
+    // Store raw Firestore notifications — will be filtered after session restore
+    window._rawFsNotifs=fsNotifs||[];
     // Load saved areas
     try{const areasDoc=await FS.loadAll('config');const aConf=areasDoc.find(x=>x.id==='areas');if(aConf&&aConf.list&&aConf.list.length>0)AREAS=aConf.list;}catch(e){}
     if(profs.length>0){
@@ -5044,6 +5034,7 @@ T.suggestions=function(){
               ${!s.read?'<span style="font-size:10px;color:#E24B4A;font-weight:700">● New</span>':''}
             </div>
             <span style="font-size:10px;color:#999;font-weight:500">${s.date}${s.time?' '+s.time:''}</span>
+              ${currentRole==='developer'?`<button onclick="deleteSuggestion('${s.id}','suggestions')" style="background:none;border:none;cursor:pointer;color:#E24B4A;font-size:15px;font-weight:700;padding:0 4px" title="Delete">&times;</button>`:''}
           </div>
           <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1.5px solid #f0f0f0;cursor:pointer" onclick="markSuggRead('${s.id}')">
             ${(()=>{const su=DB.users.find(u=>u.id===s.by)||{};const ph=su.photo||null;return ph?`<img src="${ph}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #1D9E75">`:`<div style="width:40px;height:40px;border-radius:50%;background:#1D9E75;color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0">${(s.byName||'?')[0].toUpperCase()}</div>`;})()}
@@ -5092,6 +5083,7 @@ T.complaints=function(){
               ${!s.read?'<span style="font-size:10px;color:#E24B4A;font-weight:700">● New</span>':''}
             </div>
             <span style="font-size:10px;color:#999;font-weight:500">${s.date}${s.time?' '+s.time:''}</span>
+              ${currentRole==='developer'?`<button onclick="deleteSuggestion('${s.id}','complaints')" style="background:none;border:none;cursor:pointer;color:#E24B4A;font-size:15px;font-weight:700;padding:0 4px" title="Delete">&times;</button>`:''}
           </div>
           <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1.5px solid #f0f0f0;cursor:pointer" onclick="markSuggRead('${s.id}')">
             ${(()=>{const su=DB.users.find(u=>u.id===s.by)||{};const ph=su.photo||null;return ph?`<img src="${ph}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #E24B4A">`:`<div style="width:40px;height:40px;border-radius:50%;background:#E24B4A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0">${(s.byName||'?')[0].toUpperCase()}</div>`;})()}
@@ -5121,6 +5113,12 @@ T.complaints=function(){
               </div>`:'')}  
         </div>`).join('')}
   </div>`;
+}
+function deleteSuggestion(id,tab){
+  if(!confirm('Delete this entry? | کیا آپ حذف کرنا چاہتے ہیں؟'))return;
+  DB.suggestions=DB.suggestions.filter(x=>x.id!==id);
+  FS.del('suggestions',id);
+  renderTab(tab);
 }
 function markAllComplaintsRead(){
   DB.suggestions.filter(s=>s.type==='complaint').forEach(s=>{s.read=true;FS.save('suggestions',s.id,s);});
@@ -5156,9 +5154,18 @@ function replyToComplaint(id){
   }
   // If non-developer replied — notify developer(s) AND the replier too
   if(currentUser.role!=='developer'){
-    DB.users.filter(u=>u.role==='developer').forEach(dev=>{
-      FS.save('notifications','NOTIF_R_DEV_'+_ts+'_'+dev.id,{
-        id:'NOTIF_R_DEV_'+_ts+'_'+dev.id,forUser:dev.id,type:'system',
+    // Notify all developers — check both 'developer' role and DEV001
+    const devUsers=DB.users.filter(u=>u.role==='developer'||u.id==='DEV001');
+    // Also include any pending approvals users with developer role
+    const devIds=new Set(devUsers.map(u=>u.id));
+    devIds.add('DEV001'); // always include DEV001
+    devIds.add('10009'); // registered developer
+    console.log('Sending notif to devIds:',Array.from(devIds),'currentUser:',currentUser.id);
+    devIds.forEach(function(devId){
+      if(devId===currentUser.id)return; // skip replier
+      console.log('Saving notif for dev:',devId);
+      FS.save('notifications','NOTIF_R_DEV_'+_ts+'_'+devId,{
+        id:'NOTIF_R_DEV_'+_ts+'_'+devId,forUser:devId,type:'system',
         title:'⚠️ Complaint Replied by '+currentUser.role,
         message:currentUser.name+' replied to '+_byName+': '+reply.slice(0,50),
         date:today(),time:new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'}),read:false,link:'complaints'
@@ -5192,9 +5199,14 @@ function replyToSuggestion(id){
   }
   // If non-developer replied — notify developer(s) AND the replier too
   if(currentUser.role!=='developer'){
-    DB.users.filter(u=>u.role==='developer').forEach(dev=>{
-      FS.save('notifications','NOTIF_R_DEV_'+_ts+'_'+dev.id,{
-        id:'NOTIF_R_DEV_'+_ts+'_'+dev.id,forUser:dev.id,type:'system',
+    const devUsers2=DB.users.filter(u=>u.role==='developer'||u.id==='DEV001');
+    const devIds2=new Set(devUsers2.map(u=>u.id));
+    devIds2.add('DEV001');
+    devIds2.add('10009'); // registered developer
+    devIds2.forEach(function(devId){
+      if(devId===currentUser.id)return;
+      FS.save('notifications','NOTIF_R_DEV_'+_ts+'_'+devId,{
+        id:'NOTIF_R_DEV_'+_ts+'_'+devId,forUser:devId,type:'system',
         title:'💡 Suggestion Replied by '+currentUser.role,
         message:currentUser.name+' replied to '+_byName+': '+reply.slice(0,50),
         date:today(),time:new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'}),read:false,link:'suggestions'
@@ -5428,6 +5440,21 @@ function buildTabs(){
   const nav=document.getElementById('bottomNav');
   nav.style.display='flex';
   nav.style.transform='translateY(0)';
+  // Load notifications for this user from Firestore
+  if(currentUser){
+    FS.loadAll('notifications').then(function(fsNotifs){
+      if(fsNotifs&&fsNotifs.length){
+        const mine=fsNotifs.filter(function(n){return n.forUser===currentUser.id&&!n.read;});
+        mine.forEach(function(n){
+          if(!DB_NOTIFICATIONS.find(function(x){return x.id===n.id;})){
+            DB_NOTIFICATIONS.unshift({id:n.id,type:n.type||'system',title:n.title,message:n.message,link:n.link||'',date:n.date,time:n.time||'',read:false});
+            FS.save('notifications',n.id,Object.assign({},n,{read:true}));
+          }
+        });
+        if(mine.length)updateNotifBadge();
+      }
+    }).catch(function(){});
+  }
   renderTab('dash');
   currentTab='dash';
   updateNavHighlight('dash');
@@ -5890,7 +5917,18 @@ async function appInit(){
   try{
     const restored = await restoreSession();
     if(restored){
+      // Now currentUser is set — load notifications
+      if(window._rawFsNotifs&&window._rawFsNotifs.length&&currentUser){
+        const myFsNotifs=window._rawFsNotifs.filter(n=>n.forUser===currentUser.id&&!n.read);
+        myFsNotifs.forEach(n=>{
+          if(!DB_NOTIFICATIONS.find(x=>x.id===n.id)){
+            DB_NOTIFICATIONS.unshift({id:n.id,type:n.type||'system',title:n.title,message:n.message,link:n.link||'',date:n.date,time:n.time||'',read:false});
+            FS.save('notifications',n.id,Object.assign({},n,{read:true}));
+          }
+        });
+      }
       loadDashboard();
+      try{updateNotifBadge();}catch(e){}
     }
   }catch(e){console.error('Session restore error:',e);}
 }

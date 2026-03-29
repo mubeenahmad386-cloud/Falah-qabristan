@@ -4018,6 +4018,9 @@ function saveProfile(){
     if(photo)currentUser.photo=photo;
     if(sig)currentUser.signature=sig;
     if(newPwd){currentUser.password=newPwd;}
+    // Update in DB.users array too
+    const uIdx=DB.users.findIndex(u=>u.id===currentUser.id);
+    if(uIdx>=0)DB.users[uIdx]=currentUser;
     FS.save('users',currentUser.id,currentUser);
     try{saveLocalCache();}catch(e){}
     DB.auditLog.push({by:currentUser.id,action:'Profile Updated',target:currentUser.name,detail:'Self profile update',date:today()});
@@ -4025,7 +4028,10 @@ function saveProfile(){
     const av=document.getElementById('dashAvatar');
     if(currentUser.photo)av.innerHTML=`<img src="${currentUser.photo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
     else av.textContent=currentUser.name.charAt(0);
-    showPopup('✅','Profile Updated!','Your profile has been updated.',null,()=>renderTab('profile'));
+    // Update dashboard header name too
+    const hn=document.getElementById('dashHeaderName');
+    if(hn)hn.textContent=currentUser.name;
+    showPopup('✅','Profile Updated! | پروفائل محفوظ','Your profile has been updated successfully.',null,()=>{selectTab('dash');});
   };
 
   const fi=document.getElementById('profPhotoInput');

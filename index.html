@@ -5037,41 +5037,40 @@ T.suggestions=function(){
     ${all.length===0
       ?'<p style="font-size:13px;color:#888;text-align:center;padding:16px">No suggestions yet. | ابھی تک کوئی تجویز نہیں</p>'
       :all.map(s=>`
-        <div style="border-radius:12px;margin-bottom:12px;overflow:hidden;border:1px solid ${s.read?'#eee':'#9FE1CB'};background:#fff">
-          <!-- Header: category + date + New badge -->
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:${s.read?'#f9f9f9':'#E1F5EE'};border-bottom:1px solid ${s.read?'#eee':'#9FE1CB'}">
+        <div style="border-radius:12px;margin-bottom:14px;overflow:hidden;border:1.5px solid ${s.read?'#e8e8e8':'#9FE1CB'};box-shadow:0 1px 4px rgba(0,0,0,0.06);background:#fff">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:${s.read?'#f7f7f7':'#E1F5EE'};border-bottom:1px solid ${s.read?'#eee':'#9FE1CB'}">
             <div style="display:flex;align-items:center;gap:6px">
-              <span style="font-size:11px;font-weight:700;color:#085041;background:#fff;padding:2px 10px;border-radius:20px;border:1px solid #1D9E75">${s.category}</span>
+              <span style="font-size:10px;font-weight:700;color:#085041;background:#fff;padding:3px 10px;border-radius:20px;border:1.5px solid #1D9E75">${s.category}</span>
               ${!s.read?'<span style="font-size:10px;color:#E24B4A;font-weight:700">● New</span>':''}
             </div>
-            <span style="font-size:10px;color:#888">${s.date} ${s.time||''}</span>
+            <span style="font-size:10px;color:#999;font-weight:500">${s.date}${s.time?' '+s.time:''}</span>
           </div>
-          <!-- Sender info -->
-          <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #f0f0f0" onclick="markSuggRead('${s.id}')">
-            ${(()=>{const su=DB.users.find(u=>u.id===s.by)||{};const ph=su.photo||null;return ph?`<img src="${ph}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #1D9E75">`:`<div style="width:38px;height:38px;border-radius:50%;background:#1D9E75;color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0">${(s.byName||'?')[0].toUpperCase()}</div>`})()}
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1.5px solid #f0f0f0;cursor:pointer" onclick="markSuggRead('${s.id}')">
+            ${(()=>{const su=DB.users.find(u=>u.id===s.by)||{};const ph=su.photo||null;return ph?`<img src="${ph}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #1D9E75">`:`<div style="width:40px;height:40px;border-radius:50%;background:#1D9E75;color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0">${(s.byName||'?')[0].toUpperCase()}</div>`;})()}
             <div style="flex:1;min-width:0">
-              <div style="font-size:13px;font-weight:700;color:#1a1a1a">${s.byName||'?'} <span class="badge badge-${s.byRole||'user'}">${s.byRole||'user'}</span></div>
-              <div style="font-size:11px;color:#888;margin-top:1px">${callableNum(s.byMobile||'')} • ${s.byArea||'—'}</div>
+              <div style="font-size:13px;font-weight:700;color:#1a1a1a;display:flex;align-items:center;gap:6px">${s.byName||'?'} <span class="badge badge-${s.byRole||'user'}">${s.byRole||'user'}</span></div>
+              <div style="font-size:11px;color:#999;margin-top:2px">${callableNum(s.byMobile||'')} ${s.byArea?'• '+s.byArea:''}</div>
             </div>
           </div>
-          <!-- Message -->
-          <div style="padding:10px 12px;font-size:13px;color:#1a1a1a;line-height:1.6;border-bottom:${s.reply?'1px solid #f0f0f0':'none'}">${s.text}</div>
-          <!-- Reply section -->
+          <div style="padding:12px 14px;background:#F0F7FF;border-left:3px solid #1D9E75">
+            <div style="font-size:10px;font-weight:700;color:#1D9E75;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px">Message</div>
+            <div style="font-size:14px;color:#0C3A6E;line-height:1.65">${s.text}</div>
+          </div>
           ${s.reply
-            ?`<div style="padding:10px 12px;background:#E6F1FB">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-                  ${(()=>{const ru=DB.users.find(u=>u.id===s.replyById)||DB.users.find(u=>u.name===s.replyBy)||null;return ru&&ru.photo?`<img src="${ru.photo}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid #185FA5">`:`<div style="width:28px;height:28px;border-radius:50%;background:#185FA5;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${(s.replyBy||'?')[0].toUpperCase()}</div>`;})()}
-                  <div>
-                    <span style="font-size:11px;font-weight:700;color:#0C447C">${s.replyBy||'Reply'}</span>
-                    ${s.replyByRole?`<span class="badge badge-${s.replyByRole}" style="margin-left:4px">${s.replyByRole}</span>`:''}
+            ?`<div style="padding:12px 14px;background:#E1F5EE;border-top:1.5px solid #9FE1CB;border-left:3px solid #1D9E75">
+                <div style="font-size:10px;font-weight:700;color:#085041;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Reply</div>
+                <div style="display:flex;align-items:flex-start;gap:10px">
+                  ${(()=>{const ru=DB.users.find(u=>u.id===s.replyById)||DB.users.find(u=>u.name===s.replyBy)||null;return ru&&ru.photo?`<img src="${ru.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #1D9E75">`:`<div style="width:32px;height:32px;border-radius:50%;background:#1D9E75;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0">${(s.replyBy||'?')[0].toUpperCase()}</div>`;})()}
+                  <div style="flex:1">
+                    <div style="font-size:11px;font-weight:700;color:#085041;margin-bottom:3px;display:flex;justify-content:space-between;align-items:center"><span>${s.replyBy||'Reply'} ${s.replyByRole?`<span class="badge badge-${s.replyByRole}">${s.replyByRole}</span>`:''}</span><span style="font-size:10px;color:#888;font-weight:400">${s.replyDate||''} ${s.replyTime||''}</span></div>
+                    <div style="font-size:13px;color:#085041;line-height:1.6">${s.reply}</div>
                   </div>
                 </div>
-                <div style="font-size:12px;color:#185FA5;line-height:1.5">${s.reply}</div>
               </div>`
-            :(['admin','manager','developer'].includes(currentRole)?`<div style="padding:8px 12px;display:flex;gap:6px">
-                <input type="text" id="replyInp_${s.id}" placeholder="Reply to suggestion..." style="flex:1;padding:7px 10px;border:1px solid #ddd;border-radius:6px;font-size:12px">
-                <button onclick="replyToSuggestion('${s.id}')" style="background:#1D9E75;color:#fff;border:none;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer">Reply</button>
-              </div>`:'')}
+            :(['admin','manager','developer'].includes(currentRole)?`<div style="padding:10px 14px;border-top:1px solid #f0f0f0;display:flex;gap:8px;align-items:center">
+                <input type="text" id="replyInp_${s.id}" placeholder="Reply to suggestion..." style="flex:1;padding:8px 12px;border:1.5px solid #9FE1CB;border-radius:8px;font-size:12px;outline:none;background:#fafafa">
+                <button onclick="replyToSuggestion('${s.id}')" style="background:#1D9E75;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">Reply</button>
+              </div>`:'')}  
         </div>`).join('')}
   </div>`;
 }
@@ -5086,41 +5085,40 @@ T.complaints=function(){
     ${all.length===0
       ?'<p style="font-size:13px;color:#888;text-align:center;padding:16px">No complaints yet. | ابھی تک کوئی شکایت نہیں</p>'
       :all.map(s=>`
-        <div style="border-radius:12px;margin-bottom:12px;overflow:hidden;border:1px solid ${s.read?'#eee':'#F09595'};background:#fff">
-          <!-- Header -->
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:${s.read?'#f9f9f9':'#FCEBEB'};border-bottom:1px solid ${s.read?'#eee':'#F09595'}">
+        <div style="border-radius:12px;margin-bottom:14px;overflow:hidden;border:1.5px solid ${s.read?'#e8e8e8':'#F09595'};box-shadow:0 1px 4px rgba(0,0,0,0.06);background:#fff">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 14px;background:${s.read?'#f7f7f7':'#FCEBEB'};border-bottom:1px solid ${s.read?'#eee':'#F09595'}">
             <div style="display:flex;align-items:center;gap:6px">
-              <span style="font-size:11px;font-weight:700;color:#791F1F;background:#fff;padding:2px 10px;border-radius:20px;border:1px solid #E24B4A">${s.category}</span>
+              <span style="font-size:10px;font-weight:700;color:#791F1F;background:#fff;padding:3px 10px;border-radius:20px;border:1.5px solid #E24B4A">${s.category}</span>
               ${!s.read?'<span style="font-size:10px;color:#E24B4A;font-weight:700">● New</span>':''}
             </div>
-            <span style="font-size:10px;color:#888">${s.date} ${s.time||''}</span>
+            <span style="font-size:10px;color:#999;font-weight:500">${s.date}${s.time?' '+s.time:''}</span>
           </div>
-          <!-- Sender info -->
-          <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #f0f0f0" onclick="markSuggRead('${s.id}')">
-            ${(()=>{const su=DB.users.find(u=>u.id===s.by)||{};const ph=su.photo||null;return ph?`<img src="${ph}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #E24B4A">`:`<div style="width:38px;height:38px;border-radius:50%;background:#E24B4A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0">${(s.byName||'?')[0].toUpperCase()}</div>`})()}
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1.5px solid #f0f0f0;cursor:pointer" onclick="markSuggRead('${s.id}')">
+            ${(()=>{const su=DB.users.find(u=>u.id===s.by)||{};const ph=su.photo||null;return ph?`<img src="${ph}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #E24B4A">`:`<div style="width:40px;height:40px;border-radius:50%;background:#E24B4A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0">${(s.byName||'?')[0].toUpperCase()}</div>`;})()}
             <div style="flex:1;min-width:0">
-              <div style="font-size:13px;font-weight:700;color:#1a1a1a">${s.byName||'?'} <span class="badge badge-${s.byRole||'user'}">${s.byRole||'user'}</span></div>
-              <div style="font-size:11px;color:#888;margin-top:1px">${callableNum(s.byMobile||'')} • ${s.byArea||'—'}</div>
+              <div style="font-size:13px;font-weight:700;color:#1a1a1a;display:flex;align-items:center;gap:6px">${s.byName||'?'} <span class="badge badge-${s.byRole||'user'}">${s.byRole||'user'}</span></div>
+              <div style="font-size:11px;color:#999;margin-top:2px">${callableNum(s.byMobile||'')} ${s.byArea?'• '+s.byArea:''}</div>
             </div>
           </div>
-          <!-- Message — red highlighted -->
-          <div style="padding:10px 12px;background:#FFF5F5;font-size:13px;color:#791F1F;line-height:1.6;border-bottom:${s.reply?'1px solid #f0f0f0':'none'}">${s.text}</div>
-          <!-- Reply — blue -->
+          <div style="padding:12px 14px;background:#FFF5F5;border-left:3px solid #E24B4A">
+            <div style="font-size:10px;font-weight:700;color:#E24B4A;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px">Message</div>
+            <div style="font-size:14px;color:#791F1F;line-height:1.65">${s.text}</div>
+          </div>
           ${s.reply
-            ?`<div style="padding:10px 12px;background:#E6F1FB">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-                  ${(()=>{const ru=DB.users.find(u=>u.id===s.replyById)||DB.users.find(u=>u.name===s.replyBy)||null;return ru&&ru.photo?`<img src="${ru.photo}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid #185FA5">`:`<div style="width:28px;height:28px;border-radius:50%;background:#185FA5;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${(s.replyBy||'?')[0].toUpperCase()}</div>`;})()}
-                  <div>
-                    <span style="font-size:11px;font-weight:700;color:#0C447C">${s.replyBy||'Reply'}</span>
-                    ${s.replyByRole?`<span class="badge badge-${s.replyByRole}" style="margin-left:4px">${s.replyByRole}</span>`:''}
+            ?`<div style="padding:12px 14px;background:#E1F5EE;border-top:1.5px solid #9FE1CB;border-left:3px solid #1D9E75">
+                <div style="font-size:10px;font-weight:700;color:#085041;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Reply</div>
+                <div style="display:flex;align-items:flex-start;gap:10px">
+                  ${(()=>{const ru=DB.users.find(u=>u.id===s.replyById)||DB.users.find(u=>u.name===s.replyBy)||null;return ru&&ru.photo?`<img src="${ru.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #1D9E75">`:`<div style="width:32px;height:32px;border-radius:50%;background:#1D9E75;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0">${(s.replyBy||'?')[0].toUpperCase()}</div>`;})()}
+                  <div style="flex:1">
+                    <div style="font-size:11px;font-weight:700;color:#085041;margin-bottom:3px;display:flex;justify-content:space-between;align-items:center"><span>${s.replyBy||'Reply'} ${s.replyByRole?`<span class="badge badge-${s.replyByRole}">${s.replyByRole}</span>`:''}</span><span style="font-size:10px;color:#888;font-weight:400">${s.replyDate||''} ${s.replyTime||''}</span></div>
+                    <div style="font-size:13px;color:#085041;line-height:1.6">${s.reply}</div>
                   </div>
                 </div>
-                <div style="font-size:12px;color:#185FA5;line-height:1.5">${s.reply}</div>
               </div>`
-            :(['admin','manager','developer'].includes(currentRole)?`<div style="padding:8px 12px;display:flex;gap:6px">
-                <input id="replyInp_${s.id}" type="text" placeholder="Reply to complaint..." style="flex:1;padding:6px 10px;border:1px solid #E24B4A;border-radius:6px;font-size:12px;outline:none">
-                <button onclick="replyToComplaint('${s.id}')" style="background:#E24B4A;color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:11px;font-weight:600;cursor:pointer">Reply</button>
-              </div>`:'')}
+            :(['admin','manager','developer'].includes(currentRole)?`<div style="padding:10px 14px;border-top:1px solid #f0f0f0;display:flex;gap:8px;align-items:center">
+                <input type="text" id="replyInp_${s.id}" placeholder="Reply to complaint..." style="flex:1;padding:8px 12px;border:1.5px solid #F09595;border-radius:8px;font-size:12px;outline:none;background:#fafafa">
+                <button onclick="replyToComplaint('${s.id}')" style="background:#E24B4A;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">Reply</button>
+              </div>`:'')}  
         </div>`).join('')}
   </div>`;
 }
@@ -5141,7 +5139,7 @@ function replyToComplaint(id){
   if(!reply){showPopup('⚠️','Required','Please write a reply first.');return;}
   const s=DB.suggestions.find(x=>x.id===id);
   if(!s)return;
-  s.reply=reply;s.replyBy=currentUser.name;s.replyById=currentUser.id;s.replyByRole=currentUser.role;s.read=true;
+  s.reply=reply;s.replyBy=currentUser.name;s.replyById=currentUser.id;s.replyByRole=currentUser.role;s.replyDate=today();s.replyTime=new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'});s.read=true;
   FS.save('suggestions',id,s);
   const _ts=Date.now();
   const _byName=s.byName||s.name||'user';
@@ -5177,7 +5175,7 @@ function replyToSuggestion(id){
   if(!reply){showPopup('⚠️','Required','Please write a reply first.');return;}
   const s=DB.suggestions.find(x=>x.id===id);
   if(!s)return;
-  s.reply=reply;s.replyBy=currentUser.name;s.replyById=currentUser.id;s.replyByRole=currentUser.role;s.read=true;
+  s.reply=reply;s.replyBy=currentUser.name;s.replyById=currentUser.id;s.replyByRole=currentUser.role;s.replyDate=today();s.replyTime=new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'});s.read=true;
   FS.save('suggestions',id,s);
   const _ts=Date.now();
   const _byName=s.byName;

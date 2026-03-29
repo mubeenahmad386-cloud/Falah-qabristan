@@ -5187,8 +5187,7 @@ function getMenuConfig(){
     settings.items.push(
       {icon:'🏢', label:'Organization / ادارہ', tab:'orgsettings'},
       {icon:'🏘️', label:'Areas / علاقے', tab:'areas'},
-      {icon:'📂', label:'Exp Categories', tab:'expcategories'},
-      {icon:'⚠️', label:'Complaints / شکایات', tab:'complaints', badge:DB.suggestions.filter(s=>s.type==='complaint'&&!s.read).length||0}
+      {icon:'📂', label:'Exp Categories', tab:'expcategories'}
     );
   }
   if(currentRole==='developer'){
@@ -5199,7 +5198,6 @@ function getMenuConfig(){
       {icon:'👥', label:'Users List / صارفین', tab:'userslist'},
       {icon:'📋', label:'Audit Log / لاگ', tab:'audit'},
       {icon:'🗄️', label:'Data Manager', tab:'datamanager'},
-      {icon:'💡', label:'Suggestions', tab:'suggestions', badge:DB.suggestions.filter(s=>!s.read).length||0}
     );
   }
 

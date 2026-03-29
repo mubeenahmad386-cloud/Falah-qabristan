@@ -3998,6 +3998,20 @@ function checkProfCnic(val){
   }
 }
 
+function compressPhoto(dataUrl,maxW,maxH,quality,cb){
+  var img=new Image();
+  img.onload=function(){
+    var w=img.width,h=img.height;
+    if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}
+    if(h>maxH){w=Math.round(w*maxH/h);h=maxH;}
+    var canvas=document.createElement('canvas');
+    canvas.width=w;canvas.height=h;
+    var ctx=canvas.getContext('2d');
+    ctx.drawImage(img,0,0,w,h);
+    cb(canvas.toDataURL('image/jpeg',quality));
+  };
+  img.src=dataUrl;
+}
 function saveProfile(){
   const name=(document.getElementById('profName')||{value:''}).value.trim();
   const mobile=(document.getElementById('profMobile')||{value:''}).value.trim();
@@ -4032,7 +4046,12 @@ function saveProfile(){
   var fi=document.getElementById('profPhotoInput');
   if(fi&&fi.files&&fi.files[0]){
     var r=new FileReader();
-    r.onload=function(e){doSave(e.target.result);};
+    r.onload=function(e){
+      // Compress to max 300x300, 70% quality — keeps Firestore under 1MB
+      compressPhoto(e.target.result,300,300,0.7,function(compressed){
+        doSave(compressed);
+      });
+    };
     r.readAsDataURL(fi.files[0]);
   } else {
     doSave(currentUser.photo||null);
@@ -5019,7 +5038,7 @@ T.suggestions=function(){
           </div>
           <div style="font-size:13px;color:#1a1a1a;margin-bottom:8px;line-height:1.5">${s.text}</div>
           <div style="display:flex;align-items:center;gap:8px;padding:8px;background:rgba(255,255,255,0.7);border-radius:8px;border:1px solid rgba(0,0,0,0.05)">
-            <div style="width:36px;height:36px;border-radius:50%;background:#1D9E75;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0">${(s.byName||'?')[0].toUpperCase()}</div>
+            ${(()=>{const su=DB.users.find(u=>u.id===s.by)||{};const ph=su.photo||s.byPhoto||null;return ph?`<img src="${ph}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #1D9E75">`:`<div style="width:36px;height:36px;border-radius:50%;background:#1D9E75;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0">${(s.byName||'?')[0].toUpperCase()}</div>`})()}
             <div style="flex:1">
               <div style="font-size:12px;font-weight:700">${s.byName||'?'} <span class="badge badge-${s.byRole||'user'}">${s.byRole||'user'}</span></div>
               <div style="font-size:11px;color:#888;margin-top:1px">${callableNum(s.byMobile)} • ${s.byArea||'—'}</div>
@@ -5053,8 +5072,20 @@ T.complaints=function(){
             </div>
             <span style="font-size:10px;color:#aaa;white-space:nowrap">${s.date} ${s.time||''}</span>
           </div>
-          <div style="font-size:13px;color:#1a1a1a;margin-bottom:6px;line-height:1.5">${s.text}</div>
-          <div style="font-size:11px;color:#888">— ${s.byName||s.name||'Unknown'} <span style="font-size:10px">(${s.by||''})</span> ${s.byRole?`<span style="background:#FCEBEB;color:#A32D2D;font-size:9px;padding:1px 6px;border-radius:20px;font-weight:600">${s.byRole}</span>`:''}</div>
+          <div style="font-size:13px;color:#1a1a1a;margin-bottom:8px;line-height:1.5">${s.text}</div>
+          <div style="display:flex;align-items:center;gap:8px;padding:8px;background:rgba(255,255,255,0.7);border-radius:8px;border:1px solid rgba(0,0,0,0.05)">
+            ${(()=>{const su=DB.users.find(u=>u.id===s.by)||{};const ph=su.photo||s.byPhoto||null;return ph?`<img src="${ph}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #E24B4A">`:`<div style="width:36px;height:36px;border-radius:50%;background:#E24B4A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0">${(s.byName||'?')[0].toUpperCase()}</div>`})()}
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:700">${s.byName||'?'} <span class="badge badge-${s.byRole||'user'}">${s.byRole||'user'}</span></div>
+              <div style="font-size:11px;color:#888;margin-top:1px">${callableNum(s.byMobile||'')} • ${s.byArea||'—'}</div>
+            </div>
+          </div>
+           ${s.reply
+             ?`<div style="margin-top:8px;padding:8px;background:#FCEBEB;border-radius:8px;font-size:12px;color:#A32D2D"><strong>${s.replyBy||'Reply'}:</strong> ${s.reply}</div>`
+             :(['admin','manager','developer'].includes(currentRole)?`<div style="margin-top:8px;display:flex;gap:6px">
+                 <input id="replyInp_${s.id}" type="text" placeholder="Reply to complaint..." style="flex:1;padding:6px 10px;border:1px solid #E24B4A;border-radius:6px;font-size:12px;outline:none">
+                 <button onclick="replyToComplaint('${s.id}')" style="background:#E24B4A;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer">Reply</button>
+               </div>`:'')}
         </div>`).join('')}
   </div>`;
 }

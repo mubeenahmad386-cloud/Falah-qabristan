@@ -2811,12 +2811,49 @@ T.transfer=function(){
   const pendingRecv=DB.transfers.filter(t=>t.to===currentUser.id&&!t.received);
   const recvd=DB.transfers.filter(t=>t.to===currentUser.id&&t.received);
   return `<div class="cash-box"><div><div style="font-size:12px;color:#0F6E56;font-weight:600">Cash in Hand (before transfer)</div><div style="font-size:11px;color:#0F6E56;margin-top:2px">Updated balance shown after entering amount</div></div><div style="font-size:20px;font-weight:700;color:#0F6E56">${fmt(cash)}</div></div>
-  <div class="card"><h3>Make Transfer</h3>
-    <label>Recipient <span style="font-size:10px;color:#1D9E75;font-weight:500">وصول کنندہ</span></label><div class="inp-wrap"><span class="inp-icon">👥</span><select id="transferTo"></div><option value="">-- Select Manager | منیجر منتخب کریں --</option>${DB.users.filter(u=>u.id!==currentUser.id&&u.approved&&!u.locked&&u.role==='manager').map(u=>`<option value="${u.id}">${u.name} (${u.role}) — ${u.area||''}</option>`).join('')}</select>
-    <label>Amount (Rs)</label><input type="number" id="transferAmt" oninput="updateAfterTransfer(${cash})">
-    <div id="afterTransferBox" style="display:none;margin-top:8px;padding:8px 10px;background:#FAEEDA;border-radius:8px;font-size:12px;color:#854F0B"></div>
-    <label>Note <span style="font-size:10px;color:#1D9E75;font-weight:500">نوٹ</span></label><div class="inp-wrap"><span class="inp-icon">📝</span><input type="text" id="transferNote"></div>
-    <button class="btn btn-primary" onclick="doTransfer()">Transfer</button>
+  <div class="card" style="padding:24px">
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:24px;color:#1a1a1a;display:flex;align-items:center;gap:8px">💸 Make Transfer <span style="font-size:11px;color:#1D9E75;font-weight:500">رقم منتقل کریں</span></h3>
+
+    <!-- Recipient -->
+    <div style="margin-bottom:24px">
+      <label style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.5px;display:flex;justify-content:space-between;margin-bottom:10px">
+        <span>Recipient</span><span style="color:#1D9E75;font-weight:500;text-transform:none;font-size:12px;font-family:serif">وصول کنندہ</span>
+      </label>
+      <div style="position:relative">
+        <span style="position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:20px;pointer-events:none">👥</span>
+        <select id="transferTo" style="width:100%;padding:16px 16px 16px 50px;border:1.5px solid #e0e0e0;border-radius:14px;font-size:15px;background:#fff;color:#1a1a1a;box-sizing:border-box;-webkit-appearance:none;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+          <option value="">-- Select Manager | منیجر منتخب کریں --</option>
+          ${DB.users.filter(u=>u.id!==currentUser.id&&u.approved&&!u.locked&&u.role==='manager').map(u=>`<option value="${u.id}">${u.name} (${u.role}) — ${u.area||''}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+
+    <!-- Amount -->
+    <div style="margin-bottom:10px">
+      <label style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.5px;display:flex;justify-content:space-between;margin-bottom:10px">
+        <span>Amount (Rs)</span><span style="color:#1D9E75;font-weight:500;text-transform:none;font-size:12px;font-family:serif">رقم</span>
+      </label>
+      <div style="position:relative">
+        <span style="position:absolute;left:18px;top:50%;transform:translateY(-50%);font-size:22px;pointer-events:none">💰</span>
+        <input type="number" id="transferAmt" placeholder="0" oninput="updateAfterTransfer(${cash})" style="width:100%;padding:24px 16px 24px 56px;border:2px solid #e0e0e0;border-radius:14px;font-size:34px;font-weight:800;color:#0F6E56;background:#f0fff8;letter-spacing:0.5px;box-sizing:border-box;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+      </div>
+    </div>
+    <div id="afterTransferBox" style="display:none;margin-bottom:20px;padding:12px 16px;background:#FAEEDA;border-radius:10px;font-size:13px;color:#854F0B;font-weight:600;border-left:3px solid #BA7517"></div>
+
+    <!-- Remarks -->
+    <div style="margin-bottom:28px">
+      <label style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.5px;display:flex;justify-content:space-between;margin-bottom:10px">
+        <span>Remarks</span><span style="color:#1D9E75;font-weight:500;text-transform:none;font-size:12px;font-family:serif">ریمارکس / نوٹ</span>
+      </label>
+      <div style="position:relative">
+        <span style="position:absolute;left:16px;top:18px;font-size:18px;pointer-events:none">📝</span>
+        <textarea id="transferNote" placeholder="Add a note or reason | نوٹ یا وجہ درج کریں" rows="4" style="width:100%;padding:16px 16px 16px 48px;border:1.5px solid #e0e0e0;border-radius:14px;resize:none;line-height:1.8;font-size:14px;min-height:120px;background:#fff;box-sizing:border-box;color:#1a1a1a;box-shadow:0 1px 4px rgba(0,0,0,0.06)"></textarea>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="doTransfer()" style="width:100%;padding:18px;font-size:16px;font-weight:700;border-radius:14px;letter-spacing:0.3px">
+      Transfer &nbsp;→ &nbsp;<span style="font-size:12px;opacity:0.8">رقم منتقل کریں</span>
+    </button>
   </div>
   ${pendingRecv.length>0?`<div class="card"><h3>Confirm Received (${pendingRecv.length})</h3>
     ${pendingRecv.map(t=>{const fu=DB.users.find(u=>u.id===t.from)||{name:'?',role:'?'};return `<div class="transfer-inbox-item"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:600">${fu.name} <span class="badge badge-${fu.role}">${fu.role}</span></div><div style="font-size:11px;color:#888;margin-top:2px">${t.date} • ${t.note||''}</div></div><div style="text-align:right"><div style="font-size:18px;font-weight:700;color:#1D9E75;margin-bottom:4px">+${fmt(t.amount)}</div><button style="background:#1D9E75;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600" onclick="markReceived('${t.id}')">Received ✓</button></div></div></div>`;}).join('')}

@@ -1215,6 +1215,7 @@ T.dash=function(){
       <button onclick="selectTab('search')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:0.5px solid #185FA5;background:#E6F1FB;cursor:pointer"><span style="font-size:20px">🔍</span><span style="font-size:9px;font-weight:600;color:#0C447C">Search</span><span style="font-size:8px;color:#0C447C;opacity:0.75;direction:rtl">تلاش</span></button>
       <button onclick="selectTab('contacts')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:0.5px solid #1D9E75;background:#E1F5EE;cursor:pointer"><span style="font-size:20px">📒</span><span style="font-size:9px;font-weight:600;color:#085041">Contacts</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">رابطے</span></button>
       <button onclick="selectTab('suggestion')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:0.5px solid #BA7517;background:#FAEEDA;cursor:pointer"><span style="font-size:20px">💡</span><span style="font-size:9px;font-weight:600;color:#633806">Suggestion</span><span style="font-size:8px;color:#633806;opacity:0.75;direction:rtl">تجویز</span></button>
+      <button onclick="selectTab('complaint')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:0.5px solid #E24B4A;background:#FCEBEB;cursor:pointer"><span style="font-size:20px">⚠️</span><span style="font-size:9px;font-weight:600;color:#A32D2D">Send Complaint</span><span style="font-size:8px;color:#A32D2D;opacity:0.75;direction:rtl">شکایت بھیجیں</span></button>
       <button onclick="selectTab('balreport')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:0.5px solid #185FA5;background:#E6F1FB;cursor:pointer"><span style="font-size:20px">💼</span><span style="font-size:9px;font-weight:600;color:#0C447C">Balance</span><span style="font-size:8px;color:#0C447C;opacity:0.75;direction:rtl">بیلنس</span></button>
       <button onclick="selectTab('adddonor')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:0.5px solid #0F6E56;background:#E1F5EE;cursor:pointer"><span style="font-size:20px">👤</span><span style="font-size:9px;font-weight:600;color:#085041">Add Donor</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">ڈونر شامل</span></button>
     </div>
@@ -5140,21 +5141,23 @@ let currentTab = 'dash';
 let currentSubmenu = null;
 
 function getMenuConfig(){
-  const home = {
-    key:'home', title:'Home / ہوم',
-    items:[
+  const homeItems = [
       {icon:'🏠', label:'Dashboard / ڈیش بورڈ', tab:'dash'},
       {icon:'🔍', label:'Search / تلاش', tab:'search'},
       {icon:'📒', label:'Contacts / رابطے', tab:'contacts'},
       {icon:'🔔', label:'Notifications / اطلاعات', tab:'notifications'},
-      {icon:'💡', label:'Send Suggestion / تجویز', tab:'suggestion'},
-      {icon:'⚠️', label:'Complaint / شکایت', tab:'complaint'},
       {icon:'👤', label:'Add Donor / ڈونر شامل', tab:'adddonor'},
       {icon:'📱', label:'SMS Reminders / یاد دہانی', tab:'smsreminders'},
       {icon:'🩸', label:'Blood Bank / بلڈ بینک', tab:'bloodbank'},
       {icon:'👤', label:'Profile / پروفائل', tab:'profile'},
-    ]
-  };
+    ];
+  if(currentRole!=='user'){
+    homeItems.push(
+      {icon:'💡', label:'Send Suggestion / تجویز', tab:'suggestion'},
+      {icon:'⚠️', label:'Send Complaint / شکایت بھیجیں', tab:'complaint'}
+    );
+  }
+  const home = {key:'home', title:'Home / ہوم', items:homeItems};
 
   const forms = {key:'forms', title:'Forms / فارمز', items:[]};
   if(['admin','manager','developer'].includes(currentRole)) forms.items.push({icon:'💰', label:'Donation / چندہ', tab:'donation'});
@@ -5197,7 +5200,8 @@ function getMenuConfig(){
     settings.items.push(
       {icon:'🏢', label:'Organization / ادارہ', tab:'orgsettings'},
       {icon:'🏘️', label:'Areas / علاقے', tab:'areas'},
-      {icon:'📂', label:'Exp Categories', tab:'expcategories'}
+      {icon:'📂', label:'Exp Categories', tab:'expcategories'},
+      {icon:'⚠️', label:'Complaints / شکایات', tab:'complaints', badge:DB.suggestions.filter(s=>s.type==='complaint'&&!s.read).length||0}
     );
   }
   if(currentRole==='developer'){

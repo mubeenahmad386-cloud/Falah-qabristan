@@ -1182,7 +1182,12 @@ T.dash=function(){
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px">
       <button onclick="selectTab('myentries')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #ddd;background:#f5f5f5;cursor:pointer"><span style="font-size:19px">📊</span><span style="font-size:9px;font-weight:600;color:#444">My Don.</span><span style="font-size:8px;color:#444;opacity:0.75;direction:rtl">میرا چندہ</span></button>
       <button onclick="selectTab('myentries')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #ddd;background:#f5f5f5;cursor:pointer"><span style="font-size:19px">📑</span><span style="font-size:9px;font-weight:600;color:#444">My Exp.</span><span style="font-size:8px;color:#444;opacity:0.75;direction:rtl">میرے اخراج</span></button>
-      <button onclick="selectTab('suggestions')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #BA7517;background:#FAEEDA;cursor:pointer"><span style="font-size:19px">💡</span><span style="font-size:9px;font-weight:600;color:#633806">Suggestions</span><span style="font-size:8px;color:#633806;opacity:0.75;direction:rtl">تجاویز</span></button>
+      <button onclick="selectTab('suggestions')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #BA7517;background:#FAEEDA;cursor:pointer;position:relative">
+        <span style="font-size:19px">💡</span>
+        <span style="font-size:9px;font-weight:600;color:#633806">Suggestions</span>
+        <span style="font-size:8px;color:#633806;opacity:0.75;direction:rtl">تجاویز</span>
+        ${(()=>{const cnt=DB.suggestions.filter(s=>s.type!=='complaint'&&!s.read).length;return cnt>0?`<span style="position:absolute;top:4px;right:4px;background:#BA7517;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:20px">${cnt}</span>`:'';})()}
+      </button>
       <button onclick="selectTab('complaints')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #E24B4A;background:#FCEBEB;cursor:pointer;position:relative">
         <span style="font-size:19px">⚠️</span>
         <span style="font-size:9px;font-weight:600;color:#A32D2D">Complaints</span>
@@ -1214,7 +1219,7 @@ T.dash=function(){
       <button onclick="selectTab('bloodbank')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:0.5px solid #E24B4A;background:#FCEBEB;cursor:pointer"><span style="font-size:20px">🩸</span><span style="font-size:9px;font-weight:600;color:#A32D2D">Blood Bank</span><span style="font-size:8px;color:#A32D2D;opacity:0.75;direction:rtl">بلڈ بینک</span></button>
       <button onclick="selectTab('search')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:0.5px solid #185FA5;background:#E6F1FB;cursor:pointer"><span style="font-size:20px">🔍</span><span style="font-size:9px;font-weight:600;color:#0C447C">Search</span><span style="font-size:8px;color:#0C447C;opacity:0.75;direction:rtl">تلاش</span></button>
       <button onclick="selectTab('contacts')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:0.5px solid #1D9E75;background:#E1F5EE;cursor:pointer"><span style="font-size:20px">📒</span><span style="font-size:9px;font-weight:600;color:#085041">Contacts</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">رابطے</span></button>
-      <button onclick="selectTab('suggestion')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:0.5px solid #BA7517;background:#FAEEDA;cursor:pointer"><span style="font-size:20px">💡</span><span style="font-size:9px;font-weight:600;color:#633806">Suggestion</span><span style="font-size:8px;color:#633806;opacity:0.75;direction:rtl">تجویز</span></button>
+      <button onclick="selectTab('suggestion')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:0.5px solid #BA7517;background:#FAEEDA;cursor:pointer"><span style="font-size:20px">💡</span><span style="font-size:9px;font-weight:600;color:#633806">Give Suggestion</span><span style="font-size:8px;color:#633806;opacity:0.75;direction:rtl">تجویز دیں</span></button>
       <button onclick="selectTab('complaint')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:0.5px solid #E24B4A;background:#FCEBEB;cursor:pointer"><span style="font-size:20px">⚠️</span><span style="font-size:9px;font-weight:600;color:#A32D2D">Send Complaint</span><span style="font-size:8px;color:#A32D2D;opacity:0.75;direction:rtl">شکایت بھیجیں</span></button>
       <button onclick="selectTab('balreport')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:0.5px solid #185FA5;background:#E6F1FB;cursor:pointer"><span style="font-size:20px">💼</span><span style="font-size:9px;font-weight:600;color:#0C447C">Balance</span><span style="font-size:8px;color:#0C447C;opacity:0.75;direction:rtl">بیلنس</span></button>
       <button onclick="selectTab('adddonor')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 2px;border-radius:10px;border:0.5px solid #0F6E56;background:#E1F5EE;cursor:pointer"><span style="font-size:20px">👤</span><span style="font-size:9px;font-weight:600;color:#085041">Add Donor</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">ڈونر شامل</span></button>
@@ -4990,7 +4995,7 @@ T.suggestions=function(){
   return `<div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
       <h3><span class="bi-title"><span class="bi-en">Suggestions ${unread>0?`<span style="background:#BA7517;color:#fff;border-radius:20px;padding:1px 7px;font-size:11px">${unread}</span>`:''}
-      </span><span class="bi-ur">تجاویز</span></span></h3>
+      </span><span class="bi-ur">تجویز دیں</span></span></h3>
       ${unread>0?`<button onclick="markAllSuggRead()" style="background:#f5f5f5;border:1px solid #ddd;padding:5px 10px;border-radius:8px;font-size:11px;cursor:pointer">Mark all read</button>`:''}
     </div>
     ${all.length===0
@@ -5138,7 +5143,7 @@ function getMenuConfig(){
     ];
   if(currentRole!=='user'){
     homeItems.push(
-      {icon:'💡', label:'Send Suggestion / تجویز', tab:'suggestion'},
+      {icon:'💡', label:'Give Suggestion / تجویز دیں', tab:'suggestion'},
       {icon:'⚠️', label:'Send Complaint / شکایت بھیجیں', tab:'complaint'}
     );
   }
@@ -5400,7 +5405,7 @@ const TAB_LABELS={
   donorlist:'Donor List',slip:'Donor Slip',top:'Top Donors',transfer:'Transfer',
   decconfirm:'Confirm Deceased',approvals:'Approvals',lockuser:'Login Management',
   userslist:'Users List',professions:'Professions',audit:'Audit Log',areas:'Areas',
-  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',contacts:'Contacts',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Send Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Suggestions'
+  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',contacts:'Contacts',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
 };
 
 // ============================================================

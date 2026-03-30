@@ -60,7 +60,7 @@ label{display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:5px;
 .stat-label-bi .en{font-size:9px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:0.4px}
 .stat-label-bi .ur{font-size:9px;color:#bbb;direction:rtl}
 .stat-val{font-size:21px;font-weight:800;margin-top:4px;letter-spacing:-0.5px}
-.app-header{background:#0F6E56;padding:13px 16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
+.app-header{background:#0F6E56;padding:13px 16px;display:flex;justify-content:space-between;align-items:center;position:relative;top:0;z-index:100}
 .content-area{padding:12px 12px 90px;min-height:100vh}
 .nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;cursor:pointer;flex:1;transition:all 0.15s;border-radius:10px;margin:4px 2px}
 .nav-item.active{background:rgba(29,158,117,0.12)}
@@ -1169,7 +1169,7 @@ T.dash=function(){
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px">
       <button onclick="selectTab('donation')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #1D9E75;background:#E1F5EE;cursor:pointer"><span style="font-size:19px">💰</span><span style="font-size:9px;font-weight:600;color:#085041">Donation</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">چندہ</span></button>
       <button onclick="selectTab('expense')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #BA7517;background:#FAEEDA;cursor:pointer"><span style="font-size:19px">📋</span><span style="font-size:9px;font-weight:600;color:#633806">Expense</span><span style="font-size:8px;color:#633806;opacity:0.75;direction:rtl">اخراجات</span></button>
-      <button onclick="selectTab('deceased')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #0F6E56;background:#E1F5EE;cursor:pointer"><span style="font-size:19px">🪦</span><span style="font-size:9px;font-weight:600;color:#085041">Deceased</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">وفات</span></button>
+      <button onclick="selectTab('adddonor')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:1px solid rgba(29,158,117,0.35);background:rgba(29,158,117,0.18);cursor:pointer"><span style="font-size:19px">👤</span><span style="font-size:9px;font-weight:600;color:#4ade80">Add Donor</span><span style="font-size:8px;color:#4ade80;opacity:0.7;direction:rtl">ڈونر شامل</span></button>
       <button onclick="selectTab('slip')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #185FA5;background:#E6F1FB;cursor:pointer"><span style="font-size:19px">🧾</span><span style="font-size:9px;font-weight:600;color:#0C447C">Slip</span><span style="font-size:8px;color:#0C447C;opacity:0.75;direction:rtl">سلپ</span></button>
     </div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px">
@@ -1697,6 +1697,16 @@ donor={id:nid,name,mobile,cnic,area:document.getElementById('donorArea').value,b
   // Auto refresh
   addNotification('donation','Donation Saved','Rs '+fmt(amount)+' — '+donor.name+' ('+donor.id+')');
   showPopup('✅','Entry Saved','Donor ID: '+donor.id+' | Rs '+fmt(amount)+' saved.',null,()=>renderTab('donation'));
+  // Notify all users — entry made
+  const _entryNotifTs=Date.now();
+  DB.users.filter(u=>u.approved&&!u.locked&&u.id!==currentUser.id).forEach(function(u){
+    FS.save('notifications','NOTIF_ENTRY_'+_entryNotifTs+'_'+u.id,{
+      id:'NOTIF_ENTRY_'+_entryNotifTs+'_'+u.id,forUser:u.id,type:'system',
+      title:'💰 New Donation Entry',
+      message:'Rs '+fmt(amount)+' donation recorded',
+      date:today(),time:new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'}),read:false
+    });
+  });
 }
 
 // ---- DECEASED ----
@@ -1760,6 +1770,15 @@ function submitDeceased(){
     DB.auditLog.push({by:currentUser.id,action:'Deceased Entry',target:name,detail:'ID: '+nid,date:today()});
     addNotification('deceased','Deceased Entry','ID: '+nid+' — '+name+' | Pending approval');
     showPopup('📤','Submitted','ID: '+nid+' | Pending developer approval.',null,()=>renderTab('deceased'));
+  const _decNotifTs=Date.now();
+  DB.users.filter(u=>u.approved&&!u.locked&&u.id!==currentUser.id).forEach(function(u){
+    FS.save('notifications','NOTIF_DEC_'+_decNotifTs+'_'+u.id,{
+      id:'NOTIF_DEC_'+_decNotifTs+'_'+u.id,forUser:u.id,type:'system',
+      title:'🪦 New Deceased Entry',
+      message:'A new deceased record has been added',
+      date:today(),time:new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'}),read:false
+    });
+  });
   }
   if(pf.files[0]){
     const r=new FileReader();r.onload=e=>{
@@ -2706,6 +2725,27 @@ T.slip=function(){
     <div id="slipResult" style="margin-top:12px"></div>
   </div>`;
 };
+function shareOnWhatsApp(type,id,name,amount,donor){
+  let msg='';
+  if(type==='donor'){
+    const org=ORG_CONFIG.name||'Falah e Qabristan';
+    msg=`*${org}*%0A`;
+    msg+=`*Donor Slip*%0A`;
+    msg+=`━━━━━━━━━━━━━━%0A`;
+    msg+=`*Name:* ${name}%0A`;
+    msg+=`*ID:* ${id}%0A`;
+    msg+=`*Mobile:* ${donor&&donor.mobile?donor.mobile:''}%0A`;
+    msg+=`*Area:* ${donor&&donor.area?donor.area:''}%0A`;
+    msg+=`━━━━━━━━━━━━━━%0A`;
+    msg+=`*Last Donation:* Rs ${amount}%0A`;
+    msg+=`*Total Donated:* Rs ${donor?fmt(donor.totalDonation):'0'}%0A`;
+    msg+=`━━━━━━━━━━━━━━%0A`;
+    msg+=`_JazakAllah Khair_`;
+  } else {
+    msg=`*${ORG_CONFIG.name||'Falah e Qabristan'}*%0A${name}%0AAmount: Rs ${amount}`;
+  }
+  window.open('https://wa.me/?text='+msg,'_blank');
+}
 function generateSlip(){
   const raw=(document.getElementById('slipSearch').value||'').trim();
   if(!raw){showPopup('⚠️','Required','Personal ID or Mobile is required. | ID یا موبائل ضروری ہے');return;}
@@ -2718,7 +2758,7 @@ function generateSlip(){
   const slipUser=lastEntry?DB.users.find(u=>u.id===lastEntry.by)||null:null;
   res.innerHTML=`<div class="cert-wrap" id="donorSlipWrap">
     <div class="cert-green-header">
-      ${ORG_CONFIG.logo?`<img src="${ORG_CONFIG.logo}" style="height:40px;max-width:100px;object-fit:contain;margin-bottom:6px;filter:brightness(0) invert(1);opacity:0.9">`:'<div style="font-size:18px;margin-bottom:4px">🕌</div>'}
+      ${ORG_CONFIG.logo?`<img src="${ORG_CONFIG.logo}" style="height:40px;max-width:100px;object-fit:contain;margin-bottom:6px;filter:none;opacity:1">`:'<div style="font-size:18px;margin-bottom:4px">🕌</div>'}
       <div style="font-size:16px;font-weight:700">${orgNameUrdu()}</div>
       <div style="font-size:13px;opacity:0.9">${orgName()}</div>
       <div style="font-size:11px;opacity:0.8">Donor Acknowledgement Slip</div>
@@ -2751,9 +2791,10 @@ function generateSlip(){
         <span style="color:${i===0?'#185FA5':'#666'}">${e.date} — ${e.desc||'Donation'}</span>
         <span style="font-weight:600;color:${i===0?'#185FA5':'#0F6E56'}">${fmt(e.amount)}</span>
       </div>`).join('')}
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;margin-bottom:8px">
-        <button onclick="downloadReport('donorSlipWrap','donor_slip_${donor.id}','pdf')" style="background:#E24B4A;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🖨️ Print/PDF</button>
-        <button onclick="downloadSlipPNG('donorSlipWrap','donor_slip_${donor.id}')" style="background:#185FA5;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🖼️ PNG Download</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px;margin-bottom:8px">
+        <button onclick="downloadReport('donorSlipWrap','donor_slip_${donor.id}','pdf')" style="background:#E24B4A;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🖨️ Print</button>
+        <button onclick="downloadSlipPNG('donorSlipWrap','donor_slip_${donor.id}')" style="background:#185FA5;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🖼️ PNG</button>
+        <button onclick="shareOnWhatsApp('donor','${donor.id}','${donor.name}','${fmt(lastAmt)}',donor)" style="background:#25D366;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">📲 WhatsApp</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;text-align:center;margin-top:12px;padding-top:12px;border-top:1px dashed #ccc">
         <div>${slipUser&&slipUser.signature?`<img src="${slipUser.signature}" style="height:32px;max-width:100%;object-fit:contain;margin-bottom:2px"><br>`:'<div style="height:35px;border-bottom:1px solid #999;margin-bottom:4px"></div>'}<div style="font-size:10px;color:#888">${slipUser?slipUser.name+' ('+slipUser.role+')':'Admin / Manager'}</div></div>
@@ -2858,7 +2899,7 @@ T.transfer=function(){
   ${pendingRecv.length>0?`<div class="card"><h3>Confirm Received (${pendingRecv.length})</h3>
     ${pendingRecv.map(t=>{const fu=DB.users.find(u=>u.id===t.from)||{name:'?',role:'?'};return `<div class="transfer-inbox-item"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:600">${fu.name} <span class="badge badge-${fu.role}">${fu.role}</span></div><div style="font-size:11px;color:#888;margin-top:2px">${t.date} • ${t.note||''}</div></div><div style="text-align:right"><div style="font-size:18px;font-weight:700;color:#1D9E75;margin-bottom:4px">+${fmt(t.amount)}</div><button style="background:#1D9E75;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600" onclick="markReceived('${t.id}')">Received ✓</button></div></div></div>`;}).join('')}
   </div>`:''}
-  ${sent.length>0?`<div class="card"><h3><span class="bi-title"><span class="bi-en">Sent History</span><span class="bi-ur">بھیجنے کی تاریخ</span></span></h3>${sent.map(t=>{const tu=DB.users.find(u=>u.id===t.to)||{name:'?'};return `<div class="entry-row"><div><div class="entry-name">${tu.name}</div><div class="entry-sub">${t.date} • ${t.note||''} • ${t.received?'<span style="color:#0F6E56">✓ Received</span>':'<span style="color:#BA7517">Pending</span>'}</div></div><div style="color:#E24B4A;font-size:13px;font-weight:600">-${fmt(t.amount)}</div></div>`;}).join('')}</div>`:''}
+  ${sent.length>0?`<div class="card"><h3><span class="bi-title"><span class="bi-en">Last 5 Sent</span><span class="bi-ur">آخری 5 اندراجات</span></span></h3>${sent.slice(-5).reverse().map(t=>{const tu=DB.users.find(u=>u.id===t.to)||{name:'?'};return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:0.5px solid #f0f0f0"><div><div style="font-size:13px;font-weight:600;color:#1a1a1a">${tu.name}</div><div style="font-size:11px;color:#888;margin-top:2px">${t.date}${t.note?' • '+t.note:''}</div></div><div style="text-align:right"><div style="font-size:14px;font-weight:700;color:#E24B4A">-${fmt(t.amount)}</div><div style="margin-top:3px">${t.received?'<span style="background:#E1F5EE;color:#0F6E56;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px">✓ Received</span>':'<span style="background:#FAEEDA;color:#854F0B;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px">⏳ Pending</span>'}</div></div></div>`;}).join('')}</div>`:''}
   ${recvd.length>0?`<div class="card"><h3><span class="bi-title"><span class="bi-en">Received History</span><span class="bi-ur">وصول کی تاریخ</span></span></h3>${recvd.map(t=>{const fu=DB.users.find(u=>u.id===t.from)||{name:'?'};return `<div class="entry-row"><div><div class="entry-name">${fu.name}</div><div class="entry-sub">${t.date}</div></div><div class="entry-amt">+${fmt(t.amount)}</div></div>`;}).join('')}</div>`:''}`;
 };
 function updateAfterTransfer(cash){
@@ -3238,6 +3279,15 @@ function finishExpense(desc,amount,date,area,hardcopyImg){
   DB.auditLog.push({by:currentUser.id,action:'Expense Added',target:billNo,detail:desc+' Rs '+fmt(amount),date:today()});
   addNotification('expense','Expense Added','Bill '+billNo+' — Rs '+fmt(amount)+' | '+desc);
   showPopup('✅','Bill Saved','Bill No: '+billNo+' | Rs '+fmt(amount)+' saved.',null,()=>renderTab('expense'));
+  const _expNotifTs=Date.now();
+  DB.users.filter(u=>u.approved&&!u.locked&&u.id!==currentUser.id).forEach(function(u){
+    FS.save('notifications','NOTIF_EXP_'+_expNotifTs+'_'+u.id,{
+      id:'NOTIF_EXP_'+_expNotifTs+'_'+u.id,forUser:u.id,type:'system',
+      title:'📋 New Expense Entry',
+      message:'Rs '+fmt(amount)+' expense recorded',
+      date:today(),time:new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'}),read:false
+    });
+  });
 }
 
 function printExpenseBill(id){

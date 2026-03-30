@@ -2851,68 +2851,146 @@ T.transfer=function(){
   const sent=DB.transfers.filter(t=>t.from===currentUser.id);
   const pendingRecv=DB.transfers.filter(t=>t.to===currentUser.id&&!t.received);
   const recvd=DB.transfers.filter(t=>t.to===currentUser.id&&t.received);
-  return `<div class="cash-box"><div><div style="font-size:12px;color:#0F6E56;font-weight:600">Cash in Hand (before transfer)</div><div style="font-size:11px;color:#0F6E56;margin-top:2px">Updated balance shown after entering amount</div></div><div style="font-size:20px;font-weight:700;color:#0F6E56">${fmt(cash)}</div></div>
-  <div class="card" style="padding:24px">
-    <h3 style="font-size:16px;font-weight:700;margin-bottom:24px;color:#1a1a1a;display:flex;align-items:center;gap:8px">💸 Make Transfer <span style="font-size:11px;color:#1D9E75;font-weight:500">رقم منتقل کریں</span></h3>
+  const last5=sent.slice(-5).reverse();
+  return `
+  <!-- Cash in Hand Banner -->
+  <div style="background:linear-gradient(135deg,#0F6E56,#1D9E75);border-radius:16px;padding:16px 20px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.75);font-weight:600;text-transform:uppercase;letter-spacing:0.4px">Cash in Hand</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:2px">نقد دستیاب رقم</div>
+    </div>
+    <div style="font-size:28px;font-weight:800;color:#fff">${fmt(cash)}</div>
+  </div>
 
-    <!-- Recipient -->
-    <div style="margin-bottom:24px">
-      <label style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.5px;display:flex;justify-content:space-between;margin-bottom:10px">
-        <span>Recipient</span><span style="color:#1D9E75;font-weight:500;text-transform:none;font-size:12px;font-family:serif">وصول کنندہ</span>
-      </label>
+  <!-- Transfer Form -->
+  <div class="card" style="padding:20px;margin-bottom:14px">
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:8px">
+      <span style="background:#E1F5EE;width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px">💸</span>
+      Make Transfer <span style="font-size:11px;color:#1D9E75;font-weight:500">رقم منتقل کریں</span>
+    </h3>
+
+    <div style="margin-bottom:18px">
+      <label style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:8px">Recipient <span style="font-size:10px;color:#1D9E75;text-transform:none;font-weight:500">وصول کنندہ</span></label>
       <div style="position:relative">
-        <span style="position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:20px;pointer-events:none">👥</span>
-        <select id="transferTo" style="width:100%;padding:16px 16px 16px 50px;border:1.5px solid #e0e0e0;border-radius:14px;font-size:15px;background:#fff;color:#1a1a1a;box-sizing:border-box;-webkit-appearance:none;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+        <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:18px;pointer-events:none">👥</span>
+        <select id="transferTo" style="width:100%;padding:14px 14px 14px 46px;border:1.5px solid #e8e8e8;border-radius:12px;font-size:14px;background:#fafafa;color:#1a1a1a;box-sizing:border-box;-webkit-appearance:none">
           <option value="">-- Select Manager | منیجر منتخب کریں --</option>
-          ${DB.users.filter(u=>u.id!==currentUser.id&&u.approved&&!u.locked&&u.role==='manager').map(u=>`<option value="${u.id}">${u.name} (${u.role}) — ${u.area||''}</option>`).join('')}
+          ${DB.users.filter(u=>u.id!==currentUser.id&&u.approved&&!u.locked&&u.role==='manager').map(u=>`<option value="${u.id}">${u.name} — ${u.area||''}</option>`).join('')}
         </select>
       </div>
     </div>
 
-    <!-- Amount -->
     <div style="margin-bottom:10px">
-      <label style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.5px;display:flex;justify-content:space-between;margin-bottom:10px">
-        <span>Amount (Rs)</span><span style="color:#1D9E75;font-weight:500;text-transform:none;font-size:12px;font-family:serif">رقم</span>
-      </label>
+      <label style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:8px">Amount (Rs) <span style="font-size:10px;color:#1D9E75;text-transform:none;font-weight:500">رقم</span></label>
       <div style="position:relative">
-        <span style="position:absolute;left:18px;top:50%;transform:translateY(-50%);font-size:22px;pointer-events:none">💰</span>
-        <input type="number" id="transferAmt" placeholder="0" oninput="updateAfterTransfer(${cash})" style="width:100%;padding:24px 16px 24px 56px;border:2px solid #e0e0e0;border-radius:14px;font-size:34px;font-weight:800;color:#0F6E56;background:#f0fff8;letter-spacing:0.5px;box-sizing:border-box;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+        <span style="position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:20px;pointer-events:none">💰</span>
+        <input type="number" id="transferAmt" placeholder="0" oninput="updateAfterTransfer(${cash})" style="width:100%;padding:20px 16px 20px 52px;border:1.5px solid #e8e8e8;border-radius:12px;font-size:30px;font-weight:800;color:#0F6E56;background:#f0fff8;letter-spacing:0.5px;box-sizing:border-box">
       </div>
     </div>
-    <div id="afterTransferBox" style="display:none;margin-bottom:20px;padding:12px 16px;background:#FAEEDA;border-radius:10px;font-size:13px;color:#854F0B;font-weight:600;border-left:3px solid #BA7517"></div>
+    <div id="afterTransferBox" style="display:none;margin-bottom:14px;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:600"></div>
 
-    <!-- Remarks -->
-    <div style="margin-bottom:28px">
-      <label style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.5px;display:flex;justify-content:space-between;margin-bottom:10px">
-        <span>Remarks</span><span style="color:#1D9E75;font-weight:500;text-transform:none;font-size:12px;font-family:serif">ریمارکس / نوٹ</span>
-      </label>
+    <div style="margin-bottom:20px">
+      <label style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:8px">Remarks <span style="font-size:10px;color:#1D9E75;text-transform:none;font-weight:500">ریمارکس / نوٹ</span></label>
       <div style="position:relative">
-        <span style="position:absolute;left:16px;top:18px;font-size:18px;pointer-events:none">📝</span>
-        <textarea id="transferNote" placeholder="Add a note or reason | نوٹ یا وجہ درج کریں" rows="4" style="width:100%;padding:16px 16px 16px 48px;border:1.5px solid #e0e0e0;border-radius:14px;resize:none;line-height:1.8;font-size:14px;min-height:120px;background:#fff;box-sizing:border-box;color:#1a1a1a;box-shadow:0 1px 4px rgba(0,0,0,0.06)"></textarea>
+        <span style="position:absolute;left:14px;top:16px;font-size:16px;pointer-events:none">📝</span>
+        <textarea id="transferNote" placeholder="Add a note or reason... | نوٹ یا وجہ درج کریں" rows="3" style="width:100%;padding:14px 14px 14px 42px;border:1.5px solid #e8e8e8;border-radius:12px;resize:none;line-height:1.6;font-size:14px;min-height:90px;background:#fafafa;box-sizing:border-box;color:#1a1a1a"></textarea>
       </div>
     </div>
 
-    <button class="btn btn-primary" onclick="doTransfer()" style="width:100%;padding:18px;font-size:16px;font-weight:700;border-radius:14px;letter-spacing:0.3px">
-      Transfer &nbsp;→ &nbsp;<span style="font-size:12px;opacity:0.8">رقم منتقل کریں</span>
+    <button class="btn btn-primary" onclick="doTransfer()" style="width:100%;padding:16px;font-size:16px;font-weight:700;border-radius:12px;letter-spacing:0.3px">
+      Transfer &nbsp;→ <span style="font-size:11px;opacity:0.8">رقم منتقل کریں</span>
     </button>
   </div>
-  ${pendingRecv.length>0?`<div class="card"><h3>Confirm Received (${pendingRecv.length})</h3>
-    ${pendingRecv.map(t=>{const fu=DB.users.find(u=>u.id===t.from)||{name:'?',role:'?'};return `<div class="transfer-inbox-item"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:600">${fu.name} <span class="badge badge-${fu.role}">${fu.role}</span></div><div style="font-size:11px;color:#888;margin-top:2px">${t.date} • ${t.note||''}</div></div><div style="text-align:right"><div style="font-size:18px;font-weight:700;color:#1D9E75;margin-bottom:4px">+${fmt(t.amount)}</div><button style="background:#1D9E75;color:#fff;border:none;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600" onclick="markReceived('${t.id}')">Received ✓</button></div></div></div>`;}).join('')}
-  </div>`:''}
-  ${sent.length>0?`<div class="card"><h3><span class="bi-title"><span class="bi-en">Last 5 Sent</span><span class="bi-ur">آخری 5 اندراجات</span></span></h3>${sent.slice(-5).reverse().map(t=>{const tu=DB.users.find(u=>u.id===t.to)||{name:'?'};return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:0.5px solid #f0f0f0"><div><div style="font-size:13px;font-weight:600;color:#1a1a1a">${tu.name}</div><div style="font-size:11px;color:#888;margin-top:2px">${t.date}${t.note?' • '+t.note:''}</div></div><div style="text-align:right"><div style="font-size:14px;font-weight:700;color:#E24B4A">-${fmt(t.amount)}</div><div style="margin-top:3px">${t.received?'<span style="background:#E1F5EE;color:#0F6E56;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px">✓ Received</span>':'<span style="background:#FAEEDA;color:#854F0B;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px">⏳ Pending</span>'}</div></div></div>`;}).join('')}</div>`:''}
-  ${recvd.length>0?`<div class="card"><h3><span class="bi-title"><span class="bi-en">Received History</span><span class="bi-ur">وصول کی تاریخ</span></span></h3>${recvd.map(t=>{const fu=DB.users.find(u=>u.id===t.from)||{name:'?'};return `<div class="entry-row"><div><div class="entry-name">${fu.name}</div><div class="entry-sub">${t.date}</div></div><div class="entry-amt">+${fmt(t.amount)}</div></div>`;}).join('')}</div>`:''}`;
+
+  <!-- Last 5 Sent with status -->
+  ${last5.length>0?`<div class="card" style="padding:18px;margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <h3 style="margin:0;font-size:14px;font-weight:700">📤 Last 5 Transfers</h3>
+      <span style="font-size:10px;color:#888">آخری 5 ٹرانسفر</span>
+    </div>
+    ${last5.map(t=>{const tu=DB.users.find(u=>u.id===t.to)||{name:'?'};return `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:0.5px solid #f0f0f0">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600;color:#1a1a1a">${tu.name}</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">${t.date}${t.note?' • '+t.note:''}</div>
+        </div>
+        <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+          <div style="font-size:15px;font-weight:800;color:#E24B4A">-${fmt(t.amount)}</div>
+          ${t.received
+            ?'<span style="background:#E1F5EE;color:#0F6E56;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">✓ Received</span>'
+            :`<div style="display:flex;gap:6px;align-items:center">
+                <span style="background:#FAEEDA;color:#854F0B;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">⏳ Pending</span>
+                <button onclick="sendTransferReminder('${t.id}')" style="background:#25D366;color:#fff;border:none;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;cursor:pointer">📲 Remind</button>
+              </div>`}
+        </div>
+      </div>`;}).join('')}
+  </div>`:``}
+
+  <!-- Confirm Received (for manager) -->
+  ${pendingRecv.length>0?`<div class="card" style="padding:18px;margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <h3 style="margin:0;font-size:14px;font-weight:700">📥 Confirm Received</h3>
+      <span style="background:#E24B4A;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px">${pendingRecv.length}</span>
+    </div>
+    ${pendingRecv.map(t=>{const fu=DB.users.find(u=>u.id===t.from)||{name:'?',role:'?'};return `
+      <div style="background:#f9f9f9;border-radius:12px;padding:12px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-size:13px;font-weight:600">${fu.name} <span class="badge badge-${fu.role}">${fu.role}</span></div>
+            <div style="font-size:11px;color:#888;margin-top:2px">${t.date}${t.note?' • '+t.note:''}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:20px;font-weight:800;color:#0F6E56;margin-bottom:6px">+${fmt(t.amount)}</div>
+            <button onclick="markReceived('${t.id}')" style="background:#1D9E75;color:#fff;border:none;padding:8px 16px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:700">✓ Mark Received</button>
+          </div>
+        </div>
+      </div>`;}).join('')}
+  </div>`:``}
+
+  <!-- Received History -->
+  ${recvd.length>0?`<div class="card" style="padding:18px">
+    <h3 style="margin-bottom:12px;font-size:14px;font-weight:700">📥 Received History <span style="font-size:10px;color:#888;font-weight:400">وصول کی تاریخ</span></h3>
+    ${recvd.slice(-5).reverse().map(t=>{const fu=DB.users.find(u=>u.id===t.from)||{name:'?'};return `
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid #f0f0f0;font-size:13px">
+        <div><div style="font-weight:600">${fu.name}</div><div style="font-size:11px;color:#888;margin-top:1px">${t.date}</div></div>
+        <div style="font-size:15px;font-weight:700;color:#0F6E56">+${fmt(t.amount)}</div>
+      </div>`;}).join('')}
+  </div>`:``}
+  `;
 };
 function updateAfterTransfer(cash){
-  const amt=parseInt(document.getElementById('transferAmt').value)||0;
-  const box=document.getElementById('afterTransferBox');
-  if(amt>0){const af=cash-amt;box.style.display='block';box.innerHTML=`Cash in Hand after transfer: <strong>${fmt(af)}</strong>${af<0?' ⚠️ Insufficient!':''}`;box.style.background=af<0?'#FCEBEB':'#FAEEDA';box.style.color=af<0?'#A32D2D':'#854F0B';}
-  else box.style.display='none';
+  var amt=parseInt(document.getElementById('transferAmt').value)||0;
+  var box=document.getElementById('afterTransferBox');
+  if(amt>0){
+    var af=cash-amt;
+    var ins=af<0;
+    box.style.display='block';
+    box.style.background=ins?'#FCEBEB':'#E1F5EE';
+    box.style.color=ins?'#A32D2D':'#0F6E56';
+    box.style.fontWeight='600';
+    box.style.padding='10px 14px';
+    box.style.borderRadius='10px';
+    box.style.fontSize='13px';
+    box.style.marginBottom='14px';
+    box.innerHTML=(ins?'Warning: Insufficient balance! ':'Balance after: ')+'Rs '+fmt(af);
+  } else {
+    box.style.display='none';
+  }
+}
+function sendTransferReminder(tid){
+  const t=DB.transfers.find(x=>x.id===tid);
+  if(!t)return;
+  const tu=DB.users.find(u=>u.id===t.to)||{name:'?',mobile:''};
+  const msg='*Transfer Reminder*%0AAssalamu Alaikum '+tu.name+',%0APlease confirm receipt of Rs '+fmt(t.amount)+' transferred on '+t.date+'.%0A_'+( ORG_CONFIG.name||'Falah e Qabristan')+'_';
+  window.open('https://wa.me/92'+tu.mobile.replace(/[^0-9]/g,'').replace(/^0/,'')+'?text='+msg,'_blank');
 }
 function doTransfer(){
   const to=document.getElementById('transferTo').value,amount=parseInt(document.getElementById('transferAmt').value)||0;
   if(!to||!amount){showPopup('⚠️','Incomplete','Receiver and amount are required.');return;}
   const cash=calcCashInHand(currentUser.id);
-  if(amount>cash){showPopup('⚠️','Insufficient','Insufficient balance. Cash in Hand: Rs '+fmt(cash));return;}
+  if(amount>cash){
+    if(!confirm('Balance insufficient (Cash: Rs '+fmt(cash)+'). Transfer anyway? | پھر بھی بھیجیں؟'))return;
+  }
   const tid='TRF'+Date.now();
   const trO={id:tid,from:currentUser.id,to,amount,date:today(),note:document.getElementById('transferNote').value,received:false};
   DB.transfers.push(trO);FS.save('transfers',tid,trO);

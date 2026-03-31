@@ -2996,6 +2996,48 @@ function sendTransferReminder(tid){
   const msg='*Transfer Reminder*%0AAssalamu Alaikum '+tu.name+',%0APlease confirm receipt of Rs '+fmt(t.amount)+' transferred on '+t.date+'.%0A_'+( ORG_CONFIG.name||'Falah e Qabristan')+'_';
   window.open('https://wa.me/92'+tu.mobile.replace(/[^0-9]/g,'').replace(/^0/,'')+'?text='+msg,'_blank');
 }
+async function deleteAllDonationsFirebase(){
+  if(currentRole!=='developer'){showPopup('⛔','Access Denied','Only developer can do this.');return;}
+  const cnt=DB.donations.length;
+  if(cnt===0){showPopup('ℹ️','Empty','Koi donation entries nahi hain.');return;}
+  if(!confirm('Firebase se sab '+cnt+' donation entries delete karni hain?\nDonors aur Users safe rahein ge.'))return;
+  if(!confirm('FINAL CONFIRM — sab '+cnt+' entries permanently delete hongi?'))return;
+  showLoading(true);
+  let done=0;let failed=0;
+  for(var i=0;i<DB.donations.length;i++){
+    try{await FS.del('donations',DB.donations[i].id);done++;}catch(e){failed++;}
+  }
+  for(var j=0;j<DB.donors.length;j++){
+    DB.donors[j].entries=[];
+    DB.donors[j].totalDonation=0;
+    try{await FS.save('donors',DB.donors[j].id,DB.donors[j]);}catch(e){}
+  }
+  DB.donations=[];
+  try{saveLocalCache();}catch(e){}
+  showLoading(false);
+  showPopup('✅','Done!',done+' entries delete ho gayi'+(failed>0?' ('+failed+' failed)':'')+'.');
+  renderTab('datamanager');
+}
+
+async function resetLifetimeDonationsFirebase(){
+  if(currentRole!=='developer'){showPopup('⛔','Access Denied','Only developer can do this.');return;}
+  const cnt=DB.donors.length;
+  if(cnt===0){showPopup('ℹ️','Empty','Koi donors nahi hain.');return;}
+  if(!confirm('Sab '+cnt+' donors ki lifetime total aur entries zero kar deni hain?\nDonations collection untouched rahegi.'))return;
+  if(!confirm('FINAL CONFIRM — lifetime totals reset honge?'))return;
+  showLoading(true);
+  let done=0;
+  for(var i=0;i<DB.donors.length;i++){
+    DB.donors[i].totalDonation=0;
+    DB.donors[i].entries=[];
+    try{await FS.save('donors',DB.donors[i].id,DB.donors[i]);done++;}catch(e){}
+  }
+  try{saveLocalCache();}catch(e){}
+  showLoading(false);
+  showPopup('✅','Done!','Sab '+done+' donors ki lifetime donation zero ho gayi.');
+  renderTab('datamanager');
+}
+
 function doTransfer(){
   const to=document.getElementById('transferTo').value,amount=parseInt(document.getElementById('transferAmt').value)||0;
   if(!to||!amount){showPopup('⚠️','Incomplete','Receiver and amount are required.');return;}
@@ -4562,12 +4604,12 @@ T.datamanager=function(){
       <div style="margin-top:12px;padding:14px;background:#fff3cd;border:1.5px solid #ffc107;border-radius:12px">
         <div style="font-size:12px;font-weight:700;color:#856404;margin-bottom:8px">🗂️ Delete All Donation Entries</div>
         <div style="font-size:11px;color:#856404;margin-bottom:10px">Sab ${DB.donations.length} donation entries delete hon gi. Donors aur users bilkul safe rahein ge.</div>
-        <button onclick="deleteAllDonorsData()" style="width:100%;background:#dc3545;color:#fff;border:none;padding:12px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">🗑️ Delete All Donation Entries (Keep Donors &amp; Users)</button>
+        <button onclick="deleteAllDonationsFirebase()" style="width:100%;background:#dc3545;color:#fff;border:none;padding:12px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">🗑️ Delete All Donation Entries (Keep Donors &amp; Users)</button>
       </div>
       <div style="margin-top:10px;padding:14px;background:#fff0f0;border:1.5px solid #E24B4A;border-radius:12px">
         <div style="font-size:12px;font-weight:700;color:#A32D2D;margin-bottom:8px">🔄 Reset Lifetime Donations to Zero</div>
         <div style="font-size:11px;color:#A32D2D;margin-bottom:10px">${DB.donors.length} donors ki lifetime total aur entries zero ho jayengi. Donations collection untouched.</div>
-        <button onclick="resetLifetimeDonations()" style="width:100%;background:#A32D2D;color:#fff;border:none;padding:12px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">🔄 Reset All Lifetime Donations to Zero</button>
+        <button onclick="resetLifetimeDonationsFirebase()" style="width:100%;background:#A32D2D;color:#fff;border:none;padding:12px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">🔄 Reset All Lifetime Donations to Zero</button>
       </div>
       ${DB.donations.slice(-2).reverse().map(d=>{const dn=DB.donors.find(x=>x.id===d.donorId)||{name:'Unknown'};return `
         <div class="entry-row">

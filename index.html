@@ -763,6 +763,20 @@ POPUP_MSG_UR['Your request has been submitted. Login after developer approval.']
 POPUP_MSG_UR['Report not found. Please generate report first.']='رپورٹ نہیں ملی۔ پہلے رپورٹ بنائیں۔';
 POPUP_MSG_UR['Please allow popups for this site, then try again.']='براہ کرم پاپ اپ کی اجازت دیں پھر دوبارہ کوشش کریں۔';
 
+function showCustomPopup(html){
+  var old=document.getElementById('customPopupOverlay');
+  if(old)old.remove();
+  var overlay=document.createElement('div');
+  overlay.id='customPopupOverlay';
+  overlay.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:40px 10px;overflow-y:auto';
+  overlay.innerHTML=html;
+  overlay.onclick=function(e){if(e.target===overlay)closeCustomPopup();};
+  document.body.appendChild(overlay);
+}
+function closeCustomPopup(){
+  var overlay=document.getElementById('customPopupOverlay');
+  if(overlay)overlay.remove();
+}
 function showPopup(icon,title,msg,btnText,onClose){
   document.getElementById('popupIcon').textContent=icon;
   document.getElementById('popupTitle').textContent=title;
@@ -6128,69 +6142,97 @@ function buildWAMessage(type,donor,amount){
 function openSMSReminders(activeTab){
   activeTab=activeTab||'pending';
   const thisMonth=today().substring(0,7);
-  // Received = donors who paid this month
-  const receivedDonors=DB.donors.filter(d=>DB.donations.some(x=>x.donorId===d.id&&x.date.substring(0,7)===thisMonth));
-  const receivedDons=receivedDonors.map(d=>{
-    const don=DB.donations.filter(x=>x.donorId===d.id&&x.date.substring(0,7)===thisMonth).sort((a,b)=>b.date.localeCompare(a.date))[0];
-    return {donor:d,amount:don?don.amount:0,date:don?don.date:''};
+  const log=getReminderLog();
+
+  // ALL people with mobile = donors + users (merged by mobile)
+  const allPeople=[];
+  const seenMobs=new Set();
+  // Add donors
+  DB.donors.forEach(d=>{
+    const nm=normMob(d.mobile||'');
+    if(nm&&!seenMobs.has(nm)){seenMobs.add(nm);allPeople.push({id:d.id,name:d.name,mobile:d.mobile,area:d.area||'',photo:d.photo||null,role:'donor',isDonor:true});}
   });
-  // Pending = donors who have donated before but NOT this month
-  const activeDonors=DB.donors.filter(d=>d.entries&&d.entries.length>0);
-  const pendingDonors=activeDonors.filter(d=>!DB.donations.some(x=>x.donorId===d.id&&x.date.substring(0,7)===thisMonth));
+  // Add users not already in donors
+  DB.users.filter(u=>u.approved&&!u.locked).forEach(u=>{
+    const nm=normMob(u.mobile||'');
+    if(nm&&!seenMobs.has(nm)){seenMobs.add(nm);allPeople.push({id:u.id,name:u.name,mobile:u.mobile,area:u.area||'',photo:u.photo||null,role:u.role,isDonor:false});}
+  });
+
+  // Categorize
+  const paidList=[];
+  const pendingList=[];
+  allPeople.forEach(p=>{
+    const hasPaidThisMonth=DB.donations.some(x=>x.donorId===p.id&&x.date.substring(0,7)===thisMonth);
+    const lastDon=DB.donations.filter(x=>x.donorId===p.id).sort((a,b)=>b.date.localeCompare(a.date))[0];
+    const lastAmt=lastDon?lastDon.amount:0;
+    const lastLog=log.find(l=>l.donorId===p.id);
+    if(hasPaidThisMonth){
+      const thisDon=DB.donations.filter(x=>x.donorId===p.id&&x.date.substring(0,7)===thisMonth).sort((a,b)=>b.date.localeCompare(a.date))[0];
+      paidList.push({...p,amount:thisDon?thisDon.amount:0,payDate:thisDon?thisDon.date:'',lastLog});
+    } else {
+      pendingList.push({...p,lastAmt,lastLog});
+    }
+  });
 
   const html=`
-    <div style="background:#fff;border-radius:14px;padding:16px;max-width:95vw;width:460px;max-height:82vh;overflow-y:auto">
+    <div style="background:#fff;border-radius:14px;padding:16px;max-width:95vw;width:480px;max-height:85vh;overflow-y:auto">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
         <div style="font-size:15px;font-weight:800">📱 SMS / WhatsApp Reminders</div>
-        <button onclick="closePopup()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#aaa">✕</button>
+        <button onclick="closeCustomPopup()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#aaa">✕</button>
       </div>
 
-      <div style="font-size:12px;font-weight:700;color:#0F6E56;margin-bottom:8px">✅ Thanks — Paid This Month (${receivedDons.length})</div>
-      ${receivedDons.map(item=>{
-        const d=item.donor; const amount=item.amount;
-        const sms=buildSMSMessage('thanks',d,amount);
-        const wa=sms;
-        return `<div style="background:#E1F5EE;border-radius:10px;padding:10px;margin-bottom:8px;border:1px solid #1D9E75">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-            ${avatarHtml(donor.photo,donor.name,36)}
-            <div><div style="font-size:12px;font-weight:700">${donor.name}</div>
-            <div style="font-size:10px;color:#888">${fmt(d.amount)} • ${d.date}</div></div>
+      <!-- THANKS SECTION -->
+      <div style="background:#E1F5EE;border-radius:10px;padding:8px 12px;margin-bottom:10px">
+        <div style="font-size:12px;font-weight:700;color:#085041">✅ Thanks — Paid This Month (${paidList.length})</div>
+      </div>
+      ${paidList.length===0?'<p style="font-size:12px;color:#888;margin-bottom:12px;text-align:center">Is mah kisi ne donate nahi kiya.</p>':paidList.map(p=>{
+        const sms=buildSMSMessage('thanks',{id:p.id,name:p.name,mobile:p.mobile},p.amount);
+        const wa=buildWAMessage('thanks',{id:p.id,name:p.name,mobile:p.mobile},p.amount);
+        const mob=normMob(p.mobile||'').replace(/^0/,'').replace(/-/g,'');
+        return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid #e8f5ee">
+          ${avatarHtml(p.photo,p.name,38)}
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:700">${p.name} <span class="badge badge-${p.role}">${p.role}</span></div>
+            <div style="font-size:11px;color:#888">${p.area||'—'} • Rs ${fmt(p.amount)} • ${p.payDate}</div>
+            ${p.lastLog?`<div style="font-size:10px;color:#aaa">Last msg: ${p.lastLog.date}</div>`:''}
           </div>
-          <div style="font-size:10px;color:#555;background:#fff;padding:6px 8px;border-radius:6px;margin-bottom:8px;line-height:1.4">${sms}</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-            <a href="sms:${normMob(donor.mobile||'')}?body=${encodeURIComponent(sms)}" style="display:block;background:#1D9E75;color:#fff;padding:7px;border-radius:7px;font-size:11px;font-weight:600;text-decoration:none;text-align:center">📱 SMS</a>
-            <a href="https://wa.me/92${normMob(d.mobile||'').replace(/^0/,'').replace(/-/g,'')}?text=${buildWAMessage('thanks',d,amount)}" target="_blank" onclick="logReminder('${d.id}','${d.name}','thanks','${amount}')" style="display:block;background:#25D366;color:#fff;padding:7px;border-radius:7px;font-size:11px;font-weight:600;text-decoration:none;text-align:center">💬 WhatsApp</a>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            <a href="sms:${normMob(p.mobile||'')}?body=${encodeURIComponent(sms)}" onclick="logReminder('${p.id}','${p.name}','thanks',${p.amount})" style="background:#1D9E75;color:#fff;padding:7px 10px;border-radius:8px;font-size:18px;text-decoration:none;display:flex;align-items:center" title="SMS">💬</a>
+            <a href="https://wa.me/92${mob}?text=${wa}" target="_blank" onclick="logReminder('${p.id}','${p.name}','thanks',${p.amount})" style="background:#25D366;color:#fff;padding:7px 10px;border-radius:8px;font-size:18px;text-decoration:none;display:flex;align-items:center" title="WhatsApp">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            </a>
           </div>
         </div>`;
       }).join('')}
 
-      <div style="font-size:12px;font-weight:700;color:#E24B4A;margin:14px 0 8px">⏰ Pending This Month (${pendingDonors.length})</div>
-      ${pendingDonors.length===0?'<p style="font-size:12px;color:#888">All donors donated this month! 🎉</p>':pendingDonors.slice(0,6).map(d=>{
-        const sms=buildSMSMessage('reminder',d,0);
-        const wa=encodeURIComponent(sms);
-        return `<div style="background:#FEF3F2;border-radius:10px;padding:10px;margin-bottom:8px;border:1px solid #E24B4A">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-            ${avatarHtml(d.photo,d.name,36)}
-            <div><div style="font-size:12px;font-weight:700">${d.name}</div>
-            <div style="font-size:10px;color:#888">📍 ${d.area||'—'} • Last: Rs ${fmt(d.totalDonation||0)}</div></div>
+      <!-- PENDING SECTION -->
+      <div style="background:#FCEBEB;border-radius:10px;padding:8px 12px;margin:12px 0 10px">
+        <div style="font-size:12px;font-weight:700;color:#A32D2D">⏰ Pending This Month (${pendingList.length})</div>
+      </div>
+      ${pendingList.length===0?'<p style="font-size:12px;color:#888;text-align:center">Sab ne donate kar diya!</p>':pendingList.map(p=>{
+        const sms=buildSMSMessage('reminder',{id:p.id,name:p.name,mobile:p.mobile},0);
+        const wa=buildWAMessage('reminder',{id:p.id,name:p.name,mobile:p.mobile},0);
+        const mob=normMob(p.mobile||'').replace(/^0/,'').replace(/-/g,'');
+        return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid #fde8e8">
+          ${avatarHtml(p.photo,p.name,38)}
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:700">${p.name} <span class="badge badge-${p.role}">${p.role}</span></div>
+            <div style="font-size:11px;color:#888">${p.area||'—'} • Last: Rs ${fmt(p.lastAmt)}</div>
+            ${p.lastLog?`<div style="font-size:10px;color:#E24B4A;font-weight:600">Last msg: ${p.lastLog.date}</div>`:'<div style="font-size:10px;color:#aaa">No msg sent yet</div>'}
           </div>
-          <div style="font-size:10px;color:#555;background:#fff;padding:6px 8px;border-radius:6px;margin-bottom:8px;line-height:1.4">${sms}</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-            <a href="sms:${normMob(d.mobile||'')}?body=${encodeURIComponent(sms)}" style="display:block;background:#E24B4A;color:#fff;padding:7px;border-radius:7px;font-size:11px;font-weight:600;text-decoration:none;text-align:center">📱 SMS</a>
-            <a href="https://wa.me/92${normMob(d.mobile||'').replace(/^0/,'').replace(/-/g,'')}?text=${buildWAMessage('reminder',d,0)}" onclick="logReminder('${d.id}','${d.name}','reminder',0)" target="_blank" style="display:block;background:#25D366;color:#fff;padding:7px;border-radius:7px;font-size:11px;font-weight:600;text-decoration:none;text-align:center">💬 WhatsApp</a>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            <a href="sms:${normMob(p.mobile||'')}?body=${encodeURIComponent(sms)}" onclick="logReminder('${p.id}','${p.name}','reminder',0)" style="background:#E24B4A;color:#fff;padding:7px 10px;border-radius:8px;font-size:18px;text-decoration:none;display:flex;align-items:center" title="SMS">💬</a>
+            <a href="https://wa.me/92${mob}?text=${wa}" target="_blank" onclick="logReminder('${p.id}','${p.name}','reminder',0)" style="background:#25D366;color:#fff;padding:7px 10px;border-radius:8px;font-size:18px;text-decoration:none;display:flex;align-items:center" title="WhatsApp">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            </a>
           </div>
         </div>`;
       }).join('')}
+
+      <button onclick="closeCustomPopup()" style="width:100%;margin-top:14px;padding:10px;background:#f5f5f5;border:none;border-radius:8px;font-size:13px;cursor:pointer">Close</button>
     </div>`;
-  document.getElementById('popupMsg').innerHTML='';
-  document.getElementById('popupMsgUr').innerHTML='';
-  document.getElementById('popupIcon').textContent='';
-  document.getElementById('popupTitle').textContent='';
-  document.getElementById('popupTitleUr').textContent='';
-  document.getElementById('popupBtn').style.display='none';
-  const box=document.querySelector('.popup-box');
-  if(box){box.style.maxWidth='95vw';box.style.padding='0';box.innerHTML=html;}
-  document.getElementById('popupOverlay').style.display='flex';
+
+  showCustomPopup(html);
 }
 
 async function appInit(){

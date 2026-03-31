@@ -2754,6 +2754,8 @@ function generateSlip(){
   if(!donor){res.innerHTML=`<div class="info-box warning">Donor nahi mila: "${raw}"</div>`;return;}
   const last5=donor.entries.slice(-5).reverse();
   const lastAmt=last5.length>0?last5[0].amount:0;
+  // Recompute lifetime from entries (not cached totalDonation)
+  const lifeTimeDonation=donor.entries.reduce((s,e)=>s+e.amount,0);
   const lastEntry=last5.length>0?last5[0]:null;
   const slipUser=lastEntry?DB.users.find(u=>u.id===lastEntry.by)||null:null;
   res.innerHTML=`<div class="cert-wrap" id="donorSlipWrap">
@@ -2782,7 +2784,7 @@ function generateSlip(){
         </div>
         <div style="background:#E1F5EE;border:2px solid #1D9E75;border-radius:12px;padding:12px;text-align:center">
           <div style="font-size:11px;color:#1D9E75;font-weight:700;margin-bottom:4px">LIFE TIME TOTAL</div>
-          <div style="font-size:24px;font-weight:700;color:#1D9E75">${fmt(donor.totalDonation)}</div>
+          <div style="font-size:24px;font-weight:700;color:#1D9E75">${fmt(lifeTimeDonation)}</div>
           <div style="font-size:10px;color:#1D9E75;margin-top:2px">Shukriya!</div>
         </div>
       </div>
@@ -3548,30 +3550,40 @@ function filterDPU(){
   el.innerHTML=renderDPUList([...DB.donors].sort((a,b)=>(a.name||'').localeCompare(b.name||'')),q);
 }
 T.donorlist=function(){
-  const donors=[...DB.donors].sort((a,b)=>b.totalDonation-a.totalDonation);
+  const allDonors=[...DB.donors].sort((a,b)=>b.totalDonation-a.totalDonation);
+  const areas=['All',...new Set(allDonors.map(d=>d.area||'').filter(Boolean))];
+  const sel=window._donorListArea||'All';
+  const donors=sel==='All'?allDonors:allDonors.filter(d=>d.area===sel);
   return `<div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <h3 style="margin-bottom:0">Donor List</h3>
-      <span style="font-size:12px;color:#888">${donors.length} donors</span>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h3 style="margin-bottom:0">Donor List <span style="font-size:11px;color:#888;font-weight:400">${donors.length}/${allDonors.length}</span></h3>
     </div>
-    ${donors.length===0?'<p style="font-size:13px;color:#888">No donors yet.</p>':donors.map(d=>`
-      <div style="display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:0.5px solid #f0f0f0">
-        ${avatarHtml(d.photo,d.name,36)}
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+      ${areas.map(a=>`<button onclick="window._donorListArea='${a}';renderTab('donorlist')" style="padding:5px 12px;border-radius:20px;border:1.5px solid ${a===sel?'#1D9E75':'#e8e8e8'};background:${a===sel?'#1D9E75':'#fff'};color:${a===sel?'#fff':'#555'};font-size:11px;font-weight:600;cursor:pointer">${a}</button>`).join('')}
+    </div>
+    ${donors.length===0?'<p style="font-size:13px;color:#888;text-align:center;padding:20px">No donors found.</p>':donors.map((d,i)=>{
+      const lifeTotal=DB.donations.filter(x=>x.donorId===d.id).reduce((s,x)=>s+x.amount,0);
+      const thisMonth=today().substring(0,7);
+      const paidThisMonth=DB.donations.some(x=>x.donorId===d.id&&x.date.substring(0,7)===thisMonth);
+      return `<div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:0.5px solid #f0f0f0">
+        <div style="width:28px;text-align:center;font-size:12px;font-weight:700;color:#aaa;flex-shrink:0">${i+1}</div>
+        ${avatarHtml(d.photo,d.name,40)}
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-            <span style="font-size:13px;font-weight:600">${d.name}</span>
+            <span style="font-size:13px;font-weight:700">${d.name}</span>
             <span class="id-badge">${d.id}</span>
+            <span style="font-size:9px;padding:2px 6px;border-radius:20px;font-weight:700;background:${paidThisMonth?'#E1F5EE':'#FCEBEB'};color:${paidThisMonth?'#0F6E56':'#E24B4A'}">${paidThisMonth?'✓ Paid':'Pending'}</span>
           </div>
-          <div style="font-size:11px;color:#888;margin-top:2px">${d.area} • ${d.mobile} • ${d.profession||'—'}</div>
-          <div style="font-size:11px;color:#888">${d.cnic||'—'}</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">${d.area||'—'} • ${d.mobile}</div>
         </div>
         <div style="text-align:right;flex-shrink:0">
-          <div style="font-size:13px;font-weight:700;color:#0F6E56">${fmt(d.totalDonation)}</div>
-          <div style="font-size:10px;color:#888;margin-bottom:4px">${d.entries.length} entries</div>
-          <button style="font-size:11px;background:#185FA5;color:#fff;border:none;padding:3px 10px;border-radius:6px;cursor:pointer" onclick="showDonorSlipInline('${d.id}')">Slip</button>
+          <div style="font-size:14px;font-weight:800;color:#0F6E56">Rs ${fmt(lifeTotal)}</div>
+          <div style="font-size:10px;color:#aaa;margin-top:1px">${d.entries.length} entries</div>
+          <button onclick="showDonorSlipInline('${d.id}')" style="font-size:10px;background:#E6F1FB;color:#185FA5;border:none;padding:3px 8px;border-radius:6px;cursor:pointer;margin-top:3px">Slip</button>
         </div>
       </div>
-      <div id="slip_${d.id}" style="display:none;padding:8px 0 4px;border-bottom:1px dashed #ddd"></div>`).join('')}
+      <div id="slip_${d.id}" style="display:none;padding:8px 0 4px;border-bottom:1px dashed #ddd"></div>`;
+    }).join('')}
   </div>`;
 };
 function showDonorSlipInline(id){
@@ -3580,6 +3592,8 @@ function showDonorSlipInline(id){
   if(el.style.display==='block'){el.style.display='none';return;}
   const last5=donor.entries.slice(-5).reverse();
   const lastAmt=last5.length>0?last5[0].amount:0;
+  // Recompute lifetime from entries (not cached totalDonation)
+  const lifeTimeDonation=donor.entries.reduce((s,e)=>s+e.amount,0);
   el.style.display='block';
   el.innerHTML=`<div style="background:#f9f9f9;border-radius:8px;padding:12px;margin:4px 0">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
@@ -5973,25 +5987,45 @@ function addDownloadBar(title, elementId){
 // ============================================================
 // SMS / WhatsApp REMINDER MODULE
 // ============================================================
+function logReminder(donorId,donorName,type,amount){
+  try{
+    var key='fq_reminder_log';
+    var log=JSON.parse(localStorage.getItem(key)||'[]');
+    log.unshift({donorId:donorId,donorName:donorName,type:type,amount:amount,date:today(),time:new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'})});
+    if(log.length>100)log=log.slice(0,100);
+    localStorage.setItem(key,JSON.stringify(log));
+  }catch(e){}
+}
+function getReminderLog(){
+  try{return JSON.parse(localStorage.getItem('fq_reminder_log')||'[]');}catch(e){return [];}
+}
 function buildSMSMessage(type,donor,amount){
   const org=orgName();
-  if(type==='thanks')
-    return `Dear ${donor.name}, JazakAllah! Your donation of Rs ${fmt(amount)} to ${org} has been received. May Allah reward you. | ${org}`;
-  if(type==='reminder')
-    return `Dear ${donor.name}, Assalam o Alaikum! This is a reminder from ${org}. Your monthly donation is pending. Please contribute at your earliest. JazakAllah. | ${org}`;
-  if(type==='pending')
-    return `Dear ${donor.name}, Assalam o Alaikum! ${org} awaits your generous donation. Your last donation was Rs ${fmt(donor.totalDonation||0)}. Please send your contribution. JazakAllah.`;
+  const monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const curMonth=monthNames[new Date().getMonth()];
+  if(type==='thanks'){
+    const totalLife=DB.donations.filter(x=>x.donorId===donor.id).reduce((s,x)=>s+x.amount,0);
+    return `Assalam o Alaikum, ${donor.name} Sahab! 🌙%0A%0AAlhamdulillah! Aap ki is mah (${curMonth}) ki donation Rs ${fmt(amount)} hamein mil gayi hai.%0A%0A*${org}* ki taraf se aap ka bohat bohat shukriya. Allah Taala aap ko is sadqay ka behterein ajar ata farmaye aur aap ki rizq mein barkat dale. Ameen.%0A%0A_"Man anfa qa fi sabeel illah, ata hullahu mislihi wa azwa"_ ❤️%0A%0AAap ka Life Time Total: Rs ${fmt(totalLife)}`;
+  }
+  if(type==='reminder'||type==='pending'){
+    const lastDon=DB.donations.filter(x=>x.donorId===donor.id).sort((a,b)=>b.date.localeCompare(a.date))[0];
+    const lastAmt=lastDon?fmt(lastDon.amount):'N/A';
+    return `Assalam o Alaikum, ${donor.name} Sahab! 🌙%0A%0A*${org}* ki taraf se arz hai k ${curMonth} mah ki aap ki donation abhi tak received nahi hui hai.%0A%0AAllah Taala ne farmaya: _"Aur Allah ki raah mein kharch karo aur apne aap ko halakat mein na dalo"_ (Al-Baqarah 195)%0A%0AApni khair khwah donation ka yeh mauka ganwane ka na sochein. Aap ki har donation ek sadqa-e-jariyah hai.%0A%0AGuzeshtah donation: Rs ${lastAmt}%0A%0AJazakAllah Khair! 🤲`;
+  }
   return '';
 }
 function openSMSReminders(activeTab){
   activeTab=activeTab||'pending';
   const thisMonth=today().substring(0,7);
-  const recentDons=DB.donations.slice(-20).reverse();
-  const activeDonors=DB.donors.filter(d=>d.totalDonation>0||DB.donations.some(x=>x.donorId===d.id));
-  const pendingDonors=activeDonors.filter(d=>{
-    const lastDon=DB.donations.filter(x=>x.donorId===d.id).sort((a,b)=>b.date.localeCompare(a.date))[0];
-    return !lastDon||lastDon.date.substring(0,7)!==thisMonth;
+  // Received = donors who paid this month
+  const receivedDonors=DB.donors.filter(d=>DB.donations.some(x=>x.donorId===d.id&&x.date.substring(0,7)===thisMonth));
+  const receivedDons=receivedDonors.map(d=>{
+    const don=DB.donations.filter(x=>x.donorId===d.id&&x.date.substring(0,7)===thisMonth).sort((a,b)=>b.date.localeCompare(a.date))[0];
+    return {donor:d,amount:don?don.amount:0,date:don?don.date:''};
   });
+  // Pending = donors who have donated before but NOT this month
+  const activeDonors=DB.donors.filter(d=>d.entries&&d.entries.length>0);
+  const pendingDonors=activeDonors.filter(d=>!DB.donations.some(x=>x.donorId===d.id&&x.date.substring(0,7)===thisMonth));
 
   const html=`
     <div style="background:#fff;border-radius:14px;padding:16px;max-width:95vw;width:460px;max-height:82vh;overflow-y:auto">
@@ -6000,11 +6034,11 @@ function openSMSReminders(activeTab){
         <button onclick="closePopup()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#aaa">✕</button>
       </div>
 
-      <div style="font-size:12px;font-weight:700;color:#0F6E56;margin-bottom:8px">✅ Thanks — Recent Donations (${recentDons.length})</div>
-      ${recentDons.slice(0,5).map(d=>{
-        const donor=DB.donors.find(x=>x.id===d.donorId)||{name:'?',mobile:'0000'};
-        const sms=buildSMSMessage('thanks',donor,d.amount);
-        const wa=encodeURIComponent(sms);
+      <div style="font-size:12px;font-weight:700;color:#0F6E56;margin-bottom:8px">✅ Thanks — Paid This Month (${receivedDons.length})</div>
+      ${receivedDons.map(item=>{
+        const d=item.donor; const amount=item.amount;
+        const sms=buildSMSMessage('thanks',d,amount);
+        const wa=sms;
         return `<div style="background:#E1F5EE;border-radius:10px;padding:10px;margin-bottom:8px;border:1px solid #1D9E75">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
             ${avatarHtml(donor.photo,donor.name,36)}
@@ -6014,7 +6048,7 @@ function openSMSReminders(activeTab){
           <div style="font-size:10px;color:#555;background:#fff;padding:6px 8px;border-radius:6px;margin-bottom:8px;line-height:1.4">${sms}</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
             <a href="sms:${normMob(donor.mobile||'')}?body=${encodeURIComponent(sms)}" style="display:block;background:#1D9E75;color:#fff;padding:7px;border-radius:7px;font-size:11px;font-weight:600;text-decoration:none;text-align:center">📱 SMS</a>
-            <a href="https://wa.me/92${normMob(donor.mobile||'').slice(1)}?text=${wa}" target="_blank" style="display:block;background:#25D366;color:#fff;padding:7px;border-radius:7px;font-size:11px;font-weight:600;text-decoration:none;text-align:center">💬 WhatsApp</a>
+            <a href="https://wa.me/92${normMob(donor.mobile||'').slice(1)}?text=${wa}" target="_blank" onclick="logReminder('${donor.id}','${donor.name}','thanks','${amount}')" style="display:block;background:#25D366;color:#fff;padding:7px;border-radius:7px;font-size:11px;font-weight:600;text-decoration:none;text-align:center">💬 WhatsApp</a>
           </div>
         </div>`;
       }).join('')}

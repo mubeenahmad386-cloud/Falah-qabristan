@@ -4559,6 +4559,16 @@ T.datamanager=function(){
         <div style="font-size:13px;font-weight:700">💰 Donations (${DB.donations.length})</div>
         <button onclick="devDeleteAll('donations')" style="background:#E24B4A;color:#fff;border:none;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">🗑️ Delete All</button>
       </div>
+      <div style="margin-top:12px;padding:14px;background:#fff3cd;border:1.5px solid #ffc107;border-radius:12px">
+        <div style="font-size:12px;font-weight:700;color:#856404;margin-bottom:8px">🗂️ Delete All Donation Entries</div>
+        <div style="font-size:11px;color:#856404;margin-bottom:10px">Sab ${DB.donations.length} donation entries delete hon gi. Donors aur users bilkul safe rahein ge.</div>
+        <button onclick="deleteAllDonorsData()" style="width:100%;background:#dc3545;color:#fff;border:none;padding:12px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">🗑️ Delete All Donation Entries (Keep Donors &amp; Users)</button>
+      </div>
+      <div style="margin-top:10px;padding:14px;background:#fff0f0;border:1.5px solid #E24B4A;border-radius:12px">
+        <div style="font-size:12px;font-weight:700;color:#A32D2D;margin-bottom:8px">🔄 Reset Lifetime Donations to Zero</div>
+        <div style="font-size:11px;color:#A32D2D;margin-bottom:10px">${DB.donors.length} donors ki lifetime total aur entries zero ho jayengi. Donations collection untouched.</div>
+        <button onclick="resetLifetimeDonations()" style="width:100%;background:#A32D2D;color:#fff;border:none;padding:12px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">🔄 Reset All Lifetime Donations to Zero</button>
+      </div>
       ${DB.donations.slice(-2).reverse().map(d=>{const dn=DB.donors.find(x=>x.id===d.donorId)||{name:'Unknown'};return `
         <div class="entry-row">
           <div><div class="entry-name">${dn.name} — Rs ${fmt(d.amount)}</div><div class="entry-sub">${d.date} • ${d.id}</div></div>

@@ -242,6 +242,7 @@ input[type=file]{padding:6px}
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <!-- PDF & Image Export — inline -->
 
 <!-- LOGIN SCREEN -->
@@ -2735,6 +2736,35 @@ T.slip=function(){
     <div id="slipResult" style="margin-top:12px"></div>
   </div>`;
 };
+function shareSlipImage(divId,name){
+  const el=document.getElementById(divId);
+  if(!el){showPopup('⚠️','Error','Slip not found.');return;}
+  if(typeof html2canvas==='undefined'){
+    showPopup('⚠️','Error','html2canvas not loaded. Try again.');return;
+  }
+  showPopup('⏳','Processing','Slip image ban rahi hai...');
+  html2canvas(el,{scale:2,useCORS:true,backgroundColor:'#ffffff'}).then(function(canvas){
+    closePopup();
+    var dataUrl=canvas.toDataURL('image/png');
+    // Try Web Share API first (mobile)
+    if(navigator.share&&navigator.canShare){
+      canvas.toBlob(function(blob){
+        var file=new File([blob],'donor_slip_'+name.replace(/ /g,'_')+'.png',{type:'image/png'});
+        if(navigator.canShare({files:[file]})){
+          navigator.share({title:'Donor Slip - '+name,files:[file]}).catch(function(){});
+        } else {
+          // Fallback: download
+          var a=document.createElement('a');a.href=dataUrl;a.download='donor_slip_'+name+'.png';a.click();
+          showPopup('📥','Downloaded','Slip download ho gayi. WhatsApp pe manually share karein.');
+        }
+      });
+    } else {
+      // Desktop fallback: download
+      var a=document.createElement('a');a.href=dataUrl;a.download='donor_slip_'+name+'.png';a.click();
+      showPopup('📥','Downloaded','Slip download ho gayi. WhatsApp pe manually share karein.');
+    }
+  }).catch(function(e){showPopup('⚠️','Error','Image create nahi hui: '+e.message);});
+}
 function shareOnWhatsApp(type,id,name,amount,donor){
   let msg='';
   if(type==='donor'){
@@ -2806,7 +2836,7 @@ function generateSlip(){
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px;margin-bottom:8px">
         <button onclick="downloadReport('donorSlipWrap','donor_slip_${donor.id}','pdf')" style="background:#E24B4A;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🖨️ Print</button>
         <button onclick="downloadSlipPNG('donorSlipWrap','donor_slip_${donor.id}')" style="background:#185FA5;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🖼️ PNG</button>
-        <button onclick="shareOnWhatsApp('donor','${donor.id}','${donor.name}','${fmt(lastAmt)}',donor)" style="background:#25D366;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">📲 WhatsApp</button>
+        <button onclick="shareSlipImage('donorSlipWrap','${donor.name}')" style="background:#25D366;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">📲 Share Image</button>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;text-align:center;margin-top:12px;padding-top:12px;border-top:1px dashed #ccc">
         <div>${slipUser&&slipUser.signature?`<img src="${slipUser.signature}" style="height:32px;max-width:100%;object-fit:contain;margin-bottom:2px"><br>`:'<div style="height:35px;border-bottom:1px solid #999;margin-bottom:4px"></div>'}<div style="font-size:10px;color:#888">${slipUser?slipUser.name+' ('+slipUser.role+')':'Admin / Manager'}</div></div>
@@ -6075,14 +6105,25 @@ function buildSMSMessage(type,donor,amount){
   const curMonth=monthNames[new Date().getMonth()];
   if(type==='thanks'){
     const totalLife=DB.donations.filter(x=>x.donorId===donor.id).reduce((s,x)=>s+x.amount,0);
-    return `Assalam o Alaikum, ${donor.name} Sahab! 🌙%0A%0AAlhamdulillah! Aap ki is mah (${curMonth}) ki donation Rs ${fmt(amount)} hamein mil gayi hai.%0A%0A*${org}* ki taraf se aap ka bohat bohat shukriya. Allah Taala aap ko is sadqay ka behterein ajar ata farmaye aur aap ki rizq mein barkat dale. Ameen.%0A%0A_"Man anfa qa fi sabeel illah, ata hullahu mislihi wa azwa"_ ❤️%0A%0AAap ka Life Time Total: Rs ${fmt(totalLife)}`;
+    // Plain text for display
+    return 'AsSalamu Alaikum '+donor.name+' Sahab!\n\nAlhamdulillah! '+curMonth+' mah ki donation Rs '+fmt(amount)+' mil gayi. JazakAllah Khair!\n\nLife Total: Rs '+fmt(totalLife)+'\n\n- '+org;
   }
   if(type==='reminder'||type==='pending'){
     const lastDon=DB.donations.filter(x=>x.donorId===donor.id).sort((a,b)=>b.date.localeCompare(a.date))[0];
-    const lastAmt=lastDon?fmt(lastDon.amount):'N/A';
-    return `Assalam o Alaikum, ${donor.name} Sahab! 🌙%0A%0A*${org}* ki taraf se arz hai k ${curMonth} mah ki aap ki donation abhi tak received nahi hui hai.%0A%0AAllah Taala ne farmaya: _"Aur Allah ki raah mein kharch karo aur apne aap ko halakat mein na dalo"_ (Al-Baqarah 195)%0A%0AApni khair khwah donation ka yeh mauka ganwane ka na sochein. Aap ki har donation ek sadqa-e-jariyah hai.%0A%0AGuzeshtah donation: Rs ${lastAmt}%0A%0AJazakAllah Khair! 🤲`;
+    const lastAmt=lastDon?fmt(lastDon.amount):'0';
+    return 'AsSalamu Alaikum '+donor.name+' Sahab!\n\n'+curMonth+' mah ki donation abhi tak received nahi hui.\n\nAllah ki raah mein kharch karo - Al-Baqarah 195\n\nAakhri Donation: Rs '+lastAmt+'\n\nJazakAllah Khair!\n\n- '+org;
   }
   return '';
+}
+function buildWAMessage(type,donor,amount){
+  const org=orgName();
+  const monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const curMonth=monthNames[new Date().getMonth()];
+  if(type==='thanks'){
+    const totalLife=DB.donations.filter(x=>x.donorId===donor.id).reduce((s,x)=>s+x.amount,0);
+    return encodeURIComponent('AsSalamu Alaikum '+donor.name+' Sahab!\n\nAlhamdulillah! '+curMonth+' mah ki donation Rs '+fmt(amount)+' mil gayi.\nJazakAllah Khair! Allah Taala aap ko iska behterein ajar ata farmaye. Ameen\n\nLife Total: Rs '+fmt(totalLife)+'\n\n- '+org);
+  }
+  return encodeURIComponent('AsSalamu Alaikum '+donor.name+' Sahab!\n\n'+curMonth+' mah ki donation abhi tak received nahi hui.\n"Aur Allah ki raah mein kharch karo" (Al-Baqarah 195)\n\nAakhri Donation: Rs '+(DB.donations.filter(x=>x.donorId===donor.id).sort((a,b)=>b.date.localeCompare(a.date))[0]?fmt(DB.donations.filter(x=>x.donorId===donor.id).sort((a,b)=>b.date.localeCompare(a.date))[0].amount):'0')+'\nJazakAllah Khair!\n\n- '+org);
 }
 function openSMSReminders(activeTab){
   activeTab=activeTab||'pending';
@@ -6118,7 +6159,7 @@ function openSMSReminders(activeTab){
           <div style="font-size:10px;color:#555;background:#fff;padding:6px 8px;border-radius:6px;margin-bottom:8px;line-height:1.4">${sms}</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
             <a href="sms:${normMob(donor.mobile||'')}?body=${encodeURIComponent(sms)}" style="display:block;background:#1D9E75;color:#fff;padding:7px;border-radius:7px;font-size:11px;font-weight:600;text-decoration:none;text-align:center">📱 SMS</a>
-            <a href="https://wa.me/92${normMob(donor.mobile||'').slice(1)}?text=${wa}" target="_blank" onclick="logReminder('${donor.id}','${donor.name}','thanks','${amount}')" style="display:block;background:#25D366;color:#fff;padding:7px;border-radius:7px;font-size:11px;font-weight:600;text-decoration:none;text-align:center">💬 WhatsApp</a>
+            <a href="https://wa.me/92${normMob(d.mobile||'').replace(/^0/,'').replace(/-/g,'')}?text=${buildWAMessage('thanks',d,amount)}" target="_blank" onclick="logReminder('${d.id}','${d.name}','thanks','${amount}')" style="display:block;background:#25D366;color:#fff;padding:7px;border-radius:7px;font-size:11px;font-weight:600;text-decoration:none;text-align:center">💬 WhatsApp</a>
           </div>
         </div>`;
       }).join('')}
@@ -6136,7 +6177,7 @@ function openSMSReminders(activeTab){
           <div style="font-size:10px;color:#555;background:#fff;padding:6px 8px;border-radius:6px;margin-bottom:8px;line-height:1.4">${sms}</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
             <a href="sms:${normMob(d.mobile||'')}?body=${encodeURIComponent(sms)}" style="display:block;background:#E24B4A;color:#fff;padding:7px;border-radius:7px;font-size:11px;font-weight:600;text-decoration:none;text-align:center">📱 SMS</a>
-            <a href="https://wa.me/92${normMob(d.mobile||'').slice(1)}?text=${wa}" target="_blank" style="display:block;background:#25D366;color:#fff;padding:7px;border-radius:7px;font-size:11px;font-weight:600;text-decoration:none;text-align:center">💬 WhatsApp</a>
+            <a href="https://wa.me/92${normMob(d.mobile||'').replace(/^0/,'').replace(/-/g,'')}?text=${buildWAMessage('reminder',d,0)}" onclick="logReminder('${d.id}','${d.name}','reminder',0)" target="_blank" style="display:block;background:#25D366;color:#fff;padding:7px;border-radius:7px;font-size:11px;font-weight:600;text-decoration:none;text-align:center">💬 WhatsApp</a>
           </div>
         </div>`;
       }).join('')}

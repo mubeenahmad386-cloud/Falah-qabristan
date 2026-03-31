@@ -919,7 +919,9 @@ function finishReg(name,mobile,cnic,password,photo,signature){
   const area=document.getElementById('regArea').value;
   const profession=document.getElementById('regProfession').value;
   if(pendingRegRole==='user'){
-    const nid=nextAllId();
+    // If donor with same mobile exists, use donor's ID
+    const existingDonor=DB.donors.find(d=>normMob(d.mobile)===normMob(mobile));
+    const nid=existingDonor?existingDonor.id:nextAllId();
     const regBg=(document.getElementById('regBloodGroup')||{value:''}).value;
     const nu={id:nid,name,cnic,mobile,password,area,profession,bloodGroup:regBg,role:'user',approved:true,locked:false,photo,signature:null};
     DB.users.push(nu);
@@ -1678,7 +1680,10 @@ function finishDonation(name,amount,mobile,cnic,photo){
   if(!donor){
 
     if(DB.donors.find(d=>d.mobile.replace(/-/g,'')===mobile.replace(/-/g,''))){showPopup('⚠️','Duplicate Mobile','Is mobile se donor already exist karta hai.');return;}
-    const nid=nextAllId();
+    // Check if user with same mobile exists — use their ID for donor
+    const existingUser=DB.users.find(u=>normMob(u.mobile)===normMob(mobile));
+    const nid=existingUser?existingUser.id:nextAllId();
+
     const bg=(document.getElementById('donorBloodGroup')||{value:''}).value;
 donor={id:nid,name,mobile,cnic,area:document.getElementById('donorArea').value,bloodGroup:bg||'',profession:(document.getElementById('donorProfession')||{value:''}).value,totalDonation:0,photo:photo||null,entries:[]};
     DB.donors.push(donor);FS.save('donors',donor.id,donor);

@@ -899,7 +899,8 @@ function submitReg(){
   if(password!==confirm){showPopup('⚠️','Mismatch','Passwords do not match.');return;}
   if(password.length<4){showPopup('⚠️','Weak','Password must be at least 4 characters.');return;}
   const allExisting=[...DB.users,...DB.pendingApprovals];
-  if(allExisting.find(u=>u.mobile.replace(/-/g,'')===mobileDigits)){showPopup('⚠️','Duplicate','An account with this mobile already exists.');return;}
+  // Block only if user/pending already exists — donors allowed (will get same ID)
+  if(allExisting.find(u=>normMob(u.mobile)===mobileDigits)){showPopup('⚠️','Duplicate','Is mobile se account already exist karta hai.');return;}
 
   const fi=document.getElementById('regPhotoInput');
   const si=document.getElementById('regSigInput');
@@ -930,7 +931,7 @@ function finishReg(name,mobile,cnic,password,photo,signature){
     currentUser=nu;
     currentRole='user';
     saveSession();
-    showPopup('✅','Account Created!','Welcome '+name+'! ID: '+nid,null,()=>loadDashboard());
+    showPopup('✅','Account Created!',(existingDonor?'Donor record se ID link ho gayi! ':'')+'Welcome '+name+'! ID: '+nid,null,()=>loadDashboard());
   } else {
     const regBg2=(document.getElementById('regBloodGroup')||{value:''}).value;
     const pa={id:'PA'+Date.now(),name,cnic,mobile,password,area,profession,bloodGroup:regBg2,role:pendingRegRole,date:today(),photo,signature};
@@ -1603,9 +1604,13 @@ function checkRegMobile(val){
   if(nm.length<3){hideStatus('regMobileStatus');return;}
   if(nm.length<11){statusBox('regMobileStatus','warning','⚠️ Mobile must be exactly 11 digits. Entered: '+nm.length);return;}
   if(nm.length>11){statusBox('regMobileStatus','warning','⚠️ Mobile must be exactly 11 digits. Entered: '+nm.length);return;}
-  const found=findAnyByMobile(val);
-  if(found){
-    statusBox('regMobileStatus','error',`⚠️ Yeh mobile already registered hai: <strong>${recordLabel(found)}</strong>`);
+  const nm2=normMob(val);
+  const foundUser=DB.users.find(u=>normMob(u.mobile)===nm2)||DB.pendingApprovals.find(p=>normMob(p.mobile)===nm2)||null;
+  const foundDonor=DB.donors.find(d=>normMob(d.mobile)===nm2)||null;
+  if(foundUser){
+    statusBox('regMobileStatus','error',`⚠️ Is mobile se account already exist karta hai: <strong>${recordLabel(foundUser)}</strong>`);
+  } else if(foundDonor){
+    statusBox('regMobileStatus','info',`✅ Donor mila: <strong>${foundDonor.name}</strong> (ID: ${foundDonor.id}) — Aap ko same ID assign hogi`);
   } else {
     statusBox('regMobileStatus','success','✅ Mobile (11 digits) — Available');
     setTimeout(()=>hideStatus('regMobileStatus'),2000);

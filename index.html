@@ -1684,7 +1684,7 @@ donor={id:nid,name,mobile,cnic,area:document.getElementById('donorArea').value,b
     DB.donors.push(donor);FS.save('donors',donor.id,donor);
   }
   if(photo)donor.photo=photo;
-  donor.totalDonation+=amount;
+  donor.totalDonation=DB.donations.filter(x=>x.donorId===donor.id).reduce((s,x)=>s+x.amount,0)+amount;
   const t=today();const desc=document.getElementById('donorDesc').value||'Donation';
   const eid=nextEntryId();
   donor.entries.push({id:eid,date:t,amount,by:currentUser.id,desc});
@@ -3213,12 +3213,20 @@ function saveEdit(){
 }
 function deleteDonation(id){
   const d=DB.donations.find(x=>x.id===id);if(!d)return;
-  const donor=DB.donors.find(x=>x.id===d.donorId);
-  if(donor){donor.totalDonation-=d.amount;donor.entries=donor.entries.filter(e=>!(e.date===d.date&&e.amount===d.amount));}
-  DB.auditLog.push({by:currentUser.id,action:'Deleted Donation',target:d.id,detail:'Rs '+fmt(d.amount)+' deleted',date:today()});
-  FS.del('donations',d.id);
+  // Remove from DB.donations first
   DB.donations.splice(DB.donations.indexOf(d),1);
-  showPopup('🗑️','Deleted','Donation entry deleted successfully.',null,()=>renderTab('myentries'));
+  FS.del('donations',d.id);
+  // Recalculate donor totalDonation from remaining entries
+  const donor=DB.donors.find(x=>x.id===d.donorId);
+  if(donor){
+    donor.entries=donor.entries.filter(e=>!(e.date===d.date&&e.amount===d.amount&&(e.id===d.id||!e.id)));
+    // Recalculate from ALL remaining donations for this donor
+    donor.totalDonation=DB.donations.filter(x=>x.donorId===donor.id).reduce((s,x)=>s+x.amount,0);
+    FS.save('donors',donor.id,donor);
+  }
+  DB.auditLog.push({by:currentUser.id,action:'Deleted Donation',target:d.id,detail:'Rs '+fmt(d.amount)+' deleted',date:today()});
+  FS.save('auditLog','AL'+Date.now(),{by:currentUser.id,action:'Deleted Donation',target:d.id,detail:'Rs '+fmt(d.amount)+' deleted',date:today()});
+  showPopup('🗑️','Deleted','Donation deleted. Lifetime total updated.',null,()=>renderTab('myentries'));
 }
 function deleteExpense(id){
   const e=DB.expenses.find(x=>x.id===id);if(!e)return;
@@ -3550,7 +3558,7 @@ function filterDPU(){
   el.innerHTML=renderDPUList([...DB.donors].sort((a,b)=>(a.name||'').localeCompare(b.name||'')),q);
 }
 T.donorlist=function(){
-  const allDonors=[...DB.donors].sort((a,b)=>b.totalDonation-a.totalDonation);
+  const allDonors=[...DB.donors].map(d=>{d._lifeTotal=DB.donations.filter(x=>x.donorId===d.id).reduce((s,x)=>s+x.amount,0);return d;}).sort((a,b)=>b._lifeTotal-a._lifeTotal);
   const areas=['All',...new Set(allDonors.map(d=>d.area||'').filter(Boolean))];
   const sel=window._donorListArea||'All';
   const donors=sel==='All'?allDonors:allDonors.filter(d=>d.area===sel);
@@ -3562,7 +3570,7 @@ T.donorlist=function(){
       ${areas.map(a=>`<button onclick="window._donorListArea='${a}';renderTab('donorlist')" style="padding:5px 12px;border-radius:20px;border:1.5px solid ${a===sel?'#1D9E75':'#e8e8e8'};background:${a===sel?'#1D9E75':'#fff'};color:${a===sel?'#fff':'#555'};font-size:11px;font-weight:600;cursor:pointer">${a}</button>`).join('')}
     </div>
     ${donors.length===0?'<p style="font-size:13px;color:#888;text-align:center;padding:20px">No donors found.</p>':donors.map((d,i)=>{
-      const lifeTotal=DB.donations.filter(x=>x.donorId===d.id).reduce((s,x)=>s+x.amount,0);
+      const lifeTotal=d._lifeTotal||DB.donations.filter(x=>x.donorId===d.id).reduce((s,x)=>s+x.amount,0);
       const thisMonth=today().substring(0,7);
       const paidThisMonth=DB.donations.some(x=>x.donorId===d.id&&x.date.substring(0,7)===thisMonth);
       return `<div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:0.5px solid #f0f0f0">

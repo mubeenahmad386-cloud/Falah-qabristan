@@ -785,6 +785,7 @@ function showPopup(icon,title,msg,btnText,onClose){
   const mu=document.getElementById('popupMsgUr');if(mu)mu.textContent=POPUP_MSG_UR[msg]||'';
   document.getElementById('popupBtn').textContent=btnText||'OK';
   window._onClose=onClose||null;
+  window._currentEditDonorId=donorId;
   document.getElementById('popupOverlay').style.display='flex';
 }
 function closePopup(){document.getElementById('popupOverlay').style.display='none';if(window._onClose)window._onClose();window._onClose=null;}
@@ -2586,7 +2587,7 @@ function openEditDonorProfile(donorId){
   document.getElementById('popupOverlay').style.display='flex';
 }
 function saveDonorProfile(){
-  const id=document.getElementById('donorEditId').value;
+  const id=window._currentEditDonorId||(document.getElementById('donorEditId')?document.getElementById('donorEditId').value:'');
   const donor=DB.donors.find(x=>x.id===id);
   if(!donor)return;
   const name=document.getElementById('donorEditName').value.trim();
@@ -2631,7 +2632,7 @@ function doSearch(){
   const hasId=(v)=>String(v||'').toLowerCase().includes(ql);
   const hasBlood=(v)=>(v||'').toUpperCase()===(q||'').toUpperCase();
   function matchDonor(d){
-    if(filter==='name')       return has(d.name);
+    if(filter==='name')       return has(d.name)||hasId(d.id)||hasMob(d.mobile);
     if(filter==='id')         return hasId(d.id);
     if(filter==='mobile')     return hasMob(d.mobile);
     if(filter==='blood')      return (d.bloodGroup||'').toUpperCase()===(q||'').toUpperCase();
@@ -3644,14 +3645,20 @@ T.donorlist=function(){
   const areas=['All',...new Set(allDonors.map(d=>d.area||'').filter(Boolean))];
   const sel=window._donorListArea||'All';
   const donors=sel==='All'?allDonors:allDonors.filter(d=>d.area===sel);
+  const searchQ=(window._donorListSearch||'').toLowerCase().trim();
+  const filteredDonors=searchQ?donors.filter(d=>d.name.toLowerCase().includes(searchQ)||d.mobile.includes(searchQ)||d.id.toLowerCase().includes(searchQ)):donors;
   return `<div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <h3 style="margin-bottom:0">Donor List <span style="font-size:11px;color:#888;font-weight:400">${donors.length}/${allDonors.length}</span></h3>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <h3 style="margin-bottom:0">Donor List <span style="font-size:11px;color:#888;font-weight:400">${filteredDonors.length}/${allDonors.length}</span></h3>
     </div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
-      ${areas.map(a=>`<button onclick="window._donorListArea='${a}';renderTab('donorlist')" style="padding:5px 12px;border-radius:20px;border:1.5px solid ${a===sel?'#1D9E75':'#e8e8e8'};background:${a===sel?'#1D9E75':'#fff'};color:${a===sel?'#fff':'#555'};font-size:11px;font-weight:600;cursor:pointer">${a}</button>`).join('')}
+    <div style="position:relative;margin-bottom:10px">
+      <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none">🔍</span>
+      <input type="text" id="donorListSearch" value="${window._donorListSearch||''}" placeholder="Name, ID ya Mobile se search karein..." oninput="window._donorListSearch=this.value;renderTab('donorlist')" style="width:100%;padding:10px 10px 10px 38px;border:1.5px solid #e8e8e8;border-radius:10px;font-size:13px;box-sizing:border-box">
     </div>
-    ${donors.length===0?'<p style="font-size:13px;color:#888;text-align:center;padding:20px">No donors found.</p>':donors.map((d,i)=>{
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+      ${areas.map(a=>`<button onclick="window._donorListArea='${a}';renderTab('donorlist')" style="padding:4px 10px;border-radius:20px;border:1.5px solid ${a===sel?'#1D9E75':'#e8e8e8'};background:${a===sel?'#1D9E75':'#fff'};color:${a===sel?'#fff':'#555'};font-size:11px;font-weight:600;cursor:pointer">${a}</button>`).join('')}
+    </div>
+    ${filteredDonors.length===0?'<p style="font-size:13px;color:#888;text-align:center;padding:20px">No donors found.</p>':filteredDonors.map((d,i)=>{
       const lifeTotal=d._lifeTotal||DB.donations.filter(x=>x.donorId===d.id).reduce((s,x)=>s+x.amount,0);
       const thisMonth=today().substring(0,7);
       const paidThisMonth=DB.donations.some(x=>x.donorId===d.id&&x.date.substring(0,7)===thisMonth);

@@ -2948,9 +2948,9 @@ function generateSlip(){
       <div style="font-size:11px;color:#888">${donor.area||''} ${donor.profession?'• '+donor.profession:''}</div>
     </div>
     <!-- RECEIVED STAMP -->
-    <div style="border:2.5px solid #0F6E56;border-radius:8px;padding:4px 8px;text-align:center;transform:rotate(-8deg);flex-shrink:0">
-      <div style="font-size:9px;font-weight:800;color:#0F6E56;letter-spacing:1px">✓ RECEIVED</div>
-      <div style="font-size:9px;color:#0F6E56">${last5.length>0?last5[0].date:today()}</div>
+    <div style="background:#FCEBEB;border:2px solid #E24B4A;border-radius:8px;padding:5px 9px;text-align:center;transform:rotate(-8deg);flex-shrink:0;min-width:60px">
+      <div style="font-size:9px;font-weight:800;color:#A32D2D;letter-spacing:0.5px">✓ RECEIVED</div>
+      <div style="font-size:8px;color:#A32D2D;margin-top:1px;font-weight:600">${last5.length>0?last5[0].date:today()}</div>
     </div>
   </div>
 
@@ -3079,12 +3079,12 @@ function showDonorSlipPopup(donorId){
   var initials=donor.name.split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase();
   slipHtml+='<div style="padding:11px 14px;border-bottom:1px dashed #ccc;display:flex;align-items:center;gap:10px">';
   slipHtml+=donor.photo?'<img src="'+donor.photo+'" style="width:42px;height:42px;border-radius:50%;object-fit:cover;flex-shrink:0">':'<div style="width:42px;height:42px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#0F6E56;flex-shrink:0">'+initials+'</div>';
-  slipHtml+='<div style="flex:1"><div style="font-size:15px;font-weight:700;color:#1a1a1a">'+donor.name+'</div>';
-  slipHtml+='<div style="font-size:11px;color:#888;margin-top:1px">'+donor.id+' • '+donor.mobile+'</div>';
-  slipHtml+='<div style="font-size:11px;color:#888">'+(donor.area||'')+''+(donor.profession?' • '+donor.profession:'')+'</div></div>';
-  slipHtml+='<div style="border:2px solid #0F6E56;border-radius:6px;padding:4px 7px;text-align:center;transform:rotate(-8deg);flex-shrink:0">';
-  slipHtml+='<div style="font-size:9px;font-weight:700;color:#0F6E56;letter-spacing:0.5px">✓ RECEIVED</div>';
-  slipHtml+='<div style="font-size:9px;color:#0F6E56">'+(last5.length>0?last5[0].date:today())+'</div></div></div>';
+  slipHtml+='<div style="flex:1">';
+  slipHtml+='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><span style="font-size:15px;font-weight:700;color:#1a1a1a">'+donor.name+'</span><span style="font-size:10px;background:#E1F5EE;color:#0F6E56;padding:2px 7px;border-radius:10px;font-weight:700">'+donor.id+'</span></div>';
+  slipHtml+='<div style="font-size:11px;color:#888;margin-top:2px">'+(donor.area||'—')+'</div></div>';
+  slipHtml+='<div style="background:#FCEBEB;border:2px solid #E24B4A;border-radius:8px;padding:5px 9px;text-align:center;transform:rotate(-8deg);flex-shrink:0;min-width:60px">';
+  slipHtml+='<div style="font-size:9px;font-weight:800;color:#A32D2D;letter-spacing:0.5px">✓ RECEIVED</div>';
+  slipHtml+='<div style="font-size:8px;color:#A32D2D;margin-top:1px;font-weight:600">'+(last5.length>0?last5[0].date:today())+'</div></div></div>';
   slipHtml+='<div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px dashed #ccc">';
   slipHtml+='<div style="padding:9px 14px;border-right:1px dashed #ccc;text-align:center"><div style="font-size:10px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:3px">Current Donation</div><div style="font-size:18px;font-weight:800;color:#185FA5">Rs '+fmt(lastAmt)+'</div></div>';
   slipHtml+='<div style="padding:9px 14px;text-align:center"><div style="font-size:10px;font-weight:700;color:#0F6E56;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:3px">Life Time Total</div><div style="font-size:18px;font-weight:800;color:#0F6E56">Rs '+fmt(lifeTotal)+'</div></div></div>';
@@ -3101,7 +3101,7 @@ function showDonorSlipPopup(donorId){
   slipHtml+='<button onclick="shareSlipImage(\"slipPopupWrap\",\"'+dname+'\")" style="background:#25D366;color:#fff;border:none;padding:8px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">Share</button>';
   slipHtml+='</div>';
   slipHtml+='<div style="padding:0 14px 14px">';
-  slipHtml+='<button onclick="closeCustomPopup();renderTab(\"donation\");" style="width:100%;background:#0F6E56;color:#fff;border:none;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">+ New Entry</button>';
+  slipHtml+='<button onclick="closeCustomPopup();setTimeout(function(){selectTab(\"donation\");},100);" style="width:100%;background:#0F6E56;color:#fff;border:none;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">+ New Donation Entry</button>';
   slipHtml+='</div></div>';
   showCustomPopup('<div style="display:flex;justify-content:center;padding:20px 10px">'+slipHtml+'</div>');
 }

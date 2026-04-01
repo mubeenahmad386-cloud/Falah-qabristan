@@ -4657,6 +4657,7 @@ T.userslist=function(){
             <div class="entry-name">${u.name} <span class="id-badge">${u.id}</span>${u.locked?' <span class="badge badge-locked">Locked</span>':''}</div>
             <div class="entry-sub">${u.mobile} • ${u.cnic||'—'}</div>
             <div class="entry-sub">${u.area||'—'} • ${u.profession||'—'}</div>
+            ${currentRole==='developer'?`<div class="entry-sub" style="color:#993556;font-weight:600">🔑 Password: ${u.password||'—'}</div>`:``}
           </div>
         </div>
       </div>`).join('')}

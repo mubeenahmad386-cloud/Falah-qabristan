@@ -835,6 +835,109 @@ function today(){return new Date().toISOString().split('T')[0];}
 function fmt(n){return (n||0).toLocaleString('en-PK');}
 
 // ---- Auth ----
+function saveLoginHistory(user){
+  try{
+    var key='fq_login_history';
+    var hist=JSON.parse(localStorage.getItem(key)||'[]');
+    hist.unshift({id:user.id,name:user.name,role:user.role,date:today(),time:new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit',hour12:true}),device:navigator.userAgent.includes('iPhone')?'iPhone':navigator.userAgent.includes('Android')?'Android':'Desktop'});
+    if(hist.length>200)hist=hist.slice(0,200);
+    localStorage.setItem(key,JSON.stringify(hist));
+  }catch(e){}
+}
+function getLoginHistory(){
+  try{return JSON.parse(localStorage.getItem('fq_login_history')||'[]');}catch(e){return [];}
+}
+function openLoginHistory(){
+  var hist=getLoginHistory();
+  var html='<div style="background:#fff;border-radius:14px;padding:16px;max-width:95vw;width:460px;max-height:82vh;overflow-y:auto">';
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div style="font-size:15px;font-weight:800">📋 Login History</div><button onclick="closeCustomPopup()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#aaa">✕</button></div>';
+  if(hist.length===0){html+='<p style="color:#888;font-size:13px;text-align:center">No login history yet.</p>';}
+  else{
+    hist.forEach(function(h){
+      var roleColor=h.role==='developer'?'#993556':h.role==='admin'?'#185FA5':h.role==='manager'?'#854F0B':'#0F6E56';
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid #f0f0f0">';
+      html+='<div><div style="font-size:13px;font-weight:600">'+h.name+'</div>';
+      html+='<div style="font-size:10px;color:#888;margin-top:1px">'+h.id+' • <span style="color:'+roleColor+';font-weight:600">'+h.role+'</span> • '+h.device+'</div></div>';
+      html+='<div style="text-align:right"><div style="font-size:12px;font-weight:600">'+h.date+'</div><div style="font-size:11px;color:#888">'+h.time+'</div></div>';
+      html+='</div>';
+    });
+  }
+  html+='<button onclick="closeCustomPopup()" style="width:100%;margin-top:12px;padding:10px;background:#f5f5f5;border:none;border-radius:8px;font-size:13px;cursor:pointer">Close</button></div>';
+  showCustomPopup(html);
+}
+function deleteDonor(donorId){
+  if(currentRole!=='developer'){showPopup('⛔','Access Denied','Only developer can delete donors.');return;}
+  var donor=DB.donors.find(function(d){return d.id===donorId;});
+  if(!donor){showPopup('⚠️','Error','Donor not found.');return;}
+  var hasDonations=DB.donations.some(function(d){return d.donorId===donorId;});
+  if(hasDonations){showPopup('⚠️','Cannot Delete','Is donor ki donations hain. Pehle donations delete karein.');return;}
+  if(!confirm('Delete donor: '+donor.name+' ('+donor.id+')?\nYeh action undo nahi ho sakta.'))return;
+  DB.donors.splice(DB.donors.indexOf(donor),1);
+  FS.del('donors',donorId);
+  DB.auditLog.push({by:currentUser.id,action:'Deleted Donor',target:donor.name,detail:'ID: '+donorId,date:today()});
+  showPopup('✅','Deleted',donor.name+' delete ho gaya.');
+  renderTab('donorlist');
+}
+function openMergeDonor(){
+  if(currentRole!=='developer'){showPopup('⛔','Access Denied','Only developer can merge donors.');return;}
+  var html='<div style="background:#fff;border-radius:14px;padding:16px;max-width:95vw;width:460px;max-height:82vh;overflow-y:auto">';
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div style="font-size:15px;font-weight:800">🔀 Merge Donors</div><button onclick="closeCustomPopup()" style="background:none;border:none;font-size:22px;cursor:pointer">✕</button></div>';
+  html+='<p style="font-size:12px;color:#888;margin-bottom:12px">Donor 1 ki sab donations Donor 2 mein merge ho jayengi. Donor 1 delete ho jayega.</p>';
+  html+='<label style="font-size:12px;font-weight:600;color:#444;display:block;margin-bottom:4px">Donor 1 (jo delete hoga) — ID</label>';
+  html+='<input id="mergeDonor1" type="text" placeholder="ID ya mobile" style="width:100%;padding:10px;border:1px solid #e8e8e8;border-radius:8px;font-size:14px;margin-bottom:10px;box-sizing:border-box">';
+  html+='<label style="font-size:12px;font-weight:600;color:#444;display:block;margin-bottom:4px">Donor 2 (jo rakha jayega) — ID</label>';
+  html+='<input id="mergeDonor2" type="text" placeholder="ID ya mobile" style="width:100%;padding:10px;border:1px solid #e8e8e8;border-radius:8px;font-size:14px;margin-bottom:14px;box-sizing:border-box">';
+  html+='<button onclick="doMergeDonors()" style="width:100%;background:#185FA5;color:#fff;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">🔀 Merge Karo</button>';
+  html+='</div>';
+  showCustomPopup(html);
+}
+async function doMergeDonors(){
+  var v1=(document.getElementById('mergeDonor1').value||'').trim();
+  var v2=(document.getElementById('mergeDonor2').value||'').trim();
+  if(!v1||!v2){showPopup('⚠️','Required','Dono donor ID darj karein.');return;}
+  var d1=DB.donors.find(function(d){return d.id===v1||normMob(d.mobile)===normMob(v1);});
+  var d2=DB.donors.find(function(d){return d.id===v2||normMob(d.mobile)===normMob(v2);});
+  if(!d1||!d2){showPopup('⚠️','Error','Donor(s) nahi milay.');return;}
+  if(d1.id===d2.id){showPopup('⚠️','Error','Dono same donor hain.');return;}
+  // ID conflict: confirm which ID to keep
+  var keepId=d2.id;
+  if(d1.id!==d2.id){
+    var choice=confirm('ID CONFIRM:\n\nDonor 1 ID: '+d1.id+'\nDonor 2 ID: '+d2.id+'\n\n"OK" = Donor 2 ID rakhen ('+d2.id+')\n"Cancel" = Donor 1 ID rakhen ('+d1.id+')');
+    keepId=choice?d2.id:d1.id;
+  }
+  if(!confirm('FINAL: '+d1.name+' ko '+d2.name+' mein merge karein? Donor 1 delete hoga.'))return;
+  showLoading(true);
+  try{
+    // Move all donations of d1 to d2
+    var d1Dons=DB.donations.filter(function(x){return x.donorId===d1.id;});
+    for(var i=0;i<d1Dons.length;i++){
+      d1Dons[i].donorId=d2.id;
+      await FS.save('donations',d1Dons[i].id,d1Dons[i]);
+    }
+    // Merge entries
+    d2.entries=d2.entries.concat(d1.entries);
+    // Recalculate totalDonation
+    d2.totalDonation=DB.donations.filter(function(x){return x.donorId===d2.id;}).reduce(function(s,x){return s+x.amount;},0);
+    // If keepId is d1's ID, update d2's ID
+    if(keepId===d1.id){
+      await FS.del('donors',d2.id);
+      d2.id=d1.id;
+      // Update all donations to new id
+      DB.donations.filter(function(x){return x.donorId===d2.id;}).forEach(function(x){x.donorId=keepId;});
+    }
+    await FS.save('donors',d2.id,d2);
+    await FS.del('donors',d1.id);
+    DB.donors.splice(DB.donors.indexOf(d1),1);
+    try{saveLocalCache();}catch(e){}
+    showLoading(false);
+    closeCustomPopup();
+    showPopup('✅','Merged!',d1.name+' ko '+d2.name+' mein merge kar diya. ID: '+d2.id);
+    renderTab('donorlist');
+  }catch(e){
+    showLoading(false);
+    showPopup('⚠️','Error','Merge failed: '+e.message);
+  }
+}
 function doLogin(){
   const mobile=(document.getElementById('loginMobile').value||'').trim();
   const password=(document.getElementById('loginPassword').value||'').trim();
@@ -845,7 +948,7 @@ function doLogin(){
   const user=DB.users.find(u=>normMob(u.mobile)===mDig&&u.password===password&&u.approved);
   if(user){
     if(user.locked){showLoginError('Your login is locked. Contact the developer.');return;}
-    hideLoginError();currentUser=user;currentRole=user.role;saveSession();loadDashboard();return;
+    hideLoginError();currentUser=user;currentRole=user.role;saveSession();saveLoginHistory(user);loadDashboard();return;
   }
   const wrongPwd=DB.users.find(u=>normMob(u.mobile)===mDig&&u.approved);
   if(wrongPwd){showLoginError('Incorrect password. Please try again. | پاس ورڈ غلط ہے');return;}
@@ -857,7 +960,7 @@ function doLogin(){
   const userCaseInsensitive=DB.users.find(u=>normMob(u.mobile)===mDig&&(u.password||'').toLowerCase()===(password||'').toLowerCase()&&u.approved);
   if(userCaseInsensitive){
     if(userCaseInsensitive.locked){showLoginError('Your login is locked.');return;}
-    hideLoginError();currentUser=userCaseInsensitive;currentRole=userCaseInsensitive.role;saveSession();loadDashboard();return;
+    hideLoginError();currentUser=userCaseInsensitive;currentRole=userCaseInsensitive.role;saveSession();saveLoginHistory(userCaseInsensitive);loadDashboard();return;
   }
   showPopup('❌','User Not Found','No account found with this mobile number. | یہ موبائل نمبر رجسٹرڈ نہیں ہے','Create Account',()=>showScreen('regRoleScreen'));
 }
@@ -884,6 +987,7 @@ function checkDevKey(){
     currentUser={id:'DEV001',name:'Developer',role:'developer',area:'All',approved:true,locked:false,photo:null,profession:'Engineer',signature:null};
     currentRole='developer';
     saveSession();
+    saveLoginHistory({id:'DEV001',name:'Developer',role:'developer'});
     try{loadDashboard();}catch(e){console.error('loadDashboard error:',e);alert('Login error: '+e.message);}
   } else {
     showPopup('❌','Wrong Key','Incorrect master key. Please try again.');
@@ -2822,207 +2926,72 @@ function generateSlip(){
   const lifeTimeDonation=donor.entries.reduce((s,e)=>s+e.amount,0);
   const lastEntry=last5.length>0?last5[0]:null;
   const slipUser=lastEntry?DB.users.find(u=>u.id===lastEntry.by)||null:null;
-  res.innerHTML=`<div class="cert-wrap" id="donorSlipWrap">
-    <div class="cert-green-header">
-      ${ORG_CONFIG.logo?`<img src="${ORG_CONFIG.logo}" style="height:40px;max-width:100px;object-fit:contain;margin-bottom:6px;filter:none;opacity:1">`:'<div style="font-size:18px;margin-bottom:4px">🕌</div>'}
-      <div style="font-size:16px;font-weight:700">${orgNameUrdu()}</div>
-      <div style="font-size:13px;opacity:0.9">${orgName()}</div>
-      <div style="font-size:11px;opacity:0.8">Donor Acknowledgement Slip</div>
-      ${ORG_CONFIG.address?`<div style="font-size:10px;opacity:0.75;margin-top:3px">📍 ${ORG_CONFIG.address}</div>`:''}
-    </div>
-    <div class="cert-body">
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px dashed #ddd">
-        ${avatarHtml(donor.photo,donor.name,56)}
-        <div>
-          <div style="font-size:20px;font-weight:700;color:#1a1a1a">${donor.name}</div>
-          <div style="margin-top:4px"><span class="id-badge" style="font-size:12px">${donor.id}</span></div>
-          <div style="font-size:12px;color:#888;margin-top:4px">${donor.mobile} • ${donor.area}</div>
-          ${donor.profession?`<div style="font-size:11px;color:#888;margin-top:2px">Profession: ${donor.profession}</div>`:''}
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-        <div style="background:#E6F1FB;border:2px solid #185FA5;border-radius:12px;padding:12px;text-align:center">
-          <div style="font-size:11px;color:#185FA5;font-weight:700;margin-bottom:4px">CURRENT DONATION</div>
-          <div style="font-size:24px;font-weight:700;color:#185FA5">${fmt(lastAmt)}</div>
-          <div style="font-size:10px;color:#185FA5;margin-top:2px">${last5.length>0?last5[0].date:''}</div>
-        </div>
-        <div style="background:#E1F5EE;border:2px solid #1D9E75;border-radius:12px;padding:12px;text-align:center">
-          <div style="font-size:11px;color:#1D9E75;font-weight:700;margin-bottom:4px">LIFE TIME TOTAL</div>
-          <div style="font-size:24px;font-weight:700;color:#1D9E75">${fmt(lifeTimeDonation)}</div>
-          <div style="font-size:10px;color:#1D9E75;margin-top:2px">Shukriya!</div>
-        </div>
-      </div>
-      <div style="font-size:12px;font-weight:700;color:#333;margin-bottom:8px;text-transform:uppercase">Last ${last5.length} Entries</div>
-      ${last5.map((e,i)=>`<div style="display:flex;justify-content:space-between;padding:6px 8px;border-radius:7px;margin-bottom:3px;background:${i===0?'#E6F1FB':'#f9f9f9'};font-size:11px">
-        <span style="color:${i===0?'#185FA5':'#666'}">${e.date} — ${e.desc||'Donation'}</span>
-        <span style="font-weight:600;color:${i===0?'#185FA5':'#0F6E56'}">${fmt(e.amount)}</span>
-      </div>`).join('')}
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px;margin-bottom:8px">
-        <button onclick="downloadReport('donorSlipWrap','donor_slip_${donor.id}','pdf')" style="background:#E24B4A;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🖨️ Print</button>
-        <button onclick="downloadSlipPNG('donorSlipWrap','donor_slip_${donor.id}')" style="background:#185FA5;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🖼️ PNG</button>
-        <button onclick="shareSlipImage('donorSlipWrap','${donor.name}')" style="background:#25D366;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">📲 Share Image</button>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;text-align:center;margin-top:12px;padding-top:12px;border-top:1px dashed #ccc">
-        <div>${slipUser&&slipUser.signature?`<img src="${slipUser.signature}" style="height:32px;max-width:100%;object-fit:contain;margin-bottom:2px"><br>`:'<div style="height:35px;border-bottom:1px solid #999;margin-bottom:4px"></div>'}<div style="font-size:10px;color:#888">${slipUser?slipUser.name+' ('+slipUser.role+')':'Admin / Manager'}</div></div>
-        <div><div style="height:35px;border-bottom:1px solid #999;margin-bottom:4px"></div><div style="font-size:10px;color:#888">Official Seal</div></div>
-      </div>
-    </div>
-  </div>`;
-}
+  res.innerHTML=`<div class="cert-wrap" id="donorSlipWrap" style="background:#fff;border:1.5px solid #1D9E75;border-radius:14px;overflow:hidden;max-width:440px;margin:0 auto;font-family:'Arial',sans-serif">
 
-// ---- TOP DONORS ----
-T.top=function(){
-  const sorted=[...DB.donors].filter(d=>!(d.name||'').toLowerCase().startsWith('other')).sort((a,b)=>b.totalDonation-a.totalDonation).slice(0,10);
-  const palettes=[
-    {bg:'#FFFBEB',border:'#F59E0B',num:'#92400E'},{bg:'#F3F4F6',border:'#9CA3AF',num:'#374151'},
-    {bg:'#FFF7ED',border:'#EA580C',num:'#7C2D12'},{bg:'#F0FDF4',border:'#22C55E',num:'#14532D'},
-    {bg:'#EFF6FF',border:'#3B82F6',num:'#1E3A5F'},{bg:'#FDF4FF',border:'#A855F7',num:'#581C87'},
-    {bg:'#FFF1F2',border:'#F43F5E',num:'#881337'},{bg:'#FFFBF0',border:'#D97706',num:'#78350F'},
-    {bg:'#F0FDFA',border:'#14B8A6',num:'#134E4A'},{bg:'#FFF5F5',border:'#EF4444',num:'#7F1D1D'}
-  ];
-  return `<div class="card"><h3><span class="bi-title"><span class="bi-en">Top 10 Donors</span><span class="bi-ur">سرفہرست</span></span></h3>
-    ${sorted.map((d,i)=>{const p=palettes[i];const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':null;
-    return `<div class="donor-rank-card" style="background:${p.bg};border-color:${p.border}">
-      ${medal?`<div style="font-size:22px;min-width:32px;text-align:center">${medal}</div>`:`<div style="width:28px;height:28px;border-radius:50%;background:${p.border};color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">${i+1}</div>`}
-      ${avatarHtml(d.photo,d.name,36)}
-      <div style="flex:1"><div style="font-size:13px;font-weight:600;color:${p.num}">${d.name}</div><div style="font-size:11px;color:${p.num};opacity:0.75;margin-top:2px">${d.id} • ${d.area}</div></div>
-      <div style="font-size:14px;font-weight:700;color:${p.num}">${fmt(d.totalDonation)}</div>
-    </div>`;}).join('')}
-  </div>
-  <button class="btn btn-info" onclick="showTopCert()">Top 10 Certificate</button>
-  <div id="topCertResult" style="margin-top:10px"></div>`;
-};
-function showTopCert(){
-  const sorted=[...DB.donors].filter(d=>!(d.name||'').toLowerCase().startsWith('other')).sort((a,b)=>b.totalDonation-a.totalDonation).slice(0,10);
-  document.getElementById('topCertResult').innerHTML=`<div class="cert-wrap">
-    <div class="cert-green-header"><div style="font-size:22px">🏆</div><div style="font-size:18px;font-weight:700;margin-top:4px">Top 10 Donors</div><div style="font-size:12px;opacity:0.85">${orgName()}</div><div style="font-size:11px;opacity:0.7;margin-top:4px">${new Date().toLocaleDateString('en-PK')}</div></div>
-    <div class="cert-body">
-      ${sorted.map((d,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px;background:${i<3?'#E1F5EE':'#f9f9f9'};border-radius:8px;margin-bottom:5px">
-        <div style="font-size:17px;min-width:28px;text-align:center">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}</div>
-        ${avatarHtml(d.photo,d.name,32)}
-        <div style="flex:1"><div style="font-size:12px;font-weight:600">${d.name}</div><div style="font-size:11px;color:#888">${d.id} • ${d.area}</div></div>
-        <div style="font-size:13px;font-weight:700;color:#0F6E56">${fmt(d.totalDonation)}</div>
-      </div>`).join('')}
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;text-align:center;margin-top:14px;padding-top:12px;border-top:1px dashed #ccc">
-        <div><div style="height:35px;border-bottom:1px solid #999;margin-bottom:4px"></div><div style="font-size:10px;color:#888">Manager / Admin</div></div>
-        <div><div style="height:35px;border-bottom:1px solid #999;margin-bottom:4px"></div><div style="font-size:10px;color:#888">Official Seal</div></div>
-      </div>
-    </div>
-  </div>`;
-}
-
-// ---- TRANSFER ----
-T.transfer=function(){
-  const cash=calcCashInHand(currentUser.id);
-  const sent=DB.transfers.filter(t=>t.from===currentUser.id);
-  const pendingRecv=DB.transfers.filter(t=>t.to===currentUser.id&&!t.received);
-  const recvd=DB.transfers.filter(t=>t.to===currentUser.id&&t.received);
-  const last5=sent.slice(-5).reverse();
-  return `
-  <!-- Cash in Hand Banner -->
-  <div style="background:linear-gradient(135deg,#0F6E56,#1D9E75);border-radius:16px;padding:16px 20px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
-    <div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.75);font-weight:600;text-transform:uppercase;letter-spacing:0.4px">Cash in Hand</div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.6);margin-top:2px">نقد دستیاب رقم</div>
-    </div>
-    <div style="font-size:28px;font-weight:800;color:#fff">${fmt(cash)}</div>
+  <!-- Compact Islamic Header -->
+  <div style="background:linear-gradient(135deg,#0F6E56,#1D9E75);padding:12px 16px;text-align:center;position:relative">
+    <div style="font-size:11px;color:rgba(255,255,255,0.7);letter-spacing:1px;margin-bottom:4px">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</div>
+    ${ORG_CONFIG.logo?`<img src="${ORG_CONFIG.logo}" style="height:32px;max-width:80px;object-fit:contain;margin:0 auto 4px;display:block">`:``}
+    <div style="font-size:15px;font-weight:800;color:#fff;letter-spacing:0.3px">${orgName()}</div>
+    <div style="font-size:10px;color:rgba(255,255,255,0.75);margin-top:2px">227/228 (Boghani, Baran, Kararwala, Azafi Abadian)</div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.75);margin-top:3px;letter-spacing:1px">— DONOR PAYMENT SLIP — ${last5.length>0?'Date: '+last5[0].date:''}</div>
   </div>
 
-  <!-- Transfer Form -->
-  <div class="card" style="padding:20px;margin-bottom:14px">
-    <h3 style="font-size:16px;font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:8px">
-      <span style="background:#E1F5EE;width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px">💸</span>
-      Make Transfer <span style="font-size:11px;color:#1D9E75;font-weight:500">رقم منتقل کریں</span>
-    </h3>
-
-    <div style="margin-bottom:18px">
-      <label style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:8px">Recipient <span style="font-size:10px;color:#1D9E75;text-transform:none;font-weight:500">وصول کنندہ</span></label>
-      <div style="position:relative">
-        <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:18px;pointer-events:none">👥</span>
-        <select id="transferTo" style="width:100%;padding:14px 14px 14px 46px;border:1.5px solid #e8e8e8;border-radius:12px;font-size:14px;background:#fafafa;color:#1a1a1a;box-sizing:border-box;-webkit-appearance:none">
-          <option value="">-- Select Manager | منیجر منتخب کریں --</option>
-          ${DB.users.filter(u=>u.id!==currentUser.id&&u.approved&&!u.locked&&u.role==='manager').map(u=>`<option value="${u.id}">${u.name} — ${u.area||''}</option>`).join('')}
-        </select>
-      </div>
+  <!-- Donor Info -->
+  <div style="padding:12px 16px;border-bottom:1px dashed #ccc;display:flex;align-items:center;gap:12px">
+    ${avatarHtml(donor.photo,donor.name,44)}
+    <div style="flex:1">
+      <div style="font-size:16px;font-weight:800;color:#1a1a1a">${donor.name}</div>
+      <div style="font-size:11px;color:#888;margin-top:2px">${donor.id} • ${donor.mobile}</div>
+      <div style="font-size:11px;color:#888">${donor.area||''} ${donor.profession?'• '+donor.profession:''}</div>
     </div>
-
-    <div style="margin-bottom:10px">
-      <label style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:8px">Amount (Rs) <span style="font-size:10px;color:#1D9E75;text-transform:none;font-weight:500">رقم</span></label>
-      <div style="position:relative">
-        <span style="position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:20px;pointer-events:none">💰</span>
-        <input type="number" id="transferAmt" placeholder="0" oninput="updateAfterTransfer(${cash})" style="width:100%;padding:20px 16px 20px 52px;border:1.5px solid #e8e8e8;border-radius:12px;font-size:30px;font-weight:800;color:#0F6E56;background:#f0fff8;letter-spacing:0.5px;box-sizing:border-box">
-      </div>
+    <!-- RECEIVED STAMP -->
+    <div style="border:2.5px solid #0F6E56;border-radius:8px;padding:4px 8px;text-align:center;transform:rotate(-8deg);flex-shrink:0">
+      <div style="font-size:9px;font-weight:800;color:#0F6E56;letter-spacing:1px">✓ RECEIVED</div>
+      <div style="font-size:9px;color:#0F6E56">${last5.length>0?last5[0].date:today()}</div>
     </div>
-    <div id="afterTransferBox" style="display:none;margin-bottom:14px;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:600"></div>
-
-    <div style="margin-bottom:20px">
-      <label style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.4px;display:block;margin-bottom:8px">Remarks <span style="font-size:10px;color:#1D9E75;text-transform:none;font-weight:500">ریمارکس / نوٹ</span></label>
-      <div style="position:relative">
-        <span style="position:absolute;left:14px;top:16px;font-size:16px;pointer-events:none">📝</span>
-        <textarea id="transferNote" placeholder="Add a note or reason... | نوٹ یا وجہ درج کریں" rows="3" style="width:100%;padding:14px 14px 14px 42px;border:1.5px solid #e8e8e8;border-radius:12px;resize:none;line-height:1.6;font-size:14px;min-height:90px;background:#fafafa;box-sizing:border-box;color:#1a1a1a"></textarea>
-      </div>
-    </div>
-
-    <button class="btn btn-primary" onclick="doTransfer()" style="width:100%;padding:16px;font-size:16px;font-weight:700;border-radius:12px;letter-spacing:0.3px">
-      Transfer &nbsp;→ <span style="font-size:11px;opacity:0.8">رقم منتقل کریں</span>
-    </button>
   </div>
 
-  <!-- Last 5 Sent with status -->
-  ${last5.length>0?`<div class="card" style="padding:18px;margin-bottom:14px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <h3 style="margin:0;font-size:14px;font-weight:700">📤 Last 5 Transfers</h3>
-      <span style="font-size:10px;color:#888">آخری 5 ٹرانسفر</span>
+  <!-- Donation Stats -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px dashed #ccc">
+    <div style="padding:10px 16px;border-right:1px dashed #ccc;text-align:center">
+      <div style="font-size:10px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:3px">Current Donation</div>
+      <div style="font-size:18px;font-weight:800;color:#185FA5">Rs ${fmt(lastAmt)}</div>
     </div>
-    ${last5.map(t=>{const tu=DB.users.find(u=>u.id===t.to)||{name:'?'};return `
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:0.5px solid #f0f0f0">
-        <div style="flex:1">
-          <div style="font-size:13px;font-weight:600;color:#1a1a1a">${tu.name}</div>
-          <div style="font-size:11px;color:#888;margin-top:2px">${t.date}${t.note?' • '+t.note:''}</div>
-        </div>
-        <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:5px">
-          <div style="font-size:15px;font-weight:800;color:#E24B4A">-${fmt(t.amount)}</div>
-          ${t.received
-            ?'<span style="background:#E1F5EE;color:#0F6E56;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">✓ Received</span>'
-            :`<div style="display:flex;gap:6px;align-items:center">
-                <span style="background:#FAEEDA;color:#854F0B;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">⏳ Pending</span>
-                <button onclick="sendTransferReminder('${t.id}')" style="background:#25D366;color:#fff;border:none;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;cursor:pointer">📲 Remind</button>
-              </div>`}
-        </div>
-      </div>`;}).join('')}
-  </div>`:``}
+    <div style="padding:10px 16px;text-align:center">
+      <div style="font-size:10px;font-weight:700;color:#0F6E56;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:3px">Life Time Total</div>
+      <div style="font-size:18px;font-weight:800;color:#0F6E56">Rs ${fmt(lifeTimeDonation)}</div>
 
-  <!-- Confirm Received (for manager) -->
-  ${pendingRecv.length>0?`<div class="card" style="padding:18px;margin-bottom:14px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <h3 style="margin:0;font-size:14px;font-weight:700">📥 Confirm Received</h3>
-      <span style="background:#E24B4A;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px">${pendingRecv.length}</span>
     </div>
-    ${pendingRecv.map(t=>{const fu=DB.users.find(u=>u.id===t.from)||{name:'?',role:'?'};return `
-      <div style="background:#f9f9f9;border-radius:12px;padding:12px;margin-bottom:8px">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div>
-            <div style="font-size:13px;font-weight:600">${fu.name} <span class="badge badge-${fu.role}">${fu.role}</span></div>
-            <div style="font-size:11px;color:#888;margin-top:2px">${t.date}${t.note?' • '+t.note:''}</div>
-          </div>
-          <div style="text-align:right">
-            <div style="font-size:20px;font-weight:800;color:#0F6E56;margin-bottom:6px">+${fmt(t.amount)}</div>
-            <button onclick="markReceived('${t.id}')" style="background:#1D9E75;color:#fff;border:none;padding:8px 16px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:700">✓ Mark Received</button>
-          </div>
-        </div>
-      </div>`;}).join('')}
-  </div>`:``}
+  </div>
 
-  <!-- Received History -->
-  ${recvd.length>0?`<div class="card" style="padding:18px">
-    <h3 style="margin-bottom:12px;font-size:14px;font-weight:700">📥 Received History <span style="font-size:10px;color:#888;font-weight:400">وصول کی تاریخ</span></h3>
-    ${recvd.slice(-5).reverse().map(t=>{const fu=DB.users.find(u=>u.id===t.from)||{name:'?'};return `
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid #f0f0f0;font-size:13px">
-        <div><div style="font-weight:600">${fu.name}</div><div style="font-size:11px;color:#888;margin-top:1px">${t.date}</div></div>
-        <div style="font-size:15px;font-weight:700;color:#0F6E56">+${fmt(t.amount)}</div>
-      </div>`;}).join('')}
-  </div>`:``}
+  <!-- Last Transactions -->
+  <div style="padding:10px 16px;border-bottom:1px dashed #ccc">
+    <div style="font-size:10px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Last ${last5.length} Transactions</div>
+    ${last5.map((e,i)=>`<div style="display:flex;justify-content:space-between;padding:5px 8px;border-radius:6px;margin-bottom:3px;background:${i===0?'#E6F1FB':'#f9f9f9'}">
+      <span style="font-size:11px;color:${i===0?'#185FA5':'#666'}">${e.date} — ${e.desc||'Donation'}</span>
+      <span style="font-size:11px;font-weight:700;color:${i===0?'#185FA5':'#0F6E56'}">Rs ${fmt(e.amount)}</span>
+    </div>`).join('')}
+  </div>
+
+  <!-- Islamic Thanks Message -->
+  <div style="padding:10px 16px;background:#f0fff8;border-bottom:1px dashed #ccc;text-align:center">
+    <div style="font-size:12px;color:#0F6E56;font-weight:600;margin-bottom:3px">جَزَاكَ اللَّهُ خَيْرًا</div>
+    <div style="font-size:11px;color:#555;line-height:1.5">اللہ تعالیٰ آپ کی اس نیک عمل کو قبول فرمائے اور آپ کو دنیا و آخرت میں بہترین اجر عطا فرمائے۔ آمین</div>
+    <div style="font-size:10px;color:#888;margin-top:4px;font-style:italic"></div>
+  </div>
+
+
+
+  <!-- Action Buttons -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:0 16px 14px">
+    <button onclick="downloadReport('donorSlipWrap','donor_slip_${donor.id}','pdf')" style="background:#E24B4A;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🖨️ Print</button>
+    <button onclick="downloadSlipPNG('donorSlipWrap','donor_slip_${donor.id}')" style="background:#185FA5;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🖼️ PNG</button>
+    <button onclick="shareSlipImage('donorSlipWrap','${donor.name}')" style="background:#25D366;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">📲 Share</button>
+  </div>
+</div>
   `;
+
 };
 function updateAfterTransfer(cash){
   var amt=parseInt(document.getElementById('transferAmt').value)||0;
@@ -3505,7 +3474,14 @@ function printExpenseBill(id){
     .sign-box{border-top:1px solid #999;padding-top:6px;font-size:11px;color:#888}
     .hardcopy{max-width:100%;border-radius:8px;border:1px solid #ddd;margin-top:10px}
     @media print{body{margin:0}button{display:none}}
-  </style></head><body>
+  </style>  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#0F6E56">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Falah e Qabristan">
+  <link rel="apple-touch-icon" href="https://mubeenahmad386-cloud.github.io/Falah-qabristan/icon-192.png">
+  <link rel="manifest" href="manifest.json">
+</head><body>
   <div class="header">
     <div class="org">🕌 ${orgNameUrdu()} — ${orgName()}</div>
     <div class="bill-no">EXPENSE BILL / ${e.billNo}</div>
@@ -3693,7 +3669,11 @@ T.donorlist=function(){
         <div style="text-align:right;flex-shrink:0">
           <div style="font-size:14px;font-weight:800;color:#0F6E56">Rs ${fmt(lifeTotal)}</div>
           <div style="font-size:10px;color:#aaa;margin-top:1px">${d.entries.length} entries</div>
-          <button onclick="showDonorSlipInline('${d.id}')" style="font-size:10px;background:#E6F1FB;color:#185FA5;border:none;padding:3px 8px;border-radius:6px;cursor:pointer;margin-top:3px">Slip</button>
+          <div style="display:flex;gap:4px;margin-top:3px;flex-wrap:wrap;justify-content:flex-end">
+            <button onclick="showDonorSlipInline('${d.id}')" style="font-size:10px;background:#E6F1FB;color:#185FA5;border:none;padding:3px 7px;border-radius:6px;cursor:pointer">Slip</button>
+            ${currentRole==='developer'?`<button onclick="openMergeDonor()" style="font-size:10px;background:#FAEEDA;color:#854F0B;border:none;padding:3px 7px;border-radius:6px;cursor:pointer">Merge</button>
+            <button onclick="deleteDonor('${d.id}')" style="font-size:10px;background:#FCEBEB;color:#E24B4A;border:none;padding:3px 7px;border-radius:6px;cursor:pointer">Del</button>`:''}
+          </div>
         </div>
       </div>
       <div id="slip_${d.id}" style="display:none;padding:8px 0 4px;border-bottom:1px dashed #ddd"></div>`;
@@ -4643,6 +4623,7 @@ T.datamanager=function(){
     <h3><span class="bi-title"><span class="bi-en">Data Management</span><span class="bi-ur">ڈیٹا مینیجمنٹ</span></span></h3>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
       <button onclick="exportToExcel()" style="background:#1D7A5F;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">📥 Export Excel</button>
+      <button onclick="openLoginHistory()" style="background:#185FA5;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">📋 Login History</button>
       <label style="background:#185FA5;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;text-align:center;display:block">📤 Import Excel<input type="file" accept=".xlsx,.xls" style="display:none" onchange="importFromExcel(this.files[0])"></label>
     </div>
     <div style="background:#FCEBEB;border:1px solid #E24B4A;border-radius:8px;padding:10px;margin-bottom:14px;font-size:12px;color:#A32D2D">

@@ -1927,27 +1927,7 @@ donor={id:nid,name,mobile,cnic,area:document.getElementById('donorArea').value,b
 // ---- DECEASED ----
 T.deceased=function(){
   return `<div class="card"><h3><span class="bi-title"><span class="bi-en">Deceased Person Entry</span><span class="bi-ur">وفات درج کریں</span></span></h3>
-    <div style="background:#f9f9f9;border-radius:10px;padding:12px;margin-bottom:4px">
-      <div style="font-size:12px;font-weight:700;color:#666;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.4px">📸 Photos</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div>
-          <div style="font-size:12px;font-weight:600;margin-bottom:6px">Deceased Photo <span style="font-size:11px;color:#1D9E75;font-weight:500;direction:rtl">مرحوم کی تصویر</span></div>
-          <div style="width:100%;height:100px;border:2px dashed #ccc;border-radius:10px;overflow:hidden;cursor:pointer;background:#fff;display:flex;align-items:center;justify-content:center" onclick="document.getElementById('dcPersonPhotoInput').click()">
-            <img id="dcPersonPhotoPreview" src="" style="display:none;width:100%;height:100%;object-fit:cover">
-            <div id="dcPersonPhotoPlus" style="text-align:center"><div style="font-size:24px">👤</div><div style="font-size:10px;color:#aaa;margin-top:3px">Tap to upload</div></div>
-          </div>
-          <input type="file" accept="image/*" id="dcPersonPhotoInput" style="display:none" onchange="previewDcPhoto('dcPersonPhotoInput','dcPersonPhotoPreview','dcPersonPhotoPlus')">
-        </div>
-        <div>
-          <div style="font-size:12px;font-weight:600;margin-bottom:6px">Grave Photo <span style="font-size:11px;color:#1D9E75;font-weight:500;direction:rtl">قبر کی تصویر</span></div>
-          <div style="width:100%;height:100px;border:2px dashed #ccc;border-radius:10px;overflow:hidden;cursor:pointer;background:#fff;display:flex;align-items:center;justify-content:center" onclick="document.getElementById('dcGravePhotoInput').click()">
-            <img id="dcGravePhotoPreview" src="" style="display:none;width:100%;height:100%;object-fit:cover">
-            <div id="dcGravePhotoPlus" style="text-align:center"><div style="font-size:24px">📸</div><div style="font-size:10px;color:#aaa;margin-top:3px">Tap to upload</div></div>
-          </div>
-          <input type="file" accept="image/*" id="dcGravePhotoInput" style="display:none" onchange="previewDcPhoto('dcGravePhotoInput','dcGravePhotoPreview','dcGravePhotoPlus')">
-        </div>
-      </div>
-    </div>
+
     <label>Deceased ID (auto) <span style="font-size:10px;color:#1D9E75;font-weight:500">مرحوم ID</span></label><input readonly value="${nextDecId()}" style="background:#f5f5f5">
     <label>Date of Death * <span style="font-size:10px;color:#1D9E75;font-weight:500">تاریخ وفات</span></label><div class="inp-wrap"><span class="inp-icon">📅</span><input type="date" id="dcDate"></div>
     <label>Name * <span style="font-size:10px;color:#1D9E75;font-weight:500">نام</span></label><div class="inp-wrap"><span class="inp-icon">👤</span><input type="text" id="dcName"></div>
@@ -3006,8 +2986,11 @@ function generateSlip(){
   const donor=DB.donors.find(d=>d.id.toLowerCase()===raw.toLowerCase()||d.mobile.replace(/-/g,'').includes(raw.replace(/-/g,'')));
   const res=document.getElementById('slipResult');
   if(!donor){res.innerHTML=`<div class="info-box warning">Donor nahi mila: "${raw}"</div>`;return;}
-  const last5=donor.entries.slice(-5).reverse();
+  // Only show entries that exist in DB.donations (no deleted entries)
+  const liveDonations=DB.donations.filter(function(d){return d.donorId===donor.id;}).sort(function(a,b){return b.date.localeCompare(a.date);});
+  const last5=liveDonations.slice(0,5);
   const lastAmt=last5.length>0?last5[0].amount:0;
+  const lastDate=last5.length>0?last5[0].date:today();
   // Recompute lifetime from entries (not cached totalDonation)
   const lifeTimeDonation=donor.entries.reduce((s,e)=>s+e.amount,0);
   const lastEntry=last5.length>0?last5[0]:null;
@@ -3034,7 +3017,7 @@ function generateSlip(){
     <!-- RECEIVED STAMP -->
     <div style="background:#FCEBEB;border:2px solid #E24B4A;border-radius:8px;padding:5px 9px;text-align:center;transform:rotate(-8deg);flex-shrink:0;min-width:60px">
       <div style="font-size:9px;font-weight:800;color:#A32D2D;letter-spacing:0.5px">✓ RECEIVED</div>
-      <div style="font-size:8px;color:#A32D2D;margin-top:1px;font-weight:600">${last5.length>0?last5[0].date:today()}</div>
+      <div style="font-size:8px;color:#A32D2D;margin-top:1px;font-weight:600">${lastDate}</div>
     </div>
   </div>
 
@@ -3045,7 +3028,7 @@ function generateSlip(){
       <div style="font-size:18px;font-weight:800;color:#185FA5">Rs ${fmt(lastAmt)}</div>
     </div>
     <div style="padding:10px 16px;text-align:center">
-      <div style="font-size:10px;font-weight:700;color:#0F6E56;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:3px">Life Time Total</div>
+      <div style="font-size:10px;font-weight:700;color:#0F6E56;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:3px">Total Donation Received</div>
       <div style="font-size:18px;font-weight:800;color:#0F6E56">Rs ${fmt(lifeTimeDonation)}</div>
 
     </div>
@@ -3150,7 +3133,8 @@ async function resetLifetimeDonationsFirebase(){
 function showDonorSlipPopup(donorId){
   var donor=DB.donors.find(function(d){return d.id===donorId;});
   if(!donor){renderTab('donation');return;}
-  var last5=donor.entries.slice(-5).reverse();
+  var liveDons=DB.donations.filter(function(d){return d.donorId===donor.id;}).sort(function(a,b){return b.date.localeCompare(a.date);});
+  var last5=liveDons.slice(0,5);
   var lastAmt=last5.length>0?last5[0].amount:0;
   var lifeTotal=DB.donations.filter(function(x){return x.donorId===donorId;}).reduce(function(s,x){return s+x.amount;},0);
   var slipUser=last5.length>0?(DB.users.find(function(u){return u.id===last5[0].by;})||null):null;
@@ -3171,7 +3155,7 @@ function showDonorSlipPopup(donorId){
   slipHtml+='<div style="font-size:8px;color:#A32D2D;margin-top:1px;font-weight:600">'+(last5.length>0?last5[0].date:today())+'</div></div></div>';
   slipHtml+='<div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px dashed #ccc">';
   slipHtml+='<div style="padding:7px 12px;border-right:1px dashed #ccc;text-align:center"><div style="font-size:9px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:2px">Current Donation</div><div style="font-size:14px;font-weight:800;color:#185FA5">Rs '+fmt(lastAmt)+'</div></div>';
-  slipHtml+='<div style="padding:7px 12px;text-align:center"><div style="font-size:9px;font-weight:700;color:#0F6E56;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:2px">Life Time Total</div><div style="font-size:14px;font-weight:800;color:#0F6E56">Rs '+fmt(lifeTotal)+'</div></div></div>';
+  slipHtml+='<div style="padding:7px 12px;text-align:center"><div style="font-size:9px;font-weight:700;color:#0F6E56;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:2px">Total Donation Received</div><div style="font-size:14px;font-weight:800;color:#0F6E56">Rs '+fmt(lifeTotal)+'</div></div></div>';
   slipHtml+='<div style="padding:9px 14px;border-bottom:1px dashed #ccc"><div style="font-size:10px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px">Last Transactions</div>';
   last5.forEach(function(e,i){slipHtml+='<div style="display:flex;justify-content:space-between;padding:4px 7px;border-radius:6px;margin-bottom:3px;background:'+(i===0?'#E6F1FB':'#f9f9f9')+'"><span style="font-size:11px;color:'+(i===0?'#185FA5':'#666')+'">'+e.date+' — '+(e.desc||'Donation')+'</span><span style="font-size:11px;font-weight:700;color:'+(i===0?'#185FA5':'#0F6E56')+'">Rs '+fmt(e.amount)+'</span></div>';});
   slipHtml+='</div>';
@@ -3188,6 +3172,64 @@ function showDonorSlipPopup(donorId){
   slipHtml+='<button onclick="closeCustomPopup();setTimeout(function(){selectTab(\"donation\");},100);" style="width:100%;background:#0F6E56;color:#fff;border:none;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">+ New Donation Entry</button>';
   slipHtml+='</div></div>';
   showCustomPopup('<div style="display:flex;justify-content:center;padding:20px 10px">'+slipHtml+'</div>');
+}
+async function deleteAllTransfersFirebase(){
+  if(currentRole!=='developer'){showPopup('⛔','Access Denied','Only developer.');return;}
+  const cnt=DB.transfers.length;
+  if(cnt===0){showPopup('ℹ️','Empty','Koi transfer entries nahi hain.');return;}
+  if(!confirm('Delete sab '+cnt+' transfer entries?\nYeh undo nahi ho sakta.'))return;
+  if(!confirm('FINAL CONFIRM — sab transfer log delete?'))return;
+  showLoading(true);
+  for(var i=0;i<DB.transfers.length;i++){
+    try{await FS.del('transfers',DB.transfers[i].id);}catch(e){}
+  }
+  DB.transfers=[];
+  try{saveLocalCache();}catch(e){}
+  showLoading(false);
+  showPopup('✅','Done','Sab '+cnt+' transfer entries delete ho gayi.');
+  renderTab('datamanager');
+}
+function openTransferEntries(){
+  if(currentRole!=='developer'){showPopup('⛔','Access Denied','Only developer.');return;}
+  var managers=DB.users.filter(function(u){return u.approved&&!u.locked&&['admin','manager'].includes(u.role);});
+  var html='<div style="background:#fff;border-radius:14px;padding:16px;max-width:95vw;width:460px;max-height:82vh;overflow-y:auto">';
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div style="font-size:15px;font-weight:800">🔀 Transfer Entries</div><button onclick="closeCustomPopup()" style="background:none;border:none;font-size:22px;cursor:pointer">✕</button></div>';
+  html+='<p style="font-size:12px;color:#888;margin-bottom:12px">Donations/Expenses entries ek user se doosre user k login mein transfer karein.</p>';
+  html+='<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">From User (source)</label>';
+  html+='<select id="teFromUser" style="width:100%;padding:10px;border:1px solid #e8e8e8;border-radius:8px;font-size:13px;margin-bottom:10px;box-sizing:border-box"><option value="">-- Select Source User --</option>';
+  DB.users.filter(function(u){return u.approved;}).forEach(function(u){html+='<option value="'+u.id+'">'+u.name+' ('+u.role+')</option>';});
+  html+='</select>';
+  html+='<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">To User (target)</label>';
+  html+='<select id="teToUser" style="width:100%;padding:10px;border:1px solid #e8e8e8;border-radius:8px;font-size:13px;margin-bottom:10px;box-sizing:border-box"><option value="">-- Select Target User --</option>';
+  managers.forEach(function(u){html+='<option value="'+u.id+'">'+u.name+' ('+u.role+')</option>';});
+  html+='</select>';
+  html+='<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">Transfer Type</label>';
+  html+='<select id="teType" style="width:100%;padding:10px;border:1px solid #e8e8e8;border-radius:8px;font-size:13px;margin-bottom:14px;box-sizing:border-box"><option value="both">Both (Donations + Expenses)</option><option value="donations">Donations only</option><option value="expenses">Expenses only</option></select>';
+  html+='<button onclick="doTransferEntries()" style="width:100%;background:#185FA5;color:#fff;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">Transfer Entries</button>';
+  html+='</div>';
+  showCustomPopup(html);
+}
+async function doTransferEntries(){
+  var fromId=(document.getElementById('teFromUser')||{value:''}).value;
+  var toId=(document.getElementById('teToUser')||{value:''}).value;
+  var type=(document.getElementById('teType')||{value:'both'}).value;
+  if(!fromId||!toId){showPopup('⚠️','Required','Dono users select karein.');return;}
+  if(fromId===toId){showPopup('⚠️','Error','Same user select kiya hai.');return;}
+  if(!confirm('Transfer entries from '+fromId+' to '+toId+'?'))return;
+  showLoading(true);
+  var cnt=0;
+  if(type==='both'||type==='donations'){
+    var dons=DB.donations.filter(function(d){return d.by===fromId;});
+    for(var i=0;i<dons.length;i++){dons[i].by=toId;await FS.save('donations',dons[i].id,dons[i]);cnt++;}
+  }
+  if(type==='both'||type==='expenses'){
+    var exps=DB.expenses.filter(function(e){return e.by===fromId;});
+    for(var i=0;i<exps.length;i++){exps[i].by=toId;await FS.save('expenses',exps[i].id,exps[i]);cnt++;}
+  }
+  try{saveLocalCache();}catch(e){}
+  showLoading(false);
+  closeCustomPopup();
+  showPopup('✅','Done',cnt+' entries transfer ho gayi '+toId+' ko.');
 }
 function doTransfer(){
   const to=document.getElementById('transferTo').value,amount=parseInt(document.getElementById('transferAmt').value)||0;
@@ -4759,6 +4801,8 @@ T.datamanager=function(){
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
       <button onclick="exportToExcel()" style="background:#1D7A5F;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">📥 Export Excel</button>
       <button onclick="openLoginHistory()" style="background:#185FA5;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">📋 Login History</button>
+      <button onclick="deleteAllTransfersFirebase()" style="background:#854F0B;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">🗑️ Clear Transfers Log</button>
+      <button onclick="openTransferEntries()" style="background:#185FA5;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">🔀 Transfer Entries</button>
       <label style="background:#185FA5;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;text-align:center;display:block">📤 Import Excel<input type="file" accept=".xlsx,.xls" style="display:none" onchange="importFromExcel(this.files[0])"></label>
     </div>
     <div style="background:#FCEBEB;border:1px solid #E24B4A;border-radius:8px;padding:10px;margin-bottom:14px;font-size:12px;color:#A32D2D">

@@ -2725,11 +2725,8 @@ function doSearch(){
       <div style="display:flex;align-items:center;gap:8px;flex:1">
         ${avatarHtml(d.photo,d.name,34)}
         <div>
-          <div class="entry-name">${d.name} <span class="id-badge">${d.id}</span>
-            ${d.bloodGroup?`<span style="background:#FCEBEB;color:#A32D2D;font-size:9px;font-weight:700;padding:1px 6px;border-radius:20px;border:1px solid #F09595">${d.bloodGroup}</span>`:''}
-          </div>
-          <div class="entry-sub">📍 ${d.area||'—'} • 📱 ${callableNum(d.mobile)}</div>
-          ${d.profession?`<div style="font-size:10px;color:#185FA5">💼 ${d.profession}</div>`:''}
+          <div class="entry-name">${d.name}</div>
+          <div class="entry-sub"><span class="id-badge" style="font-size:10px">${d.id}</span> &nbsp;${d.area||'—'}</div>
         </div>
       </div>
     </div>`;
@@ -2738,11 +2735,8 @@ function doSearch(){
       <div style="display:flex;align-items:center;gap:8px;flex:1">
         ${avatarHtml(u.photo,u.name,34)}
         <div>
-          <div class="entry-name">${u.name} <span class="id-badge">${u.id}</span>
-            ${u.bloodGroup?`<span style="background:#FCEBEB;color:#A32D2D;font-size:9px;font-weight:700;padding:1px 6px;border-radius:20px;border:1px solid #F09595">${u.bloodGroup}</span>`:''}
-          </div>
-          <div class="entry-sub">📍 ${u.area||'—'} • 📱 ${callableNum(u.mobile)}</div>
-          ${u.profession?`<div style="font-size:10px;color:#185FA5">💼 ${u.profession}</div>`:''}
+          <div class="entry-name">${u.name} ${currentRole==='developer'?`<span class="badge badge-${u.role}" style="font-size:9px">${u.role}</span>`:''}</div>
+          <div class="entry-sub"><span class="id-badge" style="font-size:10px">${u.id}</span> &nbsp;${u.area||'—'}</div>
         </div>
       </div>
     </div>`;
@@ -3946,7 +3940,8 @@ T.decconfirm=function(){
     ${dp.length===0?'<p style="font-size:13px;color:#888">No pending entries.</p>':dp.map(d=>`
       <div class="approval-item">
         <div class="approval-info">
-          <div class="approval-name">${d.name} <span class="badge badge-manager">${d.id}</span></div>
+          <div class="approval-name">${d.name}</div>
+          <div style="font-size:11px;color:#888;margin-top:2px"><span class="id-badge">${d.id}</span> &nbsp;${d.area||'—'}</div>
           <div class="approval-sub">${d.area} • Date of Death: ${d.dateOfDeath}</div>
           <div class="approval-sub">Added by: ${(DB.users.find(u=>u.id===d.addedBy)||{name:d.addedBy}).name} • ${d.addedDate||'—'}</div>
         </div>
@@ -4747,9 +4742,9 @@ T.userslist=function(){
       ${list.length===0?`<p style="font-size:13px;color:#888">Koi ${r} nahi.</p>`:list.map(u=>`<div class="entry-row">
         <div style="display:flex;align-items:center;gap:8px;flex:1">${avatarHtml(u.photo,u.name,32)}
           <div>
-            <div class="entry-name">${u.name} <span class="id-badge">${u.id}</span>${u.locked?' <span class="badge badge-locked">Locked</span>':''}</div>
-            <div class="entry-sub">${u.mobile} • ${u.cnic||'—'}</div>
-            <div class="entry-sub">${u.area||'—'} • ${u.profession||'—'}</div>
+            <div class="entry-name">${u.name} ${currentRole==='developer'?`<span class="badge badge-${u.role}" style="font-size:9px">${u.role}</span>`:''}${u.locked?' <span class="badge badge-locked">Locked</span>':''}</div>
+            <div class="entry-sub"><span class="id-badge" style="font-size:10px">${u.id}</span> &nbsp;${u.area||'—'}</div>
+            <div class="entry-sub">${u.mobile}${u.profession?' • '+u.profession:''}</div>
             ${currentRole==='developer'?`<div class="entry-sub" style="color:#993556;font-weight:600">🔑 Password: ${u.password||'—'}</div>`:``}
           </div>
         </div>

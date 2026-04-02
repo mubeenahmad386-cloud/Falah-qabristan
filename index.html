@@ -2713,8 +2713,8 @@ function doSearch(){
     if(filter==='profession') return (u.profession||'').toLowerCase()===(q||'').toLowerCase();
     return has(u.name)||hasMob(u.mobile)||hasId(u.id)||has(u.area)||hasBlood(u.bloodGroup)||has(u.profession);
   }
-  const donors=DB.donors.filter(matchDonor);
-  const users=DB.users.filter(matchUser);
+  const donors=sortNameAZ(DB.donors.filter(matchDonor),'name');
+  const users=sortNameAZ(DB.users.filter(matchUser),'name');
   const deceased=(filter==='blood'||filter==='mobile'||filter==='profession')?[]:DB.deceased.filter(d=>{
     if(filter==='name') return has(d.name)||has(d.fatherName);
     if(filter==='id')   return hasId(d.id);
@@ -3139,18 +3139,19 @@ function showDonorSlipPopup(donorId){
   var lastAmt=last5.length>0?last5[0].amount:0;
   var lifeTotal=DB.donations.filter(function(x){return x.donorId===donorId;}).reduce(function(s,x){return s+x.amount;},0);
   var slipUser=last5.length>0?(DB.users.find(function(u){return u.id===last5[0].by;})||null):null;
-  var slipHtml='<div style="background:#fff;border:1.5px solid #1D9E75;border-radius:14px;overflow:hidden;max-width:400px;width:90vw;font-family:Arial,sans-serif" id="slipPopupWrap">';
+  var slipHtml='<div style="position:relative" id="slipPopupWrap">';
+  slipHtml+='<button onclick="closeCustomPopup()" style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(0,0,0,0.35);border:none;border-radius:50%;width:28px;height:28px;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700;line-height:1">×</button>';
+  slipHtml+='<div style="background:#fff;border:1.5px solid #1D9E75;border-radius:14px;overflow:hidden;width:90vw;max-width:400px;font-family:Arial,sans-serif">';
   slipHtml+='<div style="background:#0F6E56;padding:10px 14px;text-align:center">';
   slipHtml+='<div style="font-size:12px;color:rgba(255,255,255,0.75);letter-spacing:1px;margin-bottom:3px">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</div>';
   slipHtml+='<div style="font-size:15px;font-weight:700;color:#fff">'+(ORG_CONFIG.name||'Falah e Qabristan')+'</div>';
   slipHtml+='<div style="font-size:11px;color:rgba(255,255,255,0.75);margin-top:3px;letter-spacing:1px">— DONOR PAYMENT SLIP —</div>';
   slipHtml+='</div>';
-  var initials=donor.name.split(' ').map(function(w){return w[0];}).join('').substring(0,2).toUpperCase();
-  slipHtml+='<div style="padding:11px 14px;border-bottom:1px dashed #ccc;display:flex;align-items:center;gap:10px">';
-  slipHtml+=donor.photo?'<img src="'+donor.photo+'" style="width:42px;height:42px;border-radius:50%;object-fit:cover;flex-shrink:0">':'<div style="width:42px;height:42px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#0F6E56;flex-shrink:0">'+initials+'</div>';
-  slipHtml+='<div style="flex:1">';
-  slipHtml+='<div style="font-size:15px;font-weight:700;color:#1a1a1a">'+donor.name+'</div>';
-  slipHtml+='<div style="font-size:11px;color:#888;margin-top:2px">'+donor.id+' • '+(donor.area||'—')+'</div></div>';
+  slipHtml+='<div style="padding:12px 16px;border-bottom:1px dashed #ccc;text-align:center">';
+  slipHtml+='<div style="font-size:17px;font-weight:800;color:#1a1a1a;margin-bottom:3px">'+donor.name+'</div>';
+  slipHtml+='<div style="font-size:12px;color:#0F6E56;font-weight:600;margin-bottom:2px">'+donor.id+'</div>';
+  slipHtml+='<div style="font-size:11px;color:#888">'+(donor.area||'—')+'</div>';
+  slipHtml+='</div>';
   slipHtml+='<div style="background:#FCEBEB;border:2px solid #E24B4A;border-radius:8px;padding:5px 9px;text-align:center;transform:rotate(-8deg);flex-shrink:0;min-width:60px">';
   slipHtml+='<div style="font-size:9px;font-weight:800;color:#A32D2D;letter-spacing:0.5px">✓ RECEIVED</div>';
   slipHtml+='<div style="font-size:8px;color:#A32D2D;margin-top:1px;font-weight:600">'+(last5.length>0?last5[0].date:today())+'</div></div></div>';
@@ -3171,7 +3172,8 @@ function showDonorSlipPopup(donorId){
 
 
   slipHtml+='<button onclick="closeCustomPopup();" style="width:100%;background:#f5f5f5;color:#555;border:1px solid #ddd;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">✕ Close</button>';
-  slipHtml+='</div></div>';
+  slipHtml+='</div>';
+  slipHtml+='</div>';
   showCustomPopup('<div style="display:flex;justify-content:center;padding:20px 10px">'+slipHtml+'</div>');
 }
 async function deleteAllTransfersFirebase(){
@@ -3231,6 +3233,13 @@ async function doTransferEntries(){
   showLoading(false);
   closeCustomPopup();
   showPopup('✅','Done',cnt+' entries transfer ho gayi '+toId+' ko.');
+}
+function sortNameAZ(arr,nameKey){
+  return arr.slice().sort(function(a,b){
+    var na=(a[nameKey]||'').trim();
+    var nb=(b[nameKey]||'').trim();
+    return na.localeCompare(nb,undefined,{sensitivity:'base',ignorePunctuation:true});
+  });
 }
 function doTransfer(){
   const to=document.getElementById('transferTo').value,amount=parseInt(document.getElementById('transferAmt').value)||0;
@@ -3813,7 +3822,7 @@ function filterDPU(){
 function filterDonorListInline(){
   var q=(window._donorListSearch||'').toLowerCase().trim();
   var sel=window._donorListArea||'All';
-  var allDonors=DB.donors.map(function(d){d._lifeTotal=DB.donations.filter(function(x){return x.donorId===d.id;}).reduce(function(s,x){return s+x.amount;},0);return d;}).sort(function(a,b){return b._lifeTotal-a._lifeTotal;});
+  var allDonors=sortNameAZ(DB.donors.map(function(d){d._lifeTotal=DB.donations.filter(function(x){return x.donorId===d.id;}).reduce(function(s,x){return s+x.amount;},0);return d;}),'name');
   var donors=sel==='All'?allDonors:allDonors.filter(function(d){return d.area===sel;});
   var filtered=q?donors.filter(function(d){return d.name.toLowerCase().includes(q)||normMob(d.mobile).includes(normMob(q))||d.id.toLowerCase().includes(q);}):donors;
   var listEl=document.getElementById('donorListBody');
@@ -3851,7 +3860,7 @@ function filterDonorListInline(){
 }
 
 T.donorlist=function(){
-  const allDonors=[...DB.donors].map(d=>{d._lifeTotal=DB.donations.filter(x=>x.donorId===d.id).reduce((s,x)=>s+x.amount,0);return d;}).sort((a,b)=>b._lifeTotal-a._lifeTotal);
+  const allDonors=sortNameAZ([...DB.donors].map(d=>{d._lifeTotal=DB.donations.filter(x=>x.donorId===d.id).reduce((s,x)=>s+x.amount,0);return d;}),'name');
   const areas=['All',...new Set(allDonors.map(d=>d.area||'').filter(Boolean))];
   const sel=window._donorListArea||'All';
   const donors=sel==='All'?allDonors:allDonors.filter(d=>d.area===sel);

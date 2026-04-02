@@ -3825,31 +3825,34 @@ function filterDonorListInline(){
     filtered.forEach(function(d,i){
       var lifeTotal=d._lifeTotal||0;
       var paid=DB.donations.some(function(x){return x.donorId===d.id&&x.date.substring(0,7)===thisMonth;});
+      var initials=d.name.split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+      var avatar=d.photo
+        ?'<img src="'+d.photo+'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0">'
+        :'<div style="width:40px;height:40px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#0F6E56;flex-shrink:0">'+initials+'</div>';
       var statusBadge=paid
         ?'<span style="font-size:9px;padding:2px 7px;border-radius:20px;font-weight:700;background:#E1F5EE;color:#0F6E56">✓ Paid</span>'
         :'<span style="font-size:9px;padding:2px 7px;border-radius:20px;font-weight:700;background:#FCEBEB;color:#E24B4A">Pending</span>';
-      var mergeDel='<button onclick="openMergeDonor()" style="font-size:10px;background:#FAEEDA;color:#854F0B;border:none;padding:3px 7px;border-radius:6px;cursor:pointer;margin-top:3px">Merge</button>'+
-                   ' <button data-del="'+d.id+'" style="font-size:10px;background:#FCEBEB;color:#E24B4A;border:none;padding:3px 7px;border-radius:6px;cursor:pointer;margin-top:3px">Del</button>';
       html+=
-        '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid #f0f0f0">'+
-          // Left: number
-          '<div style="width:22px;text-align:center;font-size:11px;font-weight:700;color:#bbb;flex-shrink:0">'+(i+1)+'</div>'+
-          // Middle: name, id+area+status
-          '<div style="flex:1;min-width:0">'+
-            '<div style="font-size:13px;font-weight:700;color:#1a1a1a">'+d.name+'</div>'+
-            '<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:2px">'+
-              '<span style="font-size:10px;color:#888">'+d.id+'</span>'+
-              '<span style="color:#ccc">•</span>'+
-              '<span style="font-size:10px;color:#888">'+(d.area||'—')+'</span>'+
-              '<span style="color:#ccc">•</span>'+
-              statusBadge+
-            '</div>'+
-            (currentRole==='developer'?'<div style="margin-top:3px">'+mergeDel+'</div>':'')+
+        '<div style="display:flex;align-items:stretch;gap:0;padding:9px 0;border-bottom:0.5px solid #f0f0f0">'+
+          // Photo
+          '<div style="display:flex;align-items:center;padding-right:10px;flex-shrink:0">'+avatar+'</div>'+
+          // Name + ID + Area
+          '<div style="flex:1;min-width:0;padding-right:8px;display:flex;flex-direction:column;justify-content:center">'+
+            '<div style="font-size:13px;font-weight:700;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+d.name+'</div>'+
+            '<div style="font-size:10px;color:#888;margin-top:2px">'+d.id+' • '+(d.area||'—')+'</div>'+
           '</div>'+
-          // Right: donation amount + slip btn
-          '<div style="text-align:right;flex-shrink:0">'+
-            '<div style="font-size:15px;font-weight:800;color:#0F6E56">'+fmt(lifeTotal)+'</div>'+
-            '<div style="margin-top:4px"><button data-slip="'+d.id+'" style="font-size:10px;background:#E6F1FB;color:#185FA5;border:none;padding:3px 8px;border-radius:6px;cursor:pointer">Slip</button></div>'+
+          // Donation + Status
+          '<div style="display:flex;flex-direction:column;align-items:flex-end;justify-content:center;padding-right:8px;flex-shrink:0">'+
+            '<div style="font-size:14px;font-weight:800;color:#0F6E56">'+fmt(lifeTotal)+'</div>'+
+            '<div style="margin-top:3px">'+statusBadge+'</div>'+
+          '</div>'+
+          // Slip / Merge / Del
+          '<div style="display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:3px;flex-shrink:0">'+
+            '<button data-slip="'+d.id+'" style="font-size:10px;font-weight:700;background:#185FA5;color:#fff;border:none;padding:4px 9px;border-radius:6px;cursor:pointer;width:52px">Slip</button>'+
+            (currentRole==='developer'?
+              '<button onclick="openMergeDonor()" style="font-size:10px;font-weight:700;background:#FAEEDA;color:#854F0B;border:none;padding:4px 9px;border-radius:6px;cursor:pointer;width:52px">Merge</button>'+
+              '<button data-del="'+d.id+'" style="font-size:10px;font-weight:700;background:#FCEBEB;color:#E24B4A;border:none;padding:4px 9px;border-radius:6px;cursor:pointer;width:52px">Del</button>'
+            :'')+
           '</div>'+
         '</div>'+
         '<div id="slip_'+d.id+'" style="display:none;padding:8px 0 4px;border-bottom:1px dashed #ddd"></div>';

@@ -456,9 +456,10 @@ input[type=file]{padding:6px}
         <div><div style="font-size:13px;font-weight:600">Upload Photo</div><div style="font-size:11px;color:#888;margin-top:2px">Select from gallery (optional)</div><div style="font-size:11px;margin-top:3px" id="regAutoIdDisplay"></div></div>
       </div>
       <input type="file" accept="image/*" id="regPhotoInput" style="display:none" onchange="previewImg('regPhotoInput','regAvatarPreview','regAvatarPlus')">
-      <label>Full Name * <span style="font-size:10px;color:#1D9E75;font-weight:500">پورا نام</span></label><div class="inp-wrap"><span class="inp-icon">👤</span><input type="text" id="regName" placeholder="Your full name"></div>
+      <label>Mobile No * <span style="font-size:10px;color:#1D9E75;font-weight:500">موبائل نمبر</span></label>
       <div class="inp-wrap"><span class="inp-icon">📱</span><input type="text" id="regMobile" placeholder="0300-1234567" maxlength="12" oninput="autoFormatMobile(this,'regMobileStatus')"></div>
       <div id="regMobileStatus" style="display:none;margin-top:4px"></div>
+      <label>Full Name * <span style="font-size:10px;color:#1D9E75;font-weight:500">پورا نام</span></label><div class="inp-wrap"><span class="inp-icon">👤</span><input type="text" id="regName" placeholder="Your full name"></div>
       <label>Password * <span style="font-size:10px;color:#1D9E75;font-weight:500">پاس ورڈ</span></label>
 
 
@@ -1015,8 +1016,8 @@ function submitReg(){
   if(missing.length){showPopup('⚠️','Incomplete','Missing: '+missing.join(', '));return;}
   const mobileDigits=normMob(mobile);
   if(mobileDigits.length!==11){showPopup('⚠️','Mobile Short','Mobile must be exactly 11 digits. Entered: '+mobileDigits.length);return;}
-  const cnicDigits=normCnic(cnic);
-  if(cnic&&cnicDigits.length!==13){showPopup('⚠️','CNIC Short','CNIC must be exactly 13 digits. Entered: '+cnicDigits.length);return;}
+
+
   if(password!==confirm){showPopup('⚠️','Mismatch','Passwords do not match.');return;}
   if(password.length<4){showPopup('⚠️','Weak','Password must be at least 4 characters.');return;}
   const allExisting=[...DB.users,...DB.pendingApprovals];
@@ -1487,7 +1488,7 @@ T.donation=function(){
     </div>
     <!-- END NEW DONOR fields -->
 
-    <input type="hidden" id="donorCnic" value="">
+    <input type="hidden" id="donorCnic" style="display:none" value="">
 
     <input type="hidden" id="donorBankAccount" value="">
 
@@ -1792,38 +1793,6 @@ function recordLabel(r){
 }
 
 // Registration form checks
-function checkRegCnic(val){
-  const nc=normCnic(val);
-  if(nc.length<3){hideStatus('regCnicStatus');return;}
-  if(nc.length<13){statusBox('regCnicStatus','warning','⚠️ CNIC must be exactly 13 digits. Entered: '+nc.length);return;}
-  const found=findAnyByCnic(val);
-  if(found){
-    statusBox('regCnicStatus','error',`⚠️ Yeh CNIC already registered hai: <strong>${recordLabel(found)}</strong>`);
-  } else {
-    statusBox('regCnicStatus','success','✅ CNIC (13 digits) — Available');
-    setTimeout(()=>hideStatus('regCnicStatus'),2000);
-  }
-}
-function checkRegMobile(val){
-  const nm=normMob(val);
-  if(nm.length<3){hideStatus('regMobileStatus');return;}
-  if(nm.length<11){statusBox('regMobileStatus','warning','⚠️ Mobile must be exactly 11 digits. Entered: '+nm.length);return;}
-  if(nm.length>11){statusBox('regMobileStatus','warning','⚠️ Mobile must be exactly 11 digits. Entered: '+nm.length);return;}
-  const nm2=normMob(val);
-  const foundUser=DB.users.find(u=>normMob(u.mobile)===nm2)||DB.pendingApprovals.find(p=>normMob(p.mobile)===nm2)||null;
-  const foundDonor=DB.donors.find(d=>normMob(d.mobile)===nm2)||null;
-  if(foundUser){
-    statusBox('regMobileStatus','error',`⚠️ Is mobile se account already exist karta hai: <strong>${recordLabel(foundUser)}</strong>`);
-  } else if(foundDonor){
-    statusBox('regMobileStatus','success',`✅ Donor record mila! <strong>${foundDonor.name}</strong> (ID: ${foundDonor.id}) — Account create karne par same ID milegi. Sirf password set karein.`);
-  } else {
-    statusBox('regMobileStatus','success','✅ Mobile (11 digits) — Available');
-    setTimeout(()=>hideStatus('regMobileStatus'),2000);
-  }
-}
-
-// Donation form — auto-fetch wrappers
-function checkDonorMobileAF(val){checkDonorMobile(val);}
 function checkDonorCnicAF(val){checkDonorCnic(val);}
 // Donation form checks — with auto-fetch
 function checkDonorMobile(val){
@@ -1849,29 +1818,6 @@ function checkDonorMobile(val){
   }
   hideStatus('donorMobileStatus');
 }
-function checkDonorCnic(val){
-  const nc=normCnic(val);
-  if(nc.length<3){hideStatus('donorCnicStatus');return;}
-  if(nc.length<13){statusBox('donorCnicStatus','warning','⚠️ CNIC must be exactly 13 digits. Entered: '+nc.length);return;}
-  if(nc.length>13){statusBox('donorCnicStatus','warning','⚠️ CNIC must be exactly 13 digits. Entered: '+nc.length);return;}
-  const donor=DB.donors.find(d=>normCnic(d.cnic)===nc);
-  if(donor){
-    fillDonorFetch(donor);
-    statusBox('donorCnicStatus','info',`✅ Donor found: <strong>${donor.name}</strong> (${donor.id}) — Data auto-filled`);
-    return;
-  }
-  const user=DB.users.find(u=>normCnic(u.cnic)===nc);
-  if(user){
-    document.getElementById('donorName').value=user.name;
-    document.getElementById('donorMobile').value=user.mobile||'';
-    setTimeout(()=>{const ae=document.getElementById('donorArea');if(ae)ae.value=user.area;const pe=document.getElementById('donorProfession');if(pe)pe.value=user.profession||'';},100);
-    statusBox('donorCnicStatus','warning',`ℹ️ This CNIC belongs to registered <strong>${user.role}</strong>: <strong>${user.name}</strong> — Data filled`);
-    return;
-  }
-  statusBox('donorCnicStatus','success','✅ CNIC available hai — new donor banega');
-  setTimeout(()=>hideStatus('donorCnicStatus'),2000);
-}
-
 function submitDonation(){
   const name=document.getElementById('donorName').value.trim();
   const amount=parseInt(document.getElementById('donorAmount').value)||0;
@@ -2790,6 +2736,7 @@ T.fundreport=function(){
       <div>
         <label style="font-size:12px;font-weight:600;color:#444;display:block;margin-bottom:5px">Area <span style="font-size:10px;color:#1D9E75">علاقہ</span></label>
         <select id="top10Area" style="width:100%;padding:9px;border:1px solid #e8e8e8;border-radius:8px;font-size:13px" onchange="genTop10()">
+          <option value="">-- Select Area | علاقہ منتخب کریں --</option>
           <option value="all">Overall — سب</option>
           ${areaOptions}
         </select>
@@ -2803,7 +2750,6 @@ T.fundreport=function(){
         </select>
       </div>
     </div>
-    <button class="btn btn-primary" style="width:100%;margin-bottom:12px" onclick="genTop10()">Show Top 10</button>
     <div id="top10Result"></div>
   </div>`;
 };
@@ -2813,6 +2759,7 @@ function genTop10(){
   var period=document.getElementById('top10Period').value;
   var el=document.getElementById('top10Result');
   if(!el)return;
+  if(!area){el.innerHTML='<p style="font-size:12px;color:#888;text-align:center;padding:16px">Pehle area select karein | پہلے علاقہ منتخب کریں</p>';return;}
   var now=new Date();
   var thisMonth=now.toISOString().substring(0,7);
   var thisYear=now.getFullYear().toString();
@@ -4485,7 +4432,7 @@ T.profile=function(){
     <input type="text" id="profMobile" value="${u.mobile||''}" maxlength="12" oninput="autoFormatMobile(this,'profMobileStatus')" placeholder="0300-1234567">
     <div id="profMobileStatus" style="display:none;margin-top:4px;font-size:12px;padding:6px 10px;border-radius:6px"></div>
     <label>CNIC No <span style="font-size:10px;color:#888">شناختی کارڈ (optional)</span></label>
-    <input type="text" id="profCnic" value="${u.cnic||''}" maxlength="15" oninput="autoFormatCnic(this,'profCnicStatus')" placeholder="00000-0000000-0">
+    <input type="text" id="profCnic" style="display:none" value="${u.cnic||''}" maxlength="15" oninput="autoFormatCnic(this,'profCnicStatus')" placeholder="00000-0000000-0">
     <div id="profCnicStatus" style="display:none;margin-top:4px;font-size:12px;padding:6px 10px;border-radius:6px"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
       <div>
@@ -6061,6 +6008,10 @@ function renderTab(key){
         if(el)el.innerHTML='<div style="text-align:center;padding:24px;color:#aaa"><div style="font-size:28px;margin-bottom:8px">🔎</div><div style="font-size:12px">Type to search | تلاش کے لیے لکھیں</div></div>';
       },
       smsreminders:()=>{},
+      fundreport:()=>{
+        var el=document.getElementById('top10Result');
+        if(el)el.innerHTML='<p style="font-size:12px;color:#888;text-align:center;padding:16px">Upar se Area aur Period select karein | اوپر سے علاقہ اور مدت منتخب کریں</p>';
+      },
       search:()=>{
         if(!window._searchFilter)window._searchFilter='name';
         const si=document.getElementById('searchInput');

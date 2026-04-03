@@ -457,13 +457,13 @@ input[type=file]{padding:6px}
       </div>
       <input type="file" accept="image/*" id="regPhotoInput" style="display:none" onchange="previewImg('regPhotoInput','regAvatarPreview','regAvatarPlus')">
       <label>Full Name * <span style="font-size:10px;color:#1D9E75;font-weight:500">پورا نام</span></label><div class="inp-wrap"><span class="inp-icon">👤</span><input type="text" id="regName" placeholder="Your full name"></div>
-
-
-
-      <label>Mobile No * (11 digits) <span style="font-size:10px;color:#1D9E75;font-weight:500">موبائل نمبر</span></label>
       <div class="inp-wrap"><span class="inp-icon">📱</span><input type="text" id="regMobile" placeholder="0300-1234567" maxlength="12" oninput="autoFormatMobile(this,'regMobileStatus')"></div>
       <div id="regMobileStatus" style="display:none;margin-top:4px"></div>
       <label>Password * <span style="font-size:10px;color:#1D9E75;font-weight:500">پاس ورڈ</span></label>
+
+
+
+
       <div class="inp-wrap" style="position:relative"><span class="inp-icon">🔒</span><input type="password" id="regPassword" placeholder="Set your password" style="padding-right:42px;padding-left:38px"><span onclick="togglePwd('regPassword',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:16px;color:#aaa">👁</span></div>
       <label>Confirm Password * <span style="font-size:10px;color:#1D9E75;font-weight:500">تصدیق</span></label><div class="inp-wrap"><span class="inp-icon">🔐</span><input type="password" id="regConfirmPassword" placeholder="Confirm password"></div>
       <label>Area <span style="font-size:10px;color:#1D9E75;font-weight:500">علاقہ</span></label><div class="inp-wrap"><span class="inp-icon">📍</span><select id="regArea" class="area-sel"></select></div>
@@ -786,6 +786,7 @@ function showPopup(icon,title,msg,btnText,onClose){
   document.getElementById('popupBtn').textContent=btnText||'OK';
   window._onClose=onClose||null;
   window._currentEditDonorId=donorId;
+  // Profile now shown inline
   document.getElementById('popupOverlay').style.display='flex';
 }
 function closePopup(){document.getElementById('popupOverlay').style.display='none';if(window._onClose)window._onClose();window._onClose=null;}
@@ -2604,6 +2605,7 @@ function openDonorProfile(donorId){
         <button onclick="closePopup();selectTab('donation');setTimeout(()=>{const inp=document.getElementById('fetchById');if(inp){inp.value='${donorId}';autoFetchDonorUnified('${donorId}');}},200)" style="background:#185FA5;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">💰 Donate</button>
       </div>`;
   }
+  // Profile now shown inline
   document.getElementById('popupOverlay').style.display='flex';
 }
 function openEditDonorProfile(donorId){
@@ -2646,6 +2648,7 @@ function openEditDonorProfile(donorId){
         <button onclick="saveDonorProfile()" style="background:#1D9E75;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">Save | محفوظ کریں</button>
       </div>`;
   }
+  // Profile now shown inline
   document.getElementById('popupOverlay').style.display='flex';
 }
 function saveDonorProfile(){
@@ -2786,14 +2789,14 @@ T.fundreport=function(){
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
       <div>
         <label style="font-size:12px;font-weight:600;color:#444;display:block;margin-bottom:5px">Area <span style="font-size:10px;color:#1D9E75">علاقہ</span></label>
-        <select id="top10Area" style="width:100%;padding:9px;border:1px solid #e8e8e8;border-radius:8px;font-size:13px">
+        <select id="top10Area" style="width:100%;padding:9px;border:1px solid #e8e8e8;border-radius:8px;font-size:13px" onchange="genTop10()">
           <option value="all">Overall — سب</option>
           ${areaOptions}
         </select>
       </div>
       <div>
         <label style="font-size:12px;font-weight:600;color:#444;display:block;margin-bottom:5px">Period</label>
-        <select id="top10Period" style="width:100%;padding:9px;border:1px solid #e8e8e8;border-radius:8px;font-size:13px">
+        <select id="top10Period" style="width:100%;padding:9px;border:1px solid #e8e8e8;border-radius:8px;font-size:13px" onchange="genTop10()">
           <option value="lifetime">Lifetime</option>
           <option value="month">This Month</option>
           <option value="year">This Year</option>
@@ -3339,6 +3342,7 @@ function openMyDonationsQuick(){
       }).join('')}
       <button onclick="closePopup();selectTab('myentries')" style="width:100%;background:#f5f5f5;border:1px solid #ddd;padding:8px;border-radius:8px;font-size:12px;cursor:pointer;margin-top:10px">View All Entries →</button>`;
   }
+  // Profile now shown inline
   document.getElementById('popupOverlay').style.display='flex';
 }
 function openMyExpensesQuick(){
@@ -3365,6 +3369,7 @@ function openMyExpensesQuick(){
         </div>`).join('')}
       <button onclick="closePopup();selectTab('myentries')" style="width:100%;background:#f5f5f5;border:1px solid #ddd;padding:8px;border-radius:8px;font-size:12px;cursor:pointer;margin-top:10px">View All Entries →</button>`;
   }
+  // Profile now shown inline
   document.getElementById('popupOverlay').style.display='flex';
 }
 function myEntriesHtml(){
@@ -3447,6 +3452,7 @@ function assignEntryPrompt(type,id){
         </div>`).join('')}
       <button onclick="closePopup()" style="width:100%;background:#f5f5f5;border:1px solid #ddd;padding:10px;border-radius:8px;font-size:13px;cursor:pointer;margin-top:4px">Cancel</button>`;
   }
+  // Profile now shown inline
   document.getElementById('popupOverlay').style.display='flex';
 }
 function doAssignEntry(type,id,toUserId){

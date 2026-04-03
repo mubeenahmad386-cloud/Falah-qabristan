@@ -6182,7 +6182,7 @@ function loadDashboard(){
   }catch(e){console.error('loadDashboard error:',e);}
 }
 
-function showLoginError(msg){const e=document.getElementById('loginError');e.className='info-box danger';e.textContent=msg;e.style.display='block';}
+function showLoginError(msg){const e=document.getElementById('loginError');e.className='info-box danger';if(msg.includes('<'))e.innerHTML=msg;else e.textContent=msg;e.style.display='block';}
 function hideLoginError(){const e=document.getElementById('loginError');if(e)e.style.display='none';}
 
 // Update footer org names after renderLoginExtras runs

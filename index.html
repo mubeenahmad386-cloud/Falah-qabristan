@@ -261,7 +261,7 @@ input[type=file]{padding:6px}
     <div style="font-size:17px;font-weight:800;color:#fff;margin-top:4px" id="loginOrgName2">Falah e Qabristan</div>
     <div style="display:none" id="loginOrgNameUrdu2">فلاح قبرستان</div>
     <div id="loginOrgAddress2" style="display:none;font-size:11px;color:rgba(255,255,255,0.6);margin-top:4px"></div>
-    <div style="font-size:10px;color:rgba(255,255,255,0.45);margin-top:6px">v03 Apr 2026, 04:05 PM</div>
+    <div id="appVersionTag" style="font-size:10px;color:rgba(255,255,255,0.45);margin-top:6px"></div>
   </div>
   <div class="login-card">
 
@@ -758,7 +758,7 @@ function nextDecId(){
   return 'D'+(Math.max(1000,...nums)+1);
 }
 function nextEntryId(){return 'E'+String(Date.now()).slice(-6);}
-function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');if(id==='loginScreen')setTimeout(initAppVersion,100);}
 // Bilingual popup messages
 const POPUP_UR={'Success!':'کامیابی!','Incomplete':'نامکمل','Duplicate':'ڈپلیکیٹ','Mismatch':'مطابقت نہیں','Weak Password':'کمزور پاس ورڈ','Weak':'کمزور','Mobile Short':'موبائل چھوٹا','CNIC Short':'شناختی کارڈ چھوٹا','Wrong Key':'غلط کی','User Not Found':'صارف نہیں ملا','Entry Saved':'اندراج محفوظ','Request Submitted':'درخواست جمع','Request Forward':'درخواست بھیجی','Bill Saved':'بل محفوظ','Transfer Sent':'رقم بھیجی گئی','Amount Received':'رقم موصول','Approved!':'منظور!','Rejected':'مسترد','Confirmed!':'تصدیق شدہ!','Locked':'بند','Unlocked':'کھلا','Deleted':'حذف','Updated':'اپ ڈیٹ','Saved':'محفوظ','Error':'خرابی','Insufficient Balance':'ناکافی بیلنس','Duplicate CNIC':'ڈپلیکیٹ شناختی کارڈ','Duplicate Mobile':'ڈپلیکیٹ موبائل','Account Created':'اکاؤنٹ بنایا','Submitted':'جمع کرایا','Password Reset':'پاس ورڈ ری سیٹ','Profile Updated':'پروفائل اپ ڈیٹ','Done':'مکمل','Required':'ضروری','Photo Added':'تصویر شامل','Logo Saved':'لوگو محفوظ'};
 const POPUP_MSG_UR={'Name, CNIC, mobile and password are required.':'نام، شناختی کارڈ، موبائل اور پاس ورڈ ضروری ہیں۔','Passwords do not match.':'پاس ورڈ مطابقت نہیں رکھتے۔','Password must be at least 4 characters.':'پاس ورڈ کم از کم 4 حروف کا ہونا چاہیے۔','An account with this mobile already exists.':'اس موبائل سے اکاؤنٹ پہلے سے موجود ہے۔','An account with this CNIC already exists.':'اس شناختی کارڈ سے اکاؤنٹ پہلے سے موجود ہے۔','Your request has been submitted. Login after developer approval.':'ڈیولپر کی منظوری کے بعد لاگ ان کر سکتے ہیں۔','Incorrect master key. Please try again.':'غلط ماسٹر کی۔ دوبارہ کوشش کریں۔','Name, mobile, CNIC and amount are required.':'نام، موبائل، شناختی کارڈ اور رقم ضروری ہے۔','Name is required.':'نام ضروری ہے۔','Please select a date range.':'براہ کرم تاریخ کی حد منتخب کریں۔','Please select a month.':'براہ کرم مہینہ منتخب کریں۔','Receiver and amount are required.':'وصول کنندہ اور رقم ضروری ہے۔','Description, amount and date are required.':'تفصیل، رقم اور تاریخ ضروری ہے۔','Address saved.':'پتہ محفوظ ہو گیا۔','Organization name saved!':'ادارے کا نام محفوظ ہو گیا!','Please enter an area name.':'براہ کرم علاقے کا نام درج کریں۔','Title, bank and account number are required.':'عنوان، بینک اور اکاؤنٹ نمبر ضروری ہے۔','Please select a photo first.':'پہلے تصویر منتخب کریں۔'};
@@ -983,6 +983,10 @@ function openReg(role){
   document.getElementById('regSubtitle').textContent=role==='user'?'Direct login — no approval needed | براہ راست لاگ ان':'Login after developer approval | منظوری کے بعد لاگ ان';
   document.getElementById('regAutoIdDisplay').innerHTML='Auto ID: <span class="id-badge">'+nextAllId()+'</span>';
   ['regName','regMobile','regPassword','regConfirmPassword'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  // Reset donor info and show all fields
+  var di=document.getElementById('regDonorInfo');if(di){di.style.display='none';di.innerHTML='';}
+  ['regNameRow','regAreaRow','regProfRow','regBloodRow'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='';});
+  hideStatus('regMobileStatus');;
   document.getElementById('regAvatarPreview').style.display='none';document.getElementById('regAvatarPlus').style.display='block';
   const sigSec=document.getElementById('regSignatureSection');
   if(sigSec) sigSec.style.display=['admin','manager','developer'].includes(role)?'block':'none';
@@ -1016,7 +1020,9 @@ function submitReg(){
   const password=document.getElementById('regPassword').value.trim();
   const confirm=document.getElementById('regConfirmPassword').value.trim();
   const missing=[];
-  if(!name)missing.push('Full Name | پورا نام');
+  // If existing donor, name is auto-filled — skip validation
+  var isDonorReg=document.getElementById('regDonorInfo')&&document.getElementById('regDonorInfo').style.display!=='none';
+  if(!name&&!isDonorReg)missing.push('Full Name | پورا نام');
   if(!mobile||normMob(mobile).length!==11)missing.push('Mobile (11 digits) | موبائل نمبر');
   if(!password)missing.push('Password | پاس ورڈ');
   if(missing.length){showPopup('⚠️','Incomplete','Missing: '+missing.join(', '));return;}
@@ -2798,7 +2804,7 @@ function genTop10(){
   var period=document.getElementById('top10Period').value;
   var el=document.getElementById('top10Result');
   if(!el)return;
-  if(!area){el.innerHTML='<p style="font-size:12px;color:#888;text-align:center;padding:16px">Pehle area select karein | پہلے علاقہ منتخب کریں</p>';return;}
+  if(!area){el.innerHTML='<div style="background:#FAEEDA;border-radius:10px;padding:14px;text-align:center;font-size:13px;color:#854F0B">⬆️ Upar se Area select karein</div>';return;}
   var now=new Date();
   var thisMonth=now.toISOString().substring(0,7);
   var thisYear=now.getFullYear().toString();
@@ -6155,6 +6161,16 @@ const TAB_LABELS={
 // T.dash — English dashboard;
 
 // Patch loadDashboard
+function initAppVersion(){
+  var el=document.getElementById('appVersionTag');
+  if(!el)return;
+  try{
+    var d=new Date(document.lastModified);
+    if(d.getFullYear()>2020){
+      el.textContent='v'+d.toLocaleDateString('en-PK',{day:'2-digit',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'});
+    }
+  }catch(e){}
+}
 function loadDashboard(){
   try{
     showScreen('dashScreen');

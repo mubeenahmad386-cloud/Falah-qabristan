@@ -6182,6 +6182,20 @@ function loadDashboard(){
   }catch(e){console.error('loadDashboard error:',e);}
 }
 
+function showLockPopup(){
+  var html='<div style="background:#fff;border-radius:16px;padding:0;max-width:340px;width:90vw;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.25)">';
+  html+='<div style="background:#A32D2D;padding:20px 20px 16px;text-align:center">';
+  html+='<div style="font-size:36px;margin-bottom:8px">&#128274;</div>';
+  html+='<div style="font-size:17px;font-weight:800;color:#fff">Account Locked</div>';
+  html+='<div style="font-size:12px;color:rgba(255,255,255,0.75);margin-top:3px;direction:rtl">اکاؤنٹ بند ہے</div>';
+  html+='</div>';
+  html+='<div style="padding:20px">';
+  html+='<div style="font-size:13px;color:#444;line-height:1.7;text-align:center;margin-bottom:10px">Your login has been locked by the administrator.<br>Please contact the administrator to unlock your account.</div>';
+  html+='<div style="font-size:12px;color:#A32D2D;line-height:1.7;text-align:center;direction:rtl;margin-bottom:18px">آپ کا اکاؤنٹ منتظم نے بند کر دیا ہے۔<br>اپنا اکاؤنٹ کھلوانے کے لیے منتظم سے رابطہ کریں۔</div>';
+  html+='<button onclick="closeCustomPopup()" style="width:100%;background:#A32D2D;color:#fff;border:none;padding:13px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">Close | بند کریں</button>';
+  html+='</div></div>';
+  showCustomPopup('<div style="display:flex;justify-content:center;align-items:center;min-height:100%;padding:20px">'+html+'</div>');
+}
 function showLoginError(msg){const e=document.getElementById('loginError');e.className='info-box danger';if(msg.includes('<'))e.innerHTML=msg;else e.textContent=msg;e.style.display='block';}
 function hideLoginError(){const e=document.getElementById('loginError');if(e)e.style.display='none';}
 

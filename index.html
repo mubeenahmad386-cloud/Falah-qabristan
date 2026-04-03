@@ -457,9 +457,9 @@ input[type=file]{padding:6px}
       </div>
       <input type="file" accept="image/*" id="regPhotoInput" style="display:none" onchange="previewImg('regPhotoInput','regAvatarPreview','regAvatarPlus')">
       <label>Full Name * <span style="font-size:10px;color:#1D9E75;font-weight:500">پورا نام</span></label><div class="inp-wrap"><span class="inp-icon">👤</span><input type="text" id="regName" placeholder="Your full name"></div>
-      <label>CNIC No * (13 digits) <span style="font-size:10px;color:#1D9E75;font-weight:500">شناختی کارڈ</span></label>
-      <div class="inp-wrap"><span class="inp-icon">🪪</span><input type="text" id="regCnic" placeholder="00000-0000000-0" maxlength="15" oninput="autoFormatCnic(this,'regCnicStatus')"></div>
-      <div id="regCnicStatus" style="display:none;margin-top:4px"></div>
+
+
+
       <label>Mobile No * (11 digits) <span style="font-size:10px;color:#1D9E75;font-weight:500">موبائل نمبر</span></label>
       <div class="inp-wrap"><span class="inp-icon">📱</span><input type="text" id="regMobile" placeholder="0300-1234567" maxlength="12" oninput="autoFormatMobile(this,'regMobileStatus')"></div>
       <div id="regMobileStatus" style="display:none;margin-top:4px"></div>
@@ -974,7 +974,7 @@ function openReg(role){
   n.className='info-box '+cls[role];n.textContent=msgs[role];n.style.display='block';
   document.getElementById('regSubtitle').textContent=role==='user'?'Direct login — no approval needed | براہ راست لاگ ان':'Login after developer approval | منظوری کے بعد لاگ ان';
   document.getElementById('regAutoIdDisplay').innerHTML='Auto ID: <span class="id-badge">'+nextAllId()+'</span>';
-  ['regName','regCnic','regMobile','regPassword','regConfirmPassword'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['regName','regMobile','regPassword','regConfirmPassword'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('regAvatarPreview').style.display='none';document.getElementById('regAvatarPlus').style.display='block';
   const sigSec=document.getElementById('regSignatureSection');
   if(sigSec) sigSec.style.display=['admin','manager','developer'].includes(role)?'block':'none';
@@ -1004,7 +1004,7 @@ function previewRegSig(){
 function submitReg(){
   const name=document.getElementById('regName').value.trim();
   const mobile=document.getElementById('regMobile').value.trim();
-  const cnic=document.getElementById('regCnic').value.trim();
+  const cnic='';
   const password=document.getElementById('regPassword').value.trim();
   const confirm=document.getElementById('regConfirmPassword').value.trim();
   const missing=[];
@@ -1814,7 +1814,7 @@ function checkRegMobile(val){
   if(foundUser){
     statusBox('regMobileStatus','error',`⚠️ Is mobile se account already exist karta hai: <strong>${recordLabel(foundUser)}</strong>`);
   } else if(foundDonor){
-    statusBox('regMobileStatus','info',`✅ Donor mila: <strong>${foundDonor.name}</strong> (ID: ${foundDonor.id}) — Aap ko same ID assign hogi`);
+    statusBox('regMobileStatus','success',`✅ Donor record mila! <strong>${foundDonor.name}</strong> (ID: ${foundDonor.id}) — Account create karne par same ID milegi. Sirf password set karein.`);
   } else {
     statusBox('regMobileStatus','success','✅ Mobile (11 digits) — Available');
     setTimeout(()=>hideStatus('regMobileStatus'),2000);
@@ -2760,6 +2760,7 @@ function doSearch(){
 T.fundreport=function(){
   const now=new Date();
   const curMonth=now.toISOString().substring(0,7);
+  const areaOptions=AREAS.map(function(a){return '<option value="'+a+'">'+a+'</option>';}).join('');
   return `<div class="card">
     <h3><span class="bi-title"><span class="bi-en">Fund Collection Report</span><span class="bi-ur">فنڈ رپورٹ</span></span></h3>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
@@ -2778,9 +2779,65 @@ T.fundreport=function(){
     </div>
     <button class="btn btn-primary" style="margin-top:0" onclick="genFundReport()"><span style="font-size:13px">View Report</span><span style="font-size:10px;opacity:0.85;display:block">رپورٹ دیکھیں</span></button>
   </div>
-  <div id="fundReportResult"></div>`;
+  <div id="fundReportResult"></div>
+
+  <div class="card" style="margin-top:10px">
+    <h3 style="margin-bottom:14px">🏆 Top 10 Donors</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div>
+        <label style="font-size:12px;font-weight:600;color:#444;display:block;margin-bottom:5px">Area <span style="font-size:10px;color:#1D9E75">علاقہ</span></label>
+        <select id="top10Area" style="width:100%;padding:9px;border:1px solid #e8e8e8;border-radius:8px;font-size:13px">
+          <option value="all">Overall — سب</option>
+          ${areaOptions}
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:#444;display:block;margin-bottom:5px">Period</label>
+        <select id="top10Period" style="width:100%;padding:9px;border:1px solid #e8e8e8;border-radius:8px;font-size:13px">
+          <option value="lifetime">Lifetime</option>
+          <option value="month">This Month</option>
+          <option value="year">This Year</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-bottom:12px" onclick="genTop10()">Show Top 10</button>
+    <div id="top10Result"></div>
+  </div>`;
 };
 
+function genTop10(){
+  var area=document.getElementById('top10Area').value;
+  var period=document.getElementById('top10Period').value;
+  var el=document.getElementById('top10Result');
+  if(!el)return;
+  var now=new Date();
+  var thisMonth=now.toISOString().substring(0,7);
+  var thisYear=now.getFullYear().toString();
+  // Calculate donation per donor based on period
+  var donors=area==='all'?DB.donors:DB.donors.filter(function(d){return d.area===area;});
+  var ranked=donors.map(function(d){
+    var dons=DB.donations.filter(function(x){return x.donorId===d.id;});
+    if(period==='month')dons=dons.filter(function(x){return x.date.substring(0,7)===thisMonth;});
+    if(period==='year')dons=dons.filter(function(x){return x.date.substring(0,4)===thisYear;});
+    var total=dons.reduce(function(s,x){return s+x.amount;},0);
+    return {donor:d,total:total};
+  }).filter(function(x){return x.total>0;}).sort(function(a,b){return b.total-a.total;}).slice(0,10);
+  if(!ranked.length){el.innerHTML='<p style="font-size:13px;color:#888;text-align:center;padding:16px">No data found.</p>';return;}
+  var medals=['🥇','🥈','🥉'];
+  var html='';
+  ranked.forEach(function(item,i){
+    var d=item.donor;
+    html+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid #f0f0f0">'+
+      '<div style="font-size:16px;width:28px;text-align:center;flex-shrink:0">'+(medals[i]||'<span style="font-size:12px;font-weight:700;color:#888">'+(i+1)+'</span>')+'</div>'+
+      '<div style="flex:1;min-width:0">'+
+        '<div style="font-size:13px;font-weight:700;color:#1a1a1a">'+d.name+'</div>'+
+        '<div style="font-size:10px;color:#888;margin-top:1px">'+d.id+' • '+(d.area||'—')+'</div>'+
+      '</div>'+
+      '<div style="font-size:15px;font-weight:800;color:#0F6E56;flex-shrink:0">'+fmt(item.total)+'</div>'+
+    '</div>';
+  });
+  el.innerHTML=html;
+}
 function genFundReport(){
   const month=document.getElementById('frMonth').value;
   const status=document.getElementById('frStatus').value;
@@ -3921,10 +3978,10 @@ function showDonorSlipInline(id){
   const donor=DB.donors.find(d=>d.id===id);if(!donor)return;
   const el=document.getElementById('slip_'+id);if(!el)return;
   if(el.style.display==='block'){el.style.display='none';return;}
-  const last5=donor.entries.slice(-5).reverse();
+  const liveDons=DB.donations.filter(d=>d.donorId===donor.id).sort((a,b)=>b.date.localeCompare(a.date));
+  const last5=liveDons.slice(0,5);
   const lastAmt=last5.length>0?last5[0].amount:0;
-  // Recompute lifetime from entries (not cached totalDonation)
-  const lifeTimeDonation=donor.entries.reduce((s,e)=>s+e.amount,0);
+  const lifeTimeDonation=liveDons.reduce((s,d)=>s+d.amount,0);
   el.style.display='block';
   el.innerHTML=`<div style="background:#f9f9f9;border-radius:8px;padding:12px;margin:4px 0">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
@@ -6002,8 +6059,12 @@ function renderTab(key){
         if(!window._searchFilter)window._searchFilter='name';
         const si=document.getElementById('searchInput');
         if(si){si.focus();}
-        // Show initial results if there's a query
         if(si&&si.value)doSearch();
+      },
+      donorlist:()=>{
+        filterDonorListInline();
+        const si=document.getElementById('donorListSearch');
+        if(si){const v=si.value;si.focus();si.setSelectionRange(v.length,v.length);}
       },
       logout_action:()=>{if(confirm('Are you sure you want to logout? | کیا آپ واقعی لاگ آؤٹ کرنا چاہتے ہیں؟'))logout();},
       donorprofileupdate:()=>filterDPU(),

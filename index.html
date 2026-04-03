@@ -332,7 +332,7 @@ input[type=file]{padding:6px}
 
     <!-- Footer -->
     <div style="text-align:center;padding:8px 0 4px">
-      <div style="font-size:10px;color:rgba(255,255,255,0.4)">Last Updated: 03 Apr 2026, 04:05 PM</div>
+
     </div>
   <div class="page-footer" style="margin-top:24px;padding:16px 0 24px;border-top:1px solid #f0f0f0;text-align:center">
       <div class="footer-org" id="footerOrgName" style="font-size:13px;font-weight:700;color:#0F6E56;margin-bottom:4px">Falah e Qabristan</div>
@@ -525,7 +525,8 @@ input[type=file]{padding:6px}
 
   <div class="page-footer" id="dashFooter">
     <div class="footer-org" id="dashFooterOrg">Falah e Qabristan</div>
-    <div style="font-size:10px;color:rgba(255,255,255,0.45);margin:2px 0">Last Updated: 03 Apr 2026, 04:05 PM</div>
+    <div id="footerLastUpdated" style="font-size:10px;color:rgba(255,255,255,0.5);margin:3px 0"></div>
+
     <div class="footer-credit">Designed By: <a href="tel:03009084228">Asif Kanwal — 0300-9084228</a></div>
       <div class="footer-credit">Developed By: <a href="tel:03184516464">Mubeen Ahmad — 0318-4516464</a></div>
   </div>
@@ -3155,6 +3156,24 @@ async function deleteAllDonationsFirebase(){
   renderTab('datamanager');
 }
 
+async function refreshLifetimeDonations(){
+  if(currentRole!=='developer'){showPopup('⛔','Access Denied','Only developer can do this.');return;}
+  if(!confirm('Sab donors ki lifetime donation DB.donations se recalculate karni hai?'))return;
+  showLoading(true);
+  var cnt=0;
+  for(var i=0;i<DB.donors.length;i++){
+    var d=DB.donors[i];
+    var total=DB.donations.filter(function(x){return x.donorId===d.id;}).reduce(function(s,x){return s+x.amount;},0);
+    var entries=DB.donations.filter(function(x){return x.donorId===d.id;}).sort(function(a,b){return a.date.localeCompare(b.date);}).map(function(x){return {id:x.id,date:x.date,amount:x.amount,by:x.by,desc:x.desc||'Donation'};});
+    d.totalDonation=total;
+    d.entries=entries;
+    try{await FS.save('donors',d.id,d);cnt++;}catch(e){}
+  }
+  try{saveLocalCache();}catch(e){}
+  showLoading(false);
+  showPopup('✅','Done!',cnt+' donors ki lifetime donation refresh ho gayi DB.donations se.');
+  renderTab('datamanager');
+}
 async function resetLifetimeDonationsFirebase(){
   if(currentRole!=='developer'){showPopup('⛔','Access Denied','Only developer can do this.');return;}
   const cnt=DB.donors.length;
@@ -4915,7 +4934,7 @@ function editProfession(i){
 // ---- AUDIT LOG ----
 T.datamanager=function(){
   return `<div class="card">
-    <div style="background:#E1F5EE;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center"><div style="font-size:11px;font-weight:700;color:#0F6E56">App Version</div><div style="font-size:11px;color:#0F6E56;font-weight:600">Last Updated: 03 Apr 2026, 04:05 PM</div></div>
+    
     <h3><span class="bi-title"><span class="bi-en">Data Management</span><span class="bi-ur">ڈیٹا مینیجمنٹ</span></span></h3>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
       <button onclick="exportToExcel()" style="background:#1D7A5F;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">📥 Export Excel</button>
@@ -4943,6 +4962,11 @@ T.datamanager=function(){
         <div style="font-size:12px;font-weight:700;color:#A32D2D;margin-bottom:8px">🔄 Reset Lifetime Donations to Zero</div>
         <div style="font-size:11px;color:#A32D2D;margin-bottom:10px">${DB.donors.length} donors ki lifetime total aur entries zero ho jayengi. Donations collection untouched.</div>
         <button onclick="resetLifetimeDonationsFirebase()" style="width:100%;background:#A32D2D;color:#fff;border:none;padding:12px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">🔄 Reset All Lifetime Donations to Zero</button>
+      </div>
+      <div style="margin-top:10px;padding:14px;background:#E6F1FB;border:1.5px solid #185FA5;border-radius:12px">
+        <div style="font-size:12px;font-weight:700;color:#185FA5;margin-bottom:8px">♻️ Refresh Lifetime Donations</div>
+        <div style="font-size:11px;color:#185FA5;margin-bottom:10px">DB.donations se sab donors ki totalDonation aur entries recalculate ho jayengi. Real data se sync ho gi.</div>
+        <button onclick="refreshLifetimeDonations()" style="width:100%;background:#185FA5;color:#fff;border:none;padding:12px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">♻️ Refresh All Lifetime Donations</button>
       </div>
       ${DB.donations.slice(-2).reverse().map(d=>{const dn=DB.donors.find(x=>x.id===d.donorId)||{name:'Unknown'};return `
         <div class="entry-row">
@@ -6162,12 +6186,16 @@ const TAB_LABELS={
 
 // Patch loadDashboard
 function initAppVersion(){
-  var el=document.getElementById('appVersionTag');
-  if(!el)return;
   try{
     var d=new Date(document.lastModified);
     if(d.getFullYear()>2020){
-      el.textContent='v'+d.toLocaleDateString('en-PK',{day:'2-digit',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'});
+      var str=d.toLocaleDateString('en-PK',{day:'2-digit',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'});
+      // Update footer
+      var footer=document.getElementById('footerLastUpdated');
+      if(footer)footer.textContent='Last Updated: '+str;
+      // Update login version tag (hidden)
+      var ver=document.getElementById('appVersionTag');
+      if(ver)ver.textContent='v'+str;
     }
   }catch(e){}
 }

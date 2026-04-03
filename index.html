@@ -3036,7 +3036,7 @@ function generateSlip(){
   const lastAmt=last5.length>0?last5[0].amount:0;
   const lastDate=last5.length>0?last5[0].date:today();
   // Recompute lifetime from entries (not cached totalDonation)
-  const lifeTimeDonation=donor.entries.reduce((s,e)=>s+e.amount,0);
+  const lifeTimeDonation=DB.donations.filter(function(d){return d.donorId===donor.id;}).reduce(function(s,d){return s+d.amount;},0);
   const lastEntry=last5.length>0?last5[0]:null;
   const slipUser=lastEntry?DB.users.find(u=>u.id===lastEntry.by)||null:null;
   res.innerHTML=`<div class="cert-wrap" id="donorSlipWrap" style="background:#fff;border:1.5px solid #1D9E75;border-radius:14px;overflow:hidden;max-width:440px;margin:0 auto;font-family:'Arial',sans-serif">

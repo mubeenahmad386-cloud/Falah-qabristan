@@ -261,6 +261,7 @@ input[type=file]{padding:6px}
     <div style="font-size:17px;font-weight:800;color:#fff;margin-top:4px" id="loginOrgName2">Falah e Qabristan</div>
     <div style="display:none" id="loginOrgNameUrdu2">فلاح قبرستان</div>
     <div id="loginOrgAddress2" style="display:none;font-size:11px;color:rgba(255,255,255,0.6);margin-top:4px"></div>
+    <div style="font-size:10px;color:rgba(255,255,255,0.45);margin-top:6px">v03 Apr 2026, 04:05 PM</div>
   </div>
   <div class="login-card">
 
@@ -330,7 +331,10 @@ input[type=file]{padding:6px}
     </button>
 
     <!-- Footer -->
-    <div class="page-footer" style="margin-top:24px;padding:16px 0 24px;border-top:1px solid #f0f0f0;text-align:center">
+    <div style="text-align:center;padding:8px 0 4px">
+      <div style="font-size:10px;color:rgba(255,255,255,0.4)">Last Updated: 03 Apr 2026, 04:05 PM</div>
+    </div>
+  <div class="page-footer" style="margin-top:24px;padding:16px 0 24px;border-top:1px solid #f0f0f0;text-align:center">
       <div class="footer-org" id="footerOrgName" style="font-size:13px;font-weight:700;color:#0F6E56;margin-bottom:4px">Falah e Qabristan</div>
       <div class="footer-credit">Designed By: <a href="tel:03009084228">Asif Kanwal — 0300-9084228</a></div>
       <div class="footer-credit">Developed By: <a href="tel:03184516464">Mubeen Ahmad — 0318-4516464</a></div>
@@ -457,19 +461,19 @@ input[type=file]{padding:6px}
       </div>
       <input type="file" accept="image/*" id="regPhotoInput" style="display:none" onchange="previewImg('regPhotoInput','regAvatarPreview','regAvatarPlus')">
       <label>Mobile No * <span style="font-size:10px;color:#1D9E75;font-weight:500">موبائل نمبر</span></label>
-      <div class="inp-wrap"><span class="inp-icon">📱</span><input type="text" id="regMobile" placeholder="0300-1234567" maxlength="12" oninput="autoFormatMobile(this,'regMobileStatus')"></div>
+      <div class="inp-wrap"><span class="inp-icon">📱</span><input type="text" id="regMobile" placeholder="0300-1234567" maxlength="12" oninput="autoFormatMobile(this,'regMobileStatus');checkRegMobileForDonor(this.value)"></div>
       <div id="regMobileStatus" style="display:none;margin-top:4px"></div>
-      <label>Full Name * <span style="font-size:10px;color:#1D9E75;font-weight:500">پورا نام</span></label><div class="inp-wrap"><span class="inp-icon">👤</span><input type="text" id="regName" placeholder="Your full name"></div>
-      <label>Password * <span style="font-size:10px;color:#1D9E75;font-weight:500">پاس ورڈ</span></label>
+<div id="regNameRow"><label>Full Name * <span style="font-size:10px;color:#1D9E75;font-weight:500">پورا نام</span></label><div class="inp-wrap"><span class="inp-icon">👤</span><input type="text" id="regName" placeholder="Your full name"></div></div>
+      <div id="regDonorInfo" style="display:none"></div><label>Password * <span style="font-size:10px;color:#1D9E75;font-weight:500">پاس ورڈ</span></label>
 
 
 
 
       <div class="inp-wrap" style="position:relative"><span class="inp-icon">🔒</span><input type="password" id="regPassword" placeholder="Set your password" style="padding-right:42px;padding-left:38px"><span onclick="togglePwd('regPassword',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:16px;color:#aaa">👁</span></div>
       <label>Confirm Password * <span style="font-size:10px;color:#1D9E75;font-weight:500">تصدیق</span></label><div class="inp-wrap"><span class="inp-icon">🔐</span><input type="password" id="regConfirmPassword" placeholder="Confirm password"></div>
-      <label>Area <span style="font-size:10px;color:#1D9E75;font-weight:500">علاقہ</span></label><div class="inp-wrap"><span class="inp-icon">📍</span><select id="regArea" class="area-sel"></select></div>
-      <label>Profession <span style="font-size:10px;color:#1D9E75;font-weight:500">پیشہ</span></label><div class="inp-wrap"><span class="inp-icon">💼</span><select id="regProfession" class="prof-sel"></select></div>
-      <label>Blood Group <span style="font-size:10px;color:#E24B4A;font-weight:500">بلڈ گروپ</span></label>
+      <div id="regAreaRow"><label>Area <span style="font-size:10px;color:#1D9E75;font-weight:500">علاقہ</span></label><div class="inp-wrap"><span class="inp-icon">📍</span><select id="regArea" class="area-sel"></select></div>
+      </div><div id="regProfRow"><label>Profession <span style="font-size:10px;color:#1D9E75;font-weight:500">پیشہ</span></label><div class="inp-wrap"><span class="inp-icon">💼</span><select id="regProfession" class="prof-sel"></select></div>
+      </div><div id="regBloodRow"><label>Blood Group <span style="font-size:10px;color:#E24B4A;font-weight:500">بلڈ گروپ</span></label>
       <div class="inp-wrap"><span class="inp-icon">🩸</span><select id="regBloodGroup">
         <option value="">-- Select Blood Group (optional) --</option>
         <option value="A+">A+</option><option value="A-">A-</option>
@@ -477,7 +481,7 @@ input[type=file]{padding:6px}
         <option value="AB+">AB+</option><option value="AB-">AB-</option>
         <option value="O+">O+</option><option value="O-">O-</option>
       </select></div>
-      <div id="regSignatureSection" style="display:none;margin-top:12px;background:#f9f9f9;border-radius:10px;padding:12px">
+      </div><div id="regSignatureSection" style="display:none;margin-top:12px;background:#f9f9f9;border-radius:10px;padding:12px">
         <div style="font-size:13px;font-weight:600;margin-bottom:4px">Signature Upload</div>
         <div style="font-size:11px;color:#888;margin-bottom:8px">Your signature will appear on donor slips and death certificates</div>
         <div style="display:flex;align-items:center;gap:10px">
@@ -521,6 +525,7 @@ input[type=file]{padding:6px}
 
   <div class="page-footer" id="dashFooter">
     <div class="footer-org" id="dashFooterOrg">Falah e Qabristan</div>
+    <div style="font-size:10px;color:rgba(255,255,255,0.45);margin:2px 0">Last Updated: 03 Apr 2026, 04:05 PM</div>
     <div class="footer-credit">Designed By: <a href="tel:03009084228">Asif Kanwal — 0300-9084228</a></div>
       <div class="footer-credit">Developed By: <a href="tel:03184516464">Mubeen Ahmad — 0318-4516464</a></div>
   </div>
@@ -610,6 +615,7 @@ function initFirebase(){
       setTimeout(initFirebase, 2000);
       return;
     }
+    const APP_LAST_UPDATED='03 Apr 2026, 04:05 PM';
     const firebaseConfig={apiKey:"AIzaSyDIfA45aTq6JZfu59ezWIXyGhjbe-dOiTg",authDomain:"falah-qabristan.firebaseapp.com",projectId:"falah-qabristan",storageBucket:"falah-qabristan.firebasestorage.app",messagingSenderId:"17144787021",appId:"1:17144787021:web:06c3c8511f2430565c2c04"};
     if(!firebase.apps||!firebase.apps.length)firebase.initializeApp(firebaseConfig);
     fdb=firebase.firestore();
@@ -1703,6 +1709,39 @@ function formatCnic(digits){
 }
 
 // oninput handler for mobile fields
+function checkRegMobileForDonor(val){
+  var nm=normMob(val);
+  if(nm.length<11)return;
+  var foundDonor=DB.donors.find(function(d){return normMob(d.mobile)===nm;});
+  var foundUser=DB.users.find(function(u){return normMob(u.mobile)===nm;})||DB.pendingApprovals.find(function(p){return normMob(p.mobile)===nm;})||null;
+  var info=document.getElementById('regDonorInfo');
+  // Toggle fields visibility
+  var fieldsToHide=['regNameRow','regAreaRow','regProfRow','regBloodRow'];
+  if(foundDonor&&!foundUser){
+    // Donor found — hide extra fields, show only password
+    fieldsToHide.forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
+    // Auto-fill hidden fields
+    var ne=document.getElementById('regName');if(ne)ne.value=foundDonor.name;
+    setTimeout(function(){
+      var ae=document.getElementById('regArea');if(ae)ae.value=foundDonor.area||'';
+      var pe=document.getElementById('regProfession');if(pe)pe.value=foundDonor.profession||'';
+      var be=document.getElementById('regBloodGroup');if(be&&foundDonor.bloodGroup)be.value=foundDonor.bloodGroup;
+    },100);
+    // Show info card
+    if(info)info.innerHTML='<div style="background:#E1F5EE;border:1.5px solid #1D9E75;border-radius:10px;padding:12px 14px;margin-bottom:12px">' +
+      '<div style="font-size:13px;font-weight:700;color:#0F6E56">✅ Donor mila!</div>' +
+      '<div style="font-size:12px;color:#0F6E56;margin-top:4px">'+foundDonor.name+' (ID: '+foundDonor.id+')</div>' +
+      '<div style="font-size:11px;color:#555;margin-top:3px">Sirf password set karein — account ban jayega same ID ke sath.</div>' +
+      '</div>';
+    if(info)info.style.display='block';
+    statusBox('regMobileStatus','info','✅ Donor: '+foundDonor.name+' — Same ID milegi: '+foundDonor.id);
+  } else {
+    // Show all fields
+    fieldsToHide.forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='';});
+    if(info)info.style.display='none';
+    if(info)info.innerHTML='';
+  }
+}
 function autoFormatMobile(input, statusId){
   const raw=input.value;
   const digits=raw.replace(/[^0-9]/g,'').slice(0,11);
@@ -3657,6 +3696,7 @@ function printExpenseBill(id){
     @media print{body{margin:0}button{display:none}}
   </style>  <!-- PWA Meta Tags -->
   <meta name="theme-color" content="#0F6E56">
+  <meta name="app-last-updated" content="2026-04-03 16:05:20">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Falah e Qabristan">
@@ -4869,6 +4909,7 @@ function editProfession(i){
 // ---- AUDIT LOG ----
 T.datamanager=function(){
   return `<div class="card">
+    <div style="background:#E1F5EE;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center"><div style="font-size:11px;font-weight:700;color:#0F6E56">App Version</div><div style="font-size:11px;color:#0F6E56;font-weight:600">Last Updated: 03 Apr 2026, 04:05 PM</div></div>
     <h3><span class="bi-title"><span class="bi-en">Data Management</span><span class="bi-ur">ڈیٹا مینیجمنٹ</span></span></h3>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
       <button onclick="exportToExcel()" style="background:#1D7A5F;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">📥 Export Excel</button>

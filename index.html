@@ -2752,6 +2752,31 @@ function doSearch(){
 // ---- DONOR SLIP ----
 
 // ---- FUND REPORT (month + pending/received) ----
+T.top=function(){
+  const areaOptions=AREAS.map(function(a){return '<option value="'+a+'">'+a+'</option>';}).join('');
+  return `<div class="card" style="margin-top:10px">
+    <h3 style="margin-bottom:14px">🏆 Top 10 Donors</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div>
+        <label style="font-size:12px;font-weight:600;color:#444;display:block;margin-bottom:5px">Area <span style="font-size:10px;color:#1D9E75">علاقہ</span></label>
+        <select id="top10Area" style="width:100%;padding:9px;border:1px solid #e8e8e8;border-radius:8px;font-size:13px" onchange="genTop10()">
+          <option value="">-- Select Area | علاقہ منتخب کریں --</option>
+          <option value="all">Overall — سب</option>
+          ${areaOptions}
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:#444;display:block;margin-bottom:5px">Period</label>
+        <select id="top10Period" style="width:100%;padding:9px;border:1px solid #e8e8e8;border-radius:8px;font-size:13px" onchange="genTop10()">
+          <option value="lifetime">Lifetime</option>
+          <option value="month">This Month</option>
+          <option value="year">This Year</option>
+        </select>
+      </div>
+    </div>
+    <div id="top10Result"></div>
+  </div>`;
+};
 T.fundreport=function(){
   const now=new Date();
   const curMonth=now.toISOString().substring(0,7);
@@ -3993,31 +4018,12 @@ T.donorlist=function(){
   </div>`;
 };
 function showDonorSlipInline(id){
-  const donor=DB.donors.find(d=>d.id===id);if(!donor)return;
-  const el=document.getElementById('slip_'+id);if(!el)return;
-  if(el.style.display==='block'){el.style.display='none';return;}
-  const liveDons=DB.donations.filter(d=>d.donorId===donor.id).sort((a,b)=>b.date.localeCompare(a.date));
-  const last5=liveDons.slice(0,5);
-  const lastAmt=last5.length>0?last5[0].amount:0;
-  const lifeTimeDonation=liveDons.reduce((s,d)=>s+d.amount,0);
-  el.style.display='block';
-  el.innerHTML=`<div style="background:#f9f9f9;border-radius:8px;padding:12px;margin:4px 0">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-      <div style="background:#E6F1FB;border:1.5px solid #185FA5;border-radius:8px;padding:8px;text-align:center">
-        <div style="font-size:10px;color:#185FA5;font-weight:700">CURRENT DONATION</div>
-        <div style="font-size:16px;font-weight:700;color:#185FA5">${fmt(lastAmt)}</div>
-      </div>
-      <div style="background:#E1F5EE;border:1.5px solid #1D9E75;border-radius:8px;padding:8px;text-align:center">
-        <div style="font-size:10px;color:#0F6E56;font-weight:700">LIFE TIME TOTAL</div>
-        <div style="font-size:16px;font-weight:700;color:#0F6E56">${fmt(donor.totalDonation)}</div>
-      </div>
-    </div>
-    <div style="font-size:11px;font-weight:700;color:#666;margin-bottom:5px">LAST ${last5.length} ENTRIES</div>
-    ${last5.map((e,i)=>`<div style="display:flex;justify-content:space-between;padding:5px 8px;border-radius:5px;background:${i===0?'#E6F1FB':'#fff'};margin-bottom:3px;font-size:12px">
-      <span style="color:${i===0?'#185FA5':'#666'}">${e.date} — ${e.desc||'Donation'}</span>
-      <span style="font-weight:600;color:${i===0?'#185FA5':'#0F6E56'}">${fmt(e.amount)}</span>
-    </div>`).join('')}
-  </div>`;
+  // Navigate to slip tab and auto-load donor
+  selectTab('slip');
+  setTimeout(function(){
+    var si=document.getElementById('slipSearch');
+    if(si){si.value=id;generateSlip();}
+  },200);
 }
 
 

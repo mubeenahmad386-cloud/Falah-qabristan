@@ -2835,7 +2835,7 @@ function genTop10(){
   var thisMonth=now.toISOString().substring(0,7);
   var thisYear=now.getFullYear().toString();
   // Calculate donation per donor based on period
-  var donors=area==='all'?DB.donors:DB.donors.filter(function(d){return d.area===area;});
+  var donors=(area==='all'?DB.donors:DB.donors.filter(function(d){return d.area===area;})).filter(function(d){return d.name.toLowerCase().trim()!=='other' && d.name.trim()!=='ادائیگی بھار';});
   var ranked=donors.map(function(d){
     var dons=DB.donations.filter(function(x){return x.donorId===d.id;});
     if(period==='month')dons=dons.filter(function(x){return x.date.substring(0,7)===thisMonth;});
@@ -6509,30 +6509,51 @@ function getReminderLog(){
   try{return JSON.parse(localStorage.getItem('fq_reminder_log')||'[]');}catch(e){return [];}
 }
 function buildSMSMessage(type,donor,amount){
-  const org=orgName();
-  const monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const curMonth=monthNames[new Date().getMonth()];
+  var org=orgName();
+  var lifeTotal=DB.donations.filter(function(x){return x.donorId===donor.id;}).reduce(function(s,x){return s+x.amount;},0);
+  var prevTotal=lifeTotal-(amount||0);
   if(type==='thanks'){
-    const totalLife=DB.donations.filter(x=>x.donorId===donor.id).reduce((s,x)=>s+x.amount,0);
-    // Plain text for display
-    return 'AsSalamu Alaikum '+donor.name+' Sahab!\n\nAlhamdulillah! '+curMonth+' mah ki donation Rs '+fmt(amount)+' mil gayi. JazakAllah Khair!\n\nLife Total: Rs '+fmt(totalLife)+'\n\n- '+org;
+    return 'AsSalamu Alaikum ' + donor.name + ' Sahab,' +
+      '\n\nAap ke khuloos aur daryadili par dil se shukarguzar hain. Rs ' + fmt(prevTotal) + ' ke baad mazeed Rs ' + fmt(amount) + ' ka ta\'awun aap ki sachchi rehmat bhari soch ka izhar hai.' +
+      '\n\nAllah Ta\'ala aap ke is sadaqah ko apni bargah mein qabool farmaye, aap ke maal mein barkat aur zindagi mein sukoon ata farmaye... Ameen' +
+      '\n\nJazakAllah Khair!' +
+      '\n— ' + org;
   }
   if(type==='reminder'||type==='pending'){
-    const lastDon=DB.donations.filter(x=>x.donorId===donor.id).sort((a,b)=>b.date.localeCompare(a.date))[0];
-    const lastAmt=lastDon?fmt(lastDon.amount):'0';
-    return 'AsSalamu Alaikum '+donor.name+' Sahab!\n\n'+curMonth+' mah ki donation abhi tak received nahi hui.\n\nAllah ki raah mein kharch karo - Al-Baqarah 195\n\nAakhri Donation: Rs '+lastAmt+'\n\nJazakAllah Khair!\n\n- '+org;
+    var lastDon=DB.donations.filter(function(x){return x.donorId===donor.id;}).sort(function(a,b){return b.date.localeCompare(a.date);})[0];
+    var lastAmt=lastDon?fmt(lastDon.amount):'0';
+    return 'AsSalamu Alaikum ' + donor.name + ' Sahab,' +
+      '\n\nDil se shukriya ke aap ne ab tak Rs ' + lastAmt + ' ki donation de kar is naik kaam mein apna hissa dala — Allah aap ko iska behtareen ajar ata farmaye.' +
+      '\n\nBas ek narmi bhari yaad dehani hai ke is mah ki aap ki donation abhi tak receive nahi ho saki. Guzarish hai ke jab aap ke liye asaan ho, isay ada kar dein.' +
+      '\n\nAllah Ta\'ala aap ke is amal ko qabool farmaye aur aap ke liye asaniyan paida farmaye... Ameen' +
+      '\n\nJazakAllah Khair!' +
+      '\n— ' + org;
   }
   return '';
 }
 function buildWAMessage(type,donor,amount){
-  const org=orgName();
-  const monthNames=['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const curMonth=monthNames[new Date().getMonth()];
+  var org=orgName();
+  var lifeTotal=DB.donations.filter(function(x){return x.donorId===donor.id;}).reduce(function(s,x){return s+x.amount;},0);
+  var prevTotal=lifeTotal-(amount||0);
   if(type==='thanks'){
-    const totalLife=DB.donations.filter(x=>x.donorId===donor.id).reduce((s,x)=>s+x.amount,0);
-    return encodeURIComponent('AsSalamu Alaikum '+donor.name+' Sahab!\n\nAlhamdulillah! '+curMonth+' mah ki donation Rs '+fmt(amount)+' mil gayi.\nJazakAllah Khair! Allah Taala aap ko iska behterein ajar ata farmaye. Ameen\n\nLife Total: Rs '+fmt(totalLife)+'\n\n- '+org);
+    return encodeURIComponent(
+      'AsSalamu Alaikum ' + donor.name + ' Sahab,' +
+      '\n\nAap ke khuloos aur daryadili par dil se shukarguzar hain. Rs ' + fmt(prevTotal) + ' ke baad mazeed Rs ' + fmt(amount) + ' ka ta\'awun aap ki sachchi rehmat bhari soch ka izhar hai.' +
+      '\n\nAllah Ta\'ala aap ke is sadaqah ko apni bargah mein qabool farmaye, aap ke maal mein barkat aur zindagi mein sukoon ata farmaye... Ameen' +
+      '\n\nJazakAllah Khair!' +
+      '\n\u2014 ' + org
+    );
   }
-  return encodeURIComponent('AsSalamu Alaikum '+donor.name+' Sahab!\n\n'+curMonth+' mah ki donation abhi tak received nahi hui.\n"Aur Allah ki raah mein kharch karo" (Al-Baqarah 195)\n\nAakhri Donation: Rs '+(DB.donations.filter(x=>x.donorId===donor.id).sort((a,b)=>b.date.localeCompare(a.date))[0]?fmt(DB.donations.filter(x=>x.donorId===donor.id).sort((a,b)=>b.date.localeCompare(a.date))[0].amount):'0')+'\nJazakAllah Khair!\n\n- '+org);
+  var lastDon=DB.donations.filter(function(x){return x.donorId===donor.id;}).sort(function(a,b){return b.date.localeCompare(a.date);})[0];
+  var lastAmt=lastDon?fmt(lastDon.amount):'0';
+  return encodeURIComponent(
+    'AsSalamu Alaikum ' + donor.name + ' Sahab,' +
+    '\n\nDil se shukriya ke aap ne ab tak Rs ' + lastAmt + ' ki donation de kar is naik kaam mein apna hissa dala — Allah aap ko iska behtareen ajar ata farmaye.' +
+    '\n\nBas ek narmi bhari yaad dehani hai ke is mah ki aap ki donation abhi tak receive nahi ho saki. Guzarish hai ke jab aap ke liye asaan ho, isay ada kar dein.' +
+    '\n\nAllah Ta\'ala aap ke is amal ko qabool farmaye aur aap ke liye asaniyan paida farmaye... Ameen' +
+    '\n\nJazakAllah Khair!' +
+    '\n\u2014 ' + org
+  );
 }
 function openSMSReminders(activeTab){
   activeTab=activeTab||'pending';

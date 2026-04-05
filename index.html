@@ -5120,6 +5120,24 @@ function addExpCat(){
   showPopup('✅','Added',v+' added.');
 }
 
+T.superentry=function(){
+  // Reset area on fresh render
+  window._contactArea='All';
+  const allUsers=[...DB.users,...DB.donors].filter(x=>x.mobile);
+  const uniqueAreas=['All',...new Set(allUsers.map(u=>u.area||'').filter(Boolean)).values()].sort();
+  return `<div style="position:sticky;top:0;z-index:10;background:var(--bg);padding:8px 0 4px">
+    <div style="display:flex;gap:8px;margin-bottom:6px">
+      <div class="inp-wrap" style="flex:1;margin-bottom:0"><span class="inp-icon">🔍</span><input type="text" id="contactSearch" placeholder="Search name or mobile... | نام یا موبائل" oninput="filterContacts()" onkeyup="filterContacts()" style="font-size:13px"></div>
+    </div>
+    <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px">
+      ${uniqueAreas.map(a=>`<button onclick="filterContacts('${a}')" id="areaBtn_${a.replace(/\s/g,'_')}" class="btn-xs" style="white-space:nowrap;background:${a==='All'?'#1D9E75':'#f5f5f5'};color:${a==='All'?'#fff':'#333'};border:1px solid #ddd;padding:5px 10px;border-radius:20px;cursor:pointer;font-size:11px">${a}</button>`).join('')}
+    </div>
+  </div>
+  <div id="contactListBody"></div>
+  <script>
+    setTimeout(()=>filterContacts('All'),50);
+  <\/script>`;
+}
 T.contacts=function(){
   // Reset area on fresh render
   window._contactArea='All';
@@ -5877,6 +5895,7 @@ function getMenuConfig(){
       {icon:'🏠', label:'Dashboard / ڈیش بورڈ', tab:'dash'},
       {icon:'🔍', label:'Search / تلاش', tab:'search'},
       {icon:'📒', label:'Contacts / رابطے', tab:'contacts'},
+      {icon:'⭐', label:'Super Entry', tab:'superentry'},
       {icon:'🔔', label:'Notifications / اطلاعات', tab:'notifications'},
       {icon:'👤', label:'Add Donor / ڈونر شامل', tab:'adddonor'},
       {icon:'📱', label:'SMS Reminders / یاد دہانی', tab:'smsreminders'},
@@ -5991,7 +6010,7 @@ function openSubmenu(key){
   currentSubmenu = key;
 }
 
-const FORM_TABS_SET=new Set(['donation','expense','deceased','adddonor','transfer','profile','suggestion','donorprofileupdate','orgsettings','areas','professions','expcategories','approvals','lockuser','userslist','audit','datamanager','suggestions','bloodbank','smartsearch','smsreminders','complaint','complaints','contacts','notifications']);
+const FORM_TABS_SET=new Set(['donation','expense','deceased','adddonor','transfer','profile','suggestion','donorprofileupdate','orgsettings','areas','professions','expcategories','approvals','lockuser','userslist','audit','datamanager','suggestions','bloodbank','smartsearch','smsreminders','complaint','complaints','contacts','superentry','notifications']);
 
 function selectTab(tab){
   renderTab(tab);
@@ -6181,7 +6200,7 @@ const TAB_LABELS={
   donorlist:'Donor List',slip:'Donor Slip',top:'Top Donors',transfer:'Transfer',
   decconfirm:'Confirm Deceased',approvals:'Approvals',lockuser:'Login Management',
   userslist:'Users List',professions:'Professions',audit:'Audit Log',areas:'Areas',
-  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',contacts:'Contacts',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
+  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
 };
 
 // ============================================================

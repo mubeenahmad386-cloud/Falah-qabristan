@@ -2803,11 +2803,12 @@ function genTodayCollection(){
   if(from>to){showPopup('⚠️','Error','From date cannot be after To date.');return;}
   var el=document.getElementById('tcResult');
   if(!el)return;
-  var dons=DB.donations.filter(function(x){return x.date>=from && x.date<=to;});
+  var dons=DB.donations.filter(function(x){return x.date>=from&&x.date<=to;});
   if(!dons.length){
     el.innerHTML='<div style="background:#f9f9f9;border-radius:10px;padding:20px;text-align:center;font-size:13px;color:#888">No donations found for this period.</div>';
     return;
   }
+  // Group by area
   var areaMap={};
   dons.forEach(function(don){
     var donor=DB.donors.find(function(d){return d.id===don.donorId;})||{area:'Unknown',name:'?',id:'?'};
@@ -2819,37 +2820,57 @@ function genTodayCollection(){
   });
   var grandTotal=dons.reduce(function(s,x){return s+x.amount;},0);
   var sortedAreas=Object.keys(areaMap).sort();
-  var label=from===to?from:from+' — '+to;
+  var label=from===to?from:from+' \u2014 '+to;
   var html='';
+  // Header bar
   html+='<div style="background:#0F6E56;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">';
   html+='<div style="font-size:13px;font-weight:700;color:#fff">'+label+'</div>';
-  html+='<div style="font-size:13px;font-weight:700;color:#fff">'+dons.length+' entries</div>';
+  html+='<div style="font-size:11px;color:rgba(255,255,255,0.8)">'+dons.length+' entries</div>';
   html+='</div>';
+  // Area rows — click to expand
   sortedAreas.forEach(function(area){
     var info=areaMap[area];
-    html+='<div style="border:1px solid #e8e8e8;border-radius:10px;margin-bottom:10px;overflow:hidden">';
-    html+='<div style="background:#E1F5EE;padding:9px 14px;display:flex;justify-content:space-between;align-items:center">';
-    html+='<div style="font-size:13px;font-weight:700;color:#0F6E56">'+area+'</div>';
-    html+='<div style="display:flex;align-items:center;gap:10px">';
-    html+='<span style="font-size:11px;background:#0F6E56;color:#fff;padding:2px 8px;border-radius:20px;font-weight:600">'+info.count+' donors</span>';
-    html+='<span style="font-size:14px;font-weight:800;color:#0F6E56">Rs '+fmt(info.total)+'</span>';
-    html+='</div></div>';
+    var areaKey=area.replace(/[^a-zA-Z0-9]/g,'_');
+    // Collapsed row: area name + total only
+    html+='<div style="border:1px solid #e8e8e8;border-radius:10px;margin-bottom:8px;overflow:hidden">';
+    html+='<div onclick="toggleAreaDetail(\'tc_'+areaKey+'\')" style="padding:12px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:#fff;user-select:none">';
+    html+='<div style="display:flex;align-items:center;gap:8px">';
+    html+='<span id="tc_arr_'+areaKey+'" style="font-size:12px;color:#888;transition:transform 0.2s">\u25b6</span>';
+    html+='<span style="font-size:14px;font-weight:700;color:#1a1a1a">'+area+'</span>';
+    html+='<span style="font-size:10px;background:#E1F5EE;color:#0F6E56;padding:2px 7px;border-radius:20px;font-weight:600">'+info.count+'</span>';
+    html+='</div>';
+    html+='<span style="font-size:15px;font-weight:800;color:#0F6E56">Rs '+fmt(info.total)+'</span>';
+    html+='</div>';
+    // Hidden detail rows
+    html+='<div id="tc_'+areaKey+'" style="display:none;border-top:1px solid #f0f0f0">';
     info.entries.forEach(function(e){
-      html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 14px;border-top:0.5px solid #f0f0f0">';
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-bottom:0.5px solid #f9f9f9">';
       html+='<div>';
       html+='<div style="font-size:12px;font-weight:600;color:#1a1a1a">'+e.name+'</div>';
-      html+='<div style="font-size:10px;color:#aaa">'+e.id+' • '+e.date+'</div>';
+      html+='<div style="font-size:10px;color:#aaa">'+e.id+' \u2022 '+e.date+'</div>';
       html+='</div>';
       html+='<div style="font-size:13px;font-weight:700;color:#185FA5">'+fmt(e.amount)+'</div>';
       html+='</div>';
     });
     html+='</div>';
+    html+='</div>';
   });
+  // Grand total
   html+='<div style="background:#185FA5;border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;margin-top:4px">';
   html+='<div style="font-size:13px;font-weight:700;color:#fff">Grand Total</div>';
   html+='<div style="font-size:18px;font-weight:800;color:#fff">Rs '+fmt(grandTotal)+'</div>';
   html+='</div>';
   el.innerHTML=html;
+}
+function toggleAreaDetail(id){
+  var el=document.getElementById(id);
+  if(!el)return;
+  var open=el.style.display!=='none';
+  el.style.display=open?'none':'block';
+  // Rotate arrow
+  var arrKey=id.replace('tc_','tc_arr_');
+  var arr=document.getElementById(arrKey);
+  if(arr)arr.style.transform=open?'':'rotate(90deg)';
 }
 
 T.fundreport=function(){

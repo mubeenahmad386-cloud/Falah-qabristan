@@ -5157,7 +5157,7 @@ T.superentry=function(){
   const uniqueAreas=['All',...new Set(allUsers.map(u=>u.area||'').filter(Boolean)).values()].sort();
   return `<div style="position:sticky;top:0;z-index:10;background:var(--bg);padding:8px 0 4px">
     <div style="display:flex;gap:8px;margin-bottom:6px">
-      <div class="inp-wrap" style="flex:1;margin-bottom:0"><span class="inp-icon">🔍</span><input type="text" id="superEntrySearch" placeholder="Search name or mobile... | نام یا موبائل" oninput="filterContacts()" onkeyup="filterContacts()" style="font-size:13px"></div>
+      <div class="inp-wrap" style="flex:1;margin-bottom:0"><span class="inp-icon">🔍</span><input type="text" id="superEntrySearch" placeholder="Search name or mobile... | نام یا موبائل" oninput="filterSuperEntry()" onkeyup="filterSuperEntry()" style="font-size:13px"></div>
     </div>
     <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px">
       ${uniqueAreas.map(a=>`<button onclick="filterContacts('${a}')" id="seAreaBtn_${a.replace(/\s/g,'_')}" class="btn-xs" style="white-space:nowrap;background:${a==='All'?'#1D9E75':'#f5f5f5'};color:${a==='All'?'#fff':'#333'};border:1px solid #ddd;padding:5px 10px;border-radius:20px;cursor:pointer;font-size:11px">${a}</button>`).join('')}
@@ -5189,10 +5189,12 @@ T.contacts=function(){
 function filterSuperEntry(area){
   var searchEl=document.getElementById('superEntrySearch');
   var q=(searchEl?searchEl.value:'').toLowerCase().trim();
-  var allContacts=[...DB.users,...DB.donors].filter(function(x){return x.mobile;});
+  var allContacts=sortNameAZ([...DB.users,...DB.donors].filter(function(x){return x.mobile&&x.name;}), 'name');
+  // Remove duplicates by mobile
+  var seen={}; allContacts=allContacts.filter(function(u){var m=normMob(u.mobile);if(seen[m])return false;seen[m]=true;return true;});
   var areas=['All',...new Set(allContacts.map(function(u){return u.area||'';}).filter(Boolean))];
   var activeArea=area!==undefined?area:(window._superEntryArea||'All');
-  if(area)window._superEntryArea=area;
+  if(area!==undefined)window._superEntryArea=area;
   areas.forEach(function(a){
     var btn=document.getElementById('seAreaBtn_'+a.replace(/\s/g,'_'));
     if(btn){btn.style.background=a===activeArea?'#1D9E75':'#f5f5f5';btn.style.color=a===activeArea?'#fff':'#333';}
@@ -5200,7 +5202,6 @@ function filterSuperEntry(area){
   var filtered=allContacts.slice();
   if(activeArea&&activeArea!=='All')filtered=filtered.filter(function(u){return (u.area||'')===activeArea;});
   if(q)filtered=filtered.filter(function(u){return (u.name||'').toLowerCase().includes(q)||(u.mobile||'').includes(q)||(u.id||'').toLowerCase().includes(q);});
-  filtered.sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
   var el=document.getElementById('superEntryBody');
   if(!el)return;
   if(!filtered.length){el.innerHTML='<p style="font-size:13px;color:#888;text-align:center;padding:20px">No contacts found.</p>';return;}
@@ -5211,22 +5212,28 @@ function filterSuperEntry(area){
     html+='<div style="font-size:11px;font-weight:700;color:#888;padding:8px 0 4px;border-bottom:1px solid #eee;margin-bottom:4px">'+letter+'</div>';
     groups[letter].forEach(function(u){
       var uInit=(u.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-      var uAvatar=u.photo?'<img src="'+u.photo+'" style="width:42px;height:42px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid #E1F5EE">':'<div style="width:42px;height:42px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#0F6E56;flex-shrink:0">'+uInit+'</div>';
-      var isDonor=DB.donors.find(function(d){return d.id===u.id;});
-      html+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid #f5f5f5">'+
-        uAvatar+
-        '<div style="flex:1;min-width:0">'+
-          '<div style="font-size:13px;font-weight:700;color:#1a1a1a">'+u.name+'</div>'+
-          '<div style="font-size:11px;color:#888;margin-top:2px"><span class="id-badge" style="font-size:10px">'+u.id+'</span> &nbsp;'+(u.area||'—')+'</div>'+
-          '<div style="font-size:11px;color:#555;margin-top:1px">'+(u.mobile||'—')+'</div>'+
-        '</div>'+
-        (isDonor?'<button data-sid="'+u.id+'" onclick="openSuperEntryDonation(this.dataset.sid)" style="flex-shrink:0;background:#1D9E75;color:#fff;border:none;padding:8px 10px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">+ Donate</button>':'')+
-      '</div>';
+      var uAvatar=u.photo
+        ?'<img src="'+u.photo+'" style="width:42px;height:42px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid #E1F5EE">'
+        :'<div style="width:42px;height:42px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#0F6E56;flex-shrink:0">'+uInit+'</div>';
+      // Find donor ID — check donors first, then users
+      var donorMatch=DB.donors.find(function(d){return d.id===u.id||normMob(d.mobile)===normMob(u.mobile||'');});
+      var targetId=donorMatch?donorMatch.id:u.id;
+      html+=
+        '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid #f5f5f5">'+
+          uAvatar+
+          '<div style="flex:1;min-width:0">'+
+            '<div style="font-size:13px;font-weight:700;color:#1a1a1a">'+u.name+'</div>'+
+            '<div style="font-size:11px;color:#888;margin-top:2px"><span class="id-badge" style="font-size:10px">'+u.id+'</span> &nbsp;'+(u.area||'—')+'</div>'+
+            '<div style="font-size:11px;color:#555;margin-top:1px">'+(u.mobile||'—')+'</div>'+
+          '</div>'+
+          '<button data-sid="'+targetId+'" onclick="openSuperEntryDonation(this.dataset.sid)" style="flex-shrink:0;background:#1D9E75;color:#fff;border:none;padding:8px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">+ Donate</button>'+
+        '</div>';
     });
   });
   html+='<div style="text-align:center;padding:12px;font-size:11px;color:#aaa">'+filtered.length+' contacts</div>';
   el.innerHTML=html;
 }
+
 function openSuperEntryDonation(donorId){
   var donor=DB.donors.find(function(d){return d.id===donorId;})||DB.users.find(function(u){return u.id===donorId;});
   if(!donor){showPopup('⚠️','Not Found','Donor nahi mila.');return;}

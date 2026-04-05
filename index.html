@@ -2778,61 +2778,76 @@ T.top=function(){
   </div>`;
 };
 T.todaycollection=function(){
+  var t=today();
   return `<div class="card">
     <h3 style="margin-bottom:14px">&#128197; Today's Collection</h3>
-    <label style="font-size:12px;font-weight:600;color:#444;display:block;margin-bottom:5px">Select Date <span style="font-size:10px;color:#1D9E75">&#xD8F1; &#xD8AA;&#xD8A7;&#xD8B1;&#xDB06;&#xD8AE; &#xD985;&#xD986;&#xD8AA;&#xD8AE;&#xD9BF; &#xDA A9;&#xD8B1;&#xDB8C;&#xDA BA;</span></label>
-    <div class="inp-wrap" style="margin-bottom:14px"><span class="inp-icon">&#128197;</span><input type="date" id="tcDate" value="${today()}" onchange="genTodayCollection()"></div>
-    <div id="tcResult"><p style="font-size:12px;color:#aaa;text-align:center;padding:16px">Select a date to view collection</p></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label style="font-size:12px;font-weight:600;color:#444;display:block;margin-bottom:5px">From Date <span style="font-size:10px;color:#1D9E75">سے</span></label>
+        <div class="inp-wrap"><span class="inp-icon">&#128197;</span><input type="date" id="tcFrom" value="${t}"></div>
+      </div>
+      <div>
+        <label style="font-size:12px;font-weight:600;color:#444;display:block;margin-bottom:5px">To Date <span style="font-size:10px;color:#1D9E75">تک</span></label>
+        <div class="inp-wrap"><span class="inp-icon">&#128197;</span><input type="date" id="tcTo" value="${t}"></div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="genTodayCollection()" style="width:100%;margin-bottom:14px">&#128269; Fetch Report</button>
+    <div id="tcResult"></div>
   </div>`;
-};
+};;
 function genTodayCollection(){
-  var dt=document.getElementById('tcDate');
-  if(!dt||!dt.value)return;
-  var d=dt.value;
+  var fromEl=document.getElementById('tcFrom');
+  var toEl=document.getElementById('tcTo');
+  if(!fromEl||!toEl||!fromEl.value||!toEl.value){showPopup('⚠️','Required','Please select both dates.');return;}
+  var from=fromEl.value, to=toEl.value;
+  if(from>to){showPopup('⚠️','Error','From date cannot be after To date.');return;}
   var el=document.getElementById('tcResult');
   if(!el)return;
-  var dons=DB.donations.filter(function(x){return x.date===d;});
+  var dons=DB.donations.filter(function(x){return x.date>=from && x.date<=to;});
   if(!dons.length){
-    el.innerHTML='<div style="background:#f9f9f9;border-radius:10px;padding:20px;text-align:center;font-size:13px;color:#888">No donations found for this date.</div>';
+    el.innerHTML='<div style="background:#f9f9f9;border-radius:10px;padding:20px;text-align:center;font-size:13px;color:#888">No donations found for this period.</div>';
     return;
   }
   var areaMap={};
   dons.forEach(function(don){
-    var donor=DB.donors.find(function(d2){return d2.id===don.donorId;})||{area:'Unknown',name:'?',id:'?'};
+    var donor=DB.donors.find(function(d){return d.id===don.donorId;})||{area:'Unknown',name:'?',id:'?'};
     var area=donor.area||'Unknown';
     if(!areaMap[area])areaMap[area]={total:0,count:0,entries:[]};
     areaMap[area].total+=don.amount;
     areaMap[area].count++;
-    areaMap[area].entries.push({name:donor.name,id:donor.id,amount:don.amount});
+    areaMap[area].entries.push({name:donor.name,id:donor.id,amount:don.amount,date:don.date});
   });
   var grandTotal=dons.reduce(function(s,x){return s+x.amount;},0);
   var sortedAreas=Object.keys(areaMap).sort();
+  var label=from===to?from:from+' — '+to;
   var html='';
   html+='<div style="background:#0F6E56;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">';
-  html+='<div style="font-size:13px;font-weight:700;color:#fff">' + d + '</div>';
-  html+='<div style="font-size:13px;font-weight:700;color:#fff">Total: Rs ' + fmt(grandTotal) + '</div>';
+  html+='<div style="font-size:13px;font-weight:700;color:#fff">'+label+'</div>';
+  html+='<div style="font-size:13px;font-weight:700;color:#fff">'+dons.length+' entries</div>';
   html+='</div>';
   sortedAreas.forEach(function(area){
     var info=areaMap[area];
     html+='<div style="border:1px solid #e8e8e8;border-radius:10px;margin-bottom:10px;overflow:hidden">';
     html+='<div style="background:#E1F5EE;padding:9px 14px;display:flex;justify-content:space-between;align-items:center">';
-    html+='<div style="font-size:13px;font-weight:700;color:#0F6E56">' + area + '</div>';
+    html+='<div style="font-size:13px;font-weight:700;color:#0F6E56">'+area+'</div>';
     html+='<div style="display:flex;align-items:center;gap:10px">';
-    html+='<span style="font-size:11px;background:#0F6E56;color:#fff;padding:2px 8px;border-radius:20px;font-weight:600">' + info.count + ' donors</span>';
-    html+='<span style="font-size:14px;font-weight:800;color:#0F6E56">Rs ' + fmt(info.total) + '</span>';
+    html+='<span style="font-size:11px;background:#0F6E56;color:#fff;padding:2px 8px;border-radius:20px;font-weight:600">'+info.count+' donors</span>';
+    html+='<span style="font-size:14px;font-weight:800;color:#0F6E56">Rs '+fmt(info.total)+'</span>';
     html+='</div></div>';
     info.entries.forEach(function(e){
       html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 14px;border-top:0.5px solid #f0f0f0">';
-      html+='<div><div style="font-size:12px;font-weight:600;color:#1a1a1a">' + e.name + '</div>';
-      html+='<div style="font-size:10px;color:#aaa">' + e.id + '</div></div>';
-      html+='<div style="font-size:13px;font-weight:700;color:#185FA5">' + fmt(e.amount) + '</div>';
+      html+='<div>';
+      html+='<div style="font-size:12px;font-weight:600;color:#1a1a1a">'+e.name+'</div>';
+      html+='<div style="font-size:10px;color:#aaa">'+e.id+' • '+e.date+'</div>';
+      html+='</div>';
+      html+='<div style="font-size:13px;font-weight:700;color:#185FA5">'+fmt(e.amount)+'</div>';
       html+='</div>';
     });
     html+='</div>';
   });
   html+='<div style="background:#185FA5;border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;margin-top:4px">';
   html+='<div style="font-size:13px;font-weight:700;color:#fff">Grand Total</div>';
-  html+='<div style="font-size:18px;font-weight:800;color:#fff">Rs ' + fmt(grandTotal) + '</div>';
+  html+='<div style="font-size:18px;font-weight:800;color:#fff">Rs '+fmt(grandTotal)+'</div>';
   html+='</div>';
   el.innerHTML=html;
 }
@@ -3400,11 +3415,11 @@ async function doTransferEntries(){
   var cnt=0;
   if(type==='both'||type==='donations'){
     var dons=DB.donations.filter(function(d){return d.by===fromId;});
-    for(var i=0;i<dons.length;i++){dons[i].by=toId;await FS.save('donations',dons[i].id,dons[i]);cnt++;}
+    for(var i=0;i<dons.length;i++){dons[i].assignedTo=toId;dons[i].assignedBy=fromId;dons[i].assignedByName=(DB.users.find(function(u){return u.id===fromId;})||{name:fromId}).name;await FS.save('donations',dons[i].id,dons[i]);cnt++;}
   }
   if(type==='both'||type==='expenses'){
     var exps=DB.expenses.filter(function(e){return e.by===fromId;});
-    for(var i=0;i<exps.length;i++){exps[i].by=toId;await FS.save('expenses',exps[i].id,exps[i]);cnt++;}
+    for(var i=0;i<exps.length;i++){exps[i].assignedTo=toId;exps[i].assignedBy=fromId;exps[i].assignedByName=(DB.users.find(function(u){return u.id===fromId;})||{name:fromId}).name;await FS.save('expenses',exps[i].id,exps[i]);cnt++;}
   }
   try{saveLocalCache();}catch(e){}
   showLoading(false);
@@ -5324,7 +5339,7 @@ async function submitSuperEntry(donorId){
   var donor=DB.donors.find(function(d){return d.id===donorId;})||DB.users.find(function(u){return u.id===donorId;});
   if(!donor){showPopup('⚠️','Error','Donor nahi mila.');return;}
   var id='DON'+Date.now();
-  var entry={id:id,donorId:donorId,amount:amount,date:today(),desc:remarks||'Donation',by:mgr,assignedBy:currentUser.id,assignedByName:currentUser.name};
+  var entry={id:id,donorId:donorId,amount:amount,date:today(),desc:remarks||'Donation',by:currentUser.id,assignedTo:mgr,assignedBy:currentUser.id,assignedByName:currentUser.name};
   DB.donations.push(entry);
   donor.totalDonation=(donor.totalDonation||0)+amount;
   if(!donor.entries)donor.entries=[];

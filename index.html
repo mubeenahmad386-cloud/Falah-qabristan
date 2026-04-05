@@ -2777,6 +2777,66 @@ T.top=function(){
     <div id="top10Result"></div>
   </div>`;
 };
+T.todaycollection=function(){
+  return `<div class="card">
+    <h3 style="margin-bottom:14px">&#128197; Today's Collection</h3>
+    <label style="font-size:12px;font-weight:600;color:#444;display:block;margin-bottom:5px">Select Date <span style="font-size:10px;color:#1D9E75">&#xD8F1; &#xD8AA;&#xD8A7;&#xD8B1;&#xDB06;&#xD8AE; &#xD985;&#xD986;&#xD8AA;&#xD8AE;&#xD9BF; &#xDA A9;&#xD8B1;&#xDB8C;&#xDA BA;</span></label>
+    <div class="inp-wrap" style="margin-bottom:14px"><span class="inp-icon">&#128197;</span><input type="date" id="tcDate" value="${today()}" onchange="genTodayCollection()"></div>
+    <div id="tcResult"><p style="font-size:12px;color:#aaa;text-align:center;padding:16px">Select a date to view collection</p></div>
+  </div>`;
+};
+function genTodayCollection(){
+  var dt=document.getElementById('tcDate');
+  if(!dt||!dt.value)return;
+  var d=dt.value;
+  var el=document.getElementById('tcResult');
+  if(!el)return;
+  var dons=DB.donations.filter(function(x){return x.date===d;});
+  if(!dons.length){
+    el.innerHTML='<div style="background:#f9f9f9;border-radius:10px;padding:20px;text-align:center;font-size:13px;color:#888">No donations found for this date.</div>';
+    return;
+  }
+  var areaMap={};
+  dons.forEach(function(don){
+    var donor=DB.donors.find(function(d2){return d2.id===don.donorId;})||{area:'Unknown',name:'?',id:'?'};
+    var area=donor.area||'Unknown';
+    if(!areaMap[area])areaMap[area]={total:0,count:0,entries:[]};
+    areaMap[area].total+=don.amount;
+    areaMap[area].count++;
+    areaMap[area].entries.push({name:donor.name,id:donor.id,amount:don.amount});
+  });
+  var grandTotal=dons.reduce(function(s,x){return s+x.amount;},0);
+  var sortedAreas=Object.keys(areaMap).sort();
+  var html='';
+  html+='<div style="background:#0F6E56;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">';
+  html+='<div style="font-size:13px;font-weight:700;color:#fff">' + d + '</div>';
+  html+='<div style="font-size:13px;font-weight:700;color:#fff">Total: Rs ' + fmt(grandTotal) + '</div>';
+  html+='</div>';
+  sortedAreas.forEach(function(area){
+    var info=areaMap[area];
+    html+='<div style="border:1px solid #e8e8e8;border-radius:10px;margin-bottom:10px;overflow:hidden">';
+    html+='<div style="background:#E1F5EE;padding:9px 14px;display:flex;justify-content:space-between;align-items:center">';
+    html+='<div style="font-size:13px;font-weight:700;color:#0F6E56">' + area + '</div>';
+    html+='<div style="display:flex;align-items:center;gap:10px">';
+    html+='<span style="font-size:11px;background:#0F6E56;color:#fff;padding:2px 8px;border-radius:20px;font-weight:600">' + info.count + ' donors</span>';
+    html+='<span style="font-size:14px;font-weight:800;color:#0F6E56">Rs ' + fmt(info.total) + '</span>';
+    html+='</div></div>';
+    info.entries.forEach(function(e){
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 14px;border-top:0.5px solid #f0f0f0">';
+      html+='<div><div style="font-size:12px;font-weight:600;color:#1a1a1a">' + e.name + '</div>';
+      html+='<div style="font-size:10px;color:#aaa">' + e.id + '</div></div>';
+      html+='<div style="font-size:13px;font-weight:700;color:#185FA5">' + fmt(e.amount) + '</div>';
+      html+='</div>';
+    });
+    html+='</div>';
+  });
+  html+='<div style="background:#185FA5;border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;margin-top:4px">';
+  html+='<div style="font-size:13px;font-weight:700;color:#fff">Grand Total</div>';
+  html+='<div style="font-size:18px;font-weight:800;color:#fff">Rs ' + fmt(grandTotal) + '</div>';
+  html+='</div>';
+  el.innerHTML=html;
+}
+
 T.fundreport=function(){
   const now=new Date();
   const curMonth=now.toISOString().substring(0,7);
@@ -6045,7 +6105,8 @@ function getMenuConfig(){
       {icon:'📈', label:'Expense / اخراجات', tab:'expreport'},
       {icon:'📒', label:'Ledger / کھاتہ', tab:'ledger'},
       {icon:'💼', label:'Balance / بیلنس', tab:'balreport'},
-      ...(currentRole!=='user'?[{icon:'📅', label:'Fund / فنڈ', tab:'fundreport'}]:[]),
+      ...(currentRole!=='user'?[{icon:'📅', label:'Today Collection', tab:'todaycollection'},
+      {icon:'📅', label:'Fund / فنڈ', tab:'fundreport'}]:[]),
       ...(currentRole!=='user'?[{icon:'📜', label:'Death Cert / وفات نامہ', tab:'deathcert'}]:[]),
       ...(currentRole!=='user'?[{icon:'🧾', label:'Donor Slip / سلپ', tab:'slip'}]:[]),
       ...(currentRole!=='user'?[{icon:'🏆', label:'Top 10 / سرفہرست', tab:'top'}]:[]),
@@ -6317,7 +6378,7 @@ const TAB_LABELS={
   dash:'Dashboard',donation:'Donation Entry',expense:'Expense Entry',search:'Search',
   deceased:'Deceased Entry',deathcert:'Death Certificates',area:'Area Report',
   expreport:'Expense Report',ledger:'Ledger',balreport:'Balance Report',
-  fundreport:'Fund Report',usersreport:'Users Report',myentries:'My Entries',
+  todaycollection:'Today Collection',fundreport:'Fund Report',usersreport:'Users Report',myentries:'My Entries',
   donorlist:'Donor List',slip:'Donor Slip',top:'Top Donors',transfer:'Transfer',
   decconfirm:'Confirm Deceased',approvals:'Approvals',lockuser:'Login Management',
   userslist:'Users List',professions:'Professions',audit:'Audit Log',areas:'Areas',

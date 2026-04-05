@@ -3122,12 +3122,12 @@ function generateSlip(){
 
 
 
-  <!-- Action Buttons -->
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:0 16px 14px">
-    <button onclick="downloadReport('donorSlipWrap','donor_slip_${donor.id}','pdf')" style="background:#E24B4A;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🖨️ Print</button>
-    <button onclick="downloadSlipPNG('donorSlipWrap','donor_slip_${donor.id}')" style="background:#185FA5;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🖼️ PNG</button>
-    <button onclick="shareSlipImage('donorSlipWrap','${donor.name}')" style="background:#25D366;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">📲 Share</button>
-  </div>
+
+
+
+
+
+
 </div>
   `;
 
@@ -6015,7 +6015,6 @@ function getMenuConfig(){
       {icon:'🏠', label:'Dashboard / ڈیش بورڈ', tab:'dash'},
       {icon:'🔍', label:'Search / تلاش', tab:'search'},
       {icon:'📒', label:'Contacts / رابطے', tab:'contacts'},
-      {icon:'⭐', label:'Super Entry', tab:'superentry'},
       {icon:'🔔', label:'Notifications / اطلاعات', tab:'notifications'},
       {icon:'👤', label:'Add Donor / ڈونر شامل', tab:'adddonor'},
       {icon:'📱', label:'SMS Reminders / یاد دہانی', tab:'smsreminders'},
@@ -6033,7 +6032,8 @@ function getMenuConfig(){
   const home = {key:'home', title:'Home / ہوم', items:homeItems};
 
   const forms = {key:'forms', title:'Forms / فارمز', items:[]};
-  if(['admin','manager','developer'].includes(currentRole)) forms.items.push({icon:'💰', label:'Donation / چندہ', tab:'donation'});
+  if(['admin','manager','developer'].includes(currentRole)) forms.items.push({icon:'⭐', label:'Super Entry', tab:'superentry'});
+  forms.items.push({icon:'💰', label:'Donation / چندہ', tab:'donation'});
   if(['manager','developer'].includes(currentRole)) forms.items.push({icon:'📋', label:'Expense / اخراجات', tab:'expense'});
   forms.items.push({icon:'⚰️', label:'Deceased / وفات', tab:'deceased'});
   if(currentRole==='admin') forms.items.push({icon:'✅', label:'Confirm / تصدیق', tab:'decconfirm'});

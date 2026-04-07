@@ -3361,7 +3361,7 @@ function showDonorSlipPopup(donorId){
   html+='<div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px dashed #ccc">';
   html+='<div style="padding:8px 14px;border-right:1px dashed #ccc;text-align:center">';
   html+='<div style="font-size:10px;color:#185FA5;font-weight:700;text-transform:uppercase;letter-spacing:0.3px">Current Donation</div>';
-  html+='<div style="font-size:16px;font-weight:800;color:#185FA5">Rs '+fmt(lastAmt)+'</div>';
+  html+='<div style="font-size:22px;font-weight:800;color:#185FA5">Rs '+fmt(lastAmt)+'</div>';
   html+='</div>';
   html+='<div style="padding:8px 14px;text-align:center">';
   html+='<div style="font-size:10px;color:#0F6E56;font-weight:700;text-transform:uppercase;letter-spacing:0.3px">Total Donation</div>';
@@ -5485,10 +5485,7 @@ function showSuperSlip(donorId){
   html+='<div style="font-size:11px;color:#555;line-height:1.7;direction:rtl">اللہ تعالیٰ آپ کی اس نیک عطیہ کو قبول فرمائے اور آپ کو دنیا و آخرت میں بہترین اجر عطا فرمائے۔ آمین</div>';
   html+='</div>';
 
-  // Close button
-  html+='<div style="padding:10px 14px">';
-  html+='<button onclick="closeCustomPopup()" style="width:100%;background:#f5f5f5;color:#555;border:1px solid #ddd;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">× Close</button>';
-  html+='</div>';
+
 
   html+='</div></div>';
   showCustomPopup('<div style="display:flex;justify-content:center;align-items:flex-start;padding:30px 10px 20px">'+html+'</div>');
@@ -6305,9 +6302,9 @@ let currentSubmenu = null;
 function getMenuConfig(){
   const homeItems = [
       {icon:'🏠', label:'Dashboard / ڈیش بورڈ', tab:'dash'},
-      {icon:'📒', label:'Last Donation', tab:'lastdonation'},
+      {icon:'💵', label:'Last Donation', tab:'lastdonation'},
       {icon:'📒', label:'Contacts / رابطے', tab:'contacts'},
-      {icon:'📒', label:'Contacts / رابطے', tab:'contacts'},
+
       {icon:'🔔', label:'Notifications / اطلاعات', tab:'notifications'},
       {icon:'👤', label:'Add Donor / ڈونر شامل', tab:'adddonor'},
       {icon:'📱', label:'SMS Reminders / یاد دہانی', tab:'smsreminders'},

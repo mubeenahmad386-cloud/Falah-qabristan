@@ -3194,7 +3194,7 @@ function generateSlip(){
       <div style="font-size:18px;font-weight:800;color:#185FA5">Rs ${fmt(lastAmt)}</div>
     </div>
     <div style="padding:10px 16px;text-align:center">
-      <div style="font-size:10px;font-weight:700;color:#0F6E56;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:3px">Total Donation Received</div>
+      <div style="font-size:10px;font-weight:700;color:#0F6E56;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:3px">Total Donation</div>
       <div style="font-size:18px;font-weight:800;color:#0F6E56">Rs ${fmt(lifeTimeDonation)}</div>
 
     </div>
@@ -3364,7 +3364,7 @@ function showDonorSlipPopup(donorId){
   html+='<div style="font-size:16px;font-weight:800;color:#185FA5">Rs '+fmt(lastAmt)+'</div>';
   html+='</div>';
   html+='<div style="padding:8px 14px;text-align:center">';
-  html+='<div style="font-size:10px;color:#0F6E56;font-weight:700;text-transform:uppercase;letter-spacing:0.3px">Total Donation Received</div>';
+  html+='<div style="font-size:10px;color:#0F6E56;font-weight:700;text-transform:uppercase;letter-spacing:0.3px">Total Donation</div>';
   html+='<div style="font-size:16px;font-weight:800;color:#0F6E56">Rs '+fmt(lifeTotal)+'</div>';
   html+='</div>';
   html+='</div>';
@@ -5264,6 +5264,77 @@ T.superentry=function(){
     setTimeout(()=>filterSuperEntry('All'),50);
   <\/script>`;
 }
+function filterLastDonation(area){
+  var searchEl=document.getElementById('ldSearch');
+  var q=(searchEl?searchEl.value:'').toLowerCase().trim();
+  var allDonors=sortNameAZ(DB.donors.filter(function(d){return d.mobile&&d.name;}),'name');
+  var areas=['All',...new Set(allDonors.map(function(u){return u.area||'';}).filter(Boolean))];
+  var activeArea=area!==undefined?area:(window._ldArea||'All');
+  if(area!==undefined)window._ldArea=area;
+  areas.forEach(function(a){
+    var btn=document.getElementById('ldAreaBtn_'+a.replace(/\s/g,'_'));
+    if(btn){btn.style.background=a===activeArea?'#1D9E75':'#f5f5f5';btn.style.color=a===activeArea?'#fff':'#333';}
+  });
+  var filtered=allDonors.slice();
+  if(activeArea&&activeArea!=='All')filtered=filtered.filter(function(u){return (u.area||'')===activeArea;});
+  if(q)filtered=filtered.filter(function(u){return (u.name||'').toLowerCase().includes(q)||(u.mobile||'').includes(q)||(u.id||'').toLowerCase().includes(q);});
+  var el=document.getElementById('ldBody');
+  if(!el)return;
+  if(!filtered.length){el.innerHTML='<p style="font-size:13px;color:#888;text-align:center;padding:20px">No donors found.</p>';return;}
+  var thisMonth=today().substring(0,7);
+  var groups={};
+  filtered.forEach(function(u){var letter=(u.name||'?')[0].toUpperCase();if(!groups[letter])groups[letter]=[];groups[letter].push(u);});
+  var html='';
+  Object.keys(groups).sort().forEach(function(letter){
+    html+='<div style="font-size:11px;font-weight:700;color:#888;padding:8px 0 4px;border-bottom:1px solid #eee;margin-bottom:4px">'+letter+'</div>';
+    groups[letter].forEach(function(u){
+      var uInit=(u.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+      var uAvatar=u.photo?'<img src="'+u.photo+'" style="width:42px;height:42px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid #E1F5EE">':'<div style="width:42px;height:42px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#0F6E56;flex-shrink:0">'+uInit+'</div>';
+      var dons=DB.donations.filter(function(d){return d.donorId===u.id;}).sort(function(a,b){return b.date.localeCompare(a.date);});
+      var lastDon=dons.length>0?dons[0]:null;
+      var lifeTotal=dons.reduce(function(s,x){return s+x.amount;},0);
+      var paidThisMonth=dons.some(function(x){return x.date.substring(0,7)===thisMonth;});
+      var statusBadge=paidThisMonth?'<span style="font-size:9px;padding:2px 7px;border-radius:20px;font-weight:700;background:#E1F5EE;color:#0F6E56">\u2713 Paid</span>':'<span style="font-size:9px;padding:2px 7px;border-radius:20px;font-weight:700;background:#FCEBEB;color:#E24B4A">Pending</span>';
+      var lastInfo=lastDon?('<span style="font-size:10px;color:#888">'+lastDon.date+' \u2022 Rs '+fmt(lastDon.amount)+(lastDon.desc?' \u2022 '+lastDon.desc:'')+'</span>'):'<span style="font-size:10px;color:#aaa">No donations yet</span>';
+      var mob=(u.mobile||'').replace(/[^0-9+]/g,'');
+      var waMsg=buildWAMessage('reminder',u,0);
+      html+=
+        '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid #f5f5f5">'+
+          uAvatar+
+          '<div style="flex:1;min-width:0;cursor:pointer" onclick="openDonorProfile(\''+u.id+'\')">'+
+            '<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">'+
+              '<span style="font-size:13px;font-weight:700;color:#1a1a1a">'+u.name+'</span>'+
+              statusBadge+
+            '</div>'+
+            '<div style="font-size:10px;color:#888;margin-top:1px"><span class="id-badge" style="font-size:9px">'+u.id+'</span> &nbsp;'+(u.area||'\u2014')+'</div>'+
+            '<div style="margin-top:3px">'+lastInfo+'</div>'+
+            '<div style="font-size:11px;font-weight:700;color:#0F6E56;margin-top:1px">Total: Rs '+fmt(lifeTotal)+'</div>'+
+          '</div>'+
+          '<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">'+
+            (mob?'<a href="https://wa.me/92'+mob.replace(/^0/,'')+u.id+'_ld" onclick="event.stopPropagation();this.href=\'https://wa.me/92'+mob.replace(/^0/,'')+'\?text='+waMsg+'\'" style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;background:#25D366;border-radius:8px;text-decoration:none;font-size:16px" title="Send Message">\U0001f4ac</a>':'')+
+          '</div>'+
+        '</div>';
+    });
+  });
+  html+='<div style="text-align:center;padding:12px;font-size:11px;color:#aaa">'+filtered.length+' donors</div>';
+  el.innerHTML=html;
+}
+T.lastdonation=function(){
+  var areas=['All',...new Set(DB.donors.map(function(u){return u.area||'';}).filter(Boolean))].sort();
+  var areaBtns='';
+  areas.forEach(function(a){
+    var akey=a.replace(/[^a-zA-Z0-9]/g,'_');
+    var style=a==='All'?'background:#1D9E75;color:#fff;border:none;':'background:#f5f5f5;color:#333;border:1px solid #ddd;';
+    areaBtns+='<button id="ldAreaBtn_'+akey+'" data-area="'+a+'" onclick="filterLastDonation(this.dataset.area)" style="'+style+'padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;margin-right:4px">'+a+'</button>';
+  });
+  return '<div class="card">' +
+    '<h3 style="margin-bottom:12px">Last Donation</h3>' +
+    '<div class="inp-wrap" style="margin-bottom:10px"><span class="inp-icon">&#128269;</span><input type="text" id="ldSearch" placeholder="Search name, ID or mobile..." oninput="filterLastDonation()" autocomplete="off" style="font-size:13px"></div>' +
+    '<div style="display:flex;gap:4px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px">'+areaBtns+'</div>' +
+    '<div id="ldBody"><p style="text-align:center;color:#aaa;padding:20px;font-size:12px">Loading...</p></div>' +
+    '<sc'+'ript>setTimeout(function(){filterLastDonation("All");},80);<'+'/script></div>';
+};;;;
+
 T.contacts=function(){
   // Reset area on fresh render
   window._contactArea='All';
@@ -5331,7 +5402,6 @@ function filterSuperEntry(area){
 }
 
 function showSuperSlip(donorId){
-  closeCustomPopup();
   var donor=DB.donors.find(function(d){return d.id===donorId;});
   if(!donor){showPopup('⚠️','Not Found','Donor nahi mila.');return;}
   var liveDons=DB.donations.filter(function(d){return d.donorId===donor.id;}).sort(function(a,b){return b.date.localeCompare(a.date);});
@@ -5393,7 +5463,7 @@ function showSuperSlip(donorId){
     });
     // Life total
     html+='<div style="display:flex;justify-content:space-between;padding:7px 8px;margin-top:4px;border-top:1px dashed #ddd">';
-    html+='<div style="font-size:11px;font-weight:700;color:#0F6E56">Total Donation Received</div>';
+    html+='<div style="font-size:11px;font-weight:700;color:#0F6E56">Total Donation</div>';
     html+='<div style="font-size:13px;font-weight:800;color:#0F6E56">Rs '+fmt(lifeTotal)+'</div>';
     html+='</div>';
   }
@@ -5448,9 +5518,13 @@ function openSuperEntryDonation(donorId){
   showCustomPopup('<div style="display:flex;justify-content:center;padding:20px 10px">'+html+'</div>');
 }
 async function submitSuperEntry(donorId){
-  var amount=parseInt((document.getElementById('seAmount')||{value:0}).value)||0;
-  var remarks=((document.getElementById('seRemarks')||{value:''}).value||'').trim();
-  var mgr=((document.getElementById('seManager')||{value:''}).value)||'';
+  // Read values immediately before any popup closes
+  var seAmtEl=document.getElementById('seAmount');
+  var seRmkEl=document.getElementById('seRemarks');
+  var seMgrEl=document.getElementById('seManager');
+  var amount=parseInt(seAmtEl?seAmtEl.value:0)||0;
+  var remarks=(seRmkEl?seRmkEl.value:'').trim();
+  var mgr=seMgrEl?seMgrEl.value:'';
   if(!amount){showPopup('⚠️','Required','Amount darj karein.');return;}
   if(!mgr){showPopup('⚠️','Required','Manager select karein.');return;}
   var donor=DB.donors.find(function(d){return d.id===donorId;})||DB.users.find(function(u){return u.id===donorId;});
@@ -6205,7 +6279,8 @@ let currentSubmenu = null;
 function getMenuConfig(){
   const homeItems = [
       {icon:'🏠', label:'Dashboard / ڈیش بورڈ', tab:'dash'},
-      {icon:'🔍', label:'Search / تلاش', tab:'search'},
+      {icon:'📒', label:'Last Donation', tab:'lastdonation'},
+      {icon:'📒', label:'Contacts / رابطے', tab:'contacts'},
       {icon:'📒', label:'Contacts / رابطے', tab:'contacts'},
       {icon:'🔔', label:'Notifications / اطلاعات', tab:'notifications'},
       {icon:'👤', label:'Add Donor / ڈونر شامل', tab:'adddonor'},
@@ -6411,6 +6486,7 @@ function renderTab(key){
       notifications:()=>{updateNotifBadge();},
       contacts:()=>{window._contactArea='All';filterContacts('All');},
       superentry:()=>{window._superEntryArea='All';filterSuperEntry('All');},
+      lastdonation:()=>{window._ldArea='All';setTimeout(function(){filterLastDonation('All');},80);},
       bloodbank:()=>{window._bbArea='All';filterBloodBank('All');},
       smartsearch:()=>{
         window._ssProf='All';
@@ -6514,7 +6590,7 @@ const TAB_LABELS={
   donorlist:'Donor List',slip:'Donor Slip',top:'Top Donors',transfer:'Transfer',
   decconfirm:'Confirm Deceased',approvals:'Approvals',lockuser:'Login Management',
   userslist:'Users List',professions:'Professions',audit:'Audit Log',areas:'Areas',
-  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
+  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',lastdonation:'Last Donation',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
 };
 
 // ============================================================

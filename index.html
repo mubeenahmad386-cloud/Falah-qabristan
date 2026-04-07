@@ -5331,70 +5331,120 @@ function filterLastDonation(area){
   var thisMonth=today().substring(0,7);
   var groups={};
   filtered.forEach(function(u){var letter=(u.name||'?')[0].toUpperCase();if(!groups[letter])groups[letter]=[];groups[letter].push(u);});
-  var html='';
+
+  // Bulk action bar
+  var html='<div id="ldBulkBar" style="display:none;position:sticky;top:0;z-index:5;background:#0F6E56;border-radius:10px;padding:9px 14px;margin-bottom:8px;display:none;justify-content:space-between;align-items:center">';
+  html+='<span id="ldSelCount" style="font-size:12px;font-weight:700;color:#fff">0 selected</span>';
+  html+='<div style="display:flex;gap:6px">';
+  html+='<button onclick="ldSelectAll()" style="background:rgba(255,255,255,0.2);color:#fff;border:none;padding:6px 12px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer">Select All</button>';
+  html+='<button onclick="ldSendBulk()" style="background:#25D366;color:#fff;border:none;padding:6px 12px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer">&#128172; Send Messages</button>';
+  html+='</div></div>';
+
   Object.keys(groups).sort().forEach(function(letter){
     html+='<div style="font-size:11px;font-weight:700;color:#888;padding:8px 0 4px;border-bottom:1px solid #eee;margin-bottom:4px">'+letter+'</div>';
     groups[letter].forEach(function(u){
       var uInit=(u.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-      var uAvatar=u.photo?'<img src="'+u.photo+'" style="width:42px;height:42px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid #E1F5EE">':'<div style="width:42px;height:42px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#0F6E56;flex-shrink:0">'+uInit+'</div>';
+      var uAvatar=u.photo?'<img src="'+u.photo+'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid #E1F5EE">':'<div style="width:40px;height:40px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#0F6E56;flex-shrink:0">'+uInit+'</div>';
       var dons=DB.donations.filter(function(d){return d.donorId===u.id;}).sort(function(a,b){return b.date.localeCompare(a.date);});
       var lastDon=dons.length>0?dons[0]:null;
       var lifeTotal=dons.reduce(function(s,x){return s+x.amount;},0);
       var paidThisMonth=dons.some(function(x){return x.date.substring(0,7)===thisMonth;});
-      var statusBadge=paidThisMonth
-        ?'<span style="font-size:9px;padding:2px 7px;border-radius:20px;font-weight:700;background:#E1F5EE;color:#0F6E56">&#x2713; Paid</span>'
-        :'<span style="font-size:9px;padding:2px 7px;border-radius:20px;font-weight:700;background:#FCEBEB;color:#E24B4A">Pending</span>';
-      var lastInfo=lastDon
-        ?('<span style="font-size:10px;color:#888">'+lastDon.date+' &bull; Rs '+fmt(lastDon.amount)+(lastDon.desc?' &bull; '+lastDon.desc:'')+'</span>')
-        :'<span style="font-size:10px;color:#aaa">No donations yet</span>';
-      // Store donor id on button using data attr, handle WA in onclick
-      var waBtn='<button data-did="'+u.id+'" onclick="sendLDReminder(this.dataset.did)" style="flex-shrink:0;width:34px;height:34px;background:#25D366;border-radius:8px;border:none;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center" title="WhatsApp Reminder">💬</button>';
-      html+=
-        '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid #f5f5f5">'+
-          uAvatar+
-          '<div style="flex:1;min-width:0">'+
-            '<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">'+
-              '<span style="font-size:13px;font-weight:700;color:#1a1a1a">'+u.name+'</span>'+
-              statusBadge+
-            '</div>'+
-            '<div style="font-size:10px;color:#888;margin-top:1px"><span class="id-badge" style="font-size:9px">'+u.id+'</span> &nbsp;'+(u.area||'—')+'</div>'+
-            '<div style="margin-top:3px">'+lastInfo+'</div>'+
-            '<div style="font-size:11px;font-weight:700;color:#0F6E56;margin-top:1px">Total: Rs '+fmt(lifeTotal)+'</div>'+
-          '</div>'+
-          waBtn+
-        '</div>';
+      var statusBadge=paidThisMonth?'<span style="font-size:9px;padding:2px 7px;border-radius:20px;font-weight:700;background:#E1F5EE;color:#0F6E56">✓ Paid</span>':'<span style="font-size:9px;padding:2px 7px;border-radius:20px;font-weight:700;background:#FCEBEB;color:#E24B4A">Pending</span>';
+      var lastInfo=lastDon?('<span style="font-size:10px;color:#888">'+lastDon.date+' • Rs '+fmt(lastDon.amount)+(lastDon.desc?' • '+lastDon.desc:'')+'</span>'):'<span style="font-size:10px;color:#aaa">No donations yet</span>';
+
+      html+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid #f5f5f5">';
+      // Checkbox
+      html+='<input type="checkbox" data-donor-id="'+u.id+'" class="ld-check" onchange="ldUpdateBulkBar()" style="width:18px;height:18px;accent-color:#0F6E56;flex-shrink:0;cursor:pointer">';
+      html+=uAvatar;
+      html+='<div style="flex:1;min-width:0;cursor:pointer" data-oid="'+u.id+'" onclick="openDonorProfile(this.dataset.oid)">';
+      html+='<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">';
+      html+='<span style="font-size:13px;font-weight:700;color:#1a1a1a">'+u.name+'</span>'+statusBadge;
+      html+='</div>';
+      html+='<div style="font-size:10px;color:#888;margin-top:1px"><span class="id-badge" style="font-size:9px">'+u.id+'</span> &nbsp;'+(u.area||'—')+'</div>';
+      html+='<div style="margin-top:2px">'+lastInfo+'</div>';
+      html+='<div style="font-size:11px;font-weight:700;color:#0F6E56;margin-top:1px">Total: Rs '+fmt(lifeTotal)+'</div>';
+      html+='</div>';
+      // Send single WA
+      var mob=(u.mobile||'').replace(/[^0-9+]/g,'');
+      if(mob){
+        html+='<a href="#" data-mob="92'+mob.replace(/^0/,'')+'" data-did="'+u.id+'" onclick="event.preventDefault();sendLDReminderById(this.dataset.did)" style="flex-shrink:0;width:34px;height:34px;background:#25D366;border-radius:8px;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:16px">💬</a>';
+      }
+      html+='</div>';
     });
   });
   html+='<div style="text-align:center;padding:12px;font-size:11px;color:#aaa">'+filtered.length+' donors</div>';
   el.innerHTML=html;
+  ldUpdateBulkBar();
 }
+
+function ldUpdateBulkBar(){
+  var checks=document.querySelectorAll('.ld-check:checked');
+  var bar=document.getElementById('ldBulkBar');
+  var cnt=document.getElementById('ldSelCount');
+  if(bar){bar.style.display=checks.length>0?'flex':'none';}
+  if(cnt)cnt.textContent=checks.length+' selected';
+}
+
+function ldSelectAll(){
+  var allChecks=document.querySelectorAll('.ld-check');
+  var anyUnchecked=Array.from(allChecks).some(function(c){return !c.checked;});
+  allChecks.forEach(function(c){c.checked=anyUnchecked;});
+  ldUpdateBulkBar();
+}
+
+function sendLDReminderById(donorId){
+  sendLDReminder(donorId);
+}
+
+function ldSendBulk(){
+  var checks=document.querySelectorAll('.ld-check:checked');
+  if(!checks.length){showPopup('⚠️','None Selected','Pehle donors select karein.');return;}
+  var ids=Array.from(checks).map(function(c){return c.getAttribute('data-donor-id');});
+  if(!confirm(ids.length+' donors ko WA message bhejein?'))return;
+  var i=0;
+  function sendNext(){
+    if(i>=ids.length){
+      showPopup('✅','Done',ids.length+' donors ko messages bhej diye.\nWA ek ek karke open hoga.');
+      return;
+    }
+    var donor=DB.donors.find(function(d){return d.id===ids[i];});
+    if(donor&&donor.mobile){
+      sendLDReminder(ids[i]);
+    }
+    i++;
+    setTimeout(sendNext,1500);
+  }
+  sendNext();
+}
+
 function sendLDReminder(donorId){
   var donor=DB.donors.find(function(d){return d.id===donorId;});
   if(!donor||!donor.mobile){showPopup('⚠️','No Mobile','Is donor ka mobile number nahi hai.');return;}
   var mob=donor.mobile.replace(/[^0-9]/g,'').replace(/^0/,'');
 
-  // Build bank account details from ORG_CONFIG
+  var orgName2=(ORG_CONFIG&&ORG_CONFIG.name)||'فلاح قبرستان';
+  var orgAddr=(ORG_CONFIG&&ORG_CONFIG.address)||'';
+
+  // Bank accounts
   var bankLines='';
-  if(ORG_CONFIG.bankAccounts&&ORG_CONFIG.bankAccounts.length>0){
-    bankLines+='\n\n' + 'ڈونیشن ٹرانسفر کی تفصیل:';
+  if(ORG_CONFIG&&ORG_CONFIG.bankAccounts&&ORG_CONFIG.bankAccounts.length>0){
+    bankLines+='\n\nڈونیشن ٹرانسفر کی تفصیل:';
     ORG_CONFIG.bankAccounts.forEach(function(acc){
-      bankLines+='\n• '+acc.title+' | '+acc.bank+'\n  اکاؤنٹ: '+acc.number;
+      bankLines+='\n• '+acc.title+' — '+acc.bank+'\n  اکاؤنٹ: '+acc.number;
     });
   }
 
-  // Org name and address
-  var orgName2=(ORG_CONFIG.name||'فلاح قبرستان');
-  var orgAddr=(ORG_CONFIG.address||'');
-
-  var fullMsg=
-    'محترم '+donor.name+' صاحب،'+
-    '\nادباً گزارش ہے کہ اس ماہ کی آپ کی عطیہ رقم ابھی تک قبرستان کمیٹی کو موصول نہیں ہو سکی۔ براہِ کرم حسبِ استطاعت اپنی ڈونیشن جلد از جلد منتقل فرما دیں تاکہ قبرستان کی دیکھ بھال اور فلاحی کام بروقت اور مؤثر انداز میں جاری رکھے جا سکیں۔'+
-    '\n\nآپ کا ہر تعاون ہمارے لیے نہایت قیمتی ہے، اور ہمیں یقین ہے کہ آپ ہمیشہ کی طرح اس نیک کام میں اپنا حصہ ضرور ڈالیں گے۔'+
+  var msg=
+    'السلام علیکم ورحمۃ اللہ وبرکاتہ،'+
+    '\nمحترم '+donor.name+' صاحب'+
+    '\n\nامید ہے آپ خیریت سے ہوں گے۔ نہایت ادب اور گزارش کے ساتھ عرض ہے کہ اس ماہ کی آپ کی عطیہ رقم ابھی تک قبرستان کمیٹی کو موصول نہیں ہو سکی۔'+
+    '\nبراہ۔ کرم حسب۔ استطاعت اور اپنی سہولت کے مطابق یہ رقم جلد از جلد منتقل فرما دیں تاکہ قبرستان کی دیکھ بھال، صفائی ستھرائی اور دیگر فلاحی کام احسن طریقے سے جاری رکھے جا سکیں۔'+
+    '\n\nآپ کا تعاون ہمارے لیے نہایت قیمتی ہے، اور ہمیں کامل یقین ہے کہ آپ ہمیشہ کی طرح اس نیک عمل میں اپنا حصہ ضرور شامل کریں گے۔'+
+    '\nاللہ تعالیٰ آپ کو اس کا بہترین اجر عطا فرمائے۔ جزاک اللہ خیراً'+
     bankLines+
-    '\n\nجزاک اللہ خیراً'+
-    '\nاز طرف: '+orgName2+(orgAddr?'\n'+orgAddr:'');
+    '\n\nاز طرف: '+orgName2+(orgAddr?'\n'+orgAddr:'');
 
-  window.open('https://wa.me/92'+mob+'?text='+encodeURIComponent(fullMsg),'_blank');
+  window.open('https://wa.me/92'+mob+'?text='+encodeURIComponent(msg),'_blank');
 }
 
 T.lastdonation=function(){

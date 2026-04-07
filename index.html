@@ -776,7 +776,7 @@ function showCustomPopup(html){
   if(old)old.remove();
   var overlay=document.createElement('div');
   overlay.id='customPopupOverlay';
-  overlay.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:40px 10px;overflow-y:auto';
+  overlay.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:40px 10px;overflow-y:auto;animation:fadeInOverlay 0.2s ease';
   overlay.innerHTML=html;
   overlay.onclick=function(e){if(e.target===overlay)closeCustomPopup();};
   document.body.appendChild(overlay);
@@ -2816,7 +2816,10 @@ function genTodayCollection(){
     if(!areaMap[area])areaMap[area]={total:0,count:0,entries:[]};
     areaMap[area].total+=don.amount;
     areaMap[area].count++;
-    areaMap[area].entries.push({name:donor.name,id:donor.id,amount:don.amount,date:don.date,photo:donor.photo||null});
+    var entryUser=don.assignedTo?DB.users.find(function(u){return u.id===don.assignedTo;}):DB.users.find(function(u){return u.id===don.by;});
+    var entryUserName=entryUser?entryUser.name:don.by;
+    var wasAssigned=don.assignedTo&&don.assignedBy;
+    areaMap[area].entries.push({name:donor.name,id:donor.id,amount:don.amount,date:don.date,photo:donor.photo||null,entryUser:entryUserName,wasAssigned:wasAssigned});
   });
   var grandTotal=dons.reduce(function(s,x){return s+x.amount;},0);
   var sortedAreas=Object.keys(areaMap).sort();
@@ -5496,9 +5499,13 @@ function openSuperEntryDonation(donorId){
   var managers=DB.users.filter(function(u){return u.approved&&!u.locked&&u.role==='manager';});
   // Include admins too
   var admins=DB.users.filter(function(u){return u.approved&&!u.locked&&(u.role==='admin'||u.role==='manager');});
-  var defaultMgr=admins.length>0?admins[0].id:'';
-  var mgrOpts=admins.map(function(m){
-    return '<option value="'+m.id+'"'+(m.id===defaultMgr?' selected':'')+'>'+m.name+' ('+m.role+')</option>';
+  // Add current user if not already in list
+  var selfInList=admins.find(function(u){return u.id===currentUser.id;});
+  var dropdownUsers=selfInList?admins:[currentUser].concat(admins);
+  var defaultMgr=currentUser.id; // default = self
+  var mgrOpts=dropdownUsers.map(function(m){
+    var label=m.id===currentUser.id?m.name+' (Me — '+m.role+')':m.name+' ('+m.role+')';
+    return '<option value="'+m.id+'"'+(m.id===defaultMgr?' selected':'')+'>'+label+'</option>';
   }).join('');
 
   var html='<div style="background:#fff;border-radius:14px;padding:0;max-width:380px;width:92vw;overflow:hidden">';
@@ -6889,6 +6896,8 @@ th{font-size:10px;color:#888;font-weight:bold;padding:5px;border-bottom:2px soli
 td{font-size:10px;padding:5px;border-bottom:0.5px solid #eee}
 button,input,select,textarea,.no-print,[onclick*="download"],[onclick*="toggle"],[onclick*="selectTab"],[onclick*="showDonor"]{display:none!important}
 img{max-width:100%;height:auto}
+
+@keyframes fadeInOverlay{from{opacity:0}to{opacity:1}}
 </style>
 </head><body>
 <div class="print-header">

@@ -5272,7 +5272,7 @@ function filterLastDonation(area){
   var activeArea=area!==undefined?area:(window._ldArea||'All');
   if(area!==undefined)window._ldArea=area;
   areas.forEach(function(a){
-    var btn=document.getElementById('ldAreaBtn_'+a.replace(/\s/g,'_'));
+    var btn=document.getElementById('ldAreaBtn_'+a.replace(/[^a-zA-Z0-9]/g,'_'));
     if(btn){btn.style.background=a===activeArea?'#1D9E75':'#f5f5f5';btn.style.color=a===activeArea?'#fff':'#333';}
   });
   var filtered=allDonors.slice();
@@ -5294,31 +5294,41 @@ function filterLastDonation(area){
       var lastDon=dons.length>0?dons[0]:null;
       var lifeTotal=dons.reduce(function(s,x){return s+x.amount;},0);
       var paidThisMonth=dons.some(function(x){return x.date.substring(0,7)===thisMonth;});
-      var statusBadge=paidThisMonth?'<span style="font-size:9px;padding:2px 7px;border-radius:20px;font-weight:700;background:#E1F5EE;color:#0F6E56">\u2713 Paid</span>':'<span style="font-size:9px;padding:2px 7px;border-radius:20px;font-weight:700;background:#FCEBEB;color:#E24B4A">Pending</span>';
-      var lastInfo=lastDon?('<span style="font-size:10px;color:#888">'+lastDon.date+' \u2022 Rs '+fmt(lastDon.amount)+(lastDon.desc?' \u2022 '+lastDon.desc:'')+'</span>'):'<span style="font-size:10px;color:#aaa">No donations yet</span>';
-      var mob=(u.mobile||'').replace(/[^0-9+]/g,'');
-      var waMsg=buildWAMessage('reminder',u,0);
+      var statusBadge=paidThisMonth
+        ?'<span style="font-size:9px;padding:2px 7px;border-radius:20px;font-weight:700;background:#E1F5EE;color:#0F6E56">&#x2713; Paid</span>'
+        :'<span style="font-size:9px;padding:2px 7px;border-radius:20px;font-weight:700;background:#FCEBEB;color:#E24B4A">Pending</span>';
+      var lastInfo=lastDon
+        ?('<span style="font-size:10px;color:#888">'+lastDon.date+' &bull; Rs '+fmt(lastDon.amount)+(lastDon.desc?' &bull; '+lastDon.desc:'')+'</span>')
+        :'<span style="font-size:10px;color:#aaa">No donations yet</span>';
+      // Store donor id on button using data attr, handle WA in onclick
+      var waBtn='<button data-did="'+u.id+'" onclick="sendLDReminder(this.dataset.did)" style="flex-shrink:0;width:34px;height:34px;background:#25D366;border-radius:8px;border:none;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center" title="WhatsApp Reminder">💬</button>';
       html+=
         '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid #f5f5f5">'+
           uAvatar+
-          '<div style="flex:1;min-width:0;cursor:pointer" onclick="openDonorProfile(\''+u.id+'\')">'+
+          '<div style="flex:1;min-width:0">'+
             '<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">'+
               '<span style="font-size:13px;font-weight:700;color:#1a1a1a">'+u.name+'</span>'+
               statusBadge+
             '</div>'+
-            '<div style="font-size:10px;color:#888;margin-top:1px"><span class="id-badge" style="font-size:9px">'+u.id+'</span> &nbsp;'+(u.area||'\u2014')+'</div>'+
+            '<div style="font-size:10px;color:#888;margin-top:1px"><span class="id-badge" style="font-size:9px">'+u.id+'</span> &nbsp;'+(u.area||'—')+'</div>'+
             '<div style="margin-top:3px">'+lastInfo+'</div>'+
             '<div style="font-size:11px;font-weight:700;color:#0F6E56;margin-top:1px">Total: Rs '+fmt(lifeTotal)+'</div>'+
           '</div>'+
-          '<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">'+
-            (mob?'<a href="https://wa.me/92'+mob.replace(/^0/,'')+u.id+'_ld" onclick="event.stopPropagation();this.href=\'https://wa.me/92'+mob.replace(/^0/,'')+'\?text='+waMsg+'\'" style="display:flex;align-items:center;justify-content:center;width:34px;height:34px;background:#25D366;border-radius:8px;text-decoration:none;font-size:16px" title="Send Message">\U0001f4ac</a>':'')+
-          '</div>'+
+          waBtn+
         '</div>';
     });
   });
   html+='<div style="text-align:center;padding:12px;font-size:11px;color:#aaa">'+filtered.length+' donors</div>';
   el.innerHTML=html;
 }
+function sendLDReminder(donorId){
+  var donor=DB.donors.find(function(d){return d.id===donorId;});
+  if(!donor||!donor.mobile){showPopup('⚠️','No Mobile','Is donor ka mobile number nahi hai.');return;}
+  var mob=donor.mobile.replace(/[^0-9]/g,'').replace(/^0/,'');
+  var msg=buildWAMessage('reminder',donor,0);
+  window.open('https://wa.me/92'+mob+'?text='+msg,'_blank');
+}
+
 T.lastdonation=function(){
   var areas=['All',...new Set(DB.donors.map(function(u){return u.area||'';}).filter(Boolean))].sort();
   var areaBtns='';
@@ -5504,6 +5514,21 @@ function openSuperEntryDonation(donorId){
   html+='</div>';
   // Form body
   html+='<div style="padding:16px">';
+  // Calculate previous total
+  var prevTotal=DB.donations.filter(function(d){return d.donorId===donorId;}).reduce(function(s,x){return s+x.amount;},0);
+  var lastDon=DB.donations.filter(function(d){return d.donorId===donorId;}).sort(function(a,b){return b.date.localeCompare(a.date);})[0];
+  html+='<div style="background:#f0fff8;border:1px solid #1D9E75;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">';
+  html+='<div>';
+  html+='<div style="font-size:10px;color:#0F6E56;font-weight:700;text-transform:uppercase;letter-spacing:0.3px">Total Donations So Far</div>';
+  html+='<div style="font-size:18px;font-weight:800;color:#0F6E56">Rs '+fmt(prevTotal)+'</div>';
+  html+='</div>';
+  if(lastDon){
+    html+='<div style="text-align:right">';
+    html+='<div style="font-size:10px;color:#888">Last: '+lastDon.date+'</div>';
+    html+='<div style="font-size:13px;font-weight:700;color:#185FA5">Rs '+fmt(lastDon.amount)+'</div>';
+    html+='</div>';
+  }
+  html+='</div>';
   html+='<label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:5px">Amount (Rs)</label>';
   html+='<input type="number" id="seAmount" placeholder="0" style="width:100%;padding:12px;border:1.5px solid #e8e8e8;border-radius:10px;font-size:20px;font-weight:700;color:#0F6E56;box-sizing:border-box;margin-bottom:10px">';
   html+='<label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:5px">Remarks</label>';
@@ -5511,8 +5536,9 @@ function openSuperEntryDonation(donorId){
   html+='<label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:5px">Assign To (Manager)</label>';
   html+='<select id="seManager" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:10px;font-size:13px;box-sizing:border-box;margin-bottom:14px">'+mgrOpts+'</select>';
   html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
-  html+='<button onclick="submitSuperEntry("+JSON.stringify(donorId)+")" style="background:#0F6E56;color:#fff;border:none;padding:13px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;width:100%">Save Donation</button>';
-  html+='<button onclick="showSuperSlip("+JSON.stringify(donorId)+")" style="background:#185FA5;color:#fff;border:none;padding:13px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;width:100%">🧾 Super Slip</button>';
+  window._seCurrentDonorId=donorId;
+  html+='<button onclick="submitSuperEntry(window._seCurrentDonorId)" style="background:#0F6E56;color:#fff;border:none;padding:13px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;width:100%">Save Donation</button>';
+  html+='<button onclick="showSuperSlip(window._seCurrentDonorId)" style="background:#185FA5;color:#fff;border:none;padding:13px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;width:100%;margin-top:6px">🧾 Super Slip</button>';
   html+='</div>';
   html+='</div></div>';
   showCustomPopup('<div style="display:flex;justify-content:center;padding:20px 10px">'+html+'</div>');

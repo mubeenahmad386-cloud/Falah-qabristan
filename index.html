@@ -5067,6 +5067,50 @@ function editProfession(i){
 }
 
 // ---- AUDIT LOG ----
+async function refreshDatabase(){
+  if(currentRole!=='developer'){showPopup('⛔','Access Denied','Only developer.');return;}
+  if(!confirm('Database refresh karein? Sab data Firebase se dobara load hoga.'))return;
+  showLoading(true);
+  try{
+    var results=await Promise.all([
+      FS.loadAll('users'),FS.loadAll('pendingApprovals'),FS.loadAll('donors'),
+      FS.loadAll('deceased'),FS.loadAll('donations'),FS.loadAll('expenses'),
+      FS.loadAll('transfers'),FS.loadAll('auditLog'),FS.loadAll('professions'),
+      FS.loadAll('suggestions'),FS.loadAll('notifications')
+    ]);
+    DB.users=results[0];DB.pendingApprovals=results[1];DB.donors=results[2];
+    DB.deceased=results[3];DB.donations=results[4];DB.expenses=results[5];
+    DB.transfers=results[6];DB.auditLog=results[7];
+    DB.suggestions=results[9]||[];
+    // Patch photos
+    DB.users.forEach(function(usr){
+      try{var p=localStorage.getItem('fq_photo_'+usr.id);if(p&&!usr.photo)usr.photo=p;}catch(e){}
+    });
+    if(currentUser){var cu=DB.users.find(function(x){return x.id===currentUser.id;});if(cu&&cu.photo)currentUser.photo=cu.photo;}
+    // Load config
+    try{await FS.loadConfig();}catch(e){}
+    // Load areas
+    try{
+      var areasDoc=await FS.loadAll('config');
+      var aConf=areasDoc.find(function(x){return x.id==='areas';});
+      if(aConf&&aConf.list&&aConf.list.length>0)AREAS=aConf.list;
+    }catch(e){}
+    // Update counters
+    var txn=DB.donations.map(function(d){return parseInt((d.id||'0').replace(/[^0-9]/g,''))||0;});
+    txnCounter=txn.length?Math.max.apply(null,txn)+1:1;
+    var bil=DB.expenses.map(function(e){return parseInt((e.billNo||'BILL-0000').replace('BILL-',''))||0;});
+    expBillCounter=bil.length?Math.max.apply(null,bil):0;
+    // Save fresh cache
+    saveLocalCache();
+    try{updateNotifBadge();}catch(e){}
+    showLoading(false);
+    showPopup('✅','Database Refreshed','Firebase se sab data fresh load ho gaya.\nKoi bhi tab dobara kholein.');
+    renderTab('datamanager');
+  }catch(e){
+    showLoading(false);
+    showPopup('❌','Error','Refresh failed: '+e.message);
+  }
+}
 T.datamanager=function(){
   return `<div class="card">
     

@@ -1308,7 +1308,7 @@ T.dash=function(){
       <button onclick="selectTab('donation')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #1D9E75;background:#E1F5EE;cursor:pointer"><span style="font-size:19px">💰</span><span style="font-size:9px;font-weight:600;color:#085041">Donation</span><span style="font-size:8px;color:#085041;opacity:0.75;direction:rtl">چندہ</span></button>
       <button onclick="selectTab('expense')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #BA7517;background:#FAEEDA;cursor:pointer"><span style="font-size:19px">📋</span><span style="font-size:9px;font-weight:600;color:#633806">Expense</span><span style="font-size:8px;color:#633806;opacity:0.75;direction:rtl">اخراجات</span></button>
       <button onclick="selectTab('adddonor')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:1px solid rgba(29,158,117,0.35);background:rgba(29,158,117,0.18);cursor:pointer"><span style="font-size:19px">👤</span><span style="font-size:9px;font-weight:600;color:#4ade80">Add Donor</span><span style="font-size:8px;color:#4ade80;opacity:0.7;direction:rtl">ڈونر شامل</span></button>
-      <button onclick="selectTab('slip')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #185FA5;background:#E6F1FB;cursor:pointer"><span style="font-size:19px">🧾</span><span style="font-size:9px;font-weight:600;color:#0C447C">Slip</span><span style="font-size:8px;color:#0C447C;opacity:0.75;direction:rtl">سلپ</span></button>
+      <button onclick="selectTab('superentry')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #0F6E56;background:#E1F5EE;cursor:pointer"><span style="font-size:19px">&#11088;</span><span style="font-size:9px;font-weight:600;color:#085041">Super Entry</span><span style="font-size:8px;color:#085041;opacity:0.75">سپر اندراج</span></button>
     </div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px">
       <button onclick="selectTab('myentries')" style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;border:0.5px solid #ddd;background:#f5f5f5;cursor:pointer"><span style="font-size:19px">📊</span><span style="font-size:9px;font-weight:600;color:#444">My Don.</span><span style="font-size:8px;color:#444;opacity:0.75;direction:rtl">میرا چندہ</span></button>
@@ -1327,11 +1327,11 @@ T.dash=function(){
       </button>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <button onclick="selectTab('search')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:0.5px solid #185FA5;background:#E6F1FB;cursor:pointer">
-        <span style="font-size:22px">🔍</span>
+      <button onclick="selectTab('contacts')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:0.5px solid #1D9E75;background:#E1F5EE;cursor:pointer">
+        <span style="font-size:22px">&#128210;</span>
         <div style="flex:1;text-align:left">
-          <div style="font-size:11px;font-weight:700;color:#0C447C">Search / تلاش</div>
-          <div style="font-size:10px;color:#0C447C;opacity:0.8">Search donors & users</div>
+          <div style="font-size:11px;font-weight:700;color:#085041">Search / Contact List</div>
+          <div style="font-size:10px;color:#085041;opacity:0.8">Donors &amp; Members</div>
         </div>
       </button>
       <button onclick="selectTab('bloodbank')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:0.5px solid #E24B4A;background:#FCEBEB;cursor:pointer">
@@ -2934,7 +2934,7 @@ function genTop10(){
   var thisMonth=now.toISOString().substring(0,7);
   var thisYear=now.getFullYear().toString();
   // Calculate donation per donor based on period
-  var donors=(area==='all'?DB.donors:DB.donors.filter(function(d){return d.area===area;})).filter(function(d){return d.name.toLowerCase().trim()!=='other' && d.name.trim()!=='ادائیگی بھار';});
+  var donors=(area==='all'?DB.donors:DB.donors.filter(function(d){return d.area===area;})).filter(function(d){var nm=(d.name||'').toLowerCase().trim();return nm!=='other'&&!nm.startsWith('other');});
   var ranked=donors.map(function(d){
     var dons=DB.donations.filter(function(x){return x.donorId===d.id;});
     if(period==='month')dons=dons.filter(function(x){return x.date.substring(0,7)===thisMonth;});
@@ -5420,78 +5420,91 @@ function showSuperSlip(donorId){
   var liveDons=DB.donations.filter(function(d){return d.donorId===donor.id;}).sort(function(a,b){return b.date.localeCompare(a.date);});
   var last5=liveDons.slice(0,5);
   var lifeTotal=liveDons.reduce(function(s,x){return s+x.amount;},0);
-  var initials=(donor.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+  var currentAmt=last5.length>0?last5[0].amount:0;
   var receiveDate=last5.length>0?last5[0].date:today();
-  var orgLogo=ORG_CONFIG.logo?'<img src="'+ORG_CONFIG.logo+'" style="width:48px;height:48px;object-fit:contain;margin-bottom:6px">':'<div style="font-size:28px;margin-bottom:6px">🪴</div>';
+  var initials=(donor.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+  var orgLogo=ORG_CONFIG&&ORG_CONFIG.logo?'<img src="'+ORG_CONFIG.logo+'" style="width:46px;height:46px;object-fit:contain;margin-bottom:5px">':'<div style="font-size:26px;margin-bottom:4px">🪴</div>';
+  var orgName2=(ORG_CONFIG&&ORG_CONFIG.name)||'Falah e Qabristan';
 
   var html='<div style="position:relative;width:90vw;max-width:400px">';
-  // Close
-  html+='<button onclick="closeCustomPopup()" style="position:absolute;top:-12px;right:-12px;z-index:20;background:#A32D2D;border:none;border-radius:50%;width:30px;height:30px;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:700">×</button>';
+  // Top close X
+  html+='<button onclick="closeCustomPopup()" style="position:absolute;top:-13px;right:-13px;z-index:20;background:#A32D2D;border:none;border-radius:50%;width:30px;height:30px;color:#fff;font-size:16px;cursor:pointer;font-weight:800;line-height:1;display:flex;align-items:center;justify-content:center">×</button>';
   html+='<div style="background:#fff;border:1.5px solid #1D9E75;border-radius:14px;overflow:hidden;font-family:Arial,sans-serif">';
 
-  // Header with logo + org name
-  html+='<div style="background:#0F6E56;padding:14px;text-align:center">';
+  // ── Header ────────────────────────────────────────────────
+  html+='<div style="background:#0F6E56;padding:13px 14px;text-align:center">';
   html+=orgLogo;
-  html+='<div style="font-size:10px;color:rgba(255,255,255,0.7);letter-spacing:1.5px;margin-bottom:3px">بِسمِ اللَّهِ الرَّحمٰنِ الرَّحِيمِ</div>';
-  html+='<div style="font-size:16px;font-weight:800;color:#fff">'+(ORG_CONFIG.name||'Falah e Qabristan')+'</div>';
-  html+='<div style="font-size:10px;color:rgba(255,255,255,0.7);letter-spacing:2px;margin-top:4px;border-top:1px solid rgba(255,255,255,0.2);padding-top:6px">— DONOR PAYMENT SLIP —</div>';
+  html+='<div style="font-size:11px;color:rgba(255,255,255,0.65);letter-spacing:1px;margin-bottom:3px">بِسمِ اللَّهِ الرَّحمٰنِ الرَّحِيمِ</div>';
+  html+='<div style="font-size:15px;font-weight:800;color:#fff">'+orgName2+'</div>';
+  html+='<div style="font-size:9px;color:rgba(255,255,255,0.65);letter-spacing:2px;margin-top:5px;border-top:1px solid rgba(255,255,255,0.2);padding-top:5px">— DONOR PAYMENT SLIP —</div>';
   html+='</div>';
 
-  // Donor info row with photo + stamp
-  html+='<div style="display:flex;align-items:center;gap:12px;padding:14px;border-bottom:1px dashed #ddd">';
+  // ── Donor info + photo + stamp ─────────────────────────────
+  html+='<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px dashed #ddd">';
   // Photo
   if(donor.photo){
-    html+='<img src="'+donor.photo+'" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2.5px solid #1D9E75;flex-shrink:0">';
+    html+='<img src="'+donor.photo+'" style="width:58px;height:58px;border-radius:50%;object-fit:cover;border:2.5px solid #1D9E75;flex-shrink:0">';
   } else {
-    html+='<div style="width:60px;height:60px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#0F6E56;border:2.5px solid #1D9E75;flex-shrink:0">'+initials+'</div>';
+    html+='<div style="width:58px;height:58px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:700;color:#0F6E56;border:2.5px solid #1D9E75;flex-shrink:0">'+initials+'</div>';
   }
   // Name + ID + Area
   html+='<div style="flex:1;min-width:0">';
-  html+='<div style="font-size:16px;font-weight:800;color:#1a1a1a">'+donor.name+'</div>';
-  html+='<div style="font-size:11px;color:#888;margin-top:3px">'+donor.id+' • '+(donor.area||'—')+'</div>';
+  html+='<div style="font-size:15px;font-weight:800;color:#1a1a1a;line-height:1.2">'+donor.name+'</div>';
+  html+='<div style="font-size:10px;color:#888;margin-top:3px">'+donor.id+' • '+(donor.area||'—')+'</div>';
+  html+='<div style="font-size:10px;color:#888;margin-top:1px">'+(donor.mobile||'')+'</div>';
   html+='</div>';
-  // Stamp circle
-  html+='<div style="width:72px;height:72px;border-radius:50%;border:2.5px solid #E24B4A;background:#FCEBEB;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;transform:rotate(-10deg)">';
-  html+='<div style="font-size:8px;font-weight:800;color:#A32D2D;text-align:center;letter-spacing:0.3px">✓ PAYMENT</div>';
-  html+='<div style="font-size:8px;font-weight:800;color:#A32D2D;text-align:center;letter-spacing:0.3px">RECEIVED</div>';
-  html+='<div style="width:50px;border-top:1px solid #E24B4A;margin:2px 0"></div>';
-  html+='<div style="font-size:7px;color:#A32D2D;text-align:center;font-weight:600">'+receiveDate+'</div>';
+  // Circular stamp
+  html+='<div style="width:68px;height:68px;border-radius:50%;border:2.5px solid #E24B4A;background:#FCEBEB;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;transform:rotate(-10deg)">';
+  html+='<div style="font-size:8px;font-weight:800;color:#A32D2D;letter-spacing:0.3px">✓ PAYMENT</div>';
+  html+='<div style="font-size:8px;font-weight:800;color:#A32D2D;letter-spacing:0.3px">RECEIVED</div>';
+  html+='<div style="width:48px;border-top:1px solid #E24B4A;margin:2px 0"></div>';
+  html+='<div style="font-size:7px;color:#A32D2D;font-weight:600;text-align:center">'+receiveDate+'</div>';
   html+='</div>';
   html+='</div>';
 
-  // Last 5 entries
+  // ── Current + Total stats ─────────────────────────────────
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px dashed #ddd">';
+  html+='<div style="padding:9px 14px;border-right:1px dashed #ddd;text-align:center">';
+  html+='<div style="font-size:9px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:0.4px">Current Donation</div>';
+  html+='<div style="font-size:20px;font-weight:800;color:#185FA5">Rs '+fmt(currentAmt)+'</div>';
+  html+='</div>';
+  html+='<div style="padding:9px 14px;text-align:center">';
+  html+='<div style="font-size:9px;font-weight:700;color:#0F6E56;text-transform:uppercase;letter-spacing:0.4px">Total Donation</div>';
+  html+='<div style="font-size:20px;font-weight:800;color:#0F6E56">Rs '+fmt(lifeTotal)+'</div>';
+  html+='</div>';
+  html+='</div>';
+
+  // ── Last 5 transactions ────────────────────────────────────
   html+='<div style="padding:10px 14px;border-bottom:1px dashed #ddd">';
-  html+='<div style="font-size:10px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:7px">Last Transactions</div>';
+  html+='<div style="font-size:10px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Last Transactions</div>';
   if(last5.length===0){
     html+='<div style="font-size:12px;color:#aaa;text-align:center;padding:8px">No transactions yet.</div>';
   } else {
     last5.forEach(function(e,i){
-      html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;border-radius:7px;margin-bottom:3px;background:'+(i===0?'#E6F1FB':'#f9f9f9')+'">';
-      html+='<div>';
-      html+='<div style="font-size:11px;color:'+(i===0?'#185FA5':'#555')+'">'+e.date+'</div>';
-      html+='<div style="font-size:10px;color:#aaa">'+(e.desc||'Donation')+'</div>';
+      var bg=i===0?'#E6F1FB':'#f9f9f9';
+      var col=i===0?'#185FA5':'#555';
+      var assignedUser=e.assignedTo?DB.users.find(function(u){return u.id===e.assignedTo;}):DB.users.find(function(u){return u.id===e.by;});
+      var assignedName=assignedUser?assignedUser.name:'';
+      var assignedBy=e.assignedBy?DB.users.find(function(u){return u.id===e.assignedBy;}):null;
+      html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:6px 8px;border-radius:7px;margin-bottom:3px;background:'+bg+'">';
+      html+='<div style="flex:1;min-width:0">';
+      html+='<div style="font-size:10px;color:'+col+';font-weight:600">'+e.date+(e.desc&&e.desc!=='Donation'?' • '+e.desc:'')+'</div>';
+      if(assignedName) html+='<div style="font-size:9px;margin-top:2px;color:'+(i===0?'#185FA5':'#888')+'">'+assignedName+(assignedBy?' → '+assignedBy.name:'')+'</div>';
       html+='</div>';
-      html+='<div style="font-size:12px;font-weight:700;color:'+(i===0?'#185FA5':'#0F6E56')+'">Rs '+fmt(e.amount)+'</div>';
+      html+='<div style="font-size:13px;font-weight:800;color:'+col+';flex-shrink:0;padding-left:6px">Rs '+fmt(e.amount)+'</div>';
       html+='</div>';
     });
-    // Life total
-    html+='<div style="display:flex;justify-content:space-between;padding:7px 8px;margin-top:4px;border-top:1px dashed #ddd">';
-    html+='<div style="font-size:11px;font-weight:700;color:#0F6E56">Total Donation</div>';
-    html+='<div style="font-size:13px;font-weight:800;color:#0F6E56">Rs '+fmt(lifeTotal)+'</div>';
-    html+='</div>';
   }
   html+='</div>';
 
-  // Thanks
-  html+='<div style="padding:12px 16px;background:#f0fff8;text-align:center">';
-  html+='<div style="font-size:14px;font-weight:700;color:#0F6E56;margin-bottom:5px">جَزَاكَ اللَّهُ خَيْرًا</div>';
+  // ── Thanks ────────────────────────────────────────────────
+  html+='<div style="padding:11px 14px;background:#f0fff8;text-align:center">';
+  html+='<div style="font-size:14px;font-weight:700;color:#0F6E56;margin-bottom:4px">جَزَاكَ اللَّهُ خَيْرًا</div>';
   html+='<div style="font-size:11px;color:#555;line-height:1.7;direction:rtl">اللہ تعالیٰ آپ کی اس نیک عطیہ کو قبول فرمائے اور آپ کو دنیا و آخرت میں بہترین اجر عطا فرمائے۔ آمین</div>';
   html+='</div>';
 
-
-
   html+='</div></div>';
-  showCustomPopup('<div style="display:flex;justify-content:center;align-items:flex-start;padding:30px 10px 20px">'+html+'</div>');
+  showCustomPopup('<div style="display:flex;justify-content:center;align-items:flex-start;padding:32px 10px 20px">'+html+'</div>');
 }
 function openSuperEntryDonation(donorId){
   var donor=DB.donors.find(function(d){return d.id===donorId;})||DB.users.find(function(u){return u.id===donorId;});

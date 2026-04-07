@@ -5332,12 +5332,13 @@ function filterLastDonation(area){
   var groups={};
   filtered.forEach(function(u){var letter=(u.name||'?')[0].toUpperCase();if(!groups[letter])groups[letter]=[];groups[letter].push(u);});
 
-  // Bulk action bar
-  var html='<div id="ldBulkBar" style="display:none;position:sticky;top:0;z-index:5;background:#0F6E56;border-radius:10px;padding:9px 14px;margin-bottom:8px;display:none;justify-content:space-between;align-items:center">';
+  var html='';
+  // Bulk bar — initially hidden
+  html+='<div id="ldBulkBar" style="display:none;background:#0F6E56;border-radius:10px;padding:9px 14px;margin-bottom:8px;justify-content:space-between;align-items:center">';
   html+='<span id="ldSelCount" style="font-size:12px;font-weight:700;color:#fff">0 selected</span>';
   html+='<div style="display:flex;gap:6px">';
   html+='<button onclick="ldSelectAll()" style="background:rgba(255,255,255,0.2);color:#fff;border:none;padding:6px 12px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer">Select All</button>';
-  html+='<button onclick="ldSendBulk()" style="background:#25D366;color:#fff;border:none;padding:6px 12px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer">&#128172; Send Messages</button>';
+  html+='<button onclick="ldSendBulk()" style="background:#25D366;color:#fff;border:none;padding:6px 12px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer">&#128172; Send All</button>';
   html+='</div></div>';
 
   Object.keys(groups).sort().forEach(function(letter){
@@ -5351,23 +5352,19 @@ function filterLastDonation(area){
       var paidThisMonth=dons.some(function(x){return x.date.substring(0,7)===thisMonth;});
       var statusBadge=paidThisMonth?'<span style="font-size:9px;padding:2px 7px;border-radius:20px;font-weight:700;background:#E1F5EE;color:#0F6E56">✓ Paid</span>':'<span style="font-size:9px;padding:2px 7px;border-radius:20px;font-weight:700;background:#FCEBEB;color:#E24B4A">Pending</span>';
       var lastInfo=lastDon?('<span style="font-size:10px;color:#888">'+lastDon.date+' • Rs '+fmt(lastDon.amount)+(lastDon.desc?' • '+lastDon.desc:'')+'</span>'):'<span style="font-size:10px;color:#aaa">No donations yet</span>';
+      var mob=(u.mobile||'').replace(/[^0-9+]/g,'');
 
-      html+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid #f5f5f5">';
-      // Checkbox
-      html+='<input type="checkbox" data-donor-id="'+u.id+'" class="ld-check" onchange="ldUpdateBulkBar()" style="width:18px;height:18px;accent-color:#0F6E56;flex-shrink:0;cursor:pointer">';
+      html+='<div style="display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:0.5px solid #f5f5f5">';
+      html+='<input type="checkbox" data-donor-id="'+u.id+'" class="ld-check" onchange="ldUpdateBulkBar()" style="width:18px;height:18px;accent-color:#0F6E56;flex-shrink:0;cursor:pointer;border-radius:4px">';
       html+=uAvatar;
-      html+='<div style="flex:1;min-width:0;cursor:pointer" data-oid="'+u.id+'" onclick="openDonorProfile(this.dataset.oid)">';
-      html+='<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">';
-      html+='<span style="font-size:13px;font-weight:700;color:#1a1a1a">'+u.name+'</span>'+statusBadge;
-      html+='</div>';
+      html+='<div style="flex:1;min-width:0" data-oid="'+u.id+'" onclick="openDonorProfile(this.dataset.oid)" style="cursor:pointer">';
+      html+='<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap"><span style="font-size:13px;font-weight:700;color:#1a1a1a">'+u.name+'</span>'+statusBadge+'</div>';
       html+='<div style="font-size:10px;color:#888;margin-top:1px"><span class="id-badge" style="font-size:9px">'+u.id+'</span> &nbsp;'+(u.area||'—')+'</div>';
       html+='<div style="margin-top:2px">'+lastInfo+'</div>';
       html+='<div style="font-size:11px;font-weight:700;color:#0F6E56;margin-top:1px">Total: Rs '+fmt(lifeTotal)+'</div>';
       html+='</div>';
-      // Send single WA
-      var mob=(u.mobile||'').replace(/[^0-9+]/g,'');
       if(mob){
-        html+='<a href="#" data-mob="92'+mob.replace(/^0/,'')+'" data-did="'+u.id+'" onclick="event.preventDefault();sendLDReminderById(this.dataset.did)" style="flex-shrink:0;width:34px;height:34px;background:#25D366;border-radius:8px;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:16px">💬</a>';
+        html+='<a href="#" data-did="'+u.id+'" onclick="event.preventDefault();event.stopPropagation();sendLDReminderById(this.dataset.did)" style="flex-shrink:0;width:34px;height:34px;background:#25D366;border-radius:8px;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:16px">💬</a>';
       }
       html+='</div>';
     });
@@ -5376,6 +5373,65 @@ function filterLastDonation(area){
   el.innerHTML=html;
   ldUpdateBulkBar();
 }
+
+function ldUpdateBulkBar(){
+  var checks=document.querySelectorAll('#ldBody .ld-check:checked');
+  var bar=document.getElementById('ldBulkBar');
+  var cnt=document.getElementById('ldSelCount');
+  if(bar)bar.style.display=checks.length>0?'flex':'none';
+  if(cnt)cnt.textContent=checks.length+' selected';
+}
+
+function ldSelectAll(){
+  var allChecks=document.querySelectorAll('#ldBody .ld-check');
+  var anyUnchecked=Array.from(allChecks).some(function(ch){return !ch.checked;});
+  allChecks.forEach(function(ch){ch.checked=anyUnchecked;});
+  ldUpdateBulkBar();
+}
+
+function sendLDReminderById(donorId){
+  sendLDReminder(donorId);
+}
+
+function ldSendBulk(){
+  var checks=document.querySelectorAll('#ldBody .ld-check:checked');
+  if(!checks.length){showPopup('⚠️','None Selected','Pehle donors select karein.');return;}
+  var ids=Array.from(checks).map(function(ch){return ch.getAttribute('data-donor-id');});
+  // Build all WA links and show them one by one
+  var links=[];
+  ids.forEach(function(id){
+    var donor=DB.donors.find(function(d){return d.id===id;});
+    if(!donor||!donor.mobile)return;
+    var mob=donor.mobile.replace(/[^0-9]/g,'').replace(/^0/,'');
+    if(!mob)return;
+    var orgName2=(ORG_CONFIG&&ORG_CONFIG.name)||'فلاح قبرستان';
+    var orgAddr=(ORG_CONFIG&&ORG_CONFIG.address)||'';
+    var bankLines='';
+    if(ORG_CONFIG&&ORG_CONFIG.bankAccounts&&ORG_CONFIG.bankAccounts.length>0){
+      bankLines+='\nڈونیشن ٹرانسفر:';
+      ORG_CONFIG.bankAccounts.forEach(function(acc){bankLines+='\n• '+acc.title+' — '+acc.bank+'\n  اکاؤنٹ: '+acc.number;});
+    }
+    var msg='السلام علیکم ورحمۃ اللہ وبرکاتہ،\nمحترم '+donor.name+' صاحب\n\nامید ہے آپ خیریت سے ہوں گے۔ نہایت ادب اور گزارش کے ساتھ عرض ہے کہ اس ماہ کی آپ کی عطیہ رقم ابھی تک قبرستان کمیٹی کو موصول نہیں ہو سکی۔\nبراہ۔ کرم حسب۔ استطاعت اور اپنی سہولت کے مطابق یہ رقم جلد از جلد منتقل فرما دیں۔\n\nآپ کا تعاون ہمارے لیے نہایت قیمتی ہے۔ جزاک اللہ خیراً'+bankLines+'\n\nاز طرف: '+orgName2+(orgAddr?'\n'+orgAddr:'');
+    links.push({name:donor.name,url:'https://wa.me/92'+mob+'?text='+encodeURIComponent(msg)});
+  });
+  if(!links.length){showPopup('⚠️','No Mobile','Selected donors mein mobile nahi hai.');return;}
+  // Show list popup with all links
+  var popHtml='<div style="background:#fff;border-radius:14px;max-width:380px;width:90vw;overflow:hidden">';
+  popHtml+='<div style="background:#0F6E56;padding:13px 16px;display:flex;justify-content:space-between;align-items:center">';
+  popHtml+='<div style="font-size:14px;font-weight:700;color:#fff">Send Messages ('+links.length+')</div>';
+  popHtml+='<button onclick="closeCustomPopup()" style="background:rgba(255,255,255,0.2);border:none;border-radius:50%;width:26px;height:26px;color:#fff;font-size:14px;cursor:pointer">×</button>';
+  popHtml+='</div><div style="padding:12px;max-height:60vh;overflow-y:auto">';
+  popHtml+='<p style="font-size:11px;color:#888;margin-bottom:10px">Har donor ka button click karein — WA khulega</p>';
+  links.forEach(function(lnk,i){
+    popHtml+='<a href="'+lnk.url+'" target="_blank" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:9px;border:1px solid #e8e8e8;margin-bottom:6px;text-decoration:none;background:#fff;color:#1a1a1a">';
+    popHtml+='<span style="font-size:13px;font-weight:500">'+(i+1)+'. '+lnk.name+'</span>';
+    popHtml+='<span style="font-size:18px">💬</span>';
+    popHtml+='</a>';
+  });
+  popHtml+='</div></div>';
+  showCustomPopup('<div style="display:flex;justify-content:center;padding:20px 10px">'+popHtml+'</div>');
+}
+
 
 function ldUpdateBulkBar(){
   var checks=document.querySelectorAll('.ld-check:checked');

@@ -5328,8 +5328,29 @@ function sendLDReminder(donorId){
   var donor=DB.donors.find(function(d){return d.id===donorId;});
   if(!donor||!donor.mobile){showPopup('⚠️','No Mobile','Is donor ka mobile number nahi hai.');return;}
   var mob=donor.mobile.replace(/[^0-9]/g,'').replace(/^0/,'');
-  var msg=buildWAMessage('reminder',donor,0);
-  window.open('https://wa.me/92'+mob+'?text='+msg,'_blank');
+
+  // Build bank account details from ORG_CONFIG
+  var bankLines='';
+  if(ORG_CONFIG.bankAccounts&&ORG_CONFIG.bankAccounts.length>0){
+    bankLines+='\n\n' + 'ڈونیشن ٹرانسفر کی تفصیل:';
+    ORG_CONFIG.bankAccounts.forEach(function(acc){
+      bankLines+='\n• '+acc.title+' | '+acc.bank+'\n  اکاؤنٹ: '+acc.number;
+    });
+  }
+
+  // Org name and address
+  var orgName2=(ORG_CONFIG.name||'فلاح قبرستان');
+  var orgAddr=(ORG_CONFIG.address||'');
+
+  var fullMsg=
+    'محترم '+donor.name+' صاحب،'+
+    '\nادباً گزارش ہے کہ اس ماہ کی آپ کی عطیہ رقم ابھی تک قبرستان کمیٹی کو موصول نہیں ہو سکی۔ براہِ کرم حسبِ استطاعت اپنی ڈونیشن جلد از جلد منتقل فرما دیں تاکہ قبرستان کی دیکھ بھال اور فلاحی کام بروقت اور مؤثر انداز میں جاری رکھے جا سکیں۔'+
+    '\n\nآپ کا ہر تعاون ہمارے لیے نہایت قیمتی ہے، اور ہمیں یقین ہے کہ آپ ہمیشہ کی طرح اس نیک کام میں اپنا حصہ ضرور ڈالیں گے۔'+
+    bankLines+
+    '\n\nجزاک اللہ خیراً'+
+    '\nاز طرف: '+orgName2+(orgAddr?'\n'+orgAddr:'');
+
+  window.open('https://wa.me/92'+mob+'?text='+encodeURIComponent(fullMsg),'_blank');
 }
 
 T.lastdonation=function(){

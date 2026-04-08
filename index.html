@@ -669,6 +669,9 @@ async function loadAllData(){
     try{updateNotifBadge();}catch(e){}
     const txn=DB.donations.map(d=>parseInt((d.id||'0').replace(/[^0-9]/g,''))||0);
     txnCounter=txn.length?Math.max(...txn)+1:1;
+    // Init donation IN-XXXX counter
+    const donNums=DB.donations.map(d=>parseInt((d.donNo||'IN-0000').replace('IN-',''))||0);
+    donCounter=donNums.length?Math.max(...donNums):0;
     const bil=DB.expenses.map(e=>parseInt((e.billNo||'BILL-0000').replace('BILL-',''))||0);
     expBillCounter=bil.length?Math.max(...bil):0;
     await FS.loadConfig();
@@ -716,7 +719,7 @@ const DB={
   suggestions:[]
 };
 
-var currentUser=null,currentRole=null,pendingRegRole=null,txnCounter=1,expBillCounter=0;
+var currentUser=null,currentRole=null,pendingRegRole=null,txnCounter=1,expBillCounter=0,donCounter=0;
 
 // ---- Offline Cache (localStorage) ----
 const CACHE_KEY='falah_db_cache';
@@ -1924,7 +1927,8 @@ donor={id:nid,name,mobile,cnic,area:document.getElementById('donorArea').value,b
   donor.entries.push({id:eid,date:t,amount,by:currentUser.id,desc});
   const bankIdx=(document.getElementById('donorBankAccount')||{value:''}).value;
   const bankRef=bankIdx!==''&&ORG_CONFIG.bankAccounts[parseInt(bankIdx)]?ORG_CONFIG.bankAccounts[parseInt(bankIdx)].title:null;
-  const txO={id:'TXN'+String(txnCounter++).padStart(3,'0'),donorId:donor.id,amount,date:t,by:currentUser.id,desc,bankAccount:bankRef};
+  const donNo=nextDonNo();
+  const txO={id:'TXN'+String(txnCounter++).padStart(3,'0'),donNo:donNo,donorId:donor.id,amount,date:t,by:currentUser.id,desc,bankAccount:bankRef};
   DB.donations.push(txO);FS.save('donations',txO.id,txO);
   FS.save('donors',donor.id,donor);
   DB.auditLog.push({by:currentUser.id,action:'Donation Entry',target:donor.name,detail:'Rs '+fmt(amount)+' — '+desc,date:t});
@@ -3779,6 +3783,7 @@ function deleteExpense(id){
 // ---- EXPENSE ENTRY (admin, manager, developer only) ----
 let EXP_CATEGORIES=['Maintenance','Cleaning','Repair','Equipment','Supplies','Salaries','Utilities','Transport','Miscellaneous'];
 
+function nextDonNo(){const n=++donCounter;return 'IN-'+String(n).padStart(4,'0');}
 function nextBillNo(){
   const nums=DB.expenses.map(e=>parseInt((e.billNo||'BILL-0000').replace('BILL-',''))||0);
   const next=Math.max(0,...nums)+1;
@@ -3870,7 +3875,7 @@ function showExpenseSlip(expId){
   var byUser=DB.users.find(function(u){return u.id===exp.by;})||{name:exp.by};
   var orgName2=(ORG_CONFIG&&ORG_CONFIG.name)||'Falah e Qabristan';
   var html='<div style="position:relative;width:90vw;max-width:380px">';
-  html+='<button onclick="closeCustomPopup();renderTab(\'expense\')" style="position:absolute;top:-12px;right:-12px;z-index:20;background:#A32D2D;border:none;border-radius:50%;width:28px;height:28px;color:#fff;font-size:14px;cursor:pointer;font-weight:700">×</button>';
+  html+='<button onclick="closeExpSlip()" style="position:absolute;top:-12px;right:-12px;z-index:20;background:#A32D2D;border:none;border-radius:50%;width:28px;height:28px;color:#fff;font-size:14px;cursor:pointer;font-weight:700">×</button>';
   html+='<div style="background:#fff;border:1.5px solid #185FA5;border-radius:14px;overflow:hidden;font-family:Arial,sans-serif">';
   // Header
   html+='<div style="background:#185FA5;padding:13px 16px;text-align:center">';
@@ -3954,6 +3959,13 @@ function finishExpense(desc,amount,date,area,hardcopyImg){
   popHtml+='<button data-eid="'+_savedExpId+'" onclick="closeCustomPopup();showExpenseSlip(this.dataset.eid)" style="background:#185FA5;color:#fff;border:none;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">&#128203; View Slip</button>';
   popHtml+='</div></div></div>';
   showCustomPopup('<div style="display:flex;justify-content:center;padding:20px 10px">'+popHtml+'</div>');
+  // Reset expense form
+  setTimeout(function(){
+    ['expDesc','expAmount','expArea'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+    var expDate=document.getElementById('expDate');if(expDate)expDate.value=today();
+    var expCat=document.getElementById('expCategory');if(expCat)expCat.selectedIndex=0;
+    var firstField=document.getElementById('expDesc');if(firstField)firstField.focus();
+  },300);
   const _expNotifTs=Date.now();
   DB.users.filter(u=>u.approved&&!u.locked&&u.id!==currentUser.id).forEach(function(u){
     FS.save('notifications','NOTIF_EXP_'+_expNotifTs+'_'+u.id,{
@@ -5212,6 +5224,8 @@ async function refreshDatabase(){
     // Update counters
     var txn=DB.donations.map(function(d){return parseInt((d.id||'0').replace(/[^0-9]/g,''))||0;});
     txnCounter=txn.length?Math.max.apply(null,txn)+1:1;
+    var donNums2=DB.donations.map(function(d){return parseInt((d.donNo||'IN-0000').replace('IN-',''))||0;});
+    donCounter=donNums2.length?Math.max.apply(null,donNums2):0;
     var bil=DB.expenses.map(function(e){return parseInt((e.billNo||'BILL-0000').replace('BILL-',''))||0;});
     expBillCounter=bil.length?Math.max.apply(null,bil):0;
     // Save fresh cache
@@ -5770,12 +5784,13 @@ function showSuperSlip(donorId){
     last5.forEach(function(e,i){
       var bg=i===0?'#E6F1FB':'#f9f9f9';
       var col=i===0?'#185FA5':'#555';
+      var donLabel=e.donNo?e.donNo:(e.id||'');
       var assignedUser=e.assignedTo?DB.users.find(function(u){return u.id===e.assignedTo;}):DB.users.find(function(u){return u.id===e.by;});
       var assignedName=assignedUser?assignedUser.name:'';
       var assignedBy=e.assignedBy?DB.users.find(function(u){return u.id===e.assignedBy;}):null;
       html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:6px 8px;border-radius:7px;margin-bottom:3px;background:'+bg+'">';
       html+='<div style="flex:1;min-width:0">';
-      html+='<div style="font-size:10px;color:'+col+';font-weight:600">'+e.date+(e.desc&&e.desc!=='Donation'?' • '+e.desc:'')+'</div>';
+      html+='<div style="font-size:10px;color:'+col+';font-weight:600">'+e.date+(donLabel?' <span style="opacity:0.7">'+donLabel+'</span>':'')+(e.desc&&e.desc!=='Donation'?' • '+e.desc:'')+'</div>';
       if(assignedName) html+='<div style="font-size:9px;margin-top:2px;color:'+(i===0?'#185FA5':'#888')+'">'+assignedName+(assignedBy?' → '+assignedBy.name:'')+'</div>';
       html+='</div>';
       html+='<div style="font-size:13px;font-weight:800;color:'+col+';flex-shrink:0;padding-left:6px">Rs '+fmt(e.amount)+'</div>';
@@ -6271,6 +6286,7 @@ function submitAddDonor(){
     showPopup('✅','Donor Added',name+' added! ID: '+nid+' | ڈونر شامل ہو گیا',null,()=>{
       // Reset form
       ['adMobile','adName'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+      setTimeout(()=>{const f=document.getElementById('adMobile');if(f)f.focus();},200);
       const ad=document.getElementById('adArea');if(ad)ad.value='';
       const bg=document.getElementById('adBloodGroup');if(bg)bg.value='';
       const ap=document.getElementById('adProfession');if(ap)ap.value='';

@@ -1903,7 +1903,15 @@ donor={id:nid,name,mobile,cnic,area:document.getElementById('donorArea').value,b
   DB.auditLog.push({by:currentUser.id,action:'Donation Entry',target:donor.name,detail:'Rs '+fmt(amount)+' — '+desc,date:t});
   // Auto refresh
   addNotification('donation','Donation Saved','Rs '+fmt(amount)+' — '+donor.name+' ('+donor.id+')');
-  // Show slip inline after save, then reset form
+  // Reset donation form after save
+  setTimeout(function(){
+    ['donorMobile','donorName','donationAmount','donorDesc','donorAmount'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+    var de=document.getElementById('donationDate');if(de)de.value=today();
+    hideStatus('donorMobileStatus');
+    var bp=document.getElementById('donorBankAccount');if(bp)bp.selectedIndex=0;
+    renderTab('donation');
+  },200);
+  // Show slip popup
   showDonorSlipPopup(donor.id);
   // Notify all users — entry made
   const _entryNotifTs=Date.now();
@@ -2250,9 +2258,9 @@ T.balreport=function(){
 
   // Compute per-user financials
   function userFinancials(u){
-    const donations=DB.donations.filter(d=>d.by===u.id);
+    const donations=DB.donations.filter(d=>d.assignedTo?d.assignedTo===u.id:d.by===u.id);
     const inc=donations.reduce((s,d)=>s+d.amount,0);
-    const expenses=DB.expenses.filter(e=>e.by===u.id);
+    const expenses=DB.expenses.filter(e=>e.assignedTo?e.assignedTo===u.id:e.by===u.id);
     const exp=expenses.reduce((s,e)=>s+e.amount,0);
     const sentT=DB.transfers.filter(t=>t.from===u.id&&t.received);
     const sent=sentT.reduce((s,t)=>s+t.amount,0);
@@ -3797,6 +3805,40 @@ function previewBillImg(){
   };r.readAsDataURL(f);
 }
 
+function showExpenseSlip(expId){
+  var exp=DB.expenses.find(function(e){return e.id===expId;});
+  if(!exp){renderTab('expense');return;}
+  var byUser=DB.users.find(function(u){return u.id===exp.by;})||{name:exp.by};
+  var orgName2=(ORG_CONFIG&&ORG_CONFIG.name)||'Falah e Qabristan';
+  var html='<div style="position:relative;width:90vw;max-width:380px">';
+  html+='<button onclick="closeCustomPopup();renderTab(\'expense\')" style="position:absolute;top:-12px;right:-12px;z-index:20;background:#A32D2D;border:none;border-radius:50%;width:28px;height:28px;color:#fff;font-size:14px;cursor:pointer;font-weight:700">×</button>';
+  html+='<div style="background:#fff;border:1.5px solid #185FA5;border-radius:14px;overflow:hidden;font-family:Arial,sans-serif">';
+  // Header
+  html+='<div style="background:#185FA5;padding:13px 16px;text-align:center">';
+  html+='<div style="font-size:16px;font-weight:800;color:#fff">'+orgName2+'</div>';
+  html+='<div style="font-size:9px;color:rgba(255,255,255,0.65);letter-spacing:2px;margin-top:4px;border-top:1px solid rgba(255,255,255,0.2);padding-top:4px">— EXPENSE BILL SLIP —</div>';
+  html+='</div>';
+  // Bill info
+  html+='<div style="padding:14px 16px;border-bottom:1px dashed #ddd">';
+  html+='<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:11px;color:#888">Bill No</span><span style="font-size:13px;font-weight:700;color:#185FA5">'+exp.billNo+'</span></div>';
+  html+='<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:11px;color:#888">Date</span><span style="font-size:12px;font-weight:600;color:#1a1a1a">'+exp.date+'</span></div>';
+  html+='<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:11px;color:#888">Category</span><span style="font-size:12px;font-weight:600;color:#1a1a1a">'+(exp.category||'—')+'</span></div>';
+  html+='<div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-size:11px;color:#888">Description</span><span style="font-size:12px;font-weight:600;color:#1a1a1a;max-width:55%;text-align:right">'+(exp.desc||'—')+'</span></div>';
+  html+='<div style="display:flex;justify-content:space-between"><span style="font-size:11px;color:#888">Recorded By</span><span style="font-size:12px;font-weight:600;color:#1a1a1a">'+byUser.name+'</span></div>';
+  html+='</div>';
+  // Amount
+  html+='<div style="padding:14px 16px;text-align:center;border-bottom:1px dashed #ddd">';
+  html+='<div style="font-size:10px;font-weight:700;color:#A32D2D;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Amount Paid</div>';
+  html+='<div style="font-size:26px;font-weight:800;color:#A32D2D">Rs '+fmt(exp.amount)+'</div>';
+  html+='</div>';
+  // Footer
+  html+='<div style="padding:10px 16px;background:#f9f9f9;text-align:center">';
+  html+='<div style="font-size:11px;color:#888">'+orgName2+'</div>';
+  if(ORG_CONFIG&&ORG_CONFIG.address)html+='<div style="font-size:10px;color:#aaa;margin-top:2px">'+ORG_CONFIG.address+'</div>';
+  html+='</div>';
+  html+='</div></div>';
+  showCustomPopup('<div style="display:flex;justify-content:center;align-items:flex-start;padding:30px 10px 20px">'+html+'</div>');
+}
 function submitExpense(){
   const desc=document.getElementById('expDesc').value.trim();
   const amount=parseInt(document.getElementById('expAmount').value)||0;
@@ -3840,7 +3882,19 @@ function finishExpense(desc,amount,date,area,hardcopyImg){
   DB.expenses.push(newExp);FS.save('expenses',newExp.id,newExp);
   DB.auditLog.push({by:currentUser.id,action:'Expense Added',target:billNo,detail:desc+' Rs '+fmt(amount),date:today()});
   addNotification('expense','Expense Added','Bill '+billNo+' — Rs '+fmt(amount)+' | '+desc);
-  showPopup('✅','Bill Saved','Bill No: '+billNo+' | Rs '+fmt(amount)+' saved.',null,()=>renderTab('expense'));
+  // Show popup with View Slip option
+  var _savedExpId=newExp.id;
+  var popHtml='<div style="background:#fff;border-radius:14px;padding:0;max-width:320px;width:85vw;overflow:hidden">';
+  popHtml+='<div style="background:#185FA5;padding:14px 16px;text-align:center"><div style="font-size:15px;font-weight:700;color:#fff">&#10004; Bill Saved</div></div>';
+  popHtml+='<div style="padding:16px;text-align:center">';
+  popHtml+='<div style="font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:4px">'+billNo+'</div>';
+  popHtml+='<div style="font-size:18px;font-weight:800;color:#A32D2D">Rs '+fmt(amount)+'</div>';
+  popHtml+='<div style="font-size:11px;color:#888;margin-top:4px">'+newExp.date+'</div>';
+  popHtml+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px">';
+  popHtml+='<button onclick="closeCustomPopup();setTimeout(function(){renderTab(String.fromCharCode(101,120,112,101,110,115,101));},100)" style="background:#f5f5f5;color:#555;border:1px solid #ddd;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">Close</button>';
+  popHtml+='<button data-eid="'+_savedExpId+'" onclick="closeCustomPopup();showExpenseSlip(this.dataset.eid)" style="background:#185FA5;color:#fff;border:none;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">&#128203; View Slip</button>';
+  popHtml+='</div></div></div>';
+  showCustomPopup('<div style="display:flex;justify-content:center;padding:20px 10px">'+popHtml+'</div>');
   const _expNotifTs=Date.now();
   DB.users.filter(u=>u.approved&&!u.locked&&u.id!==currentUser.id).forEach(function(u){
     FS.save('notifications','NOTIF_EXP_'+_expNotifTs+'_'+u.id,{
@@ -6090,6 +6144,11 @@ function submitAddDonor(){
   const profession=(document.getElementById('adProfession').value||'');
   if(!mobile||!name){showPopup('⚠️','Required','Name and mobile are required. | نام اور موبائل ضروری ہے');return;}
   if(normMob(mobile).length!==11){showPopup('⚠️','Mobile','Please enter 11-digit mobile number.');return;}
+  // Duplicate mobile check
+  const dupDonor=DB.donors.find(d=>normMob(d.mobile)===normMob(mobile));
+  if(dupDonor){showPopup('⚠️','Duplicate Donor',dupDonor.name+' (ID: '+dupDonor.id+') already exists with this mobile.\n\nDuplicate donor add nahi hoga.');return;}
+  // Confirmation
+  if(!confirm('Confirm: "'+name+'" ko donor add karna chahte hain?\n\nMobile: '+mobile+'\nArea: '+(area||'—')))return;
   const nid=nextAllId();
   const fi=document.getElementById('adPhotoInp');
   function finish(photo){
@@ -6529,7 +6588,7 @@ function getMenuConfig(){
       ...(currentRole!=='user'?[{icon:'📅', label:'Today Collection', tab:'todaycollection'},
       {icon:'📅', label:'Fund / فنڈ', tab:'fundreport'}]:[]),
       ...(currentRole!=='user'?[{icon:'📜', label:'Death Cert / وفات نامہ', tab:'deathcert'}]:[]),
-      ...(currentRole!=='user'?[{icon:'🧾', label:'Donor Slip / سلپ', tab:'slip'}]:[]),
+      
       ...(currentRole!=='user'?[{icon:'🏆', label:'Top 10 / سرفہرست', tab:'top'}]:[]),
     ]
   };

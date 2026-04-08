@@ -2505,7 +2505,8 @@ T.search=function(){
     <h3><span class="bi-title"><span class="bi-en">Search</span><span class="bi-ur">تلاش</span></span></h3>
     <div class="inp-wrap" style="margin-bottom:8px">
       <span class="inp-icon">🔍</span>
-      <input type="text" id="searchInput" placeholder="Name, ID, Mobile, Blood Group, Profession..." oninput="doSearch()" onkeyup="doSearch()" autocomplete="off" style="font-size:13px">
+      <input type="text" id="searchInput" placeholder="Name, ID, Mobile, Blood Group, Profession..." oninput="doSearch();toggleClearBtn('searchInput','searchClear')" onkeyup="doSearch()" autocomplete="off" style="font-size:13px;padding-right:32px">
+      <button id="searchClear" onclick="clearSearch('searchInput','searchClear',doSearch)" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:16px;color:#999;cursor:pointer;padding:0;line-height:1">×</button>
       <button onclick="clearSearch()" style="position:absolute;right:10px;background:none;border:none;font-size:16px;color:#aaa;cursor:pointer;padding:0;top:50%;transform:translateY(-50%)">✕</button>
     </div>
     <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px">
@@ -2708,6 +2709,18 @@ function openDonorFromSearch(id){
     const inp=document.getElementById('fetchById');
     if(inp){inp.value=id;autoFetchDonorUnified(id);}
   },200);
+}
+function toggleClearBtn(inputId,btnId){
+  var el=document.getElementById(inputId);
+  var btn=document.getElementById(btnId);
+  if(btn)btn.style.display=(el&&el.value.length>0)?'block':'none';
+}
+function clearSearch(inputId,btnId,callback){
+  var el=document.getElementById(inputId);
+  if(el){el.value='';el.focus();}
+  var btn=document.getElementById(btnId);
+  if(btn)btn.style.display='none';
+  if(callback)callback();
 }
 function doSearch(){
   if(!window._searchFilter)window._searchFilter='name';
@@ -3316,6 +3329,23 @@ async function deleteAllDonationsFirebase(){
   renderTab('datamanager');
 }
 
+async function diagnoseDonor(){
+  var id=prompt('Donor ID darein (e.g. 10030):');
+  if(!id)return;
+  id=id.trim();
+  var donor=DB.donors.find(function(d){return d.id===id;});
+  if(!donor){showPopup('⚠️','Not Found','Donor ID '+id+' nahi mila.');return;}
+  var dons=DB.donations.filter(function(d){return d.donorId===id;}).sort(function(a,b){return a.date.localeCompare(b.date);});
+  var total=dons.reduce(function(s,x){return s+x.amount;},0);
+  var msg='Donor: '+donor.name+'\nID: '+id+'\nDB.donations entries: '+dons.length+'\nLive total: Rs '+fmt(total)+'\ndonor.totalDonation: Rs '+fmt(donor.totalDonation||0);
+  if(dons.length>0){
+    msg+='\n\nEntries:';
+    dons.forEach(function(d,i){msg+='\n'+(i+1)+'. '+d.date+' Rs '+fmt(d.amount)+' by '+d.by+(d.desc?' ('+d.desc+')':'');});
+  } else {
+    msg+='\n\nNo donations found in DB.donations for this ID.';
+  }
+  alert(msg);
+}
 async function refreshLifetimeDonations(){
   if(currentRole!=='developer'){showPopup('⛔','Access Denied','Only developer can do this.');return;}
   if(!confirm('Sab donors ki lifetime donation DB.donations se recalculate karni hai?'))return;
@@ -4194,7 +4224,8 @@ T.donorlist=function(){
     </div>
     <div style="position:relative;margin-bottom:10px">
       <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none">🔍</span>
-      <input type="text" id="donorListSearch" value="${window._donorListSearch||''}" placeholder="Name, ID ya Mobile se search karein..." oninput="window._donorListSearch=this.value;filterDonorListInline()" style="width:100%;padding:10px 10px 10px 38px;border:1.5px solid #e8e8e8;border-radius:10px;font-size:13px;box-sizing:border-box" autocomplete="off">
+      <input type="text" id="donorListSearch" value="${window._donorListSearch||''}" placeholder="Name, ID ya Mobile se search karein..." oninput="window._donorListSearch=this.value;filterDonorListInline();toggleClearBtn('donorListSearch','donorListClear')" style="width:100%;padding:10px 32px 10px 38px;border:1.5px solid #e8e8e8;border-radius:10px;font-size:13px;box-sizing:border-box" autocomplete="off">
+      <button id="donorListClear" onclick="clearSearch('donorListSearch','donorListClear',function(){window._donorListSearch='';filterDonorListInline();})" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:16px;color:#999;cursor:pointer;padding:0;line-height:1">×</button>
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
       ${areas.map(a=>`<button onclick="window._donorListArea='${a}';renderTab('donorlist')" style="padding:4px 10px;border-radius:20px;border:1.5px solid ${a===sel?'#1D9E75':'#e8e8e8'};background:${a===sel?'#1D9E75':'#fff'};color:${a===sel?'#fff':'#555'};font-size:11px;font-weight:600;cursor:pointer">${a}</button>`).join('')}
@@ -5383,7 +5414,8 @@ T.superentry=function(){
   const uniqueAreas=['All',...new Set(allUsers.map(u=>u.area||'').filter(Boolean)).values()].sort();
   return `<div style="position:sticky;top:0;z-index:10;background:var(--bg);padding:8px 0 4px">
     <div style="display:flex;gap:8px;margin-bottom:6px">
-      <div class="inp-wrap" style="flex:1;margin-bottom:0"><span class="inp-icon">🔍</span><input type="text" id="superEntrySearch" placeholder="Search name or mobile... | نام یا موبائل" oninput="filterSuperEntry()" onkeyup="filterSuperEntry()" style="font-size:13px"></div>
+      <div class="inp-wrap" style="flex:1;margin-bottom:0"><span class="inp-icon">🔍</span><input type="text" id="superEntrySearch" placeholder="Search name or mobile..." oninput="filterSuperEntry();toggleClearBtn('superEntrySearch','seClear')" style="font-size:13px;padding-right:28px">
+      <button id="seClear" onclick="clearSearch('superEntrySearch','seClear',filterSuperEntry)" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:16px;color:#999;cursor:pointer;padding:0;line-height:1">×</button></div>
     </div>
     <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px">
       ${uniqueAreas.map(a=>`<button onclick="filterContacts('${a}')" id="seAreaBtn_${a.replace(/\s/g,'_')}" class="btn-xs" style="white-space:nowrap;background:${a==='All'?'#1D9E75':'#f5f5f5'};color:${a==='All'?'#fff':'#333'};border:1px solid #ddd;padding:5px 10px;border-radius:20px;cursor:pointer;font-size:11px">${a}</button>`).join('')}
@@ -5589,7 +5621,7 @@ T.lastdonation=function(){
   });
   return '<div class="card">' +
     '<h3 style="margin-bottom:12px">Last Donation</h3>' +
-    '<div class="inp-wrap" style="margin-bottom:10px"><span class="inp-icon">&#128269;</span><input type="text" id="ldSearch" placeholder="Search name, ID or mobile..." oninput="filterLastDonation()" autocomplete="off" style="font-size:13px"></div>' +
+    '<div class="inp-wrap" style="margin-bottom:10px;position:relative"><span class="inp-icon">&#128269;</span><input type="text" id="ldSearch" placeholder="Search name, ID or mobile..." oninput="filterLastDonation();toggleClearBtn(\'ldSearch\',\'ldClear\')" autocomplete="off" style="font-size:13px;padding-right:28px"><button id="ldClear" onclick="clearSearch(\'ldSearch\',\'ldClear\',filterLastDonation)" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:16px;color:#999;cursor:pointer;padding:0">&times;</button></div>' +
     '<div style="display:flex;gap:4px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px">'+areaBtns+'</div>' +
     '<div id="ldBulkBar" style="display:none;background:#0F6E56;border-radius:10px;padding:9px 14px;margin-bottom:8px;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:10">' +
       '<span id="ldSelCount" style="font-size:12px;font-weight:700;color:#fff">0 selected</span>' +
@@ -5609,7 +5641,8 @@ T.contacts=function(){
   const uniqueAreas=['All',...new Set(allUsers.map(u=>u.area||'').filter(Boolean)).values()].sort();
   return `<div style="position:sticky;top:0;z-index:10;background:var(--bg);padding:8px 0 4px">
     <div style="display:flex;gap:8px;margin-bottom:6px">
-      <div class="inp-wrap" style="flex:1;margin-bottom:0"><span class="inp-icon">🔍</span><input type="text" id="contactSearch" placeholder="Search name or mobile... | نام یا موبائل" oninput="filterContacts()" onkeyup="filterContacts()" style="font-size:13px"></div>
+      <div class="inp-wrap" style="flex:1;margin-bottom:0"><span class="inp-icon">🔍</span><input type="text" id="contactSearch" placeholder="Search name or mobile..." oninput="filterContacts();toggleClearBtn('contactSearch','contactClear')" style="font-size:13px;padding-right:28px">
+      <button id="contactClear" onclick="clearSearch('contactSearch','contactClear',function(){filterContacts();})" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:16px;color:#999;cursor:pointer;padding:0;line-height:1">×</button></div>
     </div>
     <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px">
       ${uniqueAreas.map(a=>`<button onclick="filterContacts('${a}')" id="areaBtn_${a.replace(/\s/g,'_')}" class="btn-xs" style="white-space:nowrap;background:${a==='All'?'#1D9E75':'#f5f5f5'};color:${a==='All'?'#fff':'#333'};border:1px solid #ddd;padding:5px 10px;border-radius:20px;cursor:pointer;font-size:11px">${a}</button>`).join('')}

@@ -2257,7 +2257,7 @@ function genTodayCollection(){
   var areaMap={};
   dons.forEach(function(don){
     var donor=DB.donors.find(function(d){return d.id===don.donorId;})||{area:'Unknown',name:'?',id:'?'};
-    var area=donor.area||'Unknown';
+    var area=(donor.area&&donor.area.trim())||'بغیر علاقہ';
     if(!areaMap[area])areaMap[area]={total:0,count:0,entries:[]};
     areaMap[area].total+=don.amount;
     areaMap[area].count++;
@@ -3391,6 +3391,7 @@ function printExpenseBill(id){
   <meta name="apple-mobile-web-app-title" content="Falah e Qabristan">
   <link rel="apple-touch-icon" href="https://mubeenahmad386-cloud.github.io/Falah-qabristan/icon-192.png">
   <link rel="manifest" href="manifest.json">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head><body>
   <div class="header">
     <div class="org">🕌 ${orgNameUrdu()} — ${orgName()}</div>
@@ -3520,33 +3521,60 @@ T.donorprofileupdate=function(){
   const donors=[...DB.donors].sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   return `<div class="card">
     <h3><span class="bi-title"><span class="bi-en">Donor Profile Update</span><span class="bi-ur">ڈونر پروفائل اپ ڈیٹ</span></span></h3>
-    <div style="display:flex;gap:8px;margin-bottom:12px">
-      <div class="inp-wrap" style="flex:1;margin-bottom:0"><span class="inp-icon">🔍</span><input type="text" id="dpuSearch" placeholder="Search donor name or mobile... | تلاش کریں" oninput="filterDPU()" style="font-size:13px"></div>
-      <button onclick="document.getElementById('dpuSearch').value='';filterDPU()" style="background:#f5f5f5;border:1px solid #ddd;border-radius:8px;padding:0 12px;font-size:12px;cursor:pointer;color:#666">✕</button>
+    <div class="inp-wrap" style="margin-bottom:12px;position:relative">
+      <span class="inp-icon">🔍</span>
+      <input type="text" id="dpuSearch" placeholder="Name, ID, Mobile ya Area..." oninput="filterDPU()" autocomplete="off" style="font-size:13px;padding-right:32px">
+      <button id="dpuClear" onclick="clearSearch('dpuSearch','dpuClear',filterDPU)" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:16px;color:#999;cursor:pointer;padding:0">×</button>
     </div>
     <div id="dpuList">${renderDPUList(donors,'')}</div>
   </div>`;
 }
 function renderDPUList(donors,q){
-  const filtered=q?donors.filter(d=>(d.name||'').toLowerCase().includes(q.toLowerCase())||normMob(d.mobile||'').includes(normMob(q))):donors;
+  var filtered=q?donors.filter(function(d){
+    var nm=(d.name||'').toLowerCase();
+    var mb=normMob(d.mobile||'');
+    var id=(d.id||'').toLowerCase();
+    var ql=q.toLowerCase();
+    return nm.includes(ql)||mb.includes(normMob(q))||id.includes(ql)||(d.area||'').toLowerCase().includes(ql);
+  }):donors;
   if(!filtered.length)return '<p style="font-size:13px;color:#888;text-align:center;padding:16px">No donors found.</p>';
-  return filtered.map(d=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:10px;background:#f9f9f9;border-radius:10px;margin-bottom:8px;border:1px solid #eee">
-      <div style="flex-shrink:0">${avatarHtml(d.photo,d.name,44)}</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.name} <span class="id-badge">${d.id}</span></div>
-        <div style="font-size:11px;color:#888;margin-top:2px">${d.mobile||'—'} • ${d.area||'—'}</div>
-        <div style="font-size:11px;color:#0F6E56;margin-top:1px">Total: Rs ${fmt(d.totalDonation||0)}</div>
-      </div>
-      <button onclick="openEditDonorProfile('${d.id}')" style="background:#1D9E75;color:#fff;border:none;padding:7px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0">✏️ Edit</button>
-    </div>`).join('');
+  // A-Z grouped like contacts
+  var groups={};
+  filtered.forEach(function(d){
+    var letter=(d.name||'?')[0].toUpperCase();
+    if(!groups[letter])groups[letter]=[];
+    groups[letter].push(d);
+  });
+  var html='<div style="font-size:11px;color:#888;margin-bottom:8px">'+filtered.length+' donors</div>';
+  Object.keys(groups).sort().forEach(function(letter){
+    html+='<div style="font-size:11px;font-weight:700;color:#888;padding:6px 0 3px;border-bottom:1px solid #eee;margin-bottom:4px">'+letter+'</div>';
+    groups[letter].forEach(function(d){
+      var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+      var avatar=d.photo?'<img src="'+d.photo+'" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #E1F5EE;flex-shrink:0">':'<div style="width:44px;height:44px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
+      // Live total from DB.donations
+      var liveTotal=DB.donations.filter(function(x){return x.donorId===d.id;}).reduce(function(s,x){return s+x.amount;},0);
+      var mob=(d.mobile||'').replace(/(\d{4})(\d{7})/,'$1-$2');
+      html+=
+        '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid #f5f5f5">'+
+          avatar+
+          '<div style="flex:1;min-width:0">'+
+            '<div style="font-size:13px;font-weight:700;color:#1a1a1a">'+d.name+' <span class="id-badge" style="font-size:9px">'+d.id+'</span></div>'+
+            '<div style="font-size:11px;color:#888;margin-top:2px">'+mob+' &bull; '+(d.area||'<span style="color:#E24B4A">No area</span>')+'</div>'+
+            '<div style="font-size:11px;font-weight:600;color:#0F6E56;margin-top:1px">Total: Rs '+fmt(liveTotal)+'</div>'+
+          '</div>'+
+          '<button data-did="'+d.id+'" onclick="openEditDonorProfile(this.dataset.did)" style="background:#1D9E75;color:#fff;border:none;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0">✏️ Edit</button>'+
+        '</div>';
+    });
+  });
+  return html;
 }
 function filterDPU(){
-  const inp=document.getElementById('dpuSearch');
-  const q=inp?inp.value.trim():'';
-  const el=document.getElementById('dpuList');
+  var inp=document.getElementById('dpuSearch');
+  var q=inp?inp.value.trim():'';
+  var el=document.getElementById('dpuList');
   if(!el)return;
-  el.innerHTML=renderDPUList([...DB.donors].sort((a,b)=>(a.name||'').localeCompare(b.name||'')),q);
+  el.innerHTML=renderDPUList(sortNameAZ(DB.donors.slice(),'name'),q);
+  toggleClearBtn('dpuSearch','dpuClear');
 }
 function filterDonorListInline(){
   var q=(window._donorListSearch||'').toLowerCase().trim();
@@ -4619,6 +4647,105 @@ async function refreshDatabase(){
     showPopup('❌','Error','Refresh failed: '+e.message);
   }
 }
+function exportAllToExcel(){
+  if(currentRole!=='developer'&&currentRole!=='admin'){showPopup('⚠️','Access','Only developer or admin.');return;}
+  showLoading(true);
+
+  // ── Build workbook ────────────────────────────────────────────────
+  var wb={SheetNames:[],Sheets:{}};
+
+  // Helper: array of arrays to sheet
+  function makeSheet(data){
+    if(!data||!data.length)return XLSX.utils.aoa_to_sheet([['No data']]);
+    return XLSX.utils.aoa_to_sheet(data);
+  }
+
+  // ── 1. Donors ──────────────────────────────────────────────────────
+  var donRows=[['ID','Name','Mobile','Area','Profession','Blood Group','Total Donation']];
+  sortNameAZ(DB.donors,'name').forEach(function(d){
+    var total=DB.donations.filter(function(x){return x.donorId===d.id;}).reduce(function(s,x){return s+x.amount;},0);
+    donRows.push([d.id,d.name,d.mobile,d.area||'',d.profession||'',d.bloodGroup||'',total]);
+  });
+  wb.SheetNames.push('Donors');wb.Sheets['Donors']=makeSheet(donRows);
+
+  // ── 2. Donations ───────────────────────────────────────────────────
+  var dRows=[['ID','Don No','Donor ID','Donor Name','Amount','Date','Description','By','Assigned To']];
+  DB.donations.slice().sort(function(a,b){return b.date.localeCompare(a.date);}).forEach(function(d){
+    var donor=findDonorById(d.donorId)||{name:'?'};
+    var byUser=DB.users.find(function(u){return u.id===d.by;})||{name:d.by||''};
+    var assignedUser=d.assignedTo?DB.users.find(function(u){return u.id===d.assignedTo;}):null;
+    dRows.push([d.id,d.donNo||'',d.donorId,donor.name,d.amount,d.date,d.desc||'',byUser.name,assignedUser?assignedUser.name:'']);
+  });
+  wb.SheetNames.push('Donations');wb.Sheets['Donations']=makeSheet(dRows);
+
+  // ── 3. Expenses ────────────────────────────────────────────────────
+  var eRows=[['ID','Bill No','Description','Category','Amount','Date','Area','By','Assigned To']];
+  DB.expenses.slice().sort(function(a,b){return b.date.localeCompare(a.date);}).forEach(function(e){
+    var byUser=DB.users.find(function(u){return u.id===e.by;})||{name:e.by||''};
+    var assignedUser=e.assignedTo?DB.users.find(function(u){return u.id===e.assignedTo;}):null;
+    eRows.push([e.id,e.billNo||'',e.desc,e.category||'',e.amount,e.date,e.area||'',byUser.name,assignedUser?assignedUser.name:'']);
+  });
+  wb.SheetNames.push('Expenses');wb.Sheets['Expenses']=makeSheet(eRows);
+
+  // ── 4. Users ───────────────────────────────────────────────────────
+  var uRows=[['ID','Name','Mobile','Role','Area','Profession','Status']];
+  sortNameAZ(DB.users,'name').forEach(function(u){
+    uRows.push([u.id,u.name,u.mobile,u.role,u.area||'',u.profession||'',u.approved?(u.locked?'Locked':'Active'):'Pending']);
+  });
+  wb.SheetNames.push('Users');wb.Sheets['Users']=makeSheet(uRows);
+
+  // ── 5. Deceased ────────────────────────────────────────────────────
+  var dcRows=[['ID','Name','Father','Area','Date of Death','Imam','W1 Name','W2 Name','Status']];
+  DB.deceased.forEach(function(d){
+    dcRows.push([d.id,d.name,d.fatherName||'',d.area||'',d.dateOfDeath||'',d.imamName||'',d.w1name||'',d.w2name||'',d.approved?'Approved':'Pending']);
+  });
+  wb.SheetNames.push('Deceased');wb.Sheets['Deceased']=makeSheet(dcRows);
+
+  // ── 6. Transfers ───────────────────────────────────────────────────
+  var tRows=[['ID','From','To','Amount','Date','Note','Status']];
+  DB.transfers.slice().sort(function(a,b){return b.date.localeCompare(a.date);}).forEach(function(t){
+    var fU=DB.users.find(function(u){return u.id===t.from;})||{name:t.from};
+    var tU=DB.users.find(function(u){return u.id===t.to;})||{name:t.to};
+    tRows.push([t.id,fU.name,tU.name,t.amount,t.date,t.note||'',t.received?'Received':'Pending']);
+  });
+  wb.SheetNames.push('Transfers');wb.Sheets['Transfers']=makeSheet(tRows);
+
+  // ── 7. Summary ─────────────────────────────────────────────────────
+  var totalDon=DB.donations.reduce(function(s,x){return s+x.amount;},0);
+  var totalExp=DB.expenses.reduce(function(s,x){return s+x.amount;},0);
+  var smRows=[
+    ['Falah e Qabristan — Summary Report'],
+    ['Generated On',new Date().toLocaleDateString('en-PK')+' '+new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'})],
+    [''],
+    ['Item','Count','Amount (Rs)'],
+    ['Total Donors',DB.donors.length,''],
+    ['Total Donations',DB.donations.length,totalDon],
+    ['Total Expenses',DB.expenses.length,totalExp],
+    ['Net Balance','',totalDon-totalExp],
+    ['Total Users',DB.users.length,''],
+    ['Deceased Records',DB.deceased.length,''],
+    ['Pending Approvals',DB.pendingApprovals.length,''],
+  ];
+  wb.SheetNames.unshift('Summary');wb.Sheets['Summary']=makeSheet(smRows);
+
+  // ── Download ────────────────────────────────────────────────────────
+  try{
+    var wbout=XLSX.write(wb,{bookType:'xlsx',type:'binary'});
+    function s2ab(s){var buf=new ArrayBuffer(s.length);var view=new Uint8Array(buf);for(var i=0;i<s.length;i++)view[i]=s.charCodeAt(i)&0xFF;return buf;}
+    var blob=new Blob([s2ab(wbout)],{type:'application/octet-stream'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url;
+    a.download='FalahQabristan_'+new Date().toISOString().slice(0,10)+'.xlsx';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showLoading(false);
+    showPopup('✅','Excel Downloaded','File download ho gayi! Google Drive pe upload kar sakte hain.\n\nSheets: Summary, Donors, Donations, Expenses, Users, Deceased, Transfers');
+  }catch(ex){
+    showLoading(false);
+    showPopup('❌','Error','Excel generate nahi hua: '+ex.message);
+  }
+}
 T.datamanager=function(){
   return `<div class="card">
     
@@ -5027,6 +5154,59 @@ T.lastdonation=function(){
     '<sc'+'ript>setTimeout(function(){filterLastDonation("All");},80);<'+'/script></div>';
 };;;;
 
+T.unknowndonors=function(){
+  var unknowns=DB.donors.filter(function(d){return !d.area||!d.area.trim();});
+  var areas=AREAS&&AREAS.length>0?AREAS:['Boghani','Kararwala','Other'];
+  var areaOpts=areas.map(function(a){return '<option value="'+a+'">'+a+'</option>';}).join('');
+  var html='<div class="card">';
+  html+='<h3 style="margin-bottom:4px">&#9888;&#65039; Update Unknown Donors</h3>';
+  html+='<p style="font-size:12px;color:#888;margin-bottom:14px">'+unknowns.length+' donor(s) without area — area set karein</p>';
+  if(!unknowns.length){
+    html+='<div style="text-align:center;padding:30px"><div style="font-size:32px">&#9989;</div><div style="font-size:14px;color:#0F6E56;font-weight:600;margin-top:8px">Sab donors ka area set hai!</div></div>';
+    html+='</div>';
+    return html;
+  }
+  unknowns.forEach(function(d){
+    var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+    var avatar=d.photo?'<img src="'+d.photo+'" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #E1F5EE;flex-shrink:0">':'<div style="width:44px;height:44px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
+    html+='<div style="display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #f0f0f0">';
+    html+=avatar;
+    html+='<div style="flex:1;min-width:0">';
+    html+='<div style="font-size:13px;font-weight:700;color:#1a1a1a">'+d.name+'</div>';
+    html+='<div style="font-size:10px;color:#888;margin-top:2px">'+d.id+' &bull; '+(d.mobile||'—')+'</div>';
+    html+='</div>';
+    html+='<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">';
+    html+='<select id="area_'+d.id+'" style="padding:7px 10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:12px;background:#fff;min-width:110px"><option value="">-- Area --</option>'+areaOpts+'</select>';
+    html+='<button data-did="'+d.id+'" onclick="saveUnknownArea(this.dataset.did)" style="background:#0F6E56;color:#fff;border:none;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">Save</button>';
+    html+='</div>';
+    html+='</div>';
+  });
+  html+='</div>';
+  return html;
+};
+
+async function saveUnknownArea(donorId){
+  var sel=document.getElementById('area_'+donorId);
+  if(!sel||!sel.value){showPopup('⚠️','Required','Area select karein.');return;}
+  var area=sel.value;
+  var donor=DB.donors.find(function(d){return d.id===donorId;});
+  if(!donor){showPopup('⚠️','Not Found','Donor nahi mila.');return;}
+  donor.area=area;
+  try{
+    await FS.save('donors',donorId,donor);
+    saveLocalCache();
+    // Remove from list
+    var row=sel.closest('div[style*="border-bottom"]');
+    if(row){
+      row.style.background='#E1F5EE';
+      row.style.opacity='0.5';
+      setTimeout(function(){renderTab('unknowndonors');},800);
+    }
+    showPopup('✅','Saved',donor.name+' ka area "'+area+'" set ho gaya!');
+  }catch(e){
+    showPopup('❌','Error','Save nahi hua: '+e.message);
+  }
+}
 T.contacts=function(){
   // Reset area on fresh render
   window._contactArea='All';
@@ -6052,7 +6232,8 @@ function getMenuConfig(){
   const homeItems = [
       {icon:'🏠', label:'Dashboard / ڈیش بورڈ', tab:'dash'},
       {icon:'💵', label:'Last Donation', tab:'lastdonation'},
-      {icon:'📒', label:'Contacts / رابطے', tab:'contacts'},
+      {icon:'⚠️', label:'Update Unknown', tab:'unknowndonors'},
+            {icon:'📒', label:'Contacts / رابطے', tab:'contacts'},
 
       {icon:'🔔', label:'Notifications / اطلاعات', tab:'notifications'},
       {icon:'👤', label:'Add Donor / ڈونر شامل', tab:'adddonor'},
@@ -6064,6 +6245,10 @@ function getMenuConfig(){
       {icon:'💡', label:'Give Suggestion / تجویز دیں', tab:'suggestion'},
       {icon:'⚠️', label:'Send Complaint / شکایت بھیجیں', tab:'complaint'}
     );
+  }
+  if(['admin','manager','developer'].includes(currentRole)){
+    var unknownCount=DB.donors.filter(function(d){return !d.area||!d.area.trim();}).length;
+    homeItems.push({icon:'⚠️', label:'Update Unknown'+(unknownCount>0?' ('+unknownCount+')':''), tab:'unknowndonors'});
   }
   // Add notification badges to home menu items
   const notifIdx=homeItems.findIndex(x=>x.tab==='notifications');
@@ -6259,6 +6444,7 @@ function renderTab(key){
       contacts:()=>{window._contactArea='All';filterContacts('All');},
       superentry:()=>{window._superEntryArea='All';filterSuperEntry('All');},
       lastdonation:()=>{window._ldArea='All';setTimeout(function(){filterLastDonation('All');},80);},
+      unknowndonors:()=>{renderTab('unknowndonors');},
       bloodbank:()=>{window._bbArea='All';filterBloodBank('All');},
       smartsearch:()=>{
         window._ssProf='All';
@@ -6362,7 +6548,7 @@ const TAB_LABELS={
   donorlist:'Donor List',slip:'Donor Slip',top:'Top Donors',transfer:'Transfer',
   decconfirm:'Confirm Deceased',approvals:'Approvals',lockuser:'Login Management',
   userslist:'Users List',professions:'Professions',audit:'Audit Log',areas:'Areas',
-  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',lastdonation:'Last Donation',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
+  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',lastdonation:'Last Donation',unknowndonors:'Update Unknown',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
 };
 
 // ============================================================

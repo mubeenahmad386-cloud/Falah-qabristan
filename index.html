@@ -5341,8 +5341,8 @@ T.datamanager=function(){
     
     <h3><span class="bi-title"><span class="bi-en">Data Management</span><span class="bi-ur">ڈیٹا مینیجمنٹ</span></span></h3>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
-      <button onclick="exportToExcel()" style="background:#1D7A5F;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">📥 Export Excel</button>
-      <button onclick="exportAllToExcel()" style="background:#217346;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">&#128202; Full Excel Export</button>
+      
+      
       <button onclick="openLoginHistory()" style="background:#185FA5;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">📋 Login History</button>
       <button onclick="deleteAllTransfersFirebase()" style="background:#854F0B;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">🗑️ Clear Transfers Log</button>
       <button onclick="openTransferEntries()" style="background:#185FA5;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">🔀 Transfer Entries</button>
@@ -5354,17 +5354,7 @@ T.datamanager=function(){
 
     <!-- Donations -->
     <div style="margin-bottom:14px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div style="font-size:13px;font-weight:700">💰 Donations (${DB.donations.length})</div>
-        <button onclick="devDeleteAll('donations')" style="background:#E24B4A;color:#fff;border:none;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">🗑️ Delete All</button>
-      </div>
-      <div style="margin-top:12px;padding:14px;background:#fff3cd;border:1.5px solid #ffc107;border-radius:12px">
-        <div style="font-size:12px;font-weight:700;color:#856404;margin-bottom:8px">🗂️ Delete All Donation Entries</div>
-        <div style="font-size:11px;color:#856404;margin-bottom:10px">Sab ${DB.donations.length} donation entries delete hon gi. Donors aur users bilkul safe rahein ge.</div>
-        <button onclick="deleteAllDonationsFirebase()" style="width:100%;background:#dc3545;color:#fff;border:none;padding:12px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">🗑️ Delete All Donation Entries (Keep Donors &amp; Users)</button>
-      </div>
-      <div style="margin-top:10px;padding:14px;background:#fff0f0;border:1.5px solid #E24B4A;border-radius:12px">
-        <div style="font-size:12px;font-weight:700;color:#A32D2D;margin-bottom:8px">🔄 Reset Lifetime Donations to Zero</div>
+      
         <div style="font-size:11px;color:#A32D2D;margin-bottom:10px">${DB.donors.length} donors ki lifetime total aur entries zero ho jayengi. Donations collection untouched.</div>
         <button onclick="resetLifetimeDonationsFirebase()" style="width:100%;background:#A32D2D;color:#fff;border:none;padding:12px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">🔄 Reset All Lifetime Donations to Zero</button>
       </div>
@@ -7006,7 +6996,7 @@ function openSubmenu(key){
   currentSubmenu = key;
 }
 
-const FORM_TABS_SET=new Set(['donation','expense','deceased','adddonor','transfer','profile','suggestion','donorprofileupdate','orgsettings','areas','professions','expcategories','approvals','lockuser','userslist','audit','datamanager','suggestions','bloodbank','smartsearch','smsreminders','complaint','complaints','contacts','superentry','notifications']);
+const FORM_TABS_SET=new Set(['donation','expense','deceased','adddonor','transfer','profile','suggestion','donorprofileupdate','orgsettings','areas','professions','expcategories','approvals','lockuser','userslist','audit','datamanager','suggestions','bloodbank','smartsearch','smsreminders','complaint','complaints','contacts','superentry','notifications','missinginfo','unknowndonors']);
 
 function selectTab(tab){
   renderTab(tab);

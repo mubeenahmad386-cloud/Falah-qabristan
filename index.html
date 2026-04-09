@@ -1,605 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Falah e Qabristan</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{--green:#1D9E75;--green-dark:#0F6E56;--blue:#185FA5;--amber:#BA7517;--red:#E24B4A;--purple:#993556;--bg:#f0f4f3;--card:#fff;--border:#e0e0e0;--text:#1a1a1a;--muted:#888;--radius:12px}
-body{font-family:system-ui,-apple-system,sans-serif;font-size:14px;color:var(--text);background:var(--bg);min-height:100vh;padding-bottom:60px}
-/* SCREENS */
-.screen{display:none;padding:0;min-height:100vh}.screen.active{display:block}
-.bi-field{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;margin-top:10px}
-.bi-field .en{font-size:12px;font-weight:600;color:#1a1a1a}
-.bi-field .ur{font-size:11px;color:#888;direction:rtl}
-.nav-label{font-size:9px;font-weight:600;color:#888;margin-top:1px;text-align:center}
-.nav-label-ur{font-size:8px;color:#aaa;direction:rtl;text-align:center}
-.nav-item.active .nav-label{color:#1D9E75}
-.nav-item.active .nav-label-ur{color:#1D9E75}
-.qa-btn-new{display:flex;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;border-radius:10px;cursor:pointer;border:0.5px solid var(--border-color,#ddd)}
-.qa-en{font-size:9px;font-weight:600}
-.qa-ur{font-size:8px;direction:rtl;opacity:0.8}
-.stat-card-bi{background:#f9f9f9;border-radius:12px;padding:11px 12px;border:1px solid #eee}
-.stat-label-bi{display:flex;justify-content:space-between}
-.stat-label-bi .en{font-size:9px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.4px}
-.stat-label-bi .ur{font-size:9px;color:#aaa;direction:rtl}
-.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-.section-header .en{font-size:11px;font-weight:700;color:#1a1a1a;text-transform:uppercase;letter-spacing:0.4px}
-.section-header .ur{font-size:11px;color:#888;direction:rtl}
-.card{border-radius:16px;background:#fff;padding:15px;margin-bottom:10px;border:0.5px solid #ebebeb}
-.inp-wrap{position:relative;display:flex;align-items:center;margin-bottom:8px}
-.inp-wrap input,.inp-wrap select{flex:1;padding:12px 12px 12px 38px;border:1.5px solid #e8e8e8;border-radius:12px;font-size:14px;background:#fafafa;transition:border 0.2s,background 0.2s;color:#1a1a1a}
-.inp-wrap input:focus,.inp-wrap select:focus{border-color:#1D9E75;background:#fff;outline:none;box-shadow:0 0 0 3px rgba(29,158,117,0.08)}
-.inp-icon{position:absolute;left:11px;font-size:16px;z-index:1;pointer-events:none}
-input:not(.inp-wrap input),select:not(.inp-wrap select),textarea{width:100%;padding:12px 14px;border:1.5px solid #e8e8e8;border-radius:12px;font-size:14px;background:#fafafa;box-sizing:border-box;margin-bottom:8px;transition:border 0.2s;color:#1a1a1a;-webkit-appearance:none}
-input:focus,select:focus,textarea:focus{border-color:#1D9E75;background:#fff;outline:none;box-shadow:0 0 0 3px rgba(29,158,117,0.08)}
-label{display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:5px;margin-top:10px}
-.btn{display:block;width:100%;padding:14px;border-radius:14px;border:1.5px solid #e0e0e0;font-size:14px;font-weight:600;cursor:pointer;background:#fff;transition:all 0.15s;text-align:center;-webkit-tap-highlight-color:transparent}
-.btn:active{transform:scale(0.98);opacity:0.9}
-.btn-primary{background:#0F6E56;color:#fff;border:none}
-.btn-primary:active{background:#085041}
-.btn-outline{border-color:#1D9E75;color:#1D9E75}
-.btn-dev{background:#7c2d48;color:#fff;border:none}
-.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:0.1px}
-.badge-admin{background:#E6F1FB;color:#185FA5}
-.badge-manager{background:#E1F5EE;color:#0F6E56}
-.badge-developer{background:#f5e8ff;color:#6b21a8}
-.badge-user{background:#f5f5f5;color:#666}
-.badge-donor{background:#E1F5EE;color:#0F6E56}
-.entry-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:0.5px solid #f5f5f5}
-.entry-name{font-size:13px;font-weight:600;color:#1a1a1a}
-.entry-sub{font-size:11px;color:#999;margin-top:2px}
-.entry-amt{font-size:13px;font-weight:700;color:#0F6E56}
-.id-badge{background:#E6F1FB;color:#185FA5;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700}
-.section-bi{font-size:11px;font-weight:700;color:#888;padding:8px 0 4px;border-bottom:1.5px solid #eee;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
-.stat-card{background:#f5f5f5;border-radius:14px;padding:13px;text-align:center;border:none}
-.stat-card-bi{background:#f5f5f5;border-radius:14px;padding:13px;border:none}
-.stat-label{font-size:10px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.4px}
-.stat-label-bi{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px}
-.stat-label-bi .en{font-size:9px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:0.4px}
-.stat-label-bi .ur{font-size:9px;color:#bbb;direction:rtl}
-.stat-val{font-size:21px;font-weight:800;margin-top:4px;letter-spacing:-0.5px}
-.app-header{background:#0F6E56;padding:13px 16px;display:flex;justify-content:space-between;align-items:center;position:relative;top:0;z-index:100}
-.content-area{padding:12px 12px 90px;min-height:100vh}
-.nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;cursor:pointer;flex:1;transition:all 0.15s;border-radius:10px;margin:4px 2px}
-.nav-item.active{background:rgba(29,158,117,0.12)}
-.nav-label{font-size:9px;font-weight:600;color:#888}
-.nav-item.active .nav-label{color:#1D9E75}
-/* APP HEADER */
-.app-header{background:var(--green);color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:0 2px 8px rgba(0,0,0,0.15)}
-.app-header-left{display:flex;align-items:center;gap:10px}
-.app-title{font-size:16px;font-weight:700;color:#fff}
-.app-subtitle{font-size:11px;opacity:0.85;color:#fff;margin-top:1px}
-.header-avatar{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;overflow:hidden;flex-shrink:0;border:2px solid rgba(255,255,255,0.45)}
-.btn-logout{background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3);padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer}
-/* CONTENT WRAPPER */
-.content-area{padding:16px}
-/* CARD */
-.card{background:var(--card);border:0.5px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,0.04)}
-.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #f0f0f0}
-.card-title{font-size:15px;font-weight:700}
-h2{font-size:16px;font-weight:700;margin-bottom:10px}
-h3{font-size:14px;font-weight:600;margin-bottom:8px}
-/* FORMS */
-label{font-size:12px;color:var(--muted);font-weight:500;display:block;margin-bottom:3px;margin-top:10px}
-input,select,textarea{width:100%;padding:10px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;background:#fff;color:var(--text);transition:border-color 0.15s}
-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(29,158,117,0.1)}
-input[type=file]{padding:6px}
-/* BUTTONS */
-.btn{display:block;width:100%;padding:11px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid #ddd;background:#f5f5f5;color:#333;margin-top:8px;text-align:center;transition:all 0.15s}
-.btn:active{transform:scale(0.98)}
-.btn-primary{background:var(--green);color:#fff;border-color:var(--green)}
-.btn-danger{background:var(--red);color:#fff;border-color:var(--red)}
-.btn-warn{background:var(--amber);color:#fff;border-color:var(--amber)}
-.btn-info{background:var(--blue);color:#fff;border-color:var(--blue)}
-.btn-dev{background:var(--purple);color:#fff;border-color:var(--purple)}
-.btn-outline{background:transparent;color:var(--green);border-color:var(--green)}
-.btn-sm{width:auto;display:inline-block;padding:6px 14px;font-size:12px;margin-top:0;border-radius:8px}
-.btn-xs{width:auto;display:inline-block;padding:3px 8px;font-size:11px;margin-top:0;border-radius:6px;cursor:pointer;border:1px solid}
-/* BOTTOM NAV */
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#0F6E56;border-top:none;display:flex;z-index:100;box-shadow:0 -2px 12px rgba(0,0,0,0.15);transition:transform 0.25s ease}
-.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 4px 6px;cursor:pointer;position:relative;transition:all 0.15s}
-.nav-item.active .nav-icon{opacity:1}
-.nav-item.active .nav-label{color:#fff;font-weight:700;opacity:1}
-.nav-item.active{background:#085041}
-.nav-icon{font-size:22px;margin-bottom:1px;opacity:0.7;transition:opacity 0.15s}
-.nav-label{font-size:10px;color:#fff;font-weight:500;opacity:0.7}
-.nav-badge{position:absolute;top:4px;right:calc(50% - 18px);background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;min-width:14px;text-align:center}
-/* SUBMENU DRAWER */
-.submenu-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:80;display:none}
-.submenu-overlay.active{display:block}
-.submenu-drawer{position:fixed;bottom:60px;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;z-index:90;padding:16px 16px 20px;box-shadow:0 -4px 20px rgba(0,0,0,0.15);transform:translateY(100%);transition:transform 0.25s ease;max-height:75vh;overflow-y:auto}
-.submenu-drawer.open{transform:translateY(0)}
-.submenu-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;text-align:center}
-.submenu-handle{width:40px;height:4px;background:#e0e0e0;border-radius:2px;margin:0 auto 14px;cursor:pointer}
-.submenu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
-.submenu-item{display:flex;flex-direction:column;align-items:center;padding:12px 6px;border-radius:12px;cursor:pointer;background:#f8f8f8;border:1px solid #eee;transition:all 0.15s}
-.submenu-item:active{transform:scale(0.96)}
-.submenu-item.active-tab{background:#E1F5EE;border-color:var(--green)}
-.submenu-item.active-tab .si-label{color:var(--green)}
-.si-icon{font-size:22px;margin-bottom:4px}
-.si-label{font-size:11px;font-weight:500;color:#555;text-align:center;line-height:1.2}
-/* BADGES */
-.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
-.badge-user{background:#E1F5EE;color:#0F6E56}
-.badge-admin{background:#E6F1FB;color:#185FA5}
-.badge-manager{background:#FAEEDA;color:#854F0B}
-.badge-locked{background:#FCEBEB;color:#A32D2D}
-.badge-pending{background:#FAEEDA;color:#854F0B}
-.badge-dev{background:#EEEDFE;color:#534AB7}
-/* INFO BOXES */
-.info-box{padding:10px 12px;border-radius:8px;font-size:12px;margin-bottom:10px;line-height:1.5}
-.info-box.warning{background:#FAEEDA;color:#854F0B;border:1px solid #EF9F27}
-.info-box.success{background:#E1F5EE;color:#0F6E56;border:1px solid #1D9E75}
-.info-box.info{background:#E6F1FB;color:#185FA5;border:1px solid #378ADD}
-.info-box.danger{background:#FCEBEB;color:#A32D2D;border:1px solid #E24B4A}
-/* ENTRIES */
-.entry-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:0.5px solid #f5f5f5}
-.entry-row:last-child{border-bottom:none}
-.entry-name{font-size:13px;font-weight:600}
-.entry-sub{font-size:11px;color:var(--muted);margin-top:2px}
-.entry-amt{font-size:13px;font-weight:600;color:var(--green)}
-/* STATS */
-.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
-.stat-card{background:linear-gradient(135deg,#f8f9fa,#fff);border-radius:10px;padding:14px;text-align:center;border:1px solid #eee}
-.stat-label{font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:500}
-.stat-val{font-size:18px;font-weight:700}
-/* SECTION TITLE */
-.section-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;margin-top:14px}
-/* POPUP */
-.popup{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px}
-.popup-box{background:#fff;border-radius:18px;padding:24px;max-width:340px;width:100%;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.2)}
-.popup-box p{font-size:13px;color:#666;margin-bottom:16px;line-height:1.6}
-/* MODAL */
-.modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.55);display:flex;align-items:flex-start;justify-content:center;z-index:150;padding:16px;overflow-y:auto}
-.modal-box{background:#fff;border-radius:18px;padding:20px;max-width:480px;width:100%;margin:auto}
-/* CERTS */
-.cert-wrap{background:#fff;border:2px solid var(--green);border-radius:14px;overflow:hidden;margin-top:10px}
-.cert-green-header{background:linear-gradient(135deg,var(--green),var(--green-dark));color:#fff;padding:20px;text-align:center}
-.cert-body{padding:16px}
-.cert-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed #eee;font-size:13px}
-.cert-row:last-child{border-bottom:none}
-.cert-label{color:#666;flex:1;font-size:12px}
-.cert-val{font-weight:600;flex:1.4;text-align:right}
-.cert-section{background:#f9f9f9;border-radius:8px;padding:10px;margin:8px 0;border-left:3px solid var(--green)}
-.cert-section-title{font-size:11px;color:var(--green);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;font-weight:700}
-.cert-org{font-size:17px;font-weight:700}
-.cert-sub{font-size:12px;opacity:0.85;margin-top:2px}
-/* DC CERT */
-.dc-stamp{width:60px;height:60px;border-radius:50%;border:3px solid var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:22px;background:#fff}
-.dc-field{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid #f0f0f0;font-size:13px}
-.dc-field:last-child{border-bottom:none}
-.dc-key{color:#888;min-width:110px;font-size:12px}
-.bi-title{display:flex;flex-direction:column;gap:1px}
-.bi-en{font-size:14px;font-weight:700;color:#1a1a1a;line-height:1.2}
-.bi-ur{font-size:11px;font-weight:500;color:#1D9E75;font-style:normal;direction:rtl;text-align:left}
-.card-header .bi-en{font-size:15px}
-.section-bi{display:flex;flex-direction:column;gap:1px;margin-bottom:6px;margin-top:10px}
-.section-bi .bi-en{font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.5px}
-.section-bi .bi-ur{font-size:11px;font-weight:500;color:#1D9E75;direction:rtl;text-align:left}
-.inp-wrap{position:relative}
-.inp-wrap input,.inp-wrap select,.inp-wrap textarea{padding-left:38px}
-.inp-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none;z-index:1}
-.inp-wrap textarea~.inp-icon,.inp-wrap-top .inp-icon{top:12px;transform:none}
-.dc-val{font-weight:500;flex:1}
-/* AVATAR */
-.avatar-box{width:64px;height:64px;border-radius:50%;border:2px dashed #ccc;display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;flex-shrink:0;background:#f5f5f5}
-.avatar-box img{width:100%;height:100%;object-fit:cover}
-/* LEDGER */
-.ledger-hdr{display:grid;grid-template-columns:76px 1fr 78px 78px 80px;gap:4px;font-size:11px;font-weight:700;color:#888;padding:6px 0;border-bottom:2px solid #ddd}
-.ledger-row{display:grid;grid-template-columns:76px 1fr 78px 78px 80px;gap:4px;font-size:11px;padding:6px 0;border-bottom:0.5px solid #f0f0f0;align-items:center}
-/* DONOR RANK */
-.donor-rank-card{border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;border:1px solid transparent}
-/* TRANSFER */
-.cash-box{background:#E1F5EE;border:1.5px solid var(--green);border-radius:12px;padding:14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
-.transfer-inbox-item{padding:12px;border-radius:10px;margin-bottom:8px;border:1px solid #ddd;background:#fffef0}
-/* FETCH CARD */
-.fetch-card{background:#f0fff8;border:1.5px solid var(--green);border-radius:8px;padding:10px;margin-top:8px;display:flex;align-items:center;gap:10px}
-/* USER MGMT */
-.user-mgmt-row{display:flex;align-items:center;gap:8px;padding:10px;background:#f9f9f9;border-radius:10px;margin-bottom:8px}
-/* LOCK BADGE */
-.lock-badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600}
-.lock-badge.locked{background:#FCEBEB;color:#A32D2D}
-.lock-badge.active{background:#E1F5EE;color:#0F6E56}
-/* ID BADGE */
-.id-badge{display:inline-block;background:#E6F1FB;color:#185FA5;border-radius:6px;padding:2px 7px;font-size:11px;font-weight:600}
-/* DIVIDER */
-.divider{display:flex;align-items:center;gap:10px;margin:16px 0}
-.divider-line{flex:1;height:1px;background:#eee}
-.divider-text{font-size:12px;color:#aaa;font-weight:500}
-/* ROLE BUTTONS */
-.role-select-btn{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:14px;border:1px solid #e8e8e8;background:#fff;cursor:pointer;margin-bottom:10px;width:100%;text-align:left;transition:all 0.15s;-webkit-tap-highlight-color:transparent}
-.role-select-btn:active{transform:scale(0.98)}
-.role-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
-/* APPROVAL ITEM */
-.approval-item{display:flex;align-items:center;gap:8px;padding:12px;background:#f9f9f9;border-radius:10px;margin-bottom:8px;border:1px solid #eee}
-.approval-info{flex:1}
-.approval-name{font-size:13px;font-weight:600}
-.approval-sub{font-size:11px;color:#888;margin-top:2px}
-/* FOOTER */
-.page-footer{background:#fff;border-top:1px solid #eee;padding:20px 16px 60px;text-align:center}
-.footer-org{font-size:12px;color:#888;margin-bottom:4px}
-.footer-credit{font-size:11px;color:#aaa}
-.footer-credit a{color:#1D9E75;text-decoration:none;font-weight:600}
-/* LOGIN PAGE */
-.login-hero{background:#0F6E56;padding:52px 24px 50px;text-align:center;color:#fff;position:relative;overflow:hidden}.login-hero::before{content:'';position:absolute;top:-50px;right:-50px;width:180px;height:180px;background:rgba(255,255,255,0.07);border-radius:50%}.login-hero::after{content:'';position:absolute;bottom:-40px;left:-40px;width:130px;height:130px;background:rgba(255,255,255,0.05);border-radius:50%}.login-hero-dot{position:absolute;top:30px;left:24px;width:60px;height:60px;background:rgba(255,255,255,0.04);border-radius:50%}
-.login-logo-wrap{margin-bottom:12px}
-.login-logo-box{width:76px;height:76px;background:rgba(255,255,255,0.15);border-radius:22px;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;border:2px solid rgba(255,255,255,0.25);font-size:38px}
-.login-org-name{font-size:28px;font-weight:800;letter-spacing:-0.5px;line-height:1.15;color:#fff}
-.login-org-ur{font-size:16px;color:rgba(255,255,255,0.8);direction:rtl;margin-top:6px;font-weight:600}
-.login-org-sub{font-size:12px;color:rgba(255,255,255,0.55);margin-top:8px;letter-spacing:0.3px}
-.login-org-addr{font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px}
-.login-address{font-size:12px;opacity:0.75;margin-top:6px}
-.login-card{background:#fff;border-radius:28px 28px 0 0;margin-top:-24px;padding:28px 20px 30px;min-height:calc(100vh - 220px)}
-/* MISC */
-.prof-tag{display:inline-block;padding:2px 8px;background:#E6F1FB;color:#185FA5;border-radius:20px;font-size:11px;margin:2px}
-/* STATUS BOXES */
-#regCnicStatus,#regMobileStatus,#donorMobileStatus,#donorCnicStatus,#profMobileStatus,#profCnicStatus{font-size:12px;padding:7px 10px;border-radius:7px}
-</style>
-
-<!-- Firebase CDN -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<!-- PDF & Image Export — inline -->
-
-<!-- LOGIN SCREEN -->
-<div id="loginScreen" class="screen active">
-  <!-- Hidden elements for renderLoginExtras compatibility -->
-  <div style="display:none">
-    <div id="loginLogo"></div><div id="loginOrgName"></div>
-    <div id="loginOrgNameUrdu"></div><div id="loginOrgAddress"></div>
-    <div id="socialLinksRow"></div>
-  </div>
-  <!-- Green header with logo -->
-  <div style="background:#0F6E56;padding:28px 20px 22px;text-align:center">
-    <div class="login-logo-wrap">
-      <div class="login-logo-box" id="loginLogo2"><span style="font-size:38px">🪦</span></div>
-    </div>
-    <div style="font-size:17px;font-weight:800;color:#fff;margin-top:4px" id="loginOrgName2">Falah e Qabristan</div>
-    <div style="display:none" id="loginOrgNameUrdu2">فلاح قبرستان</div>
-    <div id="loginOrgAddress2" style="display:none;font-size:11px;color:rgba(255,255,255,0.6);margin-top:4px"></div>
-    <div id="appVersionTag" style="font-size:10px;color:rgba(255,255,255,0.45);margin-top:6px"></div>
-  </div>
-  <div class="login-card">
-
-    <!-- Sign In heading -->
-    <div style="margin-bottom:20px">
-      <div style="font-size:22px;font-weight:800;color:#0F6E56;letter-spacing:-0.5px">Sign In</div>
-      <div style="font-size:13px;color:#aaa;margin-top:3px;direction:rtl">اپنا اکاؤنٹ کھولیں</div>
-    </div>
-
-    <!-- Fields -->
-    <div style="margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-        <span style="font-size:12px;font-weight:600;color:#444">Mobile Number</span>
-        <span style="font-size:11px;color:#aaa;direction:rtl">موبائل نمبر</span>
-      </div>
-      <div class="inp-wrap" style="margin-bottom:0">
-        <span class="inp-icon">📱</span>
-        <input type="tel" id="loginMobile" placeholder="0300-1234567" maxlength="12" oninput="autoFormatMobile(this,null)" style="font-size:15px">
-      </div>
-    </div>
-    <div style="margin-bottom:4px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-        <span style="font-size:12px;font-weight:600;color:#444">Password</span>
-        <span style="font-size:11px;color:#aaa;direction:rtl">پاس ورڈ</span>
-      </div>
-      <div class="inp-wrap" style="position:relative;margin-bottom:0">
-        <span class="inp-icon">🔒</span>
-        <input type="password" id="loginPassword" placeholder="••••••••" style="padding-right:42px;padding-left:38px;font-size:15px">
-        <span onclick="togglePwd('loginPassword',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:16px;color:#bbb">👁</span>
-      </div>
-    </div>
-    <div id="loginError" style="display:none;margin-top:8px"></div>
-
-    <!-- Sign In + Create Account inline 50/50 -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px">
-      <button class="btn btn-primary" style="padding:14px 8px;font-size:14px;letter-spacing:0.2px" onclick="doLogin()">
-        Sign In
-        <span style="font-size:10px;color:rgba(255,255,255,0.7);display:block;margin-top:2px;direction:rtl;letter-spacing:0">لاگ ان کریں</span>
-      </button>
-      <button class="btn btn-outline" style="padding:14px 8px;font-size:14px" onclick="showScreen('regRoleScreen')">
-        Create Account
-        <span style="font-size:10px;color:#1D9E75;display:block;margin-top:2px;direction:rtl">نیا اکاؤنٹ بنائیں</span>
-      </button>
-    </div>
-
-    <!-- Extra buttons row — always visible -->
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px">
-      <div id="historyBtnWrap" style="display:block">
-        <button class="btn" style="background:#f0fff8;color:#085041;border-color:#9FE1CB;font-size:11px;padding:10px 6px;width:100%" onclick="showScreen('historyScreen')">📖<span style="display:block;margin-top:2px">History</span></button>
-      </div>
-      <div id="bankBtnWrap" style="display:block">
-        <button class="btn" style="background:#E6F1FB;color:#0C447C;border-color:#B5D4F4;font-size:11px;padding:10px 6px;width:100%" onclick="showScreen('bankScreen')">🏦<span style="display:block;margin-top:2px">Accounts</span></button>
-      </div>
-      <div id="contactBtnWrap" style="display:block">
-        <button class="btn" style="background:#f0f4ff;color:#3730a3;border-color:#c7d2fe;font-size:11px;padding:10px 6px;width:100%" onclick="showScreen('contactScreen')">📞<span style="display:block;margin-top:2px">Contact</span></button>
-      </div>
-    </div>
-
-    <!-- Developer section -->
-    <button onclick="showScreen('devKeyScreen')" style="display:flex;align-items:center;gap:12px;width:100%;margin-top:12px;background:#fdf4f7;border:1px solid #f0c8d8;border-radius:14px;padding:12px 14px;cursor:pointer;-webkit-tap-highlight-color:transparent;text-align:left">
-      <div style="width:36px;height:36px;background:#993556;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">⚙️</div>
-      <div style="flex:1">
-        <div style="font-size:13px;font-weight:700;color:#7c2d48">Developer Access</div>
-        <div style="font-size:11px;color:#b06080;margin-top:1px;direction:rtl">ماسٹر کی سے لاگ ان</div>
-      </div>
-      <span style="color:#b06080;font-size:16px">→</span>
-    </button>
-
-    <!-- Footer -->
-    <div style="text-align:center;padding:8px 0 4px">
-
-    </div>
-  <div class="page-footer" style="margin-top:24px;padding:16px 0 24px;border-top:1px solid #f0f0f0;text-align:center">
-      <div class="footer-org" id="footerOrgName" style="font-size:13px;font-weight:700;color:#0F6E56;margin-bottom:4px">Falah e Qabristan</div>
-      <div class="footer-credit">Designed By: <a href="tel:03009084228">Asif Kanwal — 0300-9084228</a></div>
-      <div class="footer-credit">Developed By: <a href="tel:03184516464">Mubeen Ahmad — 0318-4516464</a></div>
-    </div>
-  </div>
-</div>
-
-<!-- HISTORY SCREEN -->
-<div id="historyScreen" class="screen">
-  <div class="app-header">
-    <div class="app-header-left"><button class="btn-logout" onclick="showScreen('loginScreen')">← Back</button><div><div class="app-title">📖 Our History</div></div></div>
-  </div>
-  <div class="content-area">
-    <div class="card">
-      <div style="text-align:center;margin-bottom:14px">
-        <div id="historyLogoImg" style="display:none;margin:0 auto 10px"><img id="historyLogoSrc" style="max-height:80px;max-width:180px;object-fit:contain;border-radius:10px"></div>
-        <div id="historyLogoEmoji" style="font-size:32px;margin-bottom:8px">🕌</div>
-        <div id="historyOrgName" style="font-size:17px;font-weight:700">فلاح قبرستان — Falah e Qabristan</div>
-      </div>
-      <div id="historyContent" style="font-size:14px;line-height:1.8;color:#333;white-space:pre-wrap"></div>
-      <div id="historyEmpty" style="text-align:center;color:#aaa;font-size:13px;padding:20px 0">History not yet added. Please contact the developer.</div>
-      <div id="historyPhotosGallery" style="display:none;margin-top:16px">
-        <div class="section-bi"><span class="bi-en">Photos</span><span class="bi-ur">تصاویر</span></div>
-        <div id="historyPhotosGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px"></div>
-      </div>
-    </div>
-    <div class="page-footer"><div class="footer-credit">Designed By: <a href="tel:03009084228">Asif Kanwal — 0300-9084228</a></div>
-      <div class="footer-credit">Developed By: <a href="tel:03184516464">Mubeen Ahmad — 0318-4516464</a></div></div>
-  </div>
-</div>
-
-<!-- BANK SCREEN -->
-<div id="bankScreen" class="screen">
-  <div class="app-header">
-    <div class="app-header-left"><button class="btn-logout" onclick="showScreen('loginScreen')">← Back</button><div><div class="app-title">🏦 Fund Transfer</div></div></div>
-  </div>
-  <div class="content-area">
-    <div id="bankAccountsList"></div>
-    <div id="bankEmpty" class="card"><p style="font-size:13px;color:#888;text-align:center;padding:10px 0">No accounts added yet.</p></div>
-    <div class="page-footer"><div class="footer-credit">Designed By: <a href="tel:03009084228">Asif Kanwal — 0300-9084228</a></div>
-      <div class="footer-credit">Developed By: <a href="tel:03184516464">Mubeen Ahmad — 0318-4516464</a></div></div>
-  </div>
-</div>
-
-<!-- REG ROLE SCREEN -->
-<!-- CONTACT US SCREEN -->
-<div id="contactScreen" class="screen">
-  <div class="app-header">
-    <div class="app-header-left">
-      <button class="btn-logout" onclick="showScreen('loginScreen')">← Back</button>
-      <div><div class="app-title"><span style="display:block;font-size:15px;font-weight:700;line-height:1.1">Contact Us</span><span style="display:block;font-size:10px;font-weight:500;opacity:0.85;direction:rtl;text-align:left">ہم سے رابطہ</span></div></div>
-    </div>
-  </div>
-  <div class="content-area">
-    <div class="card">
-      <div style="text-align:center;margin-bottom:16px;padding:16px;background:linear-gradient(135deg,#1D9E75,#0F6E56);border-radius:12px;color:#fff">
-        <div id="contactLogo" style="font-size:42px;margin-bottom:8px">🕌</div>
-        <div id="contactOrgName" style="font-size:16px;font-weight:700">Falah e Qabristan</div>
-        <div id="contactOrgAddr" style="font-size:12px;opacity:0.85;margin-top:4px"></div>
-      </div>
-      <div id="contactNumbersList"></div>
-      <div id="contactSocialLinks" style="margin-top:12px"></div>
-      <div id="contactEmpty" style="font-size:13px;color:#888;text-align:center;padding:16px;display:none">No contact info added. | ابھی تک کوئی معلومات نہیں</div>
-    </div>
-  </div>
-</div>
-
-<div id="regRoleScreen" class="screen">
-  <div class="app-header">
-    <div class="app-header-left"><button class="btn-logout" onclick="showScreen('loginScreen')">← Back</button><div><div class="app-title">Create Account</div></div></div>
-  </div>
-  <div class="content-area">
-    <div class="card">
-      <p style="font-size:13px;color:#888;margin-bottom:14px">Select your account type | اکاؤنٹ کی قسم منتخب کریں:</p>
-      <button type="button" class="role-select-btn" onclick="openReg('user')" style="border-color:#1D9E75">
-        <div class="role-dot" style="background:#1D9E75"></div>
-        <div style="flex:1">
-          <div style="font-size:14px;font-weight:700;color:#0F6E56">User | صارف</div>
-          <div style="font-size:11px;color:#888;margin-top:2px">Direct login — no approval needed | فوری لاگ ان</div>
-        </div>
-        <span style="color:#1D9E75;font-size:18px">→</span>
-      </button>
-      <button type="button" class="role-select-btn" onclick="openReg('admin')">
-        <div class="role-dot" style="background:#185FA5"></div>
-        <div style="flex:1">
-          <div style="font-size:14px;font-weight:700">Admin | ایڈمن</div>
-          <div style="font-size:11px;color:#888;margin-top:2px">Login after developer approval | منظوری کے بعد</div>
-        </div>
-        <span style="color:#aaa;font-size:18px">→</span>
-      </button>
-      <button type="button" class="role-select-btn" onclick="openReg('manager')">
-        <div class="role-dot" style="background:#BA7517"></div>
-        <div style="flex:1">
-          <div style="font-size:14px;font-weight:700">Manager | منیجر</div>
-          <div style="font-size:11px;color:#888;margin-top:2px">Login after developer approval | منظوری کے بعد</div>
-        </div>
-        <span style="color:#aaa;font-size:18px">→</span>
-      </button>
-      <button type="button" class="role-select-btn" onclick="openReg('developer')">
-        <div class="role-dot" style="background:#993556"></div>
-        <div style="flex:1">
-          <div style="font-size:14px;font-weight:700">Developer | ڈیولپر</div>
-          <div style="font-size:11px;color:#888;margin-top:2px">Approved via master key | ماسٹر کی سے</div>
-        </div>
-        <span style="color:#aaa;font-size:18px">→</span>
-      </button>
-    </div>
-    <div class="page-footer"><div class="footer-credit">Designed By: <a href="tel:03009084228">Asif Kanwal — 0300-9084228</a></div>
-      <div class="footer-credit">Developed By: <a href="tel:03184516464">Mubeen Ahmad — 0318-4516464</a></div></div>
-  </div>
-</div>
-
-<!-- REG SCREEN -->
-<div id="regScreen" class="screen">
-  <div class="app-header">
-    <div class="app-header-left"><button class="btn-logout" onclick="showScreen('regRoleScreen')">← Back</button><div><div class="app-title" id="regTitle">Registration</div><div class="app-subtitle" id="regSubtitle"></div></div></div>
-  </div>
-  <div class="content-area">
-    <div id="regNotice" class="info-box" style="display:none"></div>
-    <div class="card">
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px">
-        <div class="avatar-box" onclick="document.getElementById('regPhotoInput').click()"><img id="regAvatarPreview" src="" style="display:none"><span id="regAvatarPlus" style="font-size:22px;color:#aaa">+</span></div>
-        <div><div style="font-size:13px;font-weight:600">Upload Photo</div><div style="font-size:11px;color:#888;margin-top:2px">Select from gallery (optional)</div><div style="font-size:11px;margin-top:3px" id="regAutoIdDisplay"></div></div>
-      </div>
-      <input type="file" accept="image/*" id="regPhotoInput" style="display:none" onchange="previewImg('regPhotoInput','regAvatarPreview','regAvatarPlus')">
-      <label>Mobile No * <span style="font-size:10px;color:#1D9E75;font-weight:500">موبائل نمبر</span></label>
-      <div class="inp-wrap"><span class="inp-icon">📱</span><input type="text" id="regMobile" placeholder="0300-1234567" maxlength="12" oninput="autoFormatMobile(this,'regMobileStatus');checkRegMobileForDonor(this.value)"></div>
-      <div id="regMobileStatus" style="display:none;margin-top:4px"></div>
-<div id="regNameRow"><label>Full Name * <span style="font-size:10px;color:#1D9E75;font-weight:500">پورا نام</span></label><div class="inp-wrap"><span class="inp-icon">👤</span><input type="text" id="regName" placeholder="Your full name"></div></div>
-      <div id="regDonorInfo" style="display:none"></div><label>Password * <span style="font-size:10px;color:#1D9E75;font-weight:500">پاس ورڈ</span></label>
-
-
-
-
-      <div class="inp-wrap" style="position:relative"><span class="inp-icon">🔒</span><input type="password" id="regPassword" placeholder="Set your password" style="padding-right:42px;padding-left:38px"><span onclick="togglePwd('regPassword',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:16px;color:#aaa">👁</span></div>
-      <label>Confirm Password * <span style="font-size:10px;color:#1D9E75;font-weight:500">تصدیق</span></label><div class="inp-wrap"><span class="inp-icon">🔐</span><input type="password" id="regConfirmPassword" placeholder="Confirm password"></div>
-      <div id="regAreaRow"><label>Area <span style="font-size:10px;color:#1D9E75;font-weight:500">علاقہ</span></label><div class="inp-wrap"><span class="inp-icon">📍</span><select id="regArea" class="area-sel"></select></div>
-      </div><div id="regProfRow"><label>Profession <span style="font-size:10px;color:#1D9E75;font-weight:500">پیشہ</span></label><div class="inp-wrap"><span class="inp-icon">💼</span><select id="regProfession" class="prof-sel"></select></div>
-      </div><div id="regBloodRow"><label>Blood Group <span style="font-size:10px;color:#E24B4A;font-weight:500">بلڈ گروپ</span></label>
-      <div class="inp-wrap"><span class="inp-icon">🩸</span><select id="regBloodGroup">
-        <option value="">-- Select Blood Group (optional) --</option>
-        <option value="A+">A+</option><option value="A-">A-</option>
-        <option value="B+">B+</option><option value="B-">B-</option>
-        <option value="AB+">AB+</option><option value="AB-">AB-</option>
-        <option value="O+">O+</option><option value="O-">O-</option>
-      </select></div>
-      </div><div id="regSignatureSection" style="display:none;margin-top:12px;background:#f9f9f9;border-radius:10px;padding:12px">
-        <div style="font-size:13px;font-weight:600;margin-bottom:4px">Signature Upload</div>
-        <div style="font-size:11px;color:#888;margin-bottom:8px">Your signature will appear on donor slips and death certificates</div>
-        <div style="display:flex;align-items:center;gap:10px">
-          <div style="width:100px;height:50px;border:2px dashed #ccc;border-radius:8px;overflow:hidden;cursor:pointer;background:#fff;display:flex;align-items:center;justify-content:center" onclick="document.getElementById('regSigInput').click()">
-            <img id="regSigPreview" src="" style="display:none;width:100%;height:100%;object-fit:contain">
-            <span id="regSigPlus" style="font-size:11px;color:#aaa;text-align:center">✍️ Upload</span>
-          </div>
-          <div style="font-size:11px;color:#888">Signature photo<br>from gallery</div>
-        </div>
-        <input type="file" accept="image/*" id="regSigInput" style="display:none" onchange="previewRegSig()">
-      </div>
-      <button class="btn btn-primary" style="margin-top:16px;padding:13px" onclick="submitReg()"><span style="font-size:13px">Submit</span><span style="font-size:10px;color:rgba(255,255,255,0.8);display:block;margin-top:1px">جمع کرائیں</span></button>
-    </div>
-    <div class="page-footer"><div class="footer-credit">Designed By: <a href="tel:03009084228">Asif Kanwal — 0300-9084228</a></div>
-      <div class="footer-credit">Developed By: <a href="tel:03184516464">Mubeen Ahmad — 0318-4516464</a></div></div>
-  </div>
-</div>
-
-<!-- DEV KEY SCREEN -->
-<div id="devKeyScreen" class="screen">
-  <div class="app-header">
-    <div class="app-header-left"><button class="btn-logout" onclick="showScreen('loginScreen')">← Back</button><div><div class="app-title"><span style="font-size:13px">Developer Login</span><span style="font-size:10px;color:rgba(255,255,255,0.7);display:block;margin-top:1px">ڈیولپر لاگ ان</span></div></div></div>
-  </div>
-  <div class="content-area">
-    <div class="card" style="margin-top:20px;text-align:center;padding:30px 20px">
-      <div style="font-size:40px;margin-bottom:14px">⚙️</div>
-      <h3>Enter Master Key</h3>
-      <div style="font-size:12px;color:#888;margin:6px 0 16px">Developer only — no registration required</div>
-      <div style="position:relative"><span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:18px">🗝️</span><input type="password" id="devKey" placeholder="••••" style="text-align:center;font-size:22px;letter-spacing:8px;border-radius:12px;padding-left:38px"></div>
-      <button class="btn btn-dev" style="margin-top:14px;padding:13px" onclick="checkDevKey()">Login</button>
-    </div>
-    <div class="page-footer"><div class="footer-credit">Designed By: <a href="tel:03009084228">Asif Kanwal — 0300-9084228</a></div>
-      <div class="footer-credit">Developed By: <a href="tel:03184516464">Mubeen Ahmad — 0318-4516464</a></div></div>
-  </div>
-</div>
-
-<!-- DASHBOARD SCREEN -->
-<div id="dashScreen" class="screen">
-  <div class="content-area" id="tabContent"></div>
-  <!-- Floating Action Button -->
-
-  <div class="page-footer" id="dashFooter">
-    <div class="footer-org" id="dashFooterOrg">Falah e Qabristan</div>
-    <div id="footerLastUpdated" style="font-size:10px;color:rgba(255,255,255,0.5);margin:3px 0"></div>
-
-    <div class="footer-credit">Designed By: <a href="tel:03009084228">Asif Kanwal — 0300-9084228</a></div>
-      <div class="footer-credit">Developed By: <a href="tel:03184516464">Mubeen Ahmad — 0318-4516464</a></div>
-  </div>
-</div>
-
-<!-- BOTTOM NAV -->
-<nav class="bottom-nav" id="bottomNav" style="display:none">
-   <div class="nav-item" id="navHome" onclick="openSubmenu('home')" style="position:relative">
-    <span style="font-size:20px">🏠</span>
-    <span class="nav-label">Home</span>
-     <span class="notif-badge" style="display:none;position:absolute;top:4px;right:calc(50% - 18px);background:#E24B4A;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;min-width:14px;text-align:center;line-height:14px"></span>
-   </div>
-  <div class="nav-item" id="navForms" onclick="openSubmenu('forms')">
-    <span style="font-size:20px">📝</span>
-    <span class="nav-label">Forms</span>
-  </div>
-  <div class="nav-item" id="navReports" onclick="openSubmenu('reports')">
-    <span style="font-size:20px">📊</span>
-    <span class="nav-label">Reports</span>
-  </div>
-  <div class="nav-item" id="navDonors" onclick="openSubmenu('donors')">
-    <span style="font-size:20px">👥</span>
-    <span class="nav-label">Donors</span>
-  </div>
-  <div class="nav-item" id="navSettings" onclick="openSubmenu('settings')">
-    <span style="font-size:20px">⚙️</span>
-    <span class="nav-label">Settings</span>
-    <span class="badge" id="settingsBadge" style="display:none;position:absolute;top:4px;right:8px;background:#E24B4A;color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:700;align-items:center;justify-content:center"></span>
-  </div>
-</nav>
-
-<!-- SUBMENU OVERLAY -->
-<div class="submenu-overlay" id="submenuOverlay" onclick="closeSubmenu()"></div>
-
-<!-- SUBMENU DRAWER -->
-<div class="submenu-drawer" id="submenuDrawer">
-  <div class="submenu-handle" onclick="closeSubmenu()"></div>
-  <div class="submenu-title" id="submenuTitle">Menu</div>
-  <div class="submenu-grid" id="submenuGrid"></div>
-</div>
-
-<!-- POPUP -->
-<div id="popupOverlay" class="popup" style="display:none" onclick="handlePopupOverlayClick(event)">
-  <div class="popup-box" style="position:relative">
-    <button onclick="closePopup()" style="position:absolute;top:10px;right:12px;background:none;border:none;font-size:20px;cursor:pointer;color:#aaa;line-height:1;padding:2px 6px;border-radius:6px">✕</button>
-    <div style="font-size:36px;margin-bottom:10px" id="popupIcon">✅</div>
-    <div style="margin-bottom:10px">
-      <div id="popupTitle" style="font-size:15px;font-weight:700;color:#1a1a1a;line-height:1.2"></div>
-      <div id="popupTitleUr" style="font-size:11px;font-weight:500;color:#1D9E75;direction:rtl;margin-top:2px"></div>
-    </div>
-    <p id="popupMsg" style="font-size:13px;color:#666;margin-bottom:8px;line-height:1.5"></p>
-    <p id="popupMsgUr" style="font-size:11px;color:#1D9E75;margin-bottom:16px;line-height:1.5;direction:rtl"></p>
-    <button class="btn btn-primary" style="border-radius:10px" onclick="closePopup()" id="popupBtn">OK</button>
-  </div>
-</div>
-
-<!-- EDIT MODAL -->
-<div id="editModal" class="modal" style="display:none">
-  <div class="modal-box">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <h3 id="editModalTitle">Edit Entry</h3>
-      <button onclick="closeModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#aaa">✕</button>
-    </div>
-    <div id="editModalBody"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px">
-      <button class="btn" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveEdit()">Save</button>
-    </div>
-  </div>
-</div>
-
-<script>
-// Firebase init — safe initialization
+<!doctype html><html lang=en><meta charset=UTF-8><meta content="width=device-width,initial-scale=1.0,user-scalable=no" name=viewport><title>Falah e Qabristan</title><style>*{box-sizing:border-box;margin:0;padding:0}:root{--green:#1d9e75;--green-dark:#0f6e56;--blue:#185fa5;--amber:#ba7517;--red:#e24b4a;--purple:#993556;--bg:#f0f4f3;--card:#fff;--border:#e0e0e0;--text:#1a1a1a;--muted:#888;--radius:12px}body{color:var(--text);background:var(--bg);min-height:100vh;padding-bottom:60px;font-family:system-ui,-apple-system,sans-serif;font-size:14px}.screen{min-height:100vh;padding:0;display:none}.screen.active{display:block}.bi-field{justify-content:space-between;align-items:baseline;margin-top:10px;margin-bottom:4px;display:flex}.bi-field .en{color:#1a1a1a;font-size:12px;font-weight:600}.bi-field .ur{color:#888;direction:rtl;font-size:11px}.nav-label{color:#888;text-align:center;margin-top:1px;font-size:9px;font-weight:600}.nav-label-ur{color:#aaa;text-align:center;direction:rtl;font-size:8px}.nav-item.active .nav-label,.nav-item.active .nav-label-ur{color:#1d9e75}.qa-btn-new{cursor:pointer;border:.5px solid var(--border-color,#ddd);border-radius:10px;flex-direction:column;align-items:center;gap:3px;padding:11px 2px 9px;display:flex}.qa-en{font-size:9px;font-weight:600}.qa-ur{opacity:.8;direction:rtl;font-size:8px}.stat-label-bi{justify-content:space-between;display:flex}.section-header{justify-content:space-between;align-items:center;margin-bottom:10px;display:flex}.section-header .en{color:#1a1a1a;text-transform:uppercase;letter-spacing:.4px;font-size:11px;font-weight:700}.section-header .ur{color:#888;direction:rtl;font-size:11px}.card{background:#fff;border:.5px solid #ebebeb;border-radius:16px;margin-bottom:10px;padding:15px}.inp-wrap{align-items:center;margin-bottom:8px;display:flex;position:relative}.inp-wrap input,.inp-wrap select{color:#1a1a1a;background:#fafafa;border:1.5px solid #e8e8e8;border-radius:12px;flex:1;padding:12px 12px 12px 38px;font-size:14px;transition:border .2s,background .2s}.inp-wrap input:focus,.inp-wrap select:focus{background:#fff;border-color:#1d9e75;outline:none;box-shadow:0 0 0 3px #1d9e7514}.inp-icon{z-index:1;pointer-events:none;font-size:16px;position:absolute;left:11px}input:not(.inp-wrap input),select:not(.inp-wrap select),textarea{box-sizing:border-box;color:#1a1a1a;-webkit-appearance:none;background:#fafafa;border:1.5px solid #e8e8e8;border-radius:12px;width:100%;margin-bottom:8px;padding:12px 14px;font-size:14px;transition:border .2s}input:focus,select:focus,textarea:focus{background:#fff;border-color:#1d9e75;outline:none;box-shadow:0 0 0 3px #1d9e7514}.btn{cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent;background:#fff;border:1.5px solid #e0e0e0;border-radius:14px;width:100%;padding:14px;font-size:14px;font-weight:600;transition:all .15s;display:block}.btn:active{opacity:.9;transform:scale(.98)}.btn-primary{color:#fff;background:#0f6e56;border:none}.btn-primary:active{background:#085041}.btn-outline{color:#1d9e75;border-color:#1d9e75}.btn-dev{color:#fff;background:#7c2d48;border:none}.badge{letter-spacing:.1px;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700;display:inline-block}.badge-developer{color:#6b21a8;background:#f5e8ff}.badge-donor{color:#0f6e56;background:#e1f5ee}.entry-name{color:#1a1a1a;font-size:13px;font-weight:600}.id-badge{color:#185fa5;background:#e6f1fb;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700}.section-bi{color:#888;text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid #eee;margin-bottom:6px;padding:8px 0 4px;font-size:11px;font-weight:700}.stat-card-bi{background:#f5f5f5;border:none;border-radius:14px;padding:13px}.stat-label{color:#888;text-transform:uppercase;letter-spacing:.4px;font-size:10px;font-weight:600}.stat-label-bi{justify-content:space-between;align-items:baseline;margin-bottom:2px;display:flex}.stat-label-bi .en{color:#999;text-transform:uppercase;letter-spacing:.4px;font-size:9px;font-weight:700}.stat-label-bi .ur{color:#bbb;direction:rtl;font-size:9px}.stat-val{letter-spacing:-.5px;margin-top:4px;font-size:21px;font-weight:800}.app-header{z-index:100;background:#0f6e56;justify-content:space-between;align-items:center;padding:13px 16px;display:flex;position:relative;top:0}.content-area{min-height:100vh;padding:12px 12px 90px}.nav-item{cursor:pointer;border-radius:10px;flex-direction:column;flex:1;align-items:center;gap:3px;margin:4px 2px;padding:8px 4px;transition:all .15s;display:flex}.nav-label{color:#888;font-size:9px;font-weight:600}.nav-item.active .nav-label{color:#1d9e75}.app-header{background:var(--green);color:#fff;z-index:50;justify-content:space-between;align-items:center;padding:14px 16px;display:flex;position:sticky;top:0;box-shadow:0 2px 8px #00000026}.app-header-left{align-items:center;gap:10px;display:flex}.app-title{color:#fff;font-size:16px;font-weight:700}.app-subtitle{opacity:.85;color:#fff;margin-top:1px;font-size:11px}.header-avatar{color:#fff;background:#fff3;border:2px solid #ffffff73;border-radius:50%;flex-shrink:0;justify-content:center;align-items:center;width:38px;height:38px;font-size:16px;font-weight:800;display:flex;overflow:hidden}.btn-logout{color:#fff;cursor:pointer;background:#ffffff26;border:1px solid #ffffff4d;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600}.content-area{padding:16px}.card{background:var(--card);border:.5px solid var(--border);border-radius:var(--radius);margin-bottom:12px;padding:16px;box-shadow:0 1px 4px #0000000a}.card-header{border-bottom:1px solid #f0f0f0;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;display:flex}.card-title{font-size:15px;font-weight:700}h2{margin-bottom:10px;font-size:16px;font-weight:700}h3{margin-bottom:8px;font-size:14px;font-weight:600}label{color:var(--muted);margin-top:10px;margin-bottom:3px;font-size:12px;font-weight:500;display:block}input,select,textarea{width:100%;color:var(--text);background:#fff;border:1.5px solid #ddd;border-radius:8px;padding:10px 12px;font-size:13px;transition:border-color .15s}input:focus,select:focus,textarea:focus{border-color:var(--green);outline:none;box-shadow:0 0 0 3px #1d9e751a}input[type=file]{padding:6px}.btn{cursor:pointer;color:#333;text-align:center;background:#f5f5f5;border:1.5px solid #ddd;border-radius:10px;width:100%;margin-top:8px;padding:11px;font-size:13px;font-weight:600;transition:all .15s;display:block}.btn:active{transform:scale(.98)}.btn-primary{background:var(--green);color:#fff;border-color:var(--green)}.btn-danger{background:var(--red);color:#fff;border-color:var(--red)}.btn-warn{background:var(--amber);color:#fff;border-color:var(--amber)}.btn-info{background:var(--blue);color:#fff;border-color:var(--blue)}.btn-dev{background:var(--purple);color:#fff;border-color:var(--purple)}.btn-outline{color:var(--green);border-color:var(--green);background:0 0}.btn-sm{border-radius:8px;width:auto;margin-top:0;padding:6px 14px;font-size:12px;display:inline-block}.btn-xs{cursor:pointer;border:1px solid;border-radius:6px;width:auto;margin-top:0;padding:3px 8px;font-size:11px;display:inline-block}.bottom-nav{z-index:100;background:#0f6e56;border-top:none;transition:transform .25s;display:flex;position:fixed;bottom:0;left:0;right:0;box-shadow:0 -2px 12px #00000026}.nav-item{cursor:pointer;flex-direction:column;flex:1;align-items:center;padding:8px 4px 6px;transition:all .15s;display:flex;position:relative}.nav-item.active .nav-icon{opacity:1}.nav-item.active .nav-label{color:#fff;opacity:1;font-weight:700}.nav-item.active{background:#085041}.nav-icon{opacity:.7;margin-bottom:1px;font-size:22px;transition:opacity .15s}.nav-label{color:#fff;opacity:.7;font-size:10px;font-weight:500}.nav-badge{background:var(--red);color:#fff;text-align:center;border-radius:10px;min-width:14px;padding:1px 5px;font-size:9px;font-weight:700;position:absolute;top:4px;right:calc(50% - 18px)}.submenu-overlay{z-index:80;background:#0006;display:none;position:fixed;inset:0}.submenu-overlay.active{display:block}.submenu-drawer{z-index:90;background:#fff;border-radius:20px 20px 0 0;max-height:75vh;padding:16px 16px 20px;transition:transform .25s;position:fixed;bottom:60px;left:0;right:0;overflow-y:auto;transform:translateY(100%);box-shadow:0 -4px 20px #00000026}.submenu-drawer.open{transform:translateY(0)}.submenu-title{color:var(--muted);text-transform:uppercase;letter-spacing:.5px;text-align:center;margin-bottom:12px;font-size:12px;font-weight:700}.submenu-handle{cursor:pointer;background:#e0e0e0;border-radius:2px;width:40px;height:4px;margin:0 auto 14px}.submenu-grid{grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;display:grid}.submenu-item{cursor:pointer;background:#f8f8f8;border:1px solid #eee;border-radius:12px;flex-direction:column;align-items:center;padding:12px 6px;transition:all .15s;display:flex}.submenu-item:active{transform:scale(.96)}.submenu-item.active-tab{border-color:var(--green);background:#e1f5ee}.submenu-item.active-tab .si-label{color:var(--green)}.si-icon{margin-bottom:4px;font-size:22px}.si-label{color:#555;text-align:center;font-size:11px;font-weight:500;line-height:1.2}.badge{border-radius:20px;padding:2px 8px;font-size:11px;font-weight:600;display:inline-block}.badge-user{color:#0f6e56;background:#e1f5ee}.badge-admin{color:#185fa5;background:#e6f1fb}.badge-manager{color:#854f0b;background:#faeeda}.badge-locked{color:#a32d2d;background:#fcebeb}.badge-pending{color:#854f0b;background:#faeeda}.badge-dev{color:#534ab7;background:#eeedfe}.info-box{border-radius:8px;margin-bottom:10px;padding:10px 12px;font-size:12px;line-height:1.5}.info-box.warning{color:#854f0b;background:#faeeda;border:1px solid #ef9f27}.info-box.success{color:#0f6e56;background:#e1f5ee;border:1px solid #1d9e75}.info-box.info{color:#185fa5;background:#e6f1fb;border:1px solid #378add}.info-box.danger{color:#a32d2d;background:#fcebeb;border:1px solid #e24b4a}.entry-row{border-bottom:.5px solid #f5f5f5;justify-content:space-between;align-items:center;padding:11px 0;display:flex}.entry-row:last-child{border-bottom:none}.entry-name{font-size:13px;font-weight:600}.entry-sub{color:var(--muted);margin-top:2px;font-size:11px}.entry-amt{color:var(--green);font-size:13px;font-weight:600}.stat-grid{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;display:grid}.stat-card{text-align:center;background:linear-gradient(135deg,#f8f9fa,#fff);border:1px solid #eee;border-radius:10px;padding:14px}.stat-label{color:var(--muted);margin-bottom:4px;font-size:11px;font-weight:500}.stat-val{font-size:18px;font-weight:700}.section-title{color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:14px;margin-bottom:8px;font-size:11px;font-weight:700}.popup{z-index:200;background:#0000008c;justify-content:center;align-items:center;padding:16px;display:flex;position:fixed;inset:0}.popup-box{text-align:center;background:#fff;border-radius:18px;width:100%;max-width:340px;padding:24px;box-shadow:0 10px 40px #0003}.popup-box p{color:#666;margin-bottom:16px;font-size:13px;line-height:1.6}.modal{z-index:150;background:#0000008c;justify-content:center;align-items:flex-start;padding:16px;display:flex;position:fixed;inset:0;overflow-y:auto}.modal-box{background:#fff;border-radius:18px;width:100%;max-width:480px;margin:auto;padding:20px}.cert-wrap{border:2px solid var(--green);background:#fff;border-radius:14px;margin-top:10px;overflow:hidden}.cert-green-header{background:linear-gradient(135deg,var(--green),var(--green-dark));color:#fff;text-align:center;padding:20px}.cert-body{padding:16px}.cert-row{border-bottom:1px dashed #eee;justify-content:space-between;padding:6px 0;font-size:13px;display:flex}.cert-row:last-child{border-bottom:none}.cert-label{color:#666;flex:1;font-size:12px}.cert-val{text-align:right;flex:1.4;font-weight:600}.cert-section{border-left:3px solid var(--green);background:#f9f9f9;border-radius:8px;margin:8px 0;padding:10px}.cert-section-title{color:var(--green);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;font-size:11px;font-weight:700}.cert-org{font-size:17px;font-weight:700}.cert-sub{opacity:.85;margin-top:2px;font-size:12px}.dc-stamp{border:3px solid var(--green);background:#fff;border-radius:50%;justify-content:center;align-items:center;width:60px;height:60px;margin:0 auto 8px;font-size:22px;display:flex}.dc-field{border-bottom:1px solid #f0f0f0;gap:8px;padding:7px 0;font-size:13px;display:flex}.dc-field:last-child{border-bottom:none}.dc-key{color:#888;min-width:110px;font-size:12px}.bi-title{flex-direction:column;gap:1px;display:flex}.bi-en{color:#1a1a1a;font-size:14px;font-weight:700;line-height:1.2}.bi-ur{color:#1d9e75;text-align:left;direction:rtl;font-size:11px;font-style:normal;font-weight:500}.card-header .bi-en{font-size:15px}.section-bi{flex-direction:column;gap:1px;margin-top:10px;margin-bottom:6px;display:flex}.section-bi .bi-en{color:#888;text-transform:uppercase;letter-spacing:.5px;font-size:11px;font-weight:700}.section-bi .bi-ur{color:#1d9e75;text-align:left;direction:rtl;font-size:11px;font-weight:500}.inp-wrap{position:relative}.inp-wrap input,.inp-wrap select,.inp-wrap textarea{padding-left:38px}.inp-icon{pointer-events:none;z-index:1;font-size:16px;position:absolute;top:50%;left:11px;transform:translateY(-50%)}.inp-wrap textarea~.inp-icon,.inp-wrap-top .inp-icon{top:12px;transform:none}.dc-val{flex:1;font-weight:500}.avatar-box{cursor:pointer;background:#f5f5f5;border:2px dashed #ccc;border-radius:50%;flex-shrink:0;justify-content:center;align-items:center;width:64px;height:64px;display:flex;overflow:hidden}.avatar-box img{object-fit:cover;width:100%;height:100%}.ledger-hdr{color:#888;border-bottom:2px solid #ddd;grid-template-columns:76px 1fr 78px 78px 80px;gap:4px;padding:6px 0;font-size:11px;font-weight:700;display:grid}.ledger-row{border-bottom:.5px solid #f0f0f0;grid-template-columns:76px 1fr 78px 78px 80px;align-items:center;gap:4px;padding:6px 0;font-size:11px;display:grid}.donor-rank-card{border:1px solid #0000;border-radius:12px;align-items:center;gap:10px;margin-bottom:8px;padding:10px 12px;display:flex}.cash-box{border:1.5px solid var(--green);background:#e1f5ee;border-radius:12px;justify-content:space-between;align-items:center;margin-bottom:14px;padding:14px;display:flex}.transfer-inbox-item{background:#fffef0;border:1px solid #ddd;border-radius:10px;margin-bottom:8px;padding:12px}.fetch-card{border:1.5px solid var(--green);background:#f0fff8;border-radius:8px;align-items:center;gap:10px;margin-top:8px;padding:10px;display:flex}.user-mgmt-row{background:#f9f9f9;border-radius:10px;align-items:center;gap:8px;margin-bottom:8px;padding:10px;display:flex}.lock-badge{border-radius:20px;align-items:center;gap:3px;padding:3px 8px;font-size:11px;font-weight:600;display:inline-flex}.lock-badge.locked{color:#a32d2d;background:#fcebeb}.lock-badge.active{color:#0f6e56;background:#e1f5ee}.id-badge{color:#185fa5;background:#e6f1fb;border-radius:6px;padding:2px 7px;font-size:11px;font-weight:600;display:inline-block}.divider{align-items:center;gap:10px;margin:16px 0;display:flex}.divider-line{background:#eee;flex:1;height:1px}.divider-text{color:#aaa;font-size:12px;font-weight:500}.role-select-btn{cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent;background:#fff;border:1px solid #e8e8e8;border-radius:14px;align-items:center;gap:12px;width:100%;margin-bottom:10px;padding:14px 16px;transition:all .15s;display:flex}.role-select-btn:active{transform:scale(.98)}.role-dot{border-radius:50%;flex-shrink:0;width:12px;height:12px}.approval-item{background:#f9f9f9;border:1px solid #eee;border-radius:10px;align-items:center;gap:8px;margin-bottom:8px;padding:12px;display:flex}.approval-info{flex:1}.approval-name{font-size:13px;font-weight:600}.approval-sub{color:#888;margin-top:2px;font-size:11px}.page-footer{text-align:center;background:#fff;border-top:1px solid #eee;padding:20px 16px 60px}.footer-org{color:#888;margin-bottom:4px;font-size:12px}.footer-credit{color:#aaa;font-size:11px}.footer-credit a{color:#1d9e75;font-weight:600;text-decoration:none}.login-hero{text-align:center;color:#fff;background:#0f6e56;padding:52px 24px 50px;position:relative;overflow:hidden}.login-hero:before{content:"";background:#ffffff12;border-radius:50%;width:180px;height:180px;position:absolute;top:-50px;right:-50px}.login-hero:after{content:"";background:#ffffff0d;border-radius:50%;width:130px;height:130px;position:absolute;bottom:-40px;left:-40px}.login-hero-dot{background:#ffffff0a;border-radius:50%;width:60px;height:60px;position:absolute;top:30px;left:24px}.login-logo-wrap{margin-bottom:12px}.login-logo-box{background:#ffffff26;border:2px solid #ffffff40;border-radius:22px;justify-content:center;align-items:center;width:76px;height:76px;margin:0 auto 18px;font-size:38px;display:flex}.login-org-name{letter-spacing:-.5px;color:#fff;font-size:28px;font-weight:800;line-height:1.15}.login-org-ur{color:#fffc;direction:rtl;margin-top:6px;font-size:16px;font-weight:600}.login-org-sub{color:#ffffff8c;letter-spacing:.3px;margin-top:8px;font-size:12px}.login-org-addr{color:#ffffff73;margin-top:4px;font-size:11px}.login-address{opacity:.75;margin-top:6px;font-size:12px}.login-card{background:#fff;border-radius:28px 28px 0 0;min-height:calc(100vh - 220px);margin-top:-24px;padding:28px 20px 30px}.prof-tag{color:#185fa5;background:#e6f1fb;border-radius:20px;margin:2px;padding:2px 8px;font-size:11px;display:inline-block}#regCnicStatus,#regMobileStatus,#donorMobileStatus,#donorCnicStatus,#profMobileStatus,#profCnicStatus{border-radius:7px;padding:7px 10px;font-size:12px}</style><script src=https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js></script><script src=https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js></script><div class="screen active" id=loginScreen><div style=display:none><div id=loginLogo></div><div id=loginOrgName></div><div id=loginOrgNameUrdu></div><div id=loginOrgAddress></div><div id=socialLinksRow></div></div><div style="text-align:center;background:#0f6e56;padding:28px 20px 22px"><div class=login-logo-wrap><div class=login-logo-box id=loginLogo2><span style=font-size:38px>🪦</span></div></div><div id=loginOrgName2 style=color:#fff;margin-top:4px;font-size:17px;font-weight:800>Falah e Qabristan</div><div id=loginOrgNameUrdu2 style=display:none>فلاح قبرستان</div><div id=loginOrgAddress2 style=color:#fff9;margin-top:4px;font-size:11px;display:none></div><div id=appVersionTag style=color:#ffffff73;margin-top:6px;font-size:10px></div></div><div class=login-card><div style=margin-bottom:20px><div style=color:#0f6e56;letter-spacing:-.5px;font-size:22px;font-weight:800>Sign In</div><div style=color:#aaa;direction:rtl;margin-top:3px;font-size:13px>اپنا اکاؤنٹ کھولیں</div></div><div style=margin-bottom:10px><div style=justify-content:space-between;margin-bottom:6px;display:flex><span style=color:#444;font-size:12px;font-weight:600>Mobile Number</span><span style=color:#aaa;direction:rtl;font-size:11px>موبائل نمبر</span></div><div class=inp-wrap style=margin-bottom:0><span class=inp-icon>📱</span><input id=loginMobile maxlength=12 oninput=autoFormatMobile(this,null) placeholder=0300-1234567 style=font-size:15px type=tel></div></div><div style=margin-bottom:4px><div style=justify-content:space-between;margin-bottom:6px;display:flex><span style=color:#444;font-size:12px;font-weight:600>Password</span><span style=color:#aaa;direction:rtl;font-size:11px>پاس ورڈ</span></div><div class=inp-wrap style=margin-bottom:0;position:relative><span class=inp-icon>🔒</span><input id=loginPassword placeholder=•••••••• style=padding-left:38px;padding-right:42px;font-size:15px type=password><span onclick="togglePwd('loginPassword',this)" style=cursor:pointer;color:#bbb;font-size:16px;position:absolute;top:50%;right:12px;transform:translateY(-50%)>👁</span></div></div><div id=loginError style=margin-top:8px;display:none></div><div style="grid-template-columns:1fr 1fr;gap:10px;margin-top:18px;display:grid"><button class="btn btn-primary" style="letter-spacing:.2px;padding:14px 8px;font-size:14px" onclick=doLogin()>Sign In <span style=color:#ffffffb3;letter-spacing:0;direction:rtl;margin-top:2px;font-size:10px;display:block>لاگ ان کریں</span></button><button class="btn btn-outline" onclick="showScreen('regRoleScreen')" style="padding:14px 8px;font-size:14px">Create Account <span style=color:#1d9e75;direction:rtl;margin-top:2px;font-size:10px;display:block>نیا اکاؤنٹ بنائیں</span></button></div><div style="grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;display:grid"><div id=historyBtnWrap style=display:block><button onclick="showScreen('historyScreen')" style="color:#085041;background:#f0fff8;border-color:#9fe1cb;width:100%;padding:10px 6px;font-size:11px" class=btn>📖<span style=margin-top:2px;display:block>History</span></button></div><div id=bankBtnWrap style=display:block><button onclick="showScreen('bankScreen')" style="color:#0c447c;background:#e6f1fb;border-color:#b5d4f4;width:100%;padding:10px 6px;font-size:11px" class=btn>🏦<span style=margin-top:2px;display:block>Accounts</span></button></div><div id=contactBtnWrap style=display:block><button onclick="showScreen('contactScreen')" style="color:#3730a3;background:#f0f4ff;border-color:#c7d2fe;width:100%;padding:10px 6px;font-size:11px" class=btn>📞<span style=margin-top:2px;display:block>Contact</span></button></div></div><button onclick="showScreen('devKeyScreen')" style="cursor:pointer;-webkit-tap-highlight-color:transparent;text-align:left;background:#fdf4f7;border:1px solid #f0c8d8;border-radius:14px;align-items:center;gap:12px;width:100%;margin-top:12px;padding:12px 14px;display:flex"><div style=background:#993556;border-radius:10px;flex-shrink:0;justify-content:center;align-items:center;width:36px;height:36px;font-size:18px;display:flex>⚙️</div> <div style=flex:1><div style=color:#7c2d48;font-size:13px;font-weight:700>Developer Access</div><div style=color:#b06080;direction:rtl;margin-top:1px;font-size:11px>ماسٹر کی سے لاگ ان</div></div> <span style=color:#b06080;font-size:16px>→</span></button><div style="text-align:center;padding:8px 0 4px"></div><div style="text-align:center;border-top:1px solid #f0f0f0;margin-top:24px;padding:16px 0 24px" class=page-footer><div class=footer-org id=footerOrgName style=color:#0f6e56;margin-bottom:4px;font-size:13px;font-weight:700>Falah e Qabristan</div><div class=footer-credit>Designed By: <a href=tel:03009084228>Asif Kanwal — 0300-9084228</a></div><div class=footer-credit>Developed By: <a href=tel:03184516464>Mubeen Ahmad — 0318-4516464</a></div></div></div></div><div class=screen id=historyScreen><div class=app-header><div class=app-header-left><button onclick="showScreen('loginScreen')" class=btn-logout>← Back</button><div><div class=app-title>📖 Our History</div></div></div></div><div class=content-area><div class=card><div style=text-align:center;margin-bottom:14px><div style="margin:0 auto 10px;display:none" id=historyLogoImg><img id=historyLogoSrc style=object-fit:contain;border-radius:10px;max-width:180px;max-height:80px></div><div id=historyLogoEmoji style=margin-bottom:8px;font-size:32px>🕌</div><div id=historyOrgName style=font-size:17px;font-weight:700>فلاح قبرستان — Falah e Qabristan</div></div><div id=historyContent style=color:#333;white-space:pre-wrap;font-size:14px;line-height:1.8></div><div style="text-align:center;color:#aaa;padding:20px 0;font-size:13px" id=historyEmpty>History not yet added. Please contact the developer.</div><div id=historyPhotosGallery style=margin-top:16px;display:none><div class=section-bi><span class=bi-en>Photos</span><span class=bi-ur>تصاویر</span></div><div style="grid-template-columns:1fr 1fr;gap:10px;display:grid" id=historyPhotosGrid></div></div></div><div class=page-footer><div class=footer-credit>Designed By: <a href=tel:03009084228>Asif Kanwal — 0300-9084228</a></div><div class=footer-credit>Developed By: <a href=tel:03184516464>Mubeen Ahmad — 0318-4516464</a></div></div></div></div><div class=screen id=bankScreen><div class=app-header><div class=app-header-left><button onclick="showScreen('loginScreen')" class=btn-logout>← Back</button><div><div class=app-title>🏦 Fund Transfer</div></div></div></div><div class=content-area><div id=bankAccountsList></div><div class=card id=bankEmpty><p style="color:#888;text-align:center;padding:10px 0;font-size:13px">No accounts added yet.</div><div class=page-footer><div class=footer-credit>Designed By: <a href=tel:03009084228>Asif Kanwal — 0300-9084228</a></div><div class=footer-credit>Developed By: <a href=tel:03184516464>Mubeen Ahmad — 0318-4516464</a></div></div></div></div><div class=screen id=contactScreen><div class=app-header><div class=app-header-left><button onclick="showScreen('loginScreen')" class=btn-logout>← Back</button><div><div class=app-title><span style=font-size:15px;font-weight:700;line-height:1.1;display:block>Contact Us</span><span style=opacity:.85;text-align:left;direction:rtl;font-size:10px;font-weight:500;display:block>ہم سے رابطہ</span></div></div></div></div><div class=content-area><div class=card><div style=text-align:center;color:#fff;background:linear-gradient(135deg,#1d9e75,#0f6e56);border-radius:12px;margin-bottom:16px;padding:16px><div id=contactLogo style=margin-bottom:8px;font-size:42px>🕌</div><div id=contactOrgName style=font-size:16px;font-weight:700>Falah e Qabristan</div><div id=contactOrgAddr style=opacity:.85;margin-top:4px;font-size:12px></div></div><div id=contactNumbersList></div><div id=contactSocialLinks style=margin-top:12px></div><div id=contactEmpty style=color:#888;text-align:center;padding:16px;font-size:13px;display:none>No contact info added. | ابھی تک کوئی معلومات نہیں</div></div></div></div><div class=screen id=regRoleScreen><div class=app-header><div class=app-header-left><button onclick="showScreen('loginScreen')" class=btn-logout>← Back</button><div><div class=app-title>Create Account</div></div></div></div><div class=content-area><div class=card><p style=color:#888;margin-bottom:14px;font-size:13px>Select your account type | اکاؤنٹ کی قسم منتخب کریں:</p><button onclick="openReg('user')" class=role-select-btn style=border-color:#1d9e75 type=button><div class=role-dot style=background:#1d9e75></div> <div style=flex:1><div style=color:#0f6e56;font-size:14px;font-weight:700>User | صارف</div><div style=color:#888;margin-top:2px;font-size:11px>Direct login — no approval needed | فوری لاگ ان</div></div> <span style=color:#1d9e75;font-size:18px>→</span></button><button onclick="openReg('admin')" class=role-select-btn type=button><div class=role-dot style=background:#185fa5></div> <div style=flex:1><div style=font-size:14px;font-weight:700>Admin | ایڈمن</div><div style=color:#888;margin-top:2px;font-size:11px>Login after developer approval | منظوری کے بعد</div></div> <span style=color:#aaa;font-size:18px>→</span></button><button onclick="openReg('manager')" class=role-select-btn type=button><div class=role-dot style=background:#ba7517></div> <div style=flex:1><div style=font-size:14px;font-weight:700>Manager | منیجر</div><div style=color:#888;margin-top:2px;font-size:11px>Login after developer approval | منظوری کے بعد</div></div> <span style=color:#aaa;font-size:18px>→</span></button><button onclick="openReg('developer')" class=role-select-btn type=button><div class=role-dot style=background:#993556></div> <div style=flex:1><div style=font-size:14px;font-weight:700>Developer | ڈیولپر</div><div style=color:#888;margin-top:2px;font-size:11px>Approved via master key | ماسٹر کی سے</div></div> <span style=color:#aaa;font-size:18px>→</span></button></div><div class=page-footer><div class=footer-credit>Designed By: <a href=tel:03009084228>Asif Kanwal — 0300-9084228</a></div><div class=footer-credit>Developed By: <a href=tel:03184516464>Mubeen Ahmad — 0318-4516464</a></div></div></div></div><div class=screen id=regScreen><div class=app-header><div class=app-header-left><button onclick="showScreen('regRoleScreen')" class=btn-logout>← Back</button><div><div class=app-title id=regTitle>Registration</div><div class=app-subtitle id=regSubtitle></div></div></div></div><div class=content-area><div class=info-box id=regNotice style=display:none></div><div class=card><div style=align-items:center;gap:14px;margin-bottom:12px;display:flex><div onclick="document.getElementById('regPhotoInput').click()" class=avatar-box><img id=regAvatarPreview style=display:none><span id=regAvatarPlus style=color:#aaa;font-size:22px>+</span></div><div><div style=font-size:13px;font-weight:600>Upload Photo</div><div style=color:#888;margin-top:2px;font-size:11px>Select from gallery (optional)</div><div id=regAutoIdDisplay style=margin-top:3px;font-size:11px></div></div></div><input onchange="previewImg('regPhotoInput','regAvatarPreview','regAvatarPlus')" accept=image/* id=regPhotoInput style=display:none type=file><label>Mobile No * <span style=color:#1d9e75;font-size:10px;font-weight:500>موبائل نمبر</span></label><div class=inp-wrap><span class=inp-icon>📱</span><input oninput="autoFormatMobile(this,'regMobileStatus');checkRegMobileForDonor(this.value)" id=regMobile maxlength=12 placeholder=0300-1234567></div><div id=regMobileStatus style=margin-top:4px;display:none></div><div id=regNameRow><label>Full Name * <span style=color:#1d9e75;font-size:10px;font-weight:500>پورا نام</span></label><div class=inp-wrap><span class=inp-icon>👤</span><input placeholder="Your full name" id=regName></div></div><div id=regDonorInfo style=display:none></div><label>Password * <span style=color:#1d9e75;font-size:10px;font-weight:500>پاس ورڈ</span></label><div class=inp-wrap style=position:relative><span class=inp-icon>🔒</span><input placeholder="Set your password" id=regPassword style=padding-left:38px;padding-right:42px type=password><span onclick="togglePwd('regPassword',this)" style=cursor:pointer;color:#aaa;font-size:16px;position:absolute;top:50%;right:12px;transform:translateY(-50%)>👁</span></div><label>Confirm Password * <span style=color:#1d9e75;font-size:10px;font-weight:500>تصدیق</span></label><div class=inp-wrap><span class=inp-icon>🔐</span><input placeholder="Confirm password" id=regConfirmPassword type=password></div><div id=regAreaRow><label>Area <span style=color:#1d9e75;font-size:10px;font-weight:500>علاقہ</span></label><div class=inp-wrap><span class=inp-icon>📍</span><select class=area-sel id=regArea></select></div></div><div id=regProfRow><label>Profession <span style=color:#1d9e75;font-size:10px;font-weight:500>پیشہ</span></label><div class=inp-wrap><span class=inp-icon>💼</span><select class=prof-sel id=regProfession></select></div></div><div id=regBloodRow><label>Blood Group <span style=color:#e24b4a;font-size:10px;font-weight:500>بلڈ گروپ</span></label><div class=inp-wrap><span class=inp-icon>🩸</span><select id=regBloodGroup><option value>-- Select Blood Group (optional) --<option value=A+>A+<option value=A->A-<option value=B+>B+<option value=B->B-<option value=AB+>AB+<option value=AB->AB-<option value=O+>O+<option value=O->O-</select></div></div><div id=regSignatureSection style=background:#f9f9f9;border-radius:10px;margin-top:12px;padding:12px;display:none><div style=margin-bottom:4px;font-size:13px;font-weight:600>Signature Upload</div><div style=color:#888;margin-bottom:8px;font-size:11px>Your signature will appear on donor slips and death certificates</div><div style=align-items:center;gap:10px;display:flex><div onclick="document.getElementById('regSigInput').click()" style="cursor:pointer;background:#fff;border:2px dashed #ccc;border-radius:8px;justify-content:center;align-items:center;width:100px;height:50px;display:flex;overflow:hidden"><img id=regSigPreview style=object-fit:contain;width:100%;height:100%;display:none><span id=regSigPlus style=color:#aaa;text-align:center;font-size:11px>✍️ Upload</span></div><div style=color:#888;font-size:11px>Signature photo<br>from gallery</div></div><input accept=image/* id=regSigInput onchange=previewRegSig() style=display:none type=file></div><button class="btn btn-primary" onclick=submitReg() style=margin-top:16px;padding:13px><span style=font-size:13px>Submit</span><span style=color:#fffc;margin-top:1px;font-size:10px;display:block>جمع کرائیں</span></button></div><div class=page-footer><div class=footer-credit>Designed By: <a href=tel:03009084228>Asif Kanwal — 0300-9084228</a></div><div class=footer-credit>Developed By: <a href=tel:03184516464>Mubeen Ahmad — 0318-4516464</a></div></div></div></div><div class=screen id=devKeyScreen><div class=app-header><div class=app-header-left><button onclick="showScreen('loginScreen')" class=btn-logout>← Back</button><div><div class=app-title><span style=font-size:13px>Developer Login</span><span style=color:#ffffffb3;margin-top:1px;font-size:10px;display:block>ڈیولپر لاگ ان</span></div></div></div></div><div class=content-area><div style="text-align:center;margin-top:20px;padding:30px 20px" class=card><div style=margin-bottom:14px;font-size:40px>⚙️</div><h3>Enter Master Key</h3><div style="color:#888;margin:6px 0 16px;font-size:12px">Developer only — no registration required</div><div style=position:relative><span style=font-size:18px;position:absolute;top:50%;left:12px;transform:translateY(-50%)>🗝️</span><input id=devKey placeholder=•••• style=text-align:center;letter-spacing:8px;border-radius:12px;padding-left:38px;font-size:22px type=password></div><button class="btn btn-dev" onclick=checkDevKey() style=margin-top:14px;padding:13px>Login</button></div><div class=page-footer><div class=footer-credit>Designed By: <a href=tel:03009084228>Asif Kanwal — 0300-9084228</a></div><div class=footer-credit>Developed By: <a href=tel:03184516464>Mubeen Ahmad — 0318-4516464</a></div></div></div></div><div class=screen id=dashScreen><div class=content-area id=tabContent></div><div class=page-footer id=dashFooter><div class=footer-org id=dashFooterOrg>Falah e Qabristan</div><div style="color:#ffffff80;margin:3px 0;font-size:10px" id=footerLastUpdated></div><div class=footer-credit>Designed By: <a href=tel:03009084228>Asif Kanwal — 0300-9084228</a></div><div class=footer-credit>Developed By: <a href=tel:03184516464>Mubeen Ahmad — 0318-4516464</a></div></div></div><nav class=bottom-nav id=bottomNav style=display:none><div onclick="openSubmenu('home')" class=nav-item id=navHome style=position:relative><span style=font-size:20px>🏠</span><span class=nav-label>Home</span><span style="color:#fff;text-align:center;background:#e24b4a;border-radius:10px;min-width:14px;padding:1px 5px;font-size:9px;font-weight:700;line-height:14px;display:none;position:absolute;top:4px;right:calc(50% - 18px)" class=notif-badge></span></div><div onclick="openSubmenu('forms')" class=nav-item id=navForms><span style=font-size:20px>📝</span><span class=nav-label>Forms</span></div><div onclick="openSubmenu('reports')" class=nav-item id=navReports><span style=font-size:20px>📊</span><span class=nav-label>Reports</span></div><div onclick="openSubmenu('donors')" class=nav-item id=navDonors><span style=font-size:20px>👥</span><span class=nav-label>Donors</span></div><div onclick="openSubmenu('settings')" class=nav-item id=navSettings><span style=font-size:20px>⚙️</span><span class=nav-label>Settings</span><span class=badge id=settingsBadge style=color:#fff;background:#e24b4a;border-radius:50%;justify-content:center;align-items:center;width:16px;height:16px;font-size:9px;font-weight:700;display:none;position:absolute;top:4px;right:8px></span></div></nav><div class=submenu-overlay id=submenuOverlay onclick=closeSubmenu()></div><div class=submenu-drawer id=submenuDrawer><div class=submenu-handle onclick=closeSubmenu()></div><div class=submenu-title id=submenuTitle>Menu</div><div class=submenu-grid id=submenuGrid></div></div><div class=popup id=popupOverlay onclick=handlePopupOverlayClick(event) style=display:none><div class=popup-box style=position:relative><button style="cursor:pointer;color:#aaa;background:0 0;border:none;border-radius:6px;padding:2px 6px;font-size:20px;line-height:1;position:absolute;top:10px;right:12px" onclick=closePopup()>✕</button><div id=popupIcon style=margin-bottom:10px;font-size:36px>✅</div><div style=margin-bottom:10px><div id=popupTitle style=color:#1a1a1a;font-size:15px;font-weight:700;line-height:1.2></div><div id=popupTitleUr style=color:#1d9e75;direction:rtl;margin-top:2px;font-size:11px;font-weight:500></div></div><p id=popupMsg style=color:#666;margin-bottom:8px;font-size:13px;line-height:1.5><p id=popupMsgUr style=color:#1d9e75;direction:rtl;margin-bottom:16px;font-size:11px;line-height:1.5></p><button class="btn btn-primary" id=popupBtn onclick=closePopup() style=border-radius:10px>OK</button></div></div><div class=modal id=editModal style=display:none><div class=modal-box><div style=justify-content:space-between;align-items:center;margin-bottom:14px;display:flex><h3 id=editModalTitle>Edit Entry</h3><button style="cursor:pointer;color:#aaa;background:0 0;border:none;font-size:22px" onclick=closeModal()>✕</button></div><div id=editModalBody></div><div style="grid-template-columns:1fr 1fr;gap:8px;margin-top:16px;display:grid"><button class=btn onclick=closeModal()>Cancel</button><button class="btn btn-primary" onclick=saveEdit()>Save</button></div></div></div><script>// Firebase init — safe initialization
 let fdb = null;
 const FS = {
   async save(col,id,data){if(!fdb)return;try{await fdb.collection(col).doc(String(id)).set(JSON.parse(JSON.stringify(data,(k,v)=>v===undefined?null:v)));}catch(e){console.error('FS.save',e);}},
@@ -725,7 +124,6 @@ var currentUser=null,currentRole=null,pendingRegRole=null,txnCounter=1,expBillCo
 const CACHE_KEY='falah_db_cache';
 function saveLocalCache(){try{localStorage.setItem(CACHE_KEY,JSON.stringify({users:DB.users,donors:DB.donors,deceased:DB.deceased,donations:DB.donations,expenses:DB.expenses,transfers:DB.transfers,auditLog:DB.auditLog,suggestions:DB.suggestions,orgConfig:ORG_CONFIG,ts:Date.now()}));}catch(e){}}
 function loadLocalCache(){try{const d=JSON.parse(localStorage.getItem(CACHE_KEY)||'{}');if(d.donors){DB.users=d.users||[];DB.donors=d.donors||[];DB.deceased=d.deceased||[];DB.donations=d.donations||[];DB.expenses=d.expenses||[];DB.transfers=d.transfers||[];DB.auditLog=d.auditLog||[];DB.suggestions=d.suggestions||[];if(d.orgConfig)Object.assign(ORG_CONFIG,d.orgConfig);return true;}return false;}catch(e){return false;}}
-
 
 // ---- Global Config (editable by developer) ----
 var ORG_CONFIG={
@@ -1060,7 +458,6 @@ function submitReg(){
   const mobileDigits=normMob(mobile);
   if(mobileDigits.length!==11){showPopup('⚠️','Mobile Short','Mobile must be exactly 11 digits. Entered: '+mobileDigits.length);return;}
 
-
   if(password!==confirm){showPopup('⚠️','Mismatch','Passwords do not match.');return;}
   if(password.length<4){showPopup('⚠️','Weak','Password must be at least 4 characters.');return;}
   const allExisting=[...DB.users,...DB.pendingApprovals];
@@ -1285,10 +682,10 @@ T.dash=function(){
   const pt=pendingTransfers();
   const statStyle="display:flex;flex-direction:column;cursor:pointer;-webkit-tap-highlight-color:transparent";
   return `
-  <!-- HEADER: user info | org name+logo | logout -->
+  
   <div style="background:#0F6E56;border-radius:0 0 20px 20px;padding:14px 14px 18px;margin:-16px -12px 12px">
     <div style="display:flex;align-items:center;justify-content:space-between">
-      <!-- Left: user photo + name + role -->
+      
       <div style="display:flex;align-items:center;gap:10px">
         <div style="width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;overflow:hidden;border:2px solid rgba(255,255,255,0.35);flex-shrink:0">
           ${currentUser.photo?`<img src="${currentUser.photo}" style="width:100%;height:100%;object-fit:cover">`:(currentUser.name||'?')[0].toUpperCase()}
@@ -1302,11 +699,11 @@ T.dash=function(){
         </div>
       </div>
 
-      <!-- Right: logout only -->
+      
       <button onclick="logout()" style="background:#E24B4A;border:none;border-radius:8px;color:#fff;padding:6px 12px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;gap:5px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span style="font-size:11px;font-weight:700">Logout</span></button>
     </div>
   </div>
-  <!-- STATS -->
+  
   <div class="stat-grid" style="grid-template-columns:1fr 1fr">
     ${isUser?`
       <div class="stat-card-bi" onclick="openMyDonationsQuick()" style="${statStyle}"><div class="stat-label-bi"><span class="en">Donated</span><span class="ur">اعانت</span></div><div class="stat-val" style="color:#0F6E56;font-size:15px;font-weight:800;margin-top:4px">${fmt(income)}</div></div>
@@ -1319,7 +716,7 @@ T.dash=function(){
     `}
   </div>
   ${!isUser&&pt>0?`<div class="info-box warning">📩 ${pt} pending transfer(s) — check Transfer tab.</div>`:''}
-  <!-- RECENT ENTRIES -->
+  
   <div class="card" style="padding:10px;margin-bottom:10px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
       <div class="section-header" style="margin-bottom:0">
@@ -1330,7 +727,7 @@ T.dash=function(){
     </div>
     ${myD.length===0?'<p style="font-size:11px;color:#888">No entries found.</p>':myD.slice(-2).reverse().map(d=>{const dn=findDonorById(d.donorId)||{name:currentUser.name,area:currentUser.area||''};return `<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:0.5px solid #f5f5f5">${avatarHtml(dn.photo,dn.name,22)}<div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${isUser?d.desc||'Donation':dn.name}</div><div style="font-size:10px;color:#aaa">${d.date}</div></div><div style="font-size:11px;font-weight:700;color:#0F6E56;white-space:nowrap">${fmt(d.amount)}</div></div>`;}).join('')}
   </div>
-  <!-- QUICK ACTIONS -->
+  
   ${!isUser?`
   <div class="card" style="padding:10px;margin-bottom:10px">
     <div class="section-header"><span class="en">Quick Actions</span><span class="ur">فوری عمل</span></div>
@@ -1498,7 +895,7 @@ T.donation=function(){
     </div>
     <div id="donorFetchResult"></div>
 
-    <!-- NEW DONOR fields — only shown when donor NOT found -->
+    
     <div id="donorNewFields">
       <div style="background:#f9f9f9;border-radius:8px;padding:10px;margin-top:10px">
         <div style="font-size:12px;color:#888;margin-bottom:6px">Donor Photo <span style="font-size:10px;color:#1D9E75">تصویر</span></div>
@@ -1529,13 +926,13 @@ T.donation=function(){
       </select>
       <script>setTimeout(()=>{const ae=document.getElementById('donorArea');if(ae&&currentUser&&currentUser.area){ae.value=currentUser.area;if(!ae.value){const o=document.createElement('option');o.value=currentUser.area;o.textContent=currentUser.area;o.selected=true;ae.insertBefore(o,ae.firstChild);}}},200);<\/script>
     </div>
-    <!-- END NEW DONOR fields -->
+    
 
     <input type="hidden" id="donorCnic" style="display:none" value="">
 
     <input type="hidden" id="donorBankAccount" value="">
 
-    <!-- AMOUNT section — always shown after donor found/filled -->
+    
     <div id="donorAmountSection" style="display:none">
       <label>Amount (Rs) * <span style="font-size:10px;color:#1D9E75;font-weight:500">رقم</span></label>
       <div class="inp-wrap"><span class="inp-icon">💰</span><input type="number" id="donorAmount" placeholder="Amount in Rs"></div>
@@ -2364,10 +1761,6 @@ T.balreport=function(){
         <div style="flex:1">
           <div style="font-size:14px;font-weight:700;color:#1a1a1a">${u.name}</div>
           <div style="font-size:11px;color:#888;margin-top:2px"><span class="id-badge" style="font-size:10px">${u.id}</span> &nbsp;${u.area||'—'}</div>
-
-
-
-
 
         </div>
         <div style="text-align:right;flex-shrink:0">
@@ -3219,7 +2612,7 @@ function generateSlip(){
   const slipUser=lastEntry?DB.users.find(u=>u.id===lastEntry.by)||null:null;
   res.innerHTML=`<div class="cert-wrap" id="donorSlipWrap" style="background:#fff;border:1.5px solid #1D9E75;border-radius:14px;overflow:hidden;max-width:440px;margin:0 auto;font-family:'Arial',sans-serif">
 
-  <!-- Compact Islamic Header -->
+  
   <div style="background:linear-gradient(135deg,#0F6E56,#1D9E75);padding:12px 16px;text-align:center;position:relative">
     <div style="font-size:11px;color:rgba(255,255,255,0.7);letter-spacing:1px;margin-bottom:4px">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</div>
     ${ORG_CONFIG.logo?`<img src="${ORG_CONFIG.logo}" style="height:32px;max-width:80px;object-fit:contain;margin:0 auto 4px;display:block">`:``}
@@ -3228,7 +2621,7 @@ function generateSlip(){
     <div style="font-size:11px;color:rgba(255,255,255,0.75);margin-top:3px;letter-spacing:1px">— DONOR PAYMENT SLIP —</div>
   </div>
 
-  <!-- Donor Info -->
+  
   <div style="padding:12px 16px;border-bottom:1px dashed #ccc;display:flex;align-items:center;gap:12px">
     ${avatarHtml(donor.photo,donor.name,44)}
     <div style="flex:1">
@@ -3236,14 +2629,14 @@ function generateSlip(){
       <div style="font-size:11px;color:#888;margin-top:2px">${donor.id} • ${donor.mobile}</div>
       <div style="font-size:11px;color:#888">${donor.area||''} ${donor.profession?'• '+donor.profession:''}</div>
     </div>
-    <!-- RECEIVED STAMP -->
+    
     <div style="background:#FCEBEB;border:2px solid #E24B4A;border-radius:8px;padding:5px 9px;text-align:center;transform:rotate(-8deg);flex-shrink:0;min-width:60px">
       <div style="font-size:9px;font-weight:800;color:#A32D2D;letter-spacing:0.5px">✓ RECEIVED</div>
       <div style="font-size:8px;color:#A32D2D;margin-top:1px;font-weight:600">${lastDate}</div>
     </div>
   </div>
 
-  <!-- Donation Stats -->
+  
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px dashed #ccc">
     <div style="padding:10px 16px;border-right:1px dashed #ccc;text-align:center">
       <div style="font-size:10px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:3px">Current Donation</div>
@@ -3256,7 +2649,7 @@ function generateSlip(){
     </div>
   </div>
 
-  <!-- Last Transactions -->
+  
   <div style="padding:10px 16px;border-bottom:1px dashed #ccc">
     <div style="font-size:10px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Last ${last5.length} Transactions</div>
     ${last5.map((e,i)=>`<div style="display:flex;justify-content:space-between;padding:5px 8px;border-radius:6px;margin-bottom:3px;background:${i===0?'#E6F1FB':'#f9f9f9'}">
@@ -3265,20 +2658,12 @@ function generateSlip(){
     </div>`).join('')}
   </div>
 
-  <!-- Islamic Thanks Message -->
+  
   <div style="padding:10px 16px;background:#f0fff8;border-bottom:1px dashed #ccc;text-align:center">
     <div style="font-size:12px;color:#0F6E56;font-weight:600;margin-bottom:3px">جَزَاكَ اللَّهُ خَيْرًا</div>
     <div style="font-size:11px;color:#555;line-height:1.5">اللہ تعالیٰ آپ کی اس نیک عمل کو قبول فرمائے اور آپ کو دنیا و آخرت میں بہترین اجر عطا فرمائے۔ آمین</div>
     <div style="font-size:10px;color:#888;margin-top:4px;font-style:italic"></div>
   </div>
-
-
-
-
-
-
-
-
 
 </div>
   `;
@@ -3998,7 +3383,7 @@ function printExpenseBill(id){
     .sign-box{border-top:1px solid #999;padding-top:6px;font-size:11px;color:#888}
     .hardcopy{max-width:100%;border-radius:8px;border:1px solid #ddd;margin-top:10px}
     @media print{body{margin:0}button{display:none}}
-  </style>  <!-- PWA Meta Tags -->
+  </style>  
   <meta name="theme-color" content="#0F6E56">
   <meta name="app-last-updated" content="2026-04-03 16:05:20">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -4052,7 +3437,6 @@ function printExpenseBill(id){
   </body></html>`);
   printWin.document.close();
 }
-
 
 // ---- DONOR LIST (admin, manager, developer) ----
 T.bloodbank=function(){
@@ -4281,7 +3665,6 @@ function showDonorSlipInline(id){
   },200);
 }
 
-
 // ---- DECEASED CONFIRMATION (admin) ----
 T.decconfirm=function(){
   const dp=DB.deceased.filter(d=>!d.approved);
@@ -4310,8 +3693,6 @@ function adminApproveDeceased(id){
   showPopup('✅','Confirmed!','Deceased entry has been confirmed.');
   renderTab('decconfirm');
 }
-
-
 
 // ---- ORG SETTINGS (developer only) ----
 T.orgsettings=function(){
@@ -4733,7 +4114,7 @@ T.profile=function(){
   const u=currentUser;
   return `<div class="card">
     <h3><span class="bi-title"><span class="bi-en">My Profile</span><span class="bi-ur">میری پروفائل</span></span></h3>
-    <!-- Avatar + Info header -->
+    
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;padding:14px;background:#f0fff8;border-radius:12px;border:1px solid #c8f0e0">
       <div style="position:relative">
         <div class="avatar-box" onclick="document.getElementById('profPhotoInput').click()" style="width:76px;height:76px;border:2px solid #1D9E75">
@@ -4750,7 +4131,7 @@ T.profile=function(){
         ${u.bloodGroup?`<div style="font-size:11px;color:#E24B4A;font-weight:600;margin-top:2px">🩸 ${u.bloodGroup}</div>`:''}
       </div>
     </div>
-    <!-- Personal Info -->
+    
     <div style="font-size:11px;font-weight:700;color:#888;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:10px">Personal Info | ذاتی معلومات</div>
     <label>Full Name * <span style="font-size:10px;color:#1D9E75">پورا نام</span></label>
     <div class="inp-wrap"><span class="inp-icon">👤</span><input type="text" id="profName" value="${u.name||''}" placeholder="Full name"></div>
@@ -4891,7 +4272,6 @@ function saveProfile(){
     doSave(currentUser.photo||null);
   }
 }
-
 
 function autoPrefixSlip(input){
   let v=input.value;
@@ -5254,7 +4634,7 @@ T.datamanager=function(){
       ⚠️ Deleting entries is permanent and cannot be undone. | حذف کرنا مستقل ہے
     </div>
 
-    <!-- Donations -->
+    
     <div style="margin-bottom:14px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <div style="font-size:13px;font-weight:700">💰 Donations (${DB.donations.length})</div>
@@ -5283,7 +4663,7 @@ T.datamanager=function(){
       ${DB.donations.length>5?`<div style="font-size:11px;color:#888;text-align:center;margin-top:4px">Showing last 5 of ${DB.donations.length}</div>`:''}
     </div>
 
-    <!-- Expenses -->
+    
     <div style="margin-bottom:14px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <div style="font-size:13px;font-weight:700">📋 Expenses (${DB.expenses.length})</div>
@@ -5297,7 +4677,7 @@ T.datamanager=function(){
       ${DB.expenses.length>5?`<div style="font-size:11px;color:#888;text-align:center;margin-top:4px">Showing last 5 of ${DB.expenses.length}</div>`:''}
     </div>
 
-    <!-- Deceased -->
+    
     <div style="margin-bottom:14px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <div style="font-size:13px;font-weight:700">⚰️ Deceased (${DB.deceased.length})</div>
@@ -5311,7 +4691,7 @@ T.datamanager=function(){
       ${DB.deceased.length>5?`<div style="font-size:11px;color:#888;text-align:center;margin-top:4px">Showing last 5 of ${DB.deceased.length}</div>`:''}
     </div>
 
-    <!-- Donors -->
+    
     <div style="margin-bottom:14px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <div style="font-size:13px;font-weight:700">👤 Donors (${DB.donors.length})</div>
@@ -5325,7 +4705,7 @@ T.datamanager=function(){
       ${DB.donors.length>5?`<div style="font-size:11px;color:#888;text-align:center;margin-top:4px">Showing first 5 of ${DB.donors.length}</div>`:''}
     </div>
 
-    <!-- Transfers -->
+    
     <div style="margin-bottom:14px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <div style="font-size:13px;font-weight:700">💸 Transfers (${DB.transfers.length})</div>
@@ -5333,7 +4713,7 @@ T.datamanager=function(){
       </div>
     </div>
 
-    <!-- Audit Log -->
+    
     <div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <div style="font-size:13px;font-weight:700">📋 Audit Log (${DB.auditLog.length})</div>
@@ -5553,7 +4933,6 @@ function ldSendBulk(){
   popHtml+='</div></div>';
   showCustomPopup('<div style="display:flex;justify-content:center;padding:20px 10px">'+popHtml+'</div>');
 }
-
 
 function ldUpdateBulkBar(){
   var checks=document.querySelectorAll('.ld-check:checked');
@@ -5978,13 +5357,7 @@ function filterContacts(area){
         '</div>'+phoneBtn+
         '</div>';
 
-
-
-
     });
-
-
-
 
   });
   html+=`<div style="text-align:center;padding:12px;font-size:11px;color:#aaa">${filtered.length} contacts | ${filtered.length} رابطے</div>`;
@@ -7316,7 +6689,6 @@ function addDownloadBar(title, elementId){
   </div>`;
 }
 
-
 // ============================================================
 // SMS / WhatsApp REMINDER MODULE
 // ============================================================
@@ -7443,7 +6815,7 @@ function openSMSReminders(activeTab){
         <button onclick="closeCustomPopup()" style="background:none;border:none;font-size:22px;cursor:pointer;color:#aaa">✕</button>
       </div>
 
-      <!-- THANKS SECTION -->
+      
       <div style="background:#E1F5EE;border-radius:10px;padding:8px 12px;margin-bottom:10px">
         <div style="font-size:12px;font-weight:700;color:#085041">✅ Thanks — Paid This Month (${paidList.length})</div>
       </div>
@@ -7467,7 +6839,7 @@ function openSMSReminders(activeTab){
         </div>`;
       }).join('')}
 
-      <!-- PENDING SECTION -->
+      
       <div style="background:#FCEBEB;border-radius:10px;padding:8px 12px;margin:12px 0 10px">
         <div style="font-size:12px;font-weight:700;color:#A32D2D">⏰ Pending This Month (${pendingList.length})</div>
       </div>
@@ -7524,6 +6896,4 @@ async function appInit(){
   }catch(e){console.error('Session restore error:',e);}
 }
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',appInit);}
-else{appInit();}
-</script>
-</html>
+else{appInit();}</script>

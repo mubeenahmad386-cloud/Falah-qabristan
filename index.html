@@ -5702,20 +5702,33 @@ T.unknowndonors=function(){
   var areaOpts=areas.map(function(a){return '<option value="'+a+'">'+a+'</option>';}).join('');
   var html='<div class="card">';
   html+='<h3 style="margin-bottom:4px">&#9888;&#65039; Update Unknown Donors</h3>';
-  html+='<p style="font-size:12px;color:#888;margin-bottom:14px">'+unknowns.length+' donor(s) without area</p>';
+  html+='<p style="font-size:12px;color:#888;margin-bottom:14px">'+unknowns.length+' donor(s) ka area set nahi hai</p>';
   if(!unknowns.length){
     html+='<div style="text-align:center;padding:30px"><div style="font-size:36px">&#9989;</div><div style="font-size:14px;color:#0F6E56;font-weight:700;margin-top:8px">Sab donors ka area set hai!</div></div>';
     html+='</div>';return html;
   }
   unknowns.forEach(function(d){
+    var did=d.id;
     var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-    var av=d.photo?'<img src="'+d.photo+'" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #E1F5EE;flex-shrink:0">':'<div style="width:44px;height:44px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
-    html+='<div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:0.5px solid #f0f0f0">';
+    var av=d.photo
+      ?'<img src="'+d.photo+'" style="width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid #1D9E75;flex-shrink:0">'
+      :'<div style="width:46px;height:46px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
+    html+='<div style="padding:12px 0;border-bottom:1px solid #f0f0f0">';
+    // Row 1: avatar + name + ID + mobile
+    html+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">';
     html+=av;
-    html+='<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#1a1a1a">'+d.name+'</div>';
-    html+='<div style="font-size:10px;color:#888;margin-top:2px">'+d.id+' &bull; '+(d.mobile||'—')+'</div></div>';
-    html+='<select id="uad_'+d.id+'" style="padding:7px 8px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:12px;min-width:110px"><option value="">-- Area --</option>'+areaOpts+'</select>';
-    html+='<button data-did="'+d.id+'" onclick="saveUnknownArea(this.dataset.did)" style="background:#0F6E56;color:#fff;border:none;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">Save</button>';
+    html+='<div style="min-width:0">';
+    html+='<div style="font-size:14px;font-weight:700;color:#1a1a1a">'+d.name+'</div>';
+    html+='<div style="font-size:11px;color:#888;margin-top:2px">'+did+' &bull; '+(d.mobile||'—')+'</div>';
+    html+='</div></div>';
+    // Row 2: area dropdown + save button
+    html+='<div style="display:flex;gap:8px;align-items:center">';
+    html+='<select id="uad_'+did+'" style="flex:1;padding:10px 12px;border:1.5px solid #1D9E75;border-radius:10px;font-size:13px;background:#fff;color:#1a1a1a">';
+    html+='<option value="">-- Area select karein --</option>';
+    html+=areaOpts;
+    html+='</select>';
+        html+='<button onclick="saveUnknownArea('+JSON.stringify(did)+')" style="background:#0F6E56;color:#fff;border:none;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap">Save &#10003;</button>';;
+    html+='</div>';
     html+='</div>';
   });
   html+='</div>';return html;
@@ -5723,16 +5736,16 @@ T.unknowndonors=function(){
 
 async function saveUnknownArea(donorId){
   var sel=document.getElementById('uad_'+donorId);
-  if(!sel||!sel.value){showPopup('\u26a0\ufe0f','Required','Area select karein.');return;}
-  var area=sel.value;
+  var area=sel?sel.value:'';
+  if(!area){showPopup('⚠️','Required','Pehle area select karein.');return;}
   var donor=DB.donors.find(function(d){return d.id===donorId;});
-  if(!donor){return;}
+  if(!donor){showPopup('⚠️','Not Found','Donor nahi mila: '+donorId);return;}
   donor.area=area;
   try{
     await FS.save('donors',donorId,donor);
     saveLocalCache();
-    showPopup('\u2705','Saved',donor.name+' \u2014 "'+area+'" set ho gaya!',null,function(){renderTab('unknowndonors');});
-  }catch(e){showPopup('\u274c','Error',e.message);}
+    showPopup('✅','Area Saved',donor.name+' — "'+area+'" — area update ho gaya!',null,function(){renderTab('unknowndonors');});
+  }catch(e){showPopup('❌','Error','Save failed: '+e.message);}
 }
 T.contacts=function(){
   // Reset area on fresh render

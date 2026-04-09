@@ -5696,6 +5696,111 @@ T.lastdonation=function(){
     '<sc'+'ript>setTimeout(function(){filterLastDonation("All");},80);<'+'/script></div>';
 };;;;
 
+T.missinginfo=function(){
+  var missingArea=DB.donors.filter(function(d){return !d.area||!d.area.trim();});
+  var missingBlood=DB.donors.filter(function(d){return !d.bloodGroup||!d.bloodGroup.trim();});
+  var missingProf=DB.donors.filter(function(d){return !d.profession||!d.profession.trim();});
+  var activeTab=window._miTab||'area';
+
+  var tabs=[
+    {key:'area',label:'Area — علاقہ',count:missingArea.length,color:'#E24B4A'},
+    {key:'blood',label:'Blood Group — بلڈ گروپ',count:missingBlood.length,color:'#185FA5'},
+    {key:'prof',label:'Profession — پیشہ',count:missingProf.length,color:'#854F0B'},
+  ];
+
+  var html='<div class="card">';
+  html+='<h3 style="margin-bottom:10px">&#128203; Missing Information</h3>';
+
+  // Tab buttons
+  html+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">';
+  tabs.forEach(function(t){
+    var active=t.key===activeTab;
+    html+='<button data-mikey="'+t.key+'" onclick="switchMiTab(this)" style="padding:7px 12px;border-radius:20px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:'+bg+';color:'+cl+'">'+t.label+' <span style="background:'+spBg+';border-radius:20px;padding:1px 7px;font-size:11px">'+t.count+'</span></button>';
+    html+=t.label+' <span style="background:'+(active?'rgba(255,255,255,0.3)':'rgba(0,0,0,0.08)')+';border-radius:20px;padding:1px 7px;font-size:11px">'+t.count+'</span>';
+    html+='</button>';
+  });
+  html+='</div>';
+
+  // Search bar
+  var q=window._miSearch||'';
+  html+='<div class="inp-wrap" style="margin-bottom:12px;position:relative">';
+  html+='<span class="inp-icon">&#128269;</span>';
+  html+='<input type="text" id="miSearch" value="'+q+'" placeholder="Search name, ID or mobile..." oninput="window._miSearch=this.value;filterMI()" autocomplete="off" style="font-size:13px;padding-right:28px">';
+  html+='<button id="miClear" onclick="clearMiSearch()" style="display:'+(q?'block':'none')+';position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:16px;color:#999;cursor:pointer;padding:0">&times;</button>';
+  html+='</div>';
+
+  html+='<div id="miBody"></div>';
+  html+='</div>';
+  return html;
+};
+
+function clearMiSearch(){window._miSearch='';var el=document.getElementById('miSearch');if(el)el.value='';filterMI();}
+function switchMiTab(btn){
+  window._miTab=btn.getAttribute('data-mikey');
+  window._miSearch='';
+  renderTab('missinginfo');
+}
+function filterMI(){
+  var activeTab=window._miTab||'area';
+  var q=(window._miSearch||'').toLowerCase().trim();
+  var list=[];
+  if(activeTab==='area') list=DB.donors.filter(function(d){return !d.area||!d.area.trim();});
+  else if(activeTab==='blood') list=DB.donors.filter(function(d){return !d.bloodGroup||!d.bloodGroup.trim();});
+  else if(activeTab==='prof') list=DB.donors.filter(function(d){return !d.profession||!d.profession.trim();});
+  if(q) list=list.filter(function(d){return (d.name||'').toLowerCase().includes(q)||(d.mobile||'').includes(q)||(d.id||'').toLowerCase().includes(q);});
+  list=[].concat(list).sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
+  var el=document.getElementById('miBody');
+  if(!el)return;
+  if(!list.length){el.innerHTML='<p style="font-size:13px;color:#888;text-align:center;padding:20px">&#10003; No missing data for this field!</p>';return;}
+
+  var areas=AREAS&&AREAS.length>0?AREAS:[];
+  var areaOpts=areas.map(function(a){return '<option value="'+a+'">'+a+'</option>';}).join('');
+  var bloodOpts=['A+','A-','B+','B-','AB+','AB-','O+','O-'].map(function(b){return '<option value="'+b+'">'+b+'</option>';}).join('');
+  var profOpts=PROF_LIST.map(function(p){return '<option value="'+p.en+'">'+p.en+(p.ur?' — '+p.ur:'')+'</option>';}).join('');
+
+  var html='<div style="font-size:11px;color:#888;margin-bottom:8px">'+list.length+' donors</div>';
+  list.forEach(function(d){
+    var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+    var av=d.photo?'<img src="'+d.photo+'" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1.5px solid #E1F5EE;flex-shrink:0">':'<div style="width:42px;height:42px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
+    var fieldId='mif_'+activeTab+'_'+d.id;
+    var inputHtml='';
+    if(activeTab==='area'){
+      inputHtml='<select id="'+fieldId+'" style="flex:1;padding:9px 10px;border:1.5px solid #1D9E75;border-radius:8px;font-size:12px"><option value="">-- Area --</option>'+areaOpts+'</select>';
+    } else if(activeTab==='blood'){
+      inputHtml='<select id="'+fieldId+'" style="flex:1;padding:9px 10px;border:1.5px solid #185FA5;border-radius:8px;font-size:12px"><option value="">-- Blood Group --</option>'+bloodOpts+'</select>';
+    } else {
+      inputHtml='<select id="'+fieldId+'" style="flex:1;padding:9px 10px;border:1.5px solid #854F0B;border-radius:8px;font-size:12px"><option value="">-- Profession --</option>'+profOpts+'</select>';
+    }
+    var btnColor=activeTab==='area'?'#0F6E56':activeTab==='blood'?'#185FA5':'#854F0B';
+    html+='<div style="padding:10px 0;border-bottom:0.5px solid #f0f0f0">';
+    html+='<div style="display:flex;align-items:center;gap:9px;margin-bottom:8px">'+av;
+    html+='<div><div style="font-size:13px;font-weight:700;color:#1a1a1a">'+d.name+'</div>';
+    html+='<div style="font-size:10px;color:#888;margin-top:2px">'+d.id+' &bull; '+(d.mobile||'—')+'</div></div></div>';
+    html+='<div style="display:flex;gap:8px;align-items:center">';
+    html+=inputHtml;
+    html+='<button data-did2="'+d.id+'" data-field="'+activeTab+'" data-fid="'+fieldId+'" onclick="saveMissingInfo(this.dataset.did2,this.dataset.field,this.dataset.fid)" style="background:'+btnColor+';color:#fff;border:none;padding:9px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">Save</button>';
+    html+='</div></div>';
+  });
+  el.innerHTML=html;
+  var clr=document.getElementById('miClear');
+  if(clr)clr.style.display=q?'block':'none';
+}
+
+async function saveMissingInfo(donorId,field,fieldId){
+  var sel=document.getElementById(fieldId);
+  var val=sel?sel.value:'';
+  if(!val){showPopup('⚠️','Required','Pehle value select karein.');return;}
+  var donor=DB.donors.find(function(d){return d.id===donorId;});
+  if(!donor){showPopup('⚠️','Not Found','Donor nahi mila.');return;}
+  if(field==='area')donor.area=val;
+  else if(field==='blood')donor.bloodGroup=val;
+  else if(field==='prof')donor.profession=val;
+  try{
+    await FS.save('donors',donorId,donor);
+    saveLocalCache();
+    showPopup('✅','Saved',donor.name+' — '+val+' — update ho gaya!',null,function(){filterMI();});
+  }catch(e){showPopup('❌','Error',e.message);}
+}
 T.unknowndonors=function(){
   var unknowns=DB.donors.filter(function(d){return !d.area||!d.area.trim();});
   var areas=AREAS&&AREAS.length>0?AREAS:[];
@@ -5713,7 +5818,7 @@ T.unknowndonors=function(){
     var av=d.photo
       ?'<img src="'+d.photo+'" style="width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid #1D9E75;flex-shrink:0">'
       :'<div style="width:46px;height:46px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
-    html+='<div style="padding:12px 0;border-bottom:1px solid #f0f0f0">';
+    html+='<div id="urow_'+did+'" style="padding:12px 0;border-bottom:1px solid #f0f0f0">';
     // Row 1: avatar + name + ID + mobile
     html+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">';
     html+=av;
@@ -5727,7 +5832,7 @@ T.unknowndonors=function(){
     html+='<option value="">-- Area select karein --</option>';
     html+=areaOpts;
     html+='</select>';
-        html+='<button onclick="saveUnknownArea('+JSON.stringify(did)+')" style="background:#0F6E56;color:#fff;border:none;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap">Save &#10003;</button>';;
+        html+='<button onclick="saveUnknownArea('+"'"+did+"'"+')" style="background:#0F6E56;color:#fff;border:none;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap">Save &#10003;</button>';;
     html+='</div>';
     html+='</div>';
   });
@@ -6788,6 +6893,7 @@ function getMenuConfig(){
   if(['admin','manager','developer'].includes(currentRole)){
     var _uc=DB.donors.filter(function(d){return !d.area||!d.area.trim();}).length;
     homeItems.push({icon:'⚠️', label:'Update Unknown'+(_uc>0?' ('+_uc+')':''), tab:'unknowndonors'});
+    var _mi=DB.donors.filter(function(d){return !d.area||!d.bloodGroup||!d.profession;}).length;homeItems.push({icon:'📋', label:'Missing Info'+(_mi>0?' ('+_mi+')':''), tab:'missinginfo'});
   }
   if(currentRole!=='user'){
     homeItems.push(
@@ -6988,6 +7094,8 @@ function renderTab(key){
       notifications:()=>{updateNotifBadge();},
       contacts:()=>{window._contactArea='All';filterContacts('All');},
       superentry:()=>{window._superEntryArea='All';filterSuperEntry('All');},
+      unknowndonors:()=>{renderTab('unknowndonors');},
+      missinginfo:()=>{window._miTab=window._miTab||'area';window._miSearch='';setTimeout(function(){filterMI();},80);},
       lastdonation:()=>{window._ldArea='All';setTimeout(function(){filterLastDonation('All');},80);},
       bloodbank:()=>{window._bbArea='All';filterBloodBank('All');},
       smartsearch:()=>{
@@ -7092,7 +7200,7 @@ const TAB_LABELS={
   donorlist:'Donor List',slip:'Donor Slip',top:'Top Donors',transfer:'Transfer',
   decconfirm:'Confirm Deceased',approvals:'Approvals',lockuser:'Login Management',
   userslist:'Users List',professions:'Professions',audit:'Audit Log',areas:'Areas',
-  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',lastdonation:'Last Donation',unknowndonors:'Update Unknown',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
+  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',lastdonation:'Last Donation',unknowndonors:'Update Unknown',missinginfo:'Missing Information',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
 };
 
 // ============================================================

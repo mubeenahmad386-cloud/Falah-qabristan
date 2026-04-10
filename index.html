@@ -6736,7 +6736,6 @@ function submitAddDonor(){
   const dupDonor=DB.donors.find(d=>normMob(d.mobile)===normMob(mobile));
   if(dupDonor){showPopup('⚠️','Duplicate Donor',dupDonor.name+' (ID: '+dupDonor.id+') already exists with this mobile.\n\nDuplicate donor add nahi hoga.');return;}
   // Confirmation
-  if(!confirm('Confirm: "'+name+'" ko donor add karna chahte hain?\n\nMobile: '+mobile+'\nArea: '+(area||'—')))return;
   const nid=nextAllId();
   const fi=document.getElementById('adPhotoInp');
   function finish(photo){
@@ -6746,8 +6745,7 @@ function submitAddDonor(){
     const al={by:currentUser.id,action:'Donor Added',target:name,detail:'ID: '+nid+' | '+mobile,date:today()};
     DB.auditLog.push(al);FS.save('auditLog','AL'+Date.now(),al);
     addNotification('donation','New Donor Added',name+' ('+nid+') added by '+currentUser.name);
-    showPopup('✅','Donor Added',name+' added! ID: '+nid+' | ڈونر شامل ہو گیا',null,()=>{
-      // Reset form
+    function _resetAddDonorForm(){
       ['adMobile','adName'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
       setTimeout(()=>{const f=document.getElementById('adMobile');if(f)f.focus();},200);
       const ad=document.getElementById('adArea');if(ad)ad.value='';
@@ -6757,7 +6755,8 @@ function submitAddDonor(){
       const pl=document.getElementById('adPhotoPlus');if(pl)pl.style.display='block';
       const ed=document.getElementById('adExistingProfile');if(ed)ed.style.display='none';
       const nd=document.getElementById('adNewFields');if(nd)nd.style.display='none';
-    });
+    }
+    showCustomPopup('<div style="background:#fff;border-radius:16px;overflow:hidden;max-width:300px;width:88vw"><div style="background:linear-gradient(135deg,#0F6E56,#1D9E75);padding:18px;text-align:center"><div style="font-size:28px;margin-bottom:6px">&#9989;</div><div style="font-size:16px;font-weight:800;color:#fff">Donor Added!</div><div style="font-size:12px;color:rgba(255,255,255,0.8);margin-top:2px">ڈونر شامل ہو گیا</div></div><div style="padding:20px;text-align:center"><div style="font-size:13px;font-weight:600;color:#555;margin-bottom:14px">'+name+'</div><div style="background:#E1F5EE;border:2px solid #1D9E75;border-radius:12px;padding:16px"><div style="font-size:10px;color:#085041;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Donor ID Assigned</div><div style="font-size:36px;font-weight:900;color:#0F6E56;letter-spacing:2px;font-family:monospace">'+nid+'</div><div style="font-size:10px;color:#888;margin-top:6px">یہ ID یاد رکھیں</div></div><button onclick="closeCustomPopup();_resetAddDonorForm&&_resetAddDonorForm()" style="width:100%;background:#0F6E56;color:#fff;border:none;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-top:14px">OK</button></div></div>');
   }
   if(fi&&fi.files[0]){const r=new FileReader();r.onload=e=>finish(e.target.result);r.readAsDataURL(fi.files[0]);}
   else finish(null);

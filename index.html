@@ -4166,11 +4166,11 @@ function filterBloodBank(area){
   </div>`;
 }
 T.donorprofileupdate=function(){
-  const donors=[...DB.donors].sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const q=window._dpuQ||'';
   return `<div class="card">
     <h3><span class="bi-title"><span class="bi-en">Donor Profile Update</span><span class="bi-ur">ڈونر پروفائل اپ ڈیٹ</span></span></h3>
-    <div class="inp-wrap" style="margin-bottom:12px"><span class="inp-icon">🔍</span><input type="text" id="dpuSearch" placeholder="Name, ID, Mobile ya Area..." oninput="filterDPU()" autocomplete="off" style="font-size:13px"></div>
-    <div id="dpuList">${renderDPUList(donors,'')}</div>
+    <div class="inp-wrap" style="margin-bottom:12px"><span class="inp-icon">🔍</span><input type="text" id="dpuSearch" value="${q}" placeholder="Name, ID, Mobile ya Area..." oninput="window._dpuQ=this.value;filterDPU()" autocomplete="off" style="font-size:13px"></div>
+    <div id="dpuList"></div>
   </div>`;
 }
 
@@ -4196,11 +4196,34 @@ function renderDPUList(donors,q){
   return html;
 }
 function filterDPU(){
-  var inp=document.getElementById('dpuSearch');
-  var q=inp?inp.value.trim():'';
-  var el=document.getElementById('dpuList');
-  if(!el)return;
-  el.innerHTML=renderDPUList([].concat(DB.donors).sort(function(a,b){return (a.name||'').localeCompare(b.name||'');}),q);
+  var searchEl=document.getElementById('dpuSearch');
+  var searchQ=searchEl?searchEl.value.trim():(window._dpuQ||'');
+  var listEl=document.getElementById('dpuList');
+  if(!listEl)return;
+  var sortedDonors=[].concat(DB.donors).sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
+  var filtered=searchQ?sortedDonors.filter(function(d){
+    var nm=(d.name||'').toLowerCase();
+    var mb=normMob(d.mobile||'');
+    var did=(d.id||'').toLowerCase();
+    var ar=(d.area||'').toLowerCase();
+    var ql=searchQ.toLowerCase();
+    return nm.includes(ql)||mb.includes(normMob(searchQ))||did.includes(ql)||ar.includes(ql);
+  }):sortedDonors;
+  if(!filtered.length){listEl.innerHTML='<p style="font-size:13px;color:#888;text-align:center;padding:16px">No donors found.</p>';return;}
+  var groups={};
+  filtered.forEach(function(d){var l=(d.name||'?')[0].toUpperCase();if(!groups[l])groups[l]=[];groups[l].push(d);});
+  var html='<div style="font-size:11px;color:#888;margin-bottom:8px">'+filtered.length+' donors</div>';
+  Object.keys(groups).sort().forEach(function(letter){
+    html+='<div style="font-size:11px;font-weight:700;color:#888;padding:5px 0 3px;border-bottom:1px solid #eee;margin-bottom:4px">'+letter+'</div>';
+    groups[letter].forEach(function(d){
+      var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+      var av=d.photo?'<img src="'+d.photo+'" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:1.5px solid #E1F5EE;flex-shrink:0">':'<div style="width:44px;height:44px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
+      var liveTotal=DB.donations.filter(function(x){return x.donorId===d.id;}).reduce(function(s,x){return s+x.amount;},0);
+      var mob=(d.mobile||'');
+      html+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid #f5f5f5">'+av+'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#1a1a1a">'+d.name+' <span class="id-badge" style="font-size:9px">'+d.id+'</span></div><div style="font-size:11px;color:#888;margin-top:2px">'+mob+' &bull; '+(d.area||'<span style="color:#E24B4A">No area</span>')+'</div><div style="font-size:11px;font-weight:600;color:#0F6E56;margin-top:1px">Total: Rs '+fmt(liveTotal)+'</div></div><button data-did="'+d.id+'" onclick="openEditDonorProfile(this.dataset.did)" style="background:#1D9E75;color:#fff;border:none;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0">&#9998; Edit</button></div>';
+    });
+  });
+  listEl.innerHTML=html;
 }
 function filterDonorListInline(){
   var q=(window._donorListSearch||'').toLowerCase().trim();
@@ -5347,47 +5370,76 @@ T.excelexport=function(){
 };
 T.donorsummary=function(){
   var donors=[].concat(DB.donors).sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
-  var totalAll=DB.donations.reduce(function(s,x){return s+x.amount;},0);
   var areas=['All',...new Set(donors.map(function(d){return d.area||'';}).filter(Boolean)).values()].sort();
   var sel=window._dsArea||'All';
+  var sortMode=window._dsSort||'name'; // name | high | low | zero
   var q=window._dsSearch||'';
 
-  var areaBtns=areas.map(function(a){
-    return '<button data-area="'+a+'" onclick="window._dsArea=this.dataset.area;renderTab(\'donorsummary\')" style="padding:5px 12px;border-radius:20px;border:'+(a===sel?'none':'1px solid #ddd')+';background:'+(a===sel?'#0F6E56':'#f5f5f5')+';color:'+(a===sel?'#fff':'#333')+';font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">'+a+'</button>';
-  }).join('');
-
+  // Filter by area
   var filtered=donors.slice();
   if(sel&&sel!=='All')filtered=filtered.filter(function(d){return (d.area||'')===sel;});
-  if(q)filtered=filtered.filter(function(d){return (d.name||'').toLowerCase().includes(q.toLowerCase())||(d.id||'').toLowerCase().includes(q)||(d.mobile||'').includes(q);});
+  // Compute live totals
   filtered=filtered.map(function(d){
     d._liveTotal=DB.donations.filter(function(x){return x.donorId===d.id;}).reduce(function(s,x){return s+x.amount;},0);
     return d;
   });
+  // Filter by search
+  if(q)filtered=filtered.filter(function(d){return (d.name||'').toLowerCase().includes(q.toLowerCase())||(d.id||'').toLowerCase().includes(q)||(d.mobile||'').includes(q);});
+  var minAmt2=window._dsMin?parseFloat(window._dsMin):null;
+  var maxAmt2=window._dsMax?parseFloat(window._dsMax):null;
+  if(minAmt2!==null&&!isNaN(minAmt2))filtered=filtered.filter(function(d){return d._liveTotal>=minAmt2;});
+  if(maxAmt2!==null&&!isNaN(maxAmt2))filtered=filtered.filter(function(d){return d._liveTotal<=maxAmt2;});
+  // Sort
+  if(sortMode==='high')filtered.sort(function(a,b){return b._liveTotal-a._liveTotal;});
+  else if(sortMode==='low')filtered.sort(function(a,b){return a._liveTotal-b._liveTotal;});
+  else if(sortMode==='zero')filtered=filtered.filter(function(d){return d._liveTotal===0;}).concat(filtered.filter(function(d){return d._liveTotal>0;}));
+  else filtered.sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
 
   var grandTotal=filtered.reduce(function(s,d){return s+d._liveTotal;},0);
+  var areaBtns=areas.map(function(a){return '<button data-area2="'+a+'" onclick="window._dsArea=this.dataset.area2;renderTab(\'donorsummary\')" style="padding:5px 12px;border-radius:20px;border:'+(a===sel?'none':'1px solid #ddd')+';background:'+(a===sel?'#0F6E56':'#f5f5f5')+';color:'+(a===sel?'#fff':'#333')+';font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">'+a+'</button>';}).join('');
+  var sortBtns=[
+    {k:'name',l:'A-Z'},
+    {k:'high',l:'Highest'},
+    {k:'low',l:'Lowest'},
+    {k:'zero',l:'Zero First'},
+  ].map(function(s){return '<button data-sk="'+s.k+'" onclick="window._dsSort=this.dataset.sk;renderTab(\'donorsummary\')" style="padding:5px 10px;border-radius:20px;border:'+(s.k===sortMode?'none':'1px solid #ddd')+';background:'+(s.k===sortMode?'#185FA5':'#f5f5f5')+';color:'+(s.k===sortMode?'#fff':'#333')+';font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">'+s.l+'</button>';}).join('');
 
   var html='<div class="card" id="donorSummaryContent">';
   html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
   html+='<h3 style="margin:0">&#128101; Donor Summary <span style="font-size:12px;color:#888;font-weight:400">&#1688;&#1608;&#1606;&#1585; &#1585;&#1662;&#1608;&#1585;&#1657;</span></h3>';
-  html+='<button onclick="downloadReport(\'donorSummaryContent\',\'donor_summary\',\'pdf\')" style="background:#E24B4A;color:#fff;border:none;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">&#128196; PDF Download</button>';
+  html+='<button onclick="downloadReport(\'donorSummaryContent\',\'donor_summary\',\'pdf\')" style="background:#E24B4A;color:#fff;border:none;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">&#128196; PDF</button>';
   html+='</div>';
+  // Stats bar
   html+='<div style="background:#E1F5EE;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">';
   html+='<div><div style="font-size:11px;color:#085041;font-weight:700">'+filtered.length+' Donors</div><div style="font-size:10px;color:#0F6E56">'+(sel==='All'?'All Areas':sel)+'</div></div>';
   html+='<div style="text-align:right"><div style="font-size:11px;color:#085041;font-weight:700">Grand Total</div><div style="font-size:16px;font-weight:800;color:#0F6E56">Rs '+fmt(grandTotal)+'</div></div>';
   html+='</div>';
-  // Search + area
+  // Search
   html+='<div style="position:relative;margin-bottom:8px"><div class="inp-wrap" style="margin-bottom:0"><span class="inp-icon">&#128269;</span><input type="text" id="dsSearch" value="'+q.replace(/"/g,'&quot;')+'" placeholder="Search name, ID or mobile..." oninput="window._dsSearch=this.value;renderTab(\'donorsummary\')" autocomplete="off" style="font-size:13px;padding-right:28px">'+(q?'<button onclick="window._dsSearch=\'\';renderTab(\'donorsummary\')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:16px;color:#999;cursor:pointer;padding:0">&times;</button>':'')+'</div></div>';
-  html+='<div style="display:flex;gap:5px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px">'+areaBtns+'</div>';
+  // Area filter
+  html+='<div style="display:flex;gap:5px;overflow-x:auto;padding-bottom:5px;margin-bottom:8px">'+areaBtns+'</div>';
+  var minAmt=window._dsMin||'';
+  var maxAmt=window._dsMax||'';
+  // Sort filter
+  html+='<div style="margin-bottom:10px">';
+  html+='<div style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:5px;letter-spacing:0.3px">Sort by donation:</div>';
+  html+='<div style="display:flex;gap:5px;flex-wrap:wrap">'+sortBtns+'</div>';
+  html+='</div>';
+  // Amount range filter
+  html+='<div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">';
+  html+='<div style="flex:1"><div style="font-size:10px;font-weight:700;color:#888;margin-bottom:4px">Min Amount</div>';
+  html+='<input type="number" id="dsMinAmt" value="'+minAmt+'" placeholder="0" oninput="window._dsMin=this.value;renderTab(\'donorsummary\')" style="width:100%;padding:8px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box"></div>';
+  html+='<div style="flex:1"><div style="font-size:10px;font-weight:700;color:#888;margin-bottom:4px">Max Amount</div>';
+  html+='<input type="number" id="dsMaxAmt" value="'+maxAmt+'" placeholder="Any" oninput="window._dsMax=this.value;renderTab(\'donorsummary\')" style="width:100%;padding:8px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box"></div>';
+  html+='<button onclick="window._dsMin=\'\';window._dsMax=\'\';renderTab(\'donorsummary\')" style="margin-top:16px;padding:8px 12px;border-radius:8px;border:1px solid #ddd;background:#f5f5f5;color:#555;font-size:11px;font-weight:600;cursor:pointer;flex-shrink:0">Reset</button>';
+  html+='</div>';
 
   if(!filtered.length){
-    html+='<p style="font-size:13px;color:#888;text-align:center;padding:20px">No donors found.</p>';
-    html+='</div>';return html;
+    html+='<p style="font-size:13px;color:#888;text-align:center;padding:20px">No donors found.</p></div>';
+    return html;
   }
-
   // Table header
-  html+='<div style="display:grid;grid-template-columns:44px 1fr auto;gap:0;font-size:10px;font-weight:700;color:#888;text-transform:uppercase;padding:6px 8px;border-bottom:1.5px solid #ddd;letter-spacing:0.3px">';
-  html+='<div></div><div>Donor</div><div style="text-align:right">Total Donation</div></div>';
-
+  html+='<div style="display:grid;grid-template-columns:44px 1fr auto;gap:0;font-size:10px;font-weight:700;color:#888;text-transform:uppercase;padding:6px 8px;border-bottom:1.5px solid #ddd;letter-spacing:0.3px"><div></div><div>Donor</div><div style="text-align:right">Total Donation</div></div>';
   filtered.forEach(function(d,i){
     var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
     var av=d.photo?'<img src="'+d.photo+'" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1.5px solid #E1F5EE">':'<div style="width:38px;height:38px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#0F6E56">'+init+'</div>';
@@ -5398,15 +5450,14 @@ T.donorsummary=function(){
     html+='<div style="text-align:right;font-size:14px;font-weight:800;color:'+(d._liveTotal>0?'#0F6E56':'#bbb')+'">Rs '+fmt(d._liveTotal)+'</div>';
     html+='</div>';
   });
-
-  // Grand total row
+  // Footer total
   html+='<div style="display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:0;padding:10px 8px;background:#0F6E56;border-radius:0 0 10px 10px;margin-top:4px">';
   html+='<div></div><div style="font-size:13px;font-weight:700;color:#fff">Total ('+filtered.length+' donors)</div>';
-  html+='<div style="text-align:right;font-size:15px;font-weight:800;color:#fff">Rs '+fmt(grandTotal)+'</div>';
-  html+='</div>';
+  html+='<div style="text-align:right;font-size:15px;font-weight:800;color:#fff">Rs '+fmt(grandTotal)+'</div></div>';
   html+='</div>';
   return html;
 };
+;
 T.fundraisingstar=function(){
   var users=DB.users.filter(function(u){return u.approved&&!u.locked&&u.role!=='developer';});
   var rows=users.map(function(u){
@@ -5442,7 +5493,7 @@ T.fundraisingstar=function(){
     var rankBorder=idx===0?'#F9A825':idx===1?'#9E9E9E':idx===2?'#FF8F00':'#eee';
 
     html+='<div style="display:flex;align-items:flex-start;gap:12px;padding:14px;border-radius:12px;margin-bottom:10px;background:'+rankBg+';border:1.5px solid '+rankBorder+'">';
-    html+='<div style="text-align:center;flex-shrink:0;min-width:28px;padding-top:2px"><div style="font-size:'+(idx<3?'22':'13')+'px;line-height:1;font-weight:700;color:#888">'+(medal||(idx+1))+'</div></div>';
+    html+='<div style="text-align:center;flex-shrink:0;min-width:32px;padding-top:2px"><div style="font-size:'+(idx<3?'22':'13')+'px;font-weight:800;color:'+(idx===0?'#F9A825':idx===1?'#9E9E9E':idx===2?'#FF8F00':'#aaa')+'">'+(medal||(idx+1))+'</div></div>';
     html+=av;
     html+='<div style="flex:1;min-width:0">';
     html+='<div style="font-size:14px;font-weight:800;color:#1a1a1a">'+u.name+'</div>';
@@ -7316,7 +7367,7 @@ function renderTab(key){
         if(si){const v=si.value;si.focus();si.setSelectionRange(v.length,v.length);}
       },
       logout_action:()=>{if(confirm('Are you sure you want to logout? | کیا آپ واقعی لاگ آؤٹ کرنا چاہتے ہیں؟'))logout();},
-      donorprofileupdate:()=>filterDPU(),
+      donorprofileupdate:()=>{window._dpuQ='';setTimeout(filterDPU,60);},
       profile:()=>{
         setTimeout(()=>{
           const u=currentUser;

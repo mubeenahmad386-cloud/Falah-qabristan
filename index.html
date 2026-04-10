@@ -1536,7 +1536,7 @@ T.donation=function(){
     <input type="hidden" id="donorBankAccount" value="">
 
     <!-- AMOUNT section — always shown after donor found/filled -->
-    <div id="donorAmountSection" style="display:none">
+    <div id="donorAmountSection" style="display:block">
       <label>Amount (Rs) * <span style="font-size:10px;color:#1D9E75;font-weight:500">رقم</span></label>
       <div class="inp-wrap"><span class="inp-icon">💰</span><input type="number" id="donorAmount" placeholder="Amount in Rs"></div>
       <label>Description <span style="font-size:10px;color:#1D9E75;font-weight:500">تفصیل</span></label>
@@ -2246,13 +2246,13 @@ T.ledger=function(){
   const t=today(),ms=t.substring(0,7)+'-01';
   return `<div class="card"><h3><span class="bi-title"><span class="bi-en">Ledger Report</span><span class="bi-ur">کھاتہ</span></span></h3>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <div><label>From Date <span style="font-size:10px;color:#1D9E75;font-weight:500">سے</span></label><div class="inp-wrap"><span class="inp-icon">📅</span><input type="date" id="ledgerFrom"</div> value="${ms}"></div>
-      <div><label>To Date <span style="font-size:10px;color:#1D9E75;font-weight:500">تک</span></label><div class="inp-wrap"><span class="inp-icon">📅</span><input type="date" id="ledgerTo"</div> value="${t}"></div>
+      <div><label>From Date <span style="font-size:10px;color:#1D9E75;font-weight:500">سے</span></label><div class="inp-wrap"><span class="inp-icon">📅</span><input type="date" id="ledgerFrom" value="${ms}"></div>
+      <div><label>To Date <span style="font-size:10px;color:#1D9E75;font-weight:500">تک</span></label><div class="inp-wrap"><span class="inp-icon">📅</span><input type="date" id="ledgerTo" value="${t}"></div>
     </div>
     <label>Area <span style="font-size:10px;color:#1D9E75;font-weight:500">علاقہ</span></label><select id="ledgerArea" class="area-sel"></select>
     ${(currentRole==='developer'||currentRole==='manager')?`<label>View User Ledger <span style="font-size:10px;color:#1D9E75">کس کا کھاتہ</span></label><select id="ledgerUser"><option value="${currentUser.id}">My Ledger (${currentUser.name})</option>${DB.users.filter(u=>u.approved&&['admin','manager','developer'].includes(u.role)&&u.id!==currentUser.id).map(u=>`<option value="${u.id}">${u.name} — ${u.role}</option>`).join('')}</select>`:`<input type="hidden" id="ledgerUser" value="${currentUser.id}">`}
-    <button class="btn btn-primary" onclick="generateLedger()"><span style="font-size:13px">Generate Report</span><span style="font-size:10px;opacity:0.85;display:block">رپورٹ بنائیں</span></button>
-  </div><div id="ledgerResult"></div>`;
+    <button onclick="generateLedger()" style="width:100%;background:linear-gradient(135deg,#0F6E56,#1D9E75);color:#fff;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px"><span style="font-size:18px">&#128202;</span><div><div>Generate Report</div><div style="font-size:11px;opacity:0.85">رپورٹ بنائیں</div></div></button>
+  </div></div><div id="ledgerResult" style="margin-top:12px"></div>`;
 };
 function generateLedger(){
   const from=document.getElementById('ledgerFrom').value,to=document.getElementById('ledgerTo').value;
@@ -2363,7 +2363,7 @@ T.balreport=function(){
 
         <div style="flex:1">
           <div style="font-size:14px;font-weight:700;color:#1a1a1a">${u.name}</div>
-          <div style="font-size:11px;color:#888;margin-top:2px"><span class="id-badge" style="font-size:10px">${u.id}</span> &nbsp;${u.area||'—'}</div>
+          <div style="font-size:11px;color:#888;margin-top:2px"><span class="id-badge" style="font-size:10px">${u.id}</span> &nbsp;${u.area||'—'} &nbsp;<span style="font-size:10px;color:#888">${u.mobile||''}</span></div>
 
 
 
@@ -2636,48 +2636,82 @@ function openDonorProfile(donorId){
   document.getElementById('popupOverlay').style.display='flex';
 }
 function openEditDonorProfile(donorId){
-  const donor=DB.donors.find(x=>x.id===donorId);
+  var donor=DB.donors.find(function(x){return x.id===donorId;});
   if(!donor){showPopup('⚠️','Error','Donor not found.');return;}
-  document.getElementById('popupIcon').textContent='✏️';
-  document.getElementById('popupTitle').textContent='Edit Donor';
-  document.getElementById('popupTitleUr').textContent='ڈونر اپ ڈیٹ';
-  document.getElementById('popupBtn').style.display='none';
-  const box=document.querySelector('.popup-box');
-  if(box){
-    box.style.maxWidth='95vw';box.style.padding='16px';
-    box.innerHTML=`
-      <button onclick="closePopup()" style="position:absolute;top:10px;right:12px;background:none;border:none;font-size:20px;cursor:pointer;color:#aaa">✕</button>
-      <div style="font-size:15px;font-weight:700;margin-bottom:12px">✏️ Edit Donor Profile</div>
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-        <div onclick="document.getElementById('donorEditPhotoInp').click()" style="width:64px;height:64px;border-radius:50%;overflow:hidden;border:2px dashed #1D9E75;cursor:pointer;display:flex;align-items:center;justify-content:center;background:#f0fff8">
-          <img id="donorEditPhotoPreview" src="${donor.photo||''}" style="display:${donor.photo?'block':'none'};width:100%;height:100%;object-fit:cover">
-          <span id="donorEditPhotoPlus" style="display:${donor.photo?'none':'block'};font-size:22px">📸</span>
-        </div>
-        <div style="font-size:11px;color:#888">Tap to change photo</div>
-        <input type="file" id="donorEditPhotoInp" accept="image/*" style="display:none" onchange="previewImg('donorEditPhotoInp','donorEditPhotoPreview','donorEditPhotoPlus')">
-      </div>
-      <label>Name *</label><input type="text" id="donorEditName" value="${donor.name||''}" style="margin-bottom:8px">
-      <label>Mobile *</label><input type="text" id="donorEditMobile" value="${donor.mobile||''}" maxlength="12" oninput="autoFormatMobile(this,null)" style="margin-bottom:8px">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-        <div><label>Area <span style="font-size:9px;color:#1D9E75">علاقہ</span></label>
-        <select id="donorEditArea"><option value="">-- Select --</option>${AREAS.map(a=>`<option value="${a}" ${a===donor.area?'selected':''}>${a}</option>`).join('')}</select></div>
-        <div><label>Blood Group <span style="font-size:9px;color:#E24B4A">بلڈ گروپ</span></label>
-        <select id="donorEditBloodGroup"><option value="">-- None --</option>${BLOOD_GROUPS.map(g=>`<option value="${g}" ${g===donor.bloodGroup?'selected':''}>${g}</option>`).join('')}</select></div>
-      </div>
-      <label>Profession <span style="font-size:9px;color:#1D9E75">پیشہ</span></label>
-      <select id="donorEditProfession" style="margin-bottom:12px">
-        <option value="">-- Select Profession --</option>
-        ${PROF_LIST.map(p=>`<option value="${p.en}" ${p.en===(donor.profession||'')?'selected':''}>${p.en}${p.ur?' — '+p.ur:''}</option>`).join('')}
-      </select>
-      <input type="hidden" id="donorEditId" value="${donorId}">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <button onclick="closePopup()" style="background:#f5f5f5;color:#333;border:1px solid #ddd;padding:10px;border-radius:8px;font-size:13px;cursor:pointer">Cancel</button>
-        <button onclick="saveDonorProfile()" style="background:#1D9E75;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">Save | محفوظ کریں</button>
-      </div>`;
-  }
-  // Profile now shown inline
-  document.getElementById('popupOverlay').style.display='flex';
+  var areaOpts=AREAS.map(function(a){return '<option value="'+a+'"'+(a===donor.area?' selected':'')+'>'+a+'</option>';}).join('');
+  var bgOpts=BLOOD_GROUPS.map(function(g){return '<option value="'+g+'"'+(g===donor.bloodGroup?' selected':'')+'>'+g+'</option>';}).join('');
+  var profOpts=PROF_LIST.map(function(p){return '<option value="'+p.en+'"'+(p.en===(donor.profession||'')?' selected':'')+'>'+p.en+(p.ur?' — '+p.ur:'')+'</option>';}).join('');
+  var html='<div style="background:#fff;border-radius:14px;padding:0;max-width:400px;width:92vw;overflow:hidden">';
+  html+='<div style="background:#0F6E56;padding:13px 16px;display:flex;justify-content:space-between;align-items:center">';
+  html+='<div style="font-size:14px;font-weight:700;color:#fff">&#9998; Edit Donor Profile</div>';
+  html+='<button onclick="closeCustomPopup()" style="background:rgba(255,255,255,0.2);border:none;border-radius:50%;width:28px;height:28px;color:#fff;font-size:16px;cursor:pointer">&times;</button>';
+  html+='</div>';
+  html+='<div style="padding:16px">';
+  // Photo
+  html+='<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">';
+  html+='<div id="depCircle_'+donorId+'" data-inp="depInp_'+donorId+'" onclick="document.getElementById(this.dataset.inp).click()" style="width:60px;height:60px;border-radius:50%;overflow:hidden;border:2px dashed #1D9E75;cursor:pointer;display:flex;align-items:center;justify-content:center;background:#f0fff8;flex-shrink:0">';
+  html+='<img id="depPreview_'+donorId+'" src="'+(donor.photo||'')+'" style="display:'+(donor.photo?'block':'none')+';width:100%;height:100%;object-fit:cover">';
+  html+='<span id="depPlus_'+donorId+'" style="display:'+(donor.photo?'none':'block')+';font-size:22px">&#128248;</span>';
+  html+='</div>';
+  html+='<input type="file" id="depInp_'+donorId+'" data-did="'+donorId+'" accept="image/*" style="display:none" onchange="previewImg(\'depInp_\'+this.dataset.did,\'depPreview_\'+this.dataset.did,\'depPlus_\'+this.dataset.did)">';
+  html+='<div style="font-size:11px;color:#888">Tap circle to change photo</div>';
+  html+='</div>';
+  html+='<label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Name *</label>';
+  html+='<input type="text" id="depName_'+donorId+'" value="'+donor.name.replace(/"/g,'&quot;')+'" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:10px">';
+  html+='<label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Mobile *</label>';
+  html+='<input type="text" id="depMobile_'+donorId+'" value="'+(donor.mobile||'')+'" maxlength="12" oninput="autoFormatMobile(this,null)" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:10px">';
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">';
+  html+='<div><label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Area</label>';
+  html+='<select id="depArea_'+donorId+'" style="width:100%;padding:9px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:12px"><option value="">-- Select --</option>'+areaOpts+'</select></div>';
+  html+='<div><label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Blood Group</label>';
+  html+='<select id="depBlood_'+donorId+'" style="width:100%;padding:9px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:12px"><option value="">-- None --</option>'+bgOpts+'</select></div>';
+  html+='</div>';
+  html+='<label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Profession</label>';
+  html+='<select id="depProf_'+donorId+'" style="width:100%;padding:9px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:12px;margin-bottom:14px"><option value="">-- Select --</option>'+profOpts+'</select>';
+  html+='<input type="hidden" id="depHidId_'+donorId+'" value="'+donorId+'">';
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+  html+='<button onclick="closeCustomPopup()" style="background:#f5f5f5;color:#333;border:1px solid #ddd;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">Cancel</button>';
+  html+='<button data-depsave="'+donorId+'" onclick="saveDonorProfileNew(this.dataset.depsave)" style="background:#1D9E75;color:#fff;border:none;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">Save &#10003;</button>';
+  html+='</div>';
+  html+='</div></div>';
+  showCustomPopup('<div style="display:flex;justify-content:center;padding:20px 10px">'+html+'</div>');
 }
+
+async function saveDonorProfileNew(donorId){
+  var nameEl=document.getElementById('depName_'+donorId);
+  var mobEl=document.getElementById('depMobile_'+donorId);
+  var areaEl=document.getElementById('depArea_'+donorId);
+  var bloodEl=document.getElementById('depBlood_'+donorId);
+  var profEl=document.getElementById('depProf_'+donorId);
+  var inpEl=document.getElementById('depInp_'+donorId);
+  var name=nameEl?nameEl.value.trim():'';
+  var mobile=mobEl?mobEl.value.trim():'';
+  if(!name||!mobile){showPopup('⚠️','Required','Name and mobile required.');return;}
+  var donor=DB.donors.find(function(x){return x.id===donorId;});
+  if(!donor){showPopup('⚠️','Error','Donor not found.');return;}
+  function finish(photo){
+    donor.name=name;
+    donor.mobile=mobile;
+    if(areaEl)donor.area=areaEl.value;
+    if(bloodEl)donor.bloodGroup=bloodEl.value;
+    if(profEl)donor.profession=profEl.value;
+    if(photo)donor.photo=photo;
+    FS.save('donors',donorId,donor);
+    saveLocalCache();
+    var al={by:currentUser.id,action:'Donor Profile Updated',target:donor.name,detail:'ID: '+donorId,date:today()};
+    DB.auditLog.push(al);FS.save('auditLog','AL'+Date.now(),al);
+    closeCustomPopup();
+    showPopup('✅','Profile Updated',name+' ki profile update ho gayi!',null,function(){filterDPU();});
+  }
+  if(inpEl&&inpEl.files&&inpEl.files[0]){
+    var r=new FileReader();
+    r.onload=function(e){finish(e.target.result);};
+    r.readAsDataURL(inpEl.files[0]);
+  } else {
+    finish(null);
+  }
+}
+
 function saveDonorProfile(){
   const id=window._currentEditDonorId||(document.getElementById('donorEditId')?document.getElementById('donorEditId').value:'');
   const donor=DB.donors.find(x=>x.id===id);
@@ -2827,7 +2861,7 @@ T.top=function(){
 T.todaycollection=function(){
   var t=today();
   return `<div class="card">
-    <h3 style="margin-bottom:14px">&#128197; Today's Collection</h3>
+    <h3 style="margin-bottom:14px"><span class="bi-title"><span class="bi-en">&#128197; Today's Collection</span><span class="bi-ur">آج کی وصولی</span></span></h3>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
       <div>
         <label style="font-size:12px;font-weight:600;color:#444;display:block;margin-bottom:5px">From Date <span style="font-size:10px;color:#1D9E75">سے</span></label>
@@ -3648,6 +3682,7 @@ function myEntriesHtml(){
         <span style="font-size:13px;font-weight:500;color:#E24B4A">${fmt(e.amount)}</span>
         ${currentRole==='developer'&&!e.assignedTo?`<button class="btn-xs" style="color:#fff;border:none;background:#185FA5;cursor:pointer" onclick="assignEntryPrompt('expense','${e.id}')">📤</button>`:''}
         <button class="btn-xs" style="color:#185FA5;border-color:#185FA5;background:#E6F1FB" onclick="editExpense('${e.id}')">✏️</button>
+        <button class="btn-xs" style="color:#217346;border-color:#217346;background:#eafaf1" onclick="showExpenseSlip('${e.id}')">&#128203;</button>
         <button class="btn-xs" style="color:#E24B4A;border-color:#E24B4A;background:#FCEBEB" onclick="deleteExpense('${e.id}')">🗑️</button>
       </div>
     </div>`;
@@ -4170,112 +4205,72 @@ function filterDPU(){
 }
 function filterDonorListInline(){
   var q=(window._donorListSearch||'').toLowerCase().trim();
-  var sel=window._donorListArea||'All';
-  var allDonors=sortNameAZ(DB.donors.map(function(d){d._lifeTotal=DB.donations.filter(function(x){return x.donorId===d.id;}).reduce(function(s,x){return s+x.amount;},0);return d;}),'name');
-  var donors=sel==='All'?allDonors:allDonors.filter(function(d){return d.area===sel;});
-  var filtered=q?donors.filter(function(d){return d.name.toLowerCase().includes(q)||normMob(d.mobile).includes(normMob(q))||d.id.toLowerCase().includes(q);}):donors;
-  var listEl=document.getElementById('donorListBody');
-  if(!listEl)return;
+  var area=window._donorListArea||'All';
+  var el=document.getElementById('donorListContent');
+  if(!el)return;
+  var donors=sortNameAZ([...DB.donors].map(function(d){d._lifeTotal=DB.donations.filter(function(x){return x.donorId===d.id;}).reduce(function(s,x){return s+x.amount;},0);return d;}),'name');
+  if(area&&area!=='All')donors=donors.filter(function(d){return (d.area||'')===area;});
+  if(q)donors=donors.filter(function(d){return (d.name||'').toLowerCase().includes(q)||(d.mobile||'').includes(q)||(d.id||'').toLowerCase().includes(q);});
+  // Update area buttons
+  document.querySelectorAll('[data-area]').forEach(function(btn){
+    var a=btn.dataset.area;
+    btn.style.background=a===area?'#0F6E56':'#f5f5f5';
+    btn.style.color=a===area?'#fff':'#333';
+    btn.style.border=a===area?'none':'1px solid #ddd';
+  });
+  // Update clear btn
+  var clr=document.getElementById('donorListClear');
+  if(clr)clr.style.display=q?'block':'none';
+  if(!donors.length){el.innerHTML='<p style="font-size:13px;color:#888;text-align:center;padding:20px">No donors found.</p>';return;}
   var thisMonth=today().substring(0,7);
-  var html='';
-  if(filtered.length===0){html='<p style="font-size:13px;color:#888;text-align:center;padding:20px">No donors found.</p>';}
-  else{
-    filtered.forEach(function(d,i){
-      var lifeTotal=d._lifeTotal||0;
+  // A-Z grouping
+  var groups={};
+  donors.forEach(function(d){var l=(d.name||'?')[0].toUpperCase();if(!groups[l])groups[l]=[];groups[l].push(d);});
+  var html='<div style="font-size:11px;color:#888;margin-bottom:8px">'+donors.length+' donors</div>';
+  Object.keys(groups).sort().forEach(function(letter){
+    html+='<div style="font-size:11px;font-weight:700;color:#888;padding:5px 0 3px;border-bottom:1px solid #eee;margin-bottom:4px">'+letter+'</div>';
+    groups[letter].forEach(function(d){
+      var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+      var av=d.photo?'<img src="'+d.photo+'" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:1.5px solid #E1F5EE;flex-shrink:0">':'<div style="width:44px;height:44px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
       var paid=DB.donations.some(function(x){return x.donorId===d.id&&x.date.substring(0,7)===thisMonth;});
-      var initials=d.name.split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-      var avatar=d.photo
-        ?'<img src="'+d.photo+'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0">'
-        :'<div style="width:40px;height:40px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#0F6E56;flex-shrink:0">'+initials+'</div>';
-      var statusBadge=paid
-        ?'<span style="font-size:9px;padding:2px 7px;border-radius:20px;font-weight:700;background:#E1F5EE;color:#0F6E56">✓ Paid</span>'
-        :'<span style="font-size:9px;padding:2px 7px;border-radius:20px;font-weight:700;background:#FCEBEB;color:#E24B4A">Pending</span>';
-      html+=
-        '<div style="display:flex;align-items:stretch;gap:0;padding:9px 0;border-bottom:0.5px solid #f0f0f0">'+
-          // Photo
-          '<div style="display:flex;align-items:center;padding-right:10px;flex-shrink:0">'+avatar+'</div>'+
-          // Name + ID + Area
-          '<div style="flex:1;min-width:0;padding-right:8px;display:flex;flex-direction:column;justify-content:center">'+
-            '<div style="font-size:13px;font-weight:700;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+d.name+'</div>'+
-            '<div style="font-size:10px;color:#888;margin-top:2px">'+d.id+' • '+(d.area||'—')+'</div>'+
-          '</div>'+
-          // Donation + Status
-          '<div style="display:flex;flex-direction:column;align-items:flex-end;justify-content:center;padding-right:8px;flex-shrink:0">'+
-            '<div style="font-size:14px;font-weight:800;color:#0F6E56">'+fmt(lifeTotal)+'</div>'+
-            '<div style="margin-top:3px">'+statusBadge+'</div>'+
-          '</div>'+
-          // Slip / Merge / Del
-          '<div style="display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:3px;flex-shrink:0">'+
-            '<button data-slip="'+d.id+'" style="font-size:10px;font-weight:700;background:#185FA5;color:#fff;border:none;padding:4px 9px;border-radius:6px;cursor:pointer;width:52px">Slip</button>'+
-            (currentRole==='developer'?
-              '<button onclick="openMergeDonor()" style="font-size:10px;font-weight:700;background:#FAEEDA;color:#854F0B;border:none;padding:4px 9px;border-radius:6px;cursor:pointer;width:52px">Merge</button>'+
-              '<button data-del="'+d.id+'" style="font-size:10px;font-weight:700;background:#FCEBEB;color:#E24B4A;border:none;padding:4px 9px;border-radius:6px;cursor:pointer;width:52px">Del</button>'
-            :'')+
-          '</div>'+
-        '</div>'+
-        '<div id="slip_'+d.id+'" style="display:none;padding:8px 0 4px;border-bottom:1px dashed #ddd"></div>';
+      html+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid #f5f5f5">';
+      html+=av;
+      html+='<div style="flex:1;min-width:0;cursor:pointer" data-dpid="'+d.id+'" onclick="openDonorProfile(this.dataset.dpid)"><div style="font-size:13px;font-weight:700;color:#1a1a1a">'+d.name+'</div><div style="font-size:11px;color:#888;margin-top:2px"><span class="id-badge" style="font-size:9px">'+d.id+'</span> &bull; '+(d.area||'—')+'</div><div style="font-size:11px;font-weight:600;color:#0F6E56;margin-top:1px">Rs '+fmt(d._lifeTotal)+'</div></div>';
+      html+='<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">';
+      html+='<button data-slid="'+d.id+'" onclick="showDonorSlipPopup(this.dataset.slid)" style="font-size:10px;background:#185FA5;color:#fff;border:none;padding:3px 8px;border-radius:6px;cursor:pointer">Slip</button>';
+      if(currentRole==='developer'){
+        html+='<button onclick="openMergeDonor()" style="font-size:10px;background:#FAEEDA;color:#854F0B;border:none;padding:3px 8px;border-radius:6px;cursor:pointer">Merge</button>';
+        html+='<button data-dlid="'+d.id+'" onclick="deleteDonor(this.dataset.dlid)" style="font-size:10px;background:#FCEBEB;color:#E24B4A;border:none;padding:3px 8px;border-radius:6px;cursor:pointer">Del</button>';
+      }
+      html+='</div></div>';
     });
-  }
-  listEl.innerHTML=html;
-  listEl.onclick=function(e){
-    var slipId=e.target.getAttribute('data-slip');
-    var delId=e.target.getAttribute('data-del');
-    if(slipId)showDonorSlipInline(slipId);
-    if(delId)deleteDonor(delId);
-  };
-  var countEl=document.getElementById('donorListCount');
-  if(countEl)countEl.textContent=filtered.length+'/'+allDonors.length;
+  });
+  el.innerHTML=html;
 }
 
+
 T.donorlist=function(){
+  if(currentRole!=='developer'){
+    return '<div class="card"><div style="text-align:center;padding:24px;color:#888;font-size:13px">⛔<br>Only developer can access this.</div></div>';
+  }
   const allDonors=sortNameAZ([...DB.donors].map(d=>{d._lifeTotal=DB.donations.filter(x=>x.donorId===d.id).reduce((s,x)=>s+x.amount,0);return d;}),'name');
   const areas=['All',...new Set(allDonors.map(d=>d.area||'').filter(Boolean))];
   const sel=window._donorListArea||'All';
-  const donors=sel==='All'?allDonors:allDonors.filter(d=>d.area===sel);
-  const searchQ=(window._donorListSearch||'').toLowerCase().trim();
-  const filteredDonors=searchQ?donors.filter(d=>d.name.toLowerCase().includes(searchQ)||d.mobile.includes(searchQ)||d.id.toLowerCase().includes(searchQ)):donors;
+  const areaBtns=areas.map(a=>`<button data-area="${a}" onclick="window._donorListArea=this.dataset.area;filterDonorListInline()" style="padding:5px 12px;border-radius:20px;border:${a===sel?'none':'1px solid #ddd'};background:${a===sel?'#0F6E56':'#f5f5f5'};color:${a===sel?'#fff':'#333'};font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">${a}</button>`).join('');
+  const q=window._donorListSearch||'';
   return `<div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <h3 style="margin-bottom:0">Donor List <span id="donorListCount" style="font-size:11px;color:#888;font-weight:400">${filteredDonors.length}/${allDonors.length}</span></h3>
-    </div>
+    <h3 style="margin-bottom:10px">🗑️ Delete Donor <span style="font-size:12px;color:#888;font-weight:400">ڈونر حذف کریں</span></h3>
     <div style="position:relative;margin-bottom:10px">
-      <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none">🔍</span>
-      <input type="text" id="donorListSearch" value="${window._donorListSearch||''}" placeholder="Name, ID ya Mobile se search karein..." oninput="window._donorListSearch=this.value;filterDonorListInline();toggleClearBtn('donorListSearch','donorListClear')" style="width:100%;padding:10px 32px 10px 38px;border:1.5px solid #e8e8e8;border-radius:10px;font-size:13px;box-sizing:border-box" autocomplete="off">
-      <button id="donorListClear" onclick="clearSearch('donorListSearch','donorListClear',function(){window._donorListSearch='';filterDonorListInline();})" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:16px;color:#999;cursor:pointer;padding:0;line-height:1">×</button>
-    </div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
-      ${areas.map(a=>`<button onclick="window._donorListArea='${a}';renderTab('donorlist')" style="padding:4px 10px;border-radius:20px;border:1.5px solid ${a===sel?'#1D9E75':'#e8e8e8'};background:${a===sel?'#1D9E75':'#fff'};color:${a===sel?'#fff':'#555'};font-size:11px;font-weight:600;cursor:pointer">${a}</button>`).join('')}
-    </div>
-    <div id="donorListBody">
-    ${filteredDonors.length===0?'<p style="font-size:13px;color:#888;text-align:center;padding:20px">No donors found.</p>':filteredDonors.map((d,i)=>{
-      const lifeTotal=d._lifeTotal||DB.donations.filter(x=>x.donorId===d.id).reduce((s,x)=>s+x.amount,0);
-      const thisMonth=today().substring(0,7);
-      const paidThisMonth=DB.donations.some(x=>x.donorId===d.id&&x.date.substring(0,7)===thisMonth);
-      return `<div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:0.5px solid #f0f0f0">
-        <div style="width:28px;text-align:center;font-size:12px;font-weight:700;color:#aaa;flex-shrink:0">${i+1}</div>
-        ${avatarHtml(d.photo,d.name,40)}
-        <div style="flex:1;min-width:0">
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-            <span style="font-size:13px;font-weight:700">${d.name}</span>
-            <span class="id-badge">${d.id}</span>
-            <span style="font-size:9px;padding:2px 6px;border-radius:20px;font-weight:700;background:${paidThisMonth?'#E1F5EE':'#FCEBEB'};color:${paidThisMonth?'#0F6E56':'#E24B4A'}">${paidThisMonth?'✓ Paid':'Pending'}</span>
-          </div>
-          <div style="font-size:11px;color:#888;margin-top:2px">${d.area||'—'} • ${d.mobile}</div>
-        </div>
-        <div style="text-align:right;flex-shrink:0">
-          <div style="font-size:14px;font-weight:800;color:#0F6E56">Rs ${fmt(lifeTotal)}</div>
-          <div style="font-size:10px;color:#aaa;margin-top:1px">${d.entries.length} entries</div>
-          <div style="display:flex;gap:4px;margin-top:3px;flex-wrap:wrap;justify-content:flex-end">
-            <button onclick="showDonorSlipInline('${d.id}')" style="font-size:10px;background:#E6F1FB;color:#185FA5;border:none;padding:3px 7px;border-radius:6px;cursor:pointer">Slip</button>
-            ${currentRole==='developer'?`<button onclick="openMergeDonor()" style="font-size:10px;background:#FAEEDA;color:#854F0B;border:none;padding:3px 7px;border-radius:6px;cursor:pointer">Merge</button>
-            <button onclick="deleteDonor('${d.id}')" style="font-size:10px;background:#FCEBEB;color:#E24B4A;border:none;padding:3px 7px;border-radius:6px;cursor:pointer">Del</button>`:''}
-          </div>
-        </div>
+      <div class="inp-wrap" style="margin-bottom:0"><span class="inp-icon">🔍</span>
+      <input type="text" id="donorListSearch" value="${q}" placeholder="Name, ID ya Mobile se search karein..." oninput="window._donorListSearch=this.value;filterDonorListInline();toggleClearBtn('donorListSearch','donorListClear')" style="width:100%;padding:10px 32px 10px 38px;border:1.5px solid #e8e8e8;border-radius:10px;font-size:13px;box-sizing:border-box" autocomplete="off">
+      <button id="donorListClear" onclick="window._donorListSearch='';document.getElementById('donorListSearch').value='';filterDonorListInline()" style="display:${q?'block':'none'};position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:16px;color:#999;cursor:pointer;padding:0">&times;</button>
       </div>
-      <div id="slip_${d.id}" style="display:none;padding:8px 0 4px;border-bottom:1px dashed #ddd"></div>`;
-    }).join('')}
+    </div>
+    <div style="display:flex;gap:5px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px;-webkit-overflow-scrolling:touch">${areaBtns}</div>
+    <div id="donorListContent">لوڈ ہو رہی ہے...</div>
   </div>`;
-};
+}
+;
 function showDonorSlipInline(id){
   // Navigate to slip tab and auto-load donor
   selectTab('slip');
@@ -5350,6 +5345,63 @@ T.excelexport=function(){
       '<div style="font-size:11px;color:#185FA5">Download &#8594; Google Drive &#8594; + New &#8594; File Upload &#8594; Select file</div>'+
     '</div>'+
   '</div>';
+};
+T.fundraisingstar=function(){
+  // Build stats per user
+  var users=DB.users.filter(function(u){return u.approved&&!u.locked&&u.role!=='developer';});
+  var rows=users.map(function(u){
+    // Donors added by this user
+    var donorsAdded=DB.donors.filter(function(d){return d.addedBy===u.id||d.by===u.id;}).length;
+    // Donations received via this user (assignedTo or by)
+    var donations=DB.donations.filter(function(d){return d.assignedTo?d.assignedTo===u.id:d.by===u.id;});
+    var totalReceived=donations.reduce(function(s,x){return s+x.amount;},0);
+    var donCount=donations.length;
+    return {u:u,donorsAdded:donorsAdded,totalReceived:totalReceived,donCount:donCount};
+  }).sort(function(a,b){return b.totalReceived-a.totalReceived;});
+
+  var html='<div class="card" id="fundraisingStarContent">';
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">';
+  html+='<h3 style="margin:0">\u2b50 Fundraising Stars</h3>';
+  html+='<div style="display:flex;gap:6px"><button onclick="downloadReport(\'fundraisingStarContent\',\'fundraising_stars\',\'pdf\')" style="background:#E24B4A;color:#fff;border:none;padding:5px 10px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer">\U0001f4c4 PDF</button><button onclick="downloadReport(\'fundraisingStarContent\',\'fundraising_stars\',\'image\')" style="background:#185FA5;color:#fff;border:none;padding:5px 10px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer">\U0001f5bc\ufe0f Image</button></div>';
+  html+='</div>';
+
+  if(!rows.length){
+    html+='<p style="font-size:13px;color:#888;text-align:center;padding:20px">No users found.</p>';
+    html+='</div>';return html;
+  }
+
+  // Medal for top 3
+  var medals=['\U0001f947','\U0001f948','\U0001f949'];
+
+  rows.forEach(function(r,idx){
+    var u=r.u;
+    var medal=idx<3?medals[idx]:'';
+    var init=(u.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+    var av=u.photo?'<img src="'+u.photo+'" style="width:50px;height:50px;border-radius:50%;object-fit:cover;border:2px solid #1D9E75;flex-shrink:0">':'<div style="width:50px;height:50px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#0F6E56;border:2px solid #1D9E75;flex-shrink:0">'+init+'</div>';
+    var rankBg=idx===0?'#FFF9C4':idx===1?'#F5F5F5':idx===2?'#FFF0E8':'#fff';
+    var rankBorder=idx===0?'#F9A825':idx===1?'#9E9E9E':idx===2?'#BF360C':'#eee';
+
+    html+='<div style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;margin-bottom:10px;background:'+rankBg+';border:1.5px solid '+rankBorder+'">';
+    // Rank + medal
+    html+='<div style="text-align:center;flex-shrink:0;min-width:32px">';
+    html+='<div style="font-size:'+(idx<3?'22':'14')+'px;line-height:1">'+(medal||(idx+1))+'</div>';
+    html+='</div>';
+    // Avatar
+    html+=av;
+    // Info
+    html+='<div style="flex:1;min-width:0">';
+    html+='<div style="font-size:14px;font-weight:800;color:#1a1a1a">'+u.name+'</div>';
+    html+='<div style="font-size:10px;color:#888;margin-top:2px"><span class="id-badge" style="font-size:9px">'+u.id+'</span> &bull; '+(u.area||'\u2014')+' &bull; '+u.role+'</div>';
+    // Stats grid
+    html+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px">';
+    html+='<div style="background:rgba(255,255,255,0.7);border-radius:8px;padding:7px;text-align:center"><div style="font-size:9px;font-weight:700;color:#0F6E56;text-transform:uppercase;letter-spacing:0.3px">Donors Added</div><div style="font-size:17px;font-weight:800;color:#0F6E56">'+r.donorsAdded+'</div></div>';
+    html+='<div style="background:rgba(255,255,255,0.7);border-radius:8px;padding:7px;text-align:center"><div style="font-size:9px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:0.3px">Entries</div><div style="font-size:17px;font-weight:800;color:#185FA5">'+r.donCount+'</div></div>';
+    html+='<div style="background:rgba(255,255,255,0.7);border-radius:8px;padding:7px;text-align:center"><div style="font-size:9px;font-weight:700;color:#A32D2D;text-transform:uppercase;letter-spacing:0.3px">Total</div><div style="font-size:15px;font-weight:800;color:#A32D2D">Rs '+fmt(r.totalReceived)+'</div></div>';
+    html+='</div>';
+    html+='</div></div>';
+  });
+  html+='</div>';
+  return html;
 };
 T.datamanager=function(){
   return `<div class="card">
@@ -6911,11 +6963,12 @@ function getMenuConfig(){
   };
   if(['manager','developer'].includes(currentRole)) reports.items.push({icon:'👥', label:'Users Report / صارفین', tab:'usersreport'});
   if(['admin','manager','developer'].includes(currentRole)) reports.items.push({icon:'📊', label:'Excel Export', tab:'excelexport'});
+  if(['admin','manager','developer'].includes(currentRole)) reports.items.push({icon:'⭐', label:'Fundraising Stars', tab:'fundraisingstar'});
 
   const donors = {
     key:'donors', title:'Donors / عطیہ دہندگان',
     items:[
-      {icon:'👥', label:'Donors / عطیہ دہندگان', tab:'donorlist'},
+      ...(currentRole==='developer'?[{icon:'🗑️', label:'Delete Donor / ڈونر حذف کریں', tab:'donorlist'}]:[]),
       {icon:'🩸', label:'Blood Bank / بلڈ بینک', tab:'bloodbank'},
     ]
   };
@@ -6989,7 +7042,7 @@ function openSubmenu(key){
   currentSubmenu = key;
 }
 
-const FORM_TABS_SET=new Set(['donation','expense','deceased','adddonor','transfer','profile','suggestion','donorprofileupdate','orgsettings','areas','professions','expcategories','approvals','lockuser','userslist','audit','datamanager','suggestions','bloodbank','smartsearch','smsreminders','complaint','complaints','contacts','superentry','notifications','excelexport','unknowndonors','missinginfo']);
+const FORM_TABS_SET=new Set(['donation','expense','deceased','adddonor','transfer','profile','suggestion','donorprofileupdate','orgsettings','areas','professions','expcategories','approvals','lockuser','userslist','audit','datamanager','suggestions','bloodbank','smartsearch','smsreminders','complaint','complaints','contacts','superentry','notifications','excelexport','unknowndonors','missinginfo','myentries','area','balreport','expreport','fundraisingstar','ledger','usersreport','todaycollection','fundreport','top','deathcert','search','slip','donorlist','lastdonation']);
 
 function selectTab(tab){
   renderTab(tab);
@@ -7183,7 +7236,7 @@ const TAB_LABELS={
   donorlist:'Donor List',slip:'Donor Slip',top:'Top Donors',transfer:'Transfer',
   decconfirm:'Confirm Deceased',approvals:'Approvals',lockuser:'Login Management',
   userslist:'Users List',professions:'Professions',audit:'Audit Log',areas:'Areas',
-  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',lastdonation:'Last Donation',excelexport:'Excel Export',unknowndonors:'Update Unknown',missinginfo:'Missing Information',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
+  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',lastdonation:'Last Donation',excelexport:'Excel Export',fundraisingstar:'Fundraising Stars',myentries:'My Entries',unknowndonors:'Update Unknown',missinginfo:'Missing Information',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
 };
 
 // ============================================================

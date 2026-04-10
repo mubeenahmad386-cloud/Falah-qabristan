@@ -5427,7 +5427,23 @@ T.donorsummary=function(){
   html+='</div>';
   // Amount range filter
   html+='<div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">';
-  html+='<div style="flex:1"><div style="font-size:10px;font-weight:700;color:#888;margin-bottom:4px">Min Amount</div>';
+  // Preset donation range buttons
+  var presets=[
+    {label:'All',min:'',max:''},
+    {label:'Rs 0',min:'0',max:'0'},
+    {label:'< 500',min:'1',max:'499'},
+    {label:'500–1K',min:'500',max:'1000'},
+    {label:'1K–5K',min:'1001',max:'5000'},
+    {label:'5K+',min:'5001',max:''},
+  ];
+  var curMin=window._dsMin||'';var curMax=window._dsMax||'';
+  var presetBtns=presets.map(function(p){
+    var isActive=(p.min===curMin&&p.max===curMax)||(p.label==='All'&&!curMin&&!curMax);
+    return '<button data-pmin="'+p.min+'" data-pmax="'+p.max+'" onclick="window._dsMin=this.dataset.pmin;window._dsMax=this.dataset.pmax;renderTab(\'donorsummary\')" style="padding:5px 10px;border-radius:20px;border:'+(isActive?'none':'1px solid #ddd')+';background:'+(isActive?'#185FA5':'#f5f5f5')+';color:'+(isActive?'#fff':'#333')+';font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap">'+p.label+'</button>';
+  }).join('');
+  html+='<div style="margin-bottom:10px"><div style="font-size:10px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:5px;letter-spacing:0.3px">Filter by donation amount:</div>';
+  html+='<div style="display:flex;gap:5px;flex-wrap:wrap">'+presetBtns+'</div></div>';
+    html+='<div style="flex:1"><div style="font-size:10px;font-weight:700;color:#888;margin-bottom:4px">Min Amount</div>';
   html+='<input type="number" id="dsMinAmt" value="'+minAmt+'" placeholder="0" oninput="window._dsMin=this.value;renderTab(\'donorsummary\')" style="width:100%;padding:8px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box"></div>';
   html+='<div style="flex:1"><div style="font-size:10px;font-weight:700;color:#888;margin-bottom:4px">Max Amount</div>';
   html+='<input type="number" id="dsMaxAmt" value="'+maxAmt+'" placeholder="Any" oninput="window._dsMax=this.value;renderTab(\'donorsummary\')" style="width:100%;padding:8px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box"></div>';

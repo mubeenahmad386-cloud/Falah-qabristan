@@ -1917,7 +1917,7 @@ function finishDonation(name,amount,mobile,cnic,photo){
     const nid=existingUser?existingUser.id:nextAllId();
 
     const bg=(document.getElementById('donorBloodGroup')||{value:''}).value;
-donor={id:nid,name,mobile,cnic,area:document.getElementById('donorArea').value,bloodGroup:bg||'',profession:(document.getElementById('donorProfession')||{value:''}).value,totalDonation:0,photo:photo||null,entries:[]};
+donor={id:nid,name,mobile,cnic,area:document.getElementById('donorArea').value,bloodGroup:bg||'',profession:(document.getElementById('donorProfession')||{value:''}).value,totalDonation:0,photo:photo||null,entries:[],addedBy:currentUser.id,addedByName:currentUser.name,addedDate:today()};
     DB.donors.push(donor);FS.save('donors',donor.id,donor);
   }
   if(photo)donor.photo=photo;
@@ -2701,7 +2701,10 @@ async function saveDonorProfileNew(donorId){
     var al={by:currentUser.id,action:'Donor Profile Updated',target:donor.name,detail:'ID: '+donorId,date:today()};
     DB.auditLog.push(al);FS.save('auditLog','AL'+Date.now(),al);
     closeCustomPopup();
-    showPopup('✅','Profile Updated',name+' ki profile update ho gayi!',null,function(){filterDPU();});
+    closeCustomPopup();
+    showPopup('✅','Updated',name+' ki profile update ho gayi!',null,function(){
+      setTimeout(filterDPU,50);
+    });
   }
   if(inpEl&&inpEl.files&&inpEl.files[0]){
     var r=new FileReader();
@@ -4166,13 +4169,11 @@ T.donorprofileupdate=function(){
   const donors=[...DB.donors].sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   return `<div class="card">
     <h3><span class="bi-title"><span class="bi-en">Donor Profile Update</span><span class="bi-ur">ڈونر پروفائل اپ ڈیٹ</span></span></h3>
-    <div style="display:flex;gap:8px;margin-bottom:12px">
-      <div class="inp-wrap" style="flex:1;margin-bottom:0"><span class="inp-icon">🔍</span><input type="text" id="dpuSearch" placeholder="Name, ID, Mobile ya Area..." oninput="filterDPU()" autocomplete="off" style="font-size:13px;padding-right:28px"><button id="dpuClear" onclick="document.getElementById('dpuSearch').value='';filterDPU()" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:16px;color:#999;cursor:pointer;padding:0">&times;</button></div>
-      <button onclick="document.getElementById('dpuSearch').value='';filterDPU()" style="background:#f5f5f5;border:1px solid #ddd;border-radius:8px;padding:0 12px;font-size:12px;cursor:pointer;color:#666">✕</button>
-    </div>
+    <div class="inp-wrap" style="margin-bottom:12px"><span class="inp-icon">🔍</span><input type="text" id="dpuSearch" placeholder="Name, ID, Mobile ya Area..." oninput="filterDPU()" autocomplete="off" style="font-size:13px"></div>
     <div id="dpuList">${renderDPUList(donors,'')}</div>
   </div>`;
 }
+
 function renderDPUList(donors,q){
   var filtered=q?donors.filter(function(d){
     var nm=(d.name||'').toLowerCase(),mb=normMob(d.mobile||''),id=(d.id||'').toLowerCase(),ar=(d.area||'').toLowerCase(),ql=q.toLowerCase();
@@ -4200,8 +4201,6 @@ function filterDPU(){
   var el=document.getElementById('dpuList');
   if(!el)return;
   el.innerHTML=renderDPUList([].concat(DB.donors).sort(function(a,b){return (a.name||'').localeCompare(b.name||'');}),q);
-  var clr=document.getElementById('dpuClear');
-  if(clr)clr.style.display=q?'block':'none';
 }
 function filterDonorListInline(){
   var q=(window._donorListSearch||'').toLowerCase().trim();
@@ -5346,63 +5345,127 @@ T.excelexport=function(){
     '</div>'+
   '</div>';
 };
+T.donorsummary=function(){
+  var donors=[].concat(DB.donors).sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
+  var totalAll=DB.donations.reduce(function(s,x){return s+x.amount;},0);
+  var areas=['All',...new Set(donors.map(function(d){return d.area||'';}).filter(Boolean)).values()].sort();
+  var sel=window._dsArea||'All';
+  var q=window._dsSearch||'';
+
+  var areaBtns=areas.map(function(a){
+    return '<button data-area="'+a+'" onclick="window._dsArea=this.dataset.area;renderTab(\'donorsummary\')" style="padding:5px 12px;border-radius:20px;border:'+(a===sel?'none':'1px solid #ddd')+';background:'+(a===sel?'#0F6E56':'#f5f5f5')+';color:'+(a===sel?'#fff':'#333')+';font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">'+a+'</button>';
+  }).join('');
+
+  var filtered=donors.slice();
+  if(sel&&sel!=='All')filtered=filtered.filter(function(d){return (d.area||'')===sel;});
+  if(q)filtered=filtered.filter(function(d){return (d.name||'').toLowerCase().includes(q.toLowerCase())||(d.id||'').toLowerCase().includes(q)||(d.mobile||'').includes(q);});
+  filtered=filtered.map(function(d){
+    d._liveTotal=DB.donations.filter(function(x){return x.donorId===d.id;}).reduce(function(s,x){return s+x.amount;},0);
+    return d;
+  });
+
+  var grandTotal=filtered.reduce(function(s,d){return s+d._liveTotal;},0);
+
+  var html='<div class="card" id="donorSummaryContent">';
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
+  html+='<h3 style="margin:0">&#128101; Donor Summary <span style="font-size:12px;color:#888;font-weight:400">&#1688;&#1608;&#1606;&#1585; &#1585;&#1662;&#1608;&#1585;&#1657;</span></h3>';
+  html+='<button onclick="downloadReport(\'donorSummaryContent\',\'donor_summary\',\'pdf\')" style="background:#E24B4A;color:#fff;border:none;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">&#128196; PDF Download</button>';
+  html+='</div>';
+  html+='<div style="background:#E1F5EE;border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">';
+  html+='<div><div style="font-size:11px;color:#085041;font-weight:700">'+filtered.length+' Donors</div><div style="font-size:10px;color:#0F6E56">'+(sel==='All'?'All Areas':sel)+'</div></div>';
+  html+='<div style="text-align:right"><div style="font-size:11px;color:#085041;font-weight:700">Grand Total</div><div style="font-size:16px;font-weight:800;color:#0F6E56">Rs '+fmt(grandTotal)+'</div></div>';
+  html+='</div>';
+  // Search + area
+  html+='<div style="position:relative;margin-bottom:8px"><div class="inp-wrap" style="margin-bottom:0"><span class="inp-icon">&#128269;</span><input type="text" id="dsSearch" value="'+q.replace(/"/g,'&quot;')+'" placeholder="Search name, ID or mobile..." oninput="window._dsSearch=this.value;renderTab(\'donorsummary\')" autocomplete="off" style="font-size:13px;padding-right:28px">'+(q?'<button onclick="window._dsSearch=\'\';renderTab(\'donorsummary\')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:16px;color:#999;cursor:pointer;padding:0">&times;</button>':'')+'</div></div>';
+  html+='<div style="display:flex;gap:5px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px">'+areaBtns+'</div>';
+
+  if(!filtered.length){
+    html+='<p style="font-size:13px;color:#888;text-align:center;padding:20px">No donors found.</p>';
+    html+='</div>';return html;
+  }
+
+  // Table header
+  html+='<div style="display:grid;grid-template-columns:44px 1fr auto;gap:0;font-size:10px;font-weight:700;color:#888;text-transform:uppercase;padding:6px 8px;border-bottom:1.5px solid #ddd;letter-spacing:0.3px">';
+  html+='<div></div><div>Donor</div><div style="text-align:right">Total Donation</div></div>';
+
+  filtered.forEach(function(d,i){
+    var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+    var av=d.photo?'<img src="'+d.photo+'" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1.5px solid #E1F5EE">':'<div style="width:38px;height:38px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#0F6E56">'+init+'</div>';
+    var bg=i%2===0?'#fff':'#fafafa';
+    html+='<div style="display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:0;padding:8px;border-bottom:0.5px solid #f0f0f0;background:'+bg+'">';
+    html+=av;
+    html+='<div style="padding:0 8px;min-width:0"><div style="font-size:13px;font-weight:700;color:#1a1a1a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+d.name+'</div><div style="font-size:10px;color:#888;margin-top:1px"><span class="id-badge" style="font-size:9px">'+d.id+'</span> &bull; '+(d.area||'\u2014')+'</div></div>';
+    html+='<div style="text-align:right;font-size:14px;font-weight:800;color:'+(d._liveTotal>0?'#0F6E56':'#bbb')+'">Rs '+fmt(d._liveTotal)+'</div>';
+    html+='</div>';
+  });
+
+  // Grand total row
+  html+='<div style="display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:0;padding:10px 8px;background:#0F6E56;border-radius:0 0 10px 10px;margin-top:4px">';
+  html+='<div></div><div style="font-size:13px;font-weight:700;color:#fff">Total ('+filtered.length+' donors)</div>';
+  html+='<div style="text-align:right;font-size:15px;font-weight:800;color:#fff">Rs '+fmt(grandTotal)+'</div>';
+  html+='</div>';
+  html+='</div>';
+  return html;
+};
 T.fundraisingstar=function(){
-  // Build stats per user
   var users=DB.users.filter(function(u){return u.approved&&!u.locked&&u.role!=='developer';});
   var rows=users.map(function(u){
-    // Donors added by this user
-    var donorsAdded=DB.donors.filter(function(d){return d.addedBy===u.id||d.by===u.id;}).length;
-    // Donations received via this user (assignedTo or by)
-    var donations=DB.donations.filter(function(d){return d.assignedTo?d.assignedTo===u.id:d.by===u.id;});
-    var totalReceived=donations.reduce(function(s,x){return s+x.amount;},0);
-    var donCount=donations.length;
-    return {u:u,donorsAdded:donorsAdded,totalReceived:totalReceived,donCount:donCount};
-  }).sort(function(a,b){return b.totalReceived-a.totalReceived;});
+    // Donors added by this user — check addedBy field
+    var myDonors=DB.donors.filter(function(d){return d.addedBy===u.id;});
+    var donorsAdded=myDonors.length;
+    // All time donations FROM donors added by this user
+    var myDonorIds=new Set(myDonors.map(function(d){return d.id;}));
+    var donationsFromMyDonors=DB.donations.filter(function(d){return myDonorIds.has(d.donorId);});
+    var totalFromMyDonors=donationsFromMyDonors.reduce(function(s,x){return s+x.amount;},0);
+    // Entries recorded by this user (regardless of donor)
+    var entriesByUser=DB.donations.filter(function(d){return d.assignedTo?d.assignedTo===u.id:d.by===u.id;});
+    var totalByUser=entriesByUser.reduce(function(s,x){return s+x.amount;},0);
+    var entryCount=entriesByUser.length;
+    return {u:u,donorsAdded:donorsAdded,totalFromMyDonors:totalFromMyDonors,donorDonCount:donationsFromMyDonors.length,entryCount:entryCount,totalByUser:totalByUser};
+  }).sort(function(a,b){return b.totalByUser-a.totalByUser;});
 
+  var medals=['\U0001f947','\U0001f948','\U0001f949'];
   var html='<div class="card" id="fundraisingStarContent">';
   html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">';
   html+='<h3 style="margin:0">\u2b50 Fundraising Stars</h3>';
   html+='<div style="display:flex;gap:6px"><button onclick="downloadReport(\'fundraisingStarContent\',\'fundraising_stars\',\'pdf\')" style="background:#E24B4A;color:#fff;border:none;padding:5px 10px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer">\U0001f4c4 PDF</button><button onclick="downloadReport(\'fundraisingStarContent\',\'fundraising_stars\',\'image\')" style="background:#185FA5;color:#fff;border:none;padding:5px 10px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer">\U0001f5bc\ufe0f Image</button></div>';
   html+='</div>';
 
-  if(!rows.length){
-    html+='<p style="font-size:13px;color:#888;text-align:center;padding:20px">No users found.</p>';
-    html+='</div>';return html;
-  }
-
-  // Medal for top 3
-  var medals=['\U0001f947','\U0001f948','\U0001f949'];
+  if(!rows.length){html+='<p style="font-size:13px;color:#888;text-align:center;padding:20px">No users found.</p></div>';return html;}
 
   rows.forEach(function(r,idx){
     var u=r.u;
     var medal=idx<3?medals[idx]:'';
     var init=(u.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
     var av=u.photo?'<img src="'+u.photo+'" style="width:50px;height:50px;border-radius:50%;object-fit:cover;border:2px solid #1D9E75;flex-shrink:0">':'<div style="width:50px;height:50px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#0F6E56;border:2px solid #1D9E75;flex-shrink:0">'+init+'</div>';
-    var rankBg=idx===0?'#FFF9C4':idx===1?'#F5F5F5':idx===2?'#FFF0E8':'#fff';
-    var rankBorder=idx===0?'#F9A825':idx===1?'#9E9E9E':idx===2?'#BF360C':'#eee';
+    var rankBg=idx===0?'#FFFDE7':idx===1?'#FAFAFA':idx===2?'#FFF3E0':'#fff';
+    var rankBorder=idx===0?'#F9A825':idx===1?'#9E9E9E':idx===2?'#FF8F00':'#eee';
 
-    html+='<div style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;margin-bottom:10px;background:'+rankBg+';border:1.5px solid '+rankBorder+'">';
-    // Rank + medal
-    html+='<div style="text-align:center;flex-shrink:0;min-width:32px">';
-    html+='<div style="font-size:'+(idx<3?'22':'14')+'px;line-height:1">'+(medal||(idx+1))+'</div>';
-    html+='</div>';
-    // Avatar
+    html+='<div style="display:flex;align-items:flex-start;gap:12px;padding:14px;border-radius:12px;margin-bottom:10px;background:'+rankBg+';border:1.5px solid '+rankBorder+'">';
+    html+='<div style="text-align:center;flex-shrink:0;min-width:28px;padding-top:2px"><div style="font-size:'+(idx<3?'22':'13')+'px;line-height:1;font-weight:700;color:#888">'+(medal||(idx+1))+'</div></div>';
     html+=av;
-    // Info
     html+='<div style="flex:1;min-width:0">';
     html+='<div style="font-size:14px;font-weight:800;color:#1a1a1a">'+u.name+'</div>';
-    html+='<div style="font-size:10px;color:#888;margin-top:2px"><span class="id-badge" style="font-size:9px">'+u.id+'</span> &bull; '+(u.area||'\u2014')+' &bull; '+u.role+'</div>';
-    // Stats grid
-    html+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px">';
-    html+='<div style="background:rgba(255,255,255,0.7);border-radius:8px;padding:7px;text-align:center"><div style="font-size:9px;font-weight:700;color:#0F6E56;text-transform:uppercase;letter-spacing:0.3px">Donors Added</div><div style="font-size:17px;font-weight:800;color:#0F6E56">'+r.donorsAdded+'</div></div>';
-    html+='<div style="background:rgba(255,255,255,0.7);border-radius:8px;padding:7px;text-align:center"><div style="font-size:9px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:0.3px">Entries</div><div style="font-size:17px;font-weight:800;color:#185FA5">'+r.donCount+'</div></div>';
-    html+='<div style="background:rgba(255,255,255,0.7);border-radius:8px;padding:7px;text-align:center"><div style="font-size:9px;font-weight:700;color:#A32D2D;text-transform:uppercase;letter-spacing:0.3px">Total</div><div style="font-size:15px;font-weight:800;color:#A32D2D">Rs '+fmt(r.totalReceived)+'</div></div>';
+    html+='<div style="font-size:10px;color:#888;margin-top:2px"><span class="id-badge" style="font-size:9px">'+u.id+'</span> &bull; '+(u.area||'\u2014')+' &bull; <span style="font-weight:600">'+u.role+'</span></div>';
+    // Stats
+    html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">';
+    html+='<div style="background:rgba(255,255,255,0.8);border-radius:8px;padding:8px;border:1px solid rgba(0,0,0,0.05)">';
+    html+='<div style="font-size:9px;font-weight:700;color:#0F6E56;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:3px">Donors Added</div>';
+    html+='<div style="font-size:18px;font-weight:800;color:#0F6E56">'+r.donorsAdded+'</div>';
+    html+='<div style="font-size:9px;color:#888;margin-top:2px">Total from them: <b style="color:#0F6E56">Rs '+fmt(r.totalFromMyDonors)+'</b></div>';
+    html+='</div>';
+    html+='<div style="background:rgba(255,255,255,0.8);border-radius:8px;padding:8px;border:1px solid rgba(0,0,0,0.05)">';
+    html+='<div style="font-size:9px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:3px">Entries Recorded</div>';
+    html+='<div style="font-size:18px;font-weight:800;color:#185FA5">'+r.entryCount+'</div>';
+    html+='<div style="font-size:9px;color:#888;margin-top:2px">Total collected: <b style="color:#185FA5">Rs '+fmt(r.totalByUser)+'</b></div>';
+    html+='</div>';
     html+='</div>';
     html+='</div></div>';
   });
   html+='</div>';
   return html;
 };
+;
 T.datamanager=function(){
   return `<div class="card">
     
@@ -5767,10 +5830,12 @@ T.missinginfo=function(){
   var missingArea=DB.donors.filter(function(d){return !d.area||!d.area.trim();});
   var missingBlood=DB.donors.filter(function(d){return !d.bloodGroup||!d.bloodGroup.trim();});
   var missingProf=DB.donors.filter(function(d){return !d.profession||!d.profession.trim();});
+  var missingAddedBy=DB.donors.filter(function(d){return !d.addedBy||!d.addedBy.trim();}).length;
   var tabs=[
     {key:'area',label:'Area',count:missingArea.length,col:'#E24B4A'},
     {key:'blood',label:'Blood Group',count:missingBlood.length,col:'#185FA5'},
     {key:'prof',label:'Profession',count:missingProf.length,col:'#854F0B'},
+    {key:'addedby',label:'Donor Add By',count:missingAddedBy,col:'#0F6E56'},
   ];
   var q=window._miSearch||'';
   var tabBtns=tabs.map(function(t){
@@ -5785,11 +5850,97 @@ T.missinginfo=function(){
   return html;
 };
 
+function renderAddedByTab(){
+  var el=document.getElementById('miBody');
+  if(!el)return;
+
+  var users=DB.users.filter(function(u){return u.approved&&!u.locked&&u.role!=='developer';});
+  var selUserId=window._miAddedByUser||'';
+  var missingDonors=DB.donors.filter(function(d){return !d.addedBy||!d.addedBy.trim();});
+  var q=(window._miSearch||'').toLowerCase().trim();
+  if(q)missingDonors=missingDonors.filter(function(d){return (d.name||'').toLowerCase().includes(q)||(d.mobile||'').includes(q)||(d.id||'').toLowerCase().includes(q);});
+
+  var userOpts=users.map(function(u){
+    return '<option value="'+u.id+'"'+(u.id===selUserId?' selected':'')+'>'+u.name+' ('+u.role+') &bull; '+(u.area||'—')+'</option>';
+  }).join('');
+
+  var html='<div>';
+  // User dropdown
+  html+='<div style="margin-bottom:14px">';
+  html+='<label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:6px">Select User (Added By):</label>';
+  html+='<select id="miAddedByUserSel" onchange="window._miAddedByUser=this.value;renderAddedByTab()" style="width:100%;padding:11px 12px;border:1.5px solid #1D9E75;border-radius:10px;font-size:13px;background:#fff"><option value="">-- Select User --</option>'+userOpts+'</select>';
+  html+='</div>';
+
+  if(!missingDonors.length){
+    html+='<div style="text-align:center;padding:20px;color:#0F6E56;font-size:13px;font-weight:600">&#10003; All donors have addedBy set!</div>';
+    html+='</div>';
+    el.innerHTML=html;return;
+  }
+
+  html+='<div style="font-size:11px;color:#888;margin-bottom:8px">'+missingDonors.length+' donors without addedBy</div>';
+
+  // Select All + Save
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
+  html+='<button onclick="miAddedBySelectAll()" style="padding:7px 14px;border-radius:8px;border:1px solid #1D9E75;background:#E1F5EE;color:#0F6E56;font-size:12px;font-weight:700;cursor:pointer">Select All</button>';
+  html+='<button onclick="miSaveAddedBy()" style="padding:7px 18px;border-radius:8px;border:none;background:#0F6E56;color:#fff;font-size:12px;font-weight:700;cursor:pointer">&#10003; Save Selected</button>';
+  html+='</div>';
+
+  // Donor list with checkboxes
+  missingDonors.forEach(function(d){
+    var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+    var av=d.photo?'<img src="'+d.photo+'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1.5px solid #E1F5EE;flex-shrink:0">':'<div style="width:40px;height:40px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
+    html+='<div style="display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:0.5px solid #f0f0f0">';
+    html+='<input type="checkbox" data-did="'+d.id+'" class="mi-ab-chk" style="width:18px;height:18px;accent-color:#0F6E56;flex-shrink:0;cursor:pointer">';
+    html+=av;
+    html+='<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#1a1a1a">'+d.name+'</div><div style="font-size:10px;color:#888;margin-top:1px"><span class="id-badge" style="font-size:9px">'+d.id+'</span> &bull; '+(d.area||'—')+'</div></div>';
+    html+='</div>';
+  });
+  html+='</div>';
+  el.innerHTML=html;
+}
+
+function miAddedBySelectAll(){
+  var checks=document.querySelectorAll('.mi-ab-chk');
+  var anyUnchecked=Array.from(checks).some(function(c){return !c.checked;});
+  checks.forEach(function(c){c.checked=anyUnchecked;});
+}
+
+async function miSaveAddedBy(){
+  var selUser=document.getElementById('miAddedByUserSel');
+  var userId=selUser?selUser.value:'';
+  if(!userId){showPopup('\u26a0\ufe0f','Required','Pehle user select karein.');return;}
+  var checks=document.querySelectorAll('.mi-ab-chk:checked');
+  if(!checks.length){showPopup('\u26a0\ufe0f','None Selected','Koi donor check nahi kiya.');return;}
+  var user=DB.users.find(function(u){return u.id===userId;});
+  if(!user){showPopup('\u26a0\ufe0f','Error','User nahi mila.');return;}
+  var ids=Array.from(checks).map(function(c){return c.getAttribute('data-did');});
+  if(!confirm(ids.length+' donors ko '+user.name+' se assign karna chahte hain?'))return;
+  showLoading(true);
+  var cnt=0;
+  for(var i=0;i<ids.length;i++){
+    var donor=DB.donors.find(function(d){return d.id===ids[i];});
+    if(donor){
+      donor.addedBy=userId;
+      donor.addedByName=user.name;
+      donor.addedDate=today();
+      try{await FS.save('donors',donor.id,donor);cnt++;}catch(e){}
+    }
+  }
+  saveLocalCache();
+  showLoading(false);
+  showPopup('\u2705','Saved',cnt+' donors ko '+user.name+' se assign ho gaya!',null,function(){
+    window._miAddedByUser=userId;
+    renderAddedByTab();
+  });
+}
 function switchMiTab(btn){
   window._miTab=btn.getAttribute('data-mikey');
   window._miSearch='';
   renderTab('missinginfo');
-  setTimeout(filterMI,80);
+  setTimeout(function(){
+    if(window._miTab==='addedby')renderAddedByTab();
+    else filterMI();
+  },80);
 }
 
 function clearMiSearch(){
@@ -5805,11 +5956,19 @@ function filterMI(){
   var list=[];
   if(activeTab==='area') list=DB.donors.filter(function(d){return !d.area||!d.area.trim();});
   else if(activeTab==='blood') list=DB.donors.filter(function(d){return !d.bloodGroup||!d.bloodGroup.trim();});
+  else if(activeTab==='addedby') list=DB.donors.filter(function(d){return !d.addedBy||!d.addedBy.trim();});
   else list=DB.donors.filter(function(d){return !d.profession||!d.profession.trim();});
   if(q) list=list.filter(function(d){return (d.name||'').toLowerCase().includes(q)||(d.mobile||'').includes(q)||(d.id||'').toLowerCase().includes(q);});
   list=[].concat(list).sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
   var el=document.getElementById('miBody');
   if(!el)return;
+
+  // Special tab: addedby
+  if(activeTab==='addedby'){
+    renderAddedByTab();
+    return;
+  }
+
   if(!list.length){el.innerHTML='<p style="font-size:13px;color:#888;text-align:center;padding:20px">&#10003; Sab donors ki yeh info maujood hai!</p>';return;}
   var areas=AREAS&&AREAS.length>0?AREAS:[];
   var areaOpts=areas.map(function(a){return '<option value="'+a+'">'+a+'</option>';}).join('');
@@ -6514,7 +6673,7 @@ function submitAddDonor(){
   const nid=nextAllId();
   const fi=document.getElementById('adPhotoInp');
   function finish(photo){
-    const donor={id:nid,name,mobile,cnic:'',area,bloodGroup,profession,totalDonation:0,photo:photo||null,entries:[]};
+    const donor={id:nid,name,mobile,cnic:'',area,bloodGroup,profession,totalDonation:0,photo:photo||null,entries:[],addedBy:currentUser.id,addedByName:currentUser.name,addedDate:today()};
     DB.donors.push(donor);
     FS.save('donors',nid,donor);
     const al={by:currentUser.id,action:'Donor Added',target:name,detail:'ID: '+nid+' | '+mobile,date:today()};
@@ -6964,6 +7123,7 @@ function getMenuConfig(){
   if(['manager','developer'].includes(currentRole)) reports.items.push({icon:'👥', label:'Users Report / صارفین', tab:'usersreport'});
   if(['admin','manager','developer'].includes(currentRole)) reports.items.push({icon:'📊', label:'Excel Export', tab:'excelexport'});
   if(['admin','manager','developer'].includes(currentRole)) reports.items.push({icon:'⭐', label:'Fundraising Stars', tab:'fundraisingstar'});
+  if(['admin','manager','developer'].includes(currentRole)) reports.items.push({icon:'📋', label:'Donor Summary', tab:'donorsummary'});
 
   const donors = {
     key:'donors', title:'Donors / عطیہ دہندگان',
@@ -7042,7 +7202,7 @@ function openSubmenu(key){
   currentSubmenu = key;
 }
 
-const FORM_TABS_SET=new Set(['donation','expense','deceased','adddonor','transfer','profile','suggestion','donorprofileupdate','orgsettings','areas','professions','expcategories','approvals','lockuser','userslist','audit','datamanager','suggestions','bloodbank','smartsearch','smsreminders','complaint','complaints','contacts','superentry','notifications','excelexport','unknowndonors','missinginfo','myentries','area','balreport','expreport','fundraisingstar','ledger','usersreport','todaycollection','fundreport','top','deathcert','search','slip','donorlist','lastdonation']);
+const FORM_TABS_SET=new Set(['donation','expense','deceased','adddonor','transfer','profile','suggestion','donorprofileupdate','orgsettings','areas','professions','expcategories','approvals','lockuser','userslist','audit','datamanager','suggestions','bloodbank','smartsearch','smsreminders','complaint','complaints','contacts','superentry','notifications','excelexport','unknowndonors','missinginfo','myentries','area','balreport','expreport','fundraisingstar','donorsummary','ledger','usersreport','todaycollection','fundreport','top','deathcert','search','slip','donorlist','lastdonation']);
 
 function selectTab(tab){
   renderTab(tab);
@@ -7128,7 +7288,7 @@ function renderTab(key){
     // Post-render init — run search functions after DOM is ready
     const initMap={
       notifications:()=>{updateNotifBadge();},
-      missinginfo:()=>{window._miTab=window._miTab||'area';window._miSearch='';setTimeout(filterMI,80);},
+      missinginfo:()=>{window._miTab=window._miTab||'area';window._miSearch='';setTimeout(function(){if(window._miTab==='addedby')renderAddedByTab();else filterMI();},80);},
       unknowndonors:()=>{renderTab('unknowndonors');},
       contacts:()=>{window._contactArea='All';filterContacts('All');},
       superentry:()=>{window._superEntryArea='All';filterSuperEntry('All');},
@@ -7236,7 +7396,7 @@ const TAB_LABELS={
   donorlist:'Donor List',slip:'Donor Slip',top:'Top Donors',transfer:'Transfer',
   decconfirm:'Confirm Deceased',approvals:'Approvals',lockuser:'Login Management',
   userslist:'Users List',professions:'Professions',audit:'Audit Log',areas:'Areas',
-  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',lastdonation:'Last Donation',excelexport:'Excel Export',fundraisingstar:'Fundraising Stars',myentries:'My Entries',unknowndonors:'Update Unknown',missinginfo:'Missing Information',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
+  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',lastdonation:'Last Donation',excelexport:'Excel Export',fundraisingstar:'Fundraising Stars',donorsummary:'Donor Summary',myentries:'My Entries',unknowndonors:'Update Unknown',missinginfo:'Missing Information',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
 };
 
 // ============================================================

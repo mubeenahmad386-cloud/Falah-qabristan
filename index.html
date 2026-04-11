@@ -594,7 +594,7 @@ const FS = {
   async save(col,id,data){if(!fdb)return;try{await fdb.collection(col).doc(String(id)).set(JSON.parse(JSON.stringify(data,(k,v)=>v===undefined?null:v)));}catch(e){console.error('FS.save',e);}},
   async del(col,id){if(!fdb)return;try{await fdb.collection(col).doc(String(id)).delete();}catch(e){}},
   async loadAll(col){if(!fdb)return[];try{const s=await fdb.collection(col).get();return s.docs.map(d=>({...d.data(),id:d.id}));}catch(e){console.error('FS.loadAll',e);return [];}},
-  async saveConfig(){if(!fdb)return;try{await fdb.collection('config').doc('org').set(JSON.parse(JSON.stringify(ORG_CONFIG,(k,v)=>v===undefined?null:v)));}catch(e){}},
+  async saveConfig(){if(!fdb){console.error('Firestore not initialized');return;}try{await fdb.collection('config').doc('org').set(JSON.parse(JSON.stringify(ORG_CONFIG,(k,v)=>v===undefined?null:v)));console.log('Config saved ok');}catch(e){console.error('saveConfig error:',e);try{showPopup('❌','Save Error','Settings save failed: '+e.message);}catch(pe){}}},
   async loadConfig(){if(!fdb)return;try{const d=await fdb.collection('config').doc('org').get();if(d.exists){Object.assign(ORG_CONFIG,d.data());try{renderLoginExtras();}catch(e){}}}catch(e){}}
 };
 
@@ -4601,17 +4601,17 @@ function saveOrgName(){
   const ur=document.getElementById('orgNameUr').value.trim();
   if(!en){showPopup('⚠️','Required','English name is required.');return;}
   ORG_CONFIG.name=en;if(ur)ORG_CONFIG.nameUrdu=ur;
-  FS.saveConfig();renderLoginExtras();
+  FS.saveConfig();saveLocalCache();renderLoginExtras();
   showPopup('✅','Saved','Organization name saved — updated everywhere! | ادارے کا نام محفوظ ہو گیا');
 }
 function saveOrgAddress(){
   ORG_CONFIG.address=document.getElementById('orgAddress').value.trim();
-  FS.saveConfig();renderLoginExtras();
+  FS.saveConfig();saveLocalCache();renderLoginExtras();
   showPopup('✅','Saved','Address saved. | پتہ محفوظ ہو گیا');
 }
 function saveOrgHistory(){
   ORG_CONFIG.history=document.getElementById('orgHistory').value.trim();
-  FS.saveConfig();renderLoginExtras();
+  FS.saveConfig();saveLocalCache();renderLoginExtras();
   showPopup('✅','Saved','History saved. | تاریخ محفوظ ہو گئی');
 }
 function uploadOrgLogo(){
@@ -4683,7 +4683,7 @@ function addContactNumber(){
   if(!ORG_CONFIG.contactNumbers)ORG_CONFIG.contactNumbers=[];
   function finish(photo){
     ORG_CONFIG.contactNumbers.push({label,number,area,photo:photo||null});
-    FS.saveConfig();renderLoginExtras();
+    FS.saveConfig();saveLocalCache();renderLoginExtras();
     document.getElementById('cnLabel').value='';
     document.getElementById('cnNumber').value='';
     showPopup('✅','Added','Contact number added. | نمبر شامل ہو گیا');
@@ -4720,7 +4720,7 @@ function saveSocialLinks(){
     youtube:document.getElementById('slYoutube').value.trim(),
     whatsapp:document.getElementById('slWhatsapp').value.trim()
   };
-  FS.saveConfig();renderLoginExtras();
+  FS.saveConfig();saveLocalCache();renderLoginExtras();
   showPopup('✅','Saved','Social links saved. | سوشل لنکس محفوظ ہو گئے');
 }
 // previewBaQr removed
@@ -4742,9 +4742,10 @@ function addBankAccount(){
   const fiPhoto=document.getElementById('baPhotoInput');
   function finish(photo){
     ORG_CONFIG.bankAccounts.push({title,bank,number,area,photo:photo||null});
-    FS.saveConfig();renderLoginExtras();
+    FS.saveConfig();saveLocalCache();renderLoginExtras();
     showPopup('✅','Account Added','Bank account added.');
     renderTab('orgsettings');
+    renderLoginExtras();
   }
   if(fiPhoto.files[0]){
     const r=new FileReader();r.onload=e=>finish(e.target.result);r.readAsDataURL(fiPhoto.files[0]);
@@ -4753,7 +4754,7 @@ function addBankAccount(){
 function removeBankAccount(i){
   if(!confirm('Remove this bank account?'))return;
   ORG_CONFIG.bankAccounts.splice(i,1);
-  FS.saveConfig();renderLoginExtras();
+  FS.saveConfig();saveLocalCache();renderLoginExtras();
   renderTab('orgsettings');
   showPopup('🗑️','Removed','Account removed.');
 }
@@ -4810,7 +4811,7 @@ function saveEditBank(){
   function finish(photo){
     acc.title=title;acc.bank=bank;acc.number=number;acc.area=area;
     if(photo!==undefined)acc.photo=photo;
-    FS.saveConfig();renderLoginExtras();
+    FS.saveConfig();saveLocalCache();renderLoginExtras();
     cancelEditBank();
     showPopup('✅','Updated','Bank account updated.');
     renderTab('orgsettings');

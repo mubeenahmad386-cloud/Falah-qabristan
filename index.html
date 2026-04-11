@@ -1241,12 +1241,8 @@ function renderLoginExtras(){
       '<div style="font-size:10px;font-weight:700;color:#0C447C;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Account Number</div>'+
       '<div style="font-size:18px;font-weight:800;letter-spacing:2px;color:#185FA5;font-family:monospace">'+(acc.number||'\u2014')+'</div>'+
     '</div>'+
-    '<div style="background:#f0fff8;border-radius:10px;padding:10px 14px;border-right:4px solid #1D9E75;text-align:right">'+
-      '<div style="font-size:13px;font-weight:600;color:#0F6E56;direction:rtl;line-height:1.8">\u0627\u0644\u0644\u06c1 \u06a9\u06cc \u0631\u0627\u06c1 \u0645\u06cc\u06ba \u062f\u06cc\u062c\u06cc\u0626\u06d2 \u062a\u0627\u06a9\u06c1 \u062c\u0627\u0631\u06cc \u06a9\u0627\u0645\u0648\u06ba \u06a9\u0648 \u0645\u06a9\u0645\u0644 \u06a9\u06cc\u0627 \u062c\u0627 \u0633\u06a9\u06d2</div>'+
-      '<div style="font-size:11px;color:#1D9E75;margin-top:5px;direction:rtl">\u0631\u0628 \u06a9\u0631\u06cc\u0645 \u0622\u067e \u06a9\u0648 \u062f\u0646\u06cc\u0627 \u0648 \u0622\u062e\u0631\u062a \u0645\u06cc\u06ba \u0628\u06c1\u062a\u0631\u06cc\u0646 \u0628\u062f\u0644\u06c1 \u0639\u0637\u0627 \u0641\u0631\u0645\u0627\u0626\u06d2 \u06d4 \u0622\u0645\u06cc\u0646</div>'+
-    '</div>'+
   '</div>';
-}).join('');
+}).join('')+'<div style="background:#f0fff8;border-radius:12px;padding:14px 16px;border-right:4px solid #1D9E75;text-align:right;margin-top:4px"><div style="font-size:14px;font-weight:600;color:#0F6E56;direction:rtl;line-height:2">اللہ کی راہ میں دیجیئے تاکہ قبرستان میں جاری کاموں کو مکمل کیا جا سکے</div><div style="font-size:12px;color:#1D9E75;margin-top:5px;direction:rtl">رب کریم آپ کو دنیا و آخرت میں بہترین بدلہ عطا فرمائے ۔ آمین</div></div>';
     } else {be.style.display='block';bl.innerHTML='';}
   }
 }
@@ -3433,9 +3429,20 @@ async function deleteAllDonationsFirebase(){
   renderTab('datamanager');
 }
 
+function _runDiagnose(){
+  var v=document.getElementById('diagDonorIdInp');
+  if(!v||!v.value.trim())return;
+  window._diagnoseDonorId=v.value.trim();
+  closeCustomPopup();
+  setTimeout(diagnoseDonor,100);
+}
 async function diagnoseDonor(){
-  var id=prompt('Donor ID darein (e.g. 10030):');
-  if(!id)return;
+  var id=window._diagnoseDonorId||'';
+  if(!id){
+    showCustomPopup('<div style="background:#fff;border-radius:14px;overflow:hidden;max-width:320px;width:88vw"><div style="background:#185FA5;padding:13px 16px;display:flex;justify-content:space-between;align-items:center"><div style="font-size:14px;font-weight:700;color:#fff">&#128269; Diagnose Donor</div><button onclick="closeCustomPopup()" style="background:rgba(255,255,255,0.2);border:none;border-radius:50%;width:26px;height:26px;color:#fff;font-size:15px;cursor:pointer">&times;</button></div><div style="padding:16px"><label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:6px">Donor ID (e.g. 10030)</label><input type="text" id="diagDonorIdInp" placeholder="10030" autocomplete="new-password" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:14px;box-sizing:border-box;margin-bottom:12px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button onclick="closeCustomPopup()" style="background:#f5f5f5;color:#333;border:1px solid #ddd;padding:10px;border-radius:8px;font-size:13px;cursor:pointer">Cancel</button><button onclick="_runDiagnose()" style="background:#185FA5;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">Diagnose</button></div></div></div>');
+    return;
+  }
+  window._diagnoseDonorId='';
   id=id.trim();
   var donor=DB.donors.find(function(d){return d.id===id;});
   if(!donor){showPopup('⚠️','Not Found','Donor ID '+id+' nahi mila.');return;}
@@ -4694,14 +4701,38 @@ function addContactNumber(){
 }
 function editContactNumber(i){
   const n=ORG_CONFIG.contactNumbers[i];if(!n)return;
-  // Simple edit via prompts
-  const newLabel=prompt('Label:',n.label);if(newLabel===null)return;
-  const newNum=prompt('Number:',n.number);if(newNum===null)return;
-  const newArea=prompt('Area (optional):',n.area||'');
-  n.label=newLabel.trim()||n.label;
-  n.number=newNum.trim()||n.number;
-  n.area=newArea.trim();
-  FS.saveConfig();renderLoginExtras();
+  const areaOpts=AREAS.map(a=>'<option value="'+a+'"'+(a===n.area?' selected':'')+'>'+a+'</option>').join('');
+  const html='<div style="background:#fff;border-radius:14px;overflow:hidden;max-width:340px;width:90vw">'+
+    '<div style="background:#0F6E56;padding:13px 16px;display:flex;justify-content:space-between;align-items:center">'+
+      '<div style="font-size:14px;font-weight:700;color:#fff">&#9998; Edit Contact</div>'+
+      '<button onclick="closeCustomPopup()" style="background:rgba(255,255,255,0.2);border:none;border-radius:50%;width:28px;height:28px;color:#fff;font-size:16px;cursor:pointer">&times;</button>'+
+    '</div>'+
+    '<div style="padding:16px">'+
+      '<label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Label *</label>'+
+      '<input type="text" id="ecLabel" value="'+n.label.replace(/"/g,'&quot;')+'" autocomplete="new-password" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:10px">'+
+      '<label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Number *</label>'+
+      '<input type="text" id="ecNumber" value="'+n.number.replace(/"/g,'&quot;')+'" autocomplete="new-password" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:10px">'+
+      '<label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Area</label>'+
+      '<select id="ecArea" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:14px"><option value="">-- Select --</option>'+areaOpts+'</select>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
+        '<button onclick="closeCustomPopup()" style="background:#f5f5f5;color:#333;border:1px solid #ddd;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">Cancel</button>'+
+        '<button data-ci="'+i+'" onclick="saveContactEdit(this.dataset.ci)" style="background:#0F6E56;color:#fff;border:none;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">Save &#10003;</button>'+
+      '</div>'+
+    '</div></div>';
+  showCustomPopup('<div style="display:flex;justify-content:center;padding:16px 10px">'+html+'</div>');
+}
+
+function saveContactEdit(idx){
+  var n=ORG_CONFIG.contactNumbers[parseInt(idx)];if(!n)return;
+  var labelEl=document.getElementById('ecLabel');
+  var numEl=document.getElementById('ecNumber');
+  var areaEl=document.getElementById('ecArea');
+  var label=labelEl?labelEl.value.trim():'';
+  var num=numEl?numEl.value.trim():'';
+  if(!label||!num){showPopup('⚠️','Required','Label and number are required.');return;}
+  n.label=label;n.number=num;n.area=areaEl?areaEl.value:'';
+  FS.saveConfig();saveLocalCache();renderLoginExtras();
+  closeCustomPopup();
   renderTab('orgsettings');
   showPopup('✅','Updated','Contact updated.');
 }
@@ -5157,15 +5188,20 @@ function toggleLock(id){
   renderLockUserList();
   showPopup(u.locked?'🔒':'🔓',u.locked?'Locked':'Unlocked',u.name+' has been '+(u.locked?'locked':'unlocked')+'.');
 }
-function resetPwdPrompt(id){
-  const u=DB.users.find(x=>x.id===id);
+function resetPwdPrompt(userId){
+  const u=DB.users.find(x=>x.id===userId);
   if(!u)return;
-  const np=prompt('New password for '+u.name+':');
-  if(!np||!np.trim()){return;}
-  if(np.trim().length<4){showPopup('⚠️','Too Short','Password must be at least 4 characters.');return;}
-  u.password=np.trim();
+  showCustomPopup('<div style="background:#fff;border-radius:14px;overflow:hidden;max-width:320px;width:88vw"><div style="background:#E24B4A;padding:13px 16px;display:flex;justify-content:space-between;align-items:center"><div style="font-size:14px;font-weight:700;color:#fff">&#128274; Reset Password</div><button onclick="closeCustomPopup()" style="background:rgba(255,255,255,0.2);border:none;border-radius:50%;width:26px;height:26px;color:#fff;font-size:15px;cursor:pointer">&times;</button></div><div style="padding:16px"><div style="font-size:13px;font-weight:600;color:#1a1a1a;margin-bottom:10px">'+u.name+'</div><label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:5px">New Password *</label><input type="text" id="resetPwdInp" placeholder="Min 4 characters" autocomplete="new-password" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:14px;box-sizing:border-box;margin-bottom:12px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button onclick="closeCustomPopup()" style="background:#f5f5f5;color:#333;border:1px solid #ddd;padding:10px;border-radius:8px;font-size:13px;cursor:pointer">Cancel</button><button data-uid="'+userId+'" onclick="doResetPwd(this.dataset.uid)" style="background:#E24B4A;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">Reset &#10003;</button></div></div></div>');
+}
+function doResetPwd(id){
+  const u=DB.users.find(x=>x.id===id);if(!u)return;
+  var el=document.getElementById('resetPwdInp');
+  var np=el?el.value.trim():'';
+  if(!np){showPopup('⚠️','Required','Password darein.');return;}
+  if(np.length<4){showPopup('⚠️','Too Short','Password must be at least 4 characters.');return;}
+  u.password=np;
   FS.save('users',u.id,u);
-  const al={by:currentUser.id,action:'Password Reset',target:u.name,detail:'Password was reset',date:today()};
+    const al={by:currentUser.id,action:'Password Reset',target:u.name,detail:'Password was reset',date:today()};
   DB.auditLog.push(al);FS.save('auditLog','AL'+Date.now(),al);
   showPopup('✅','Password Reset',u.name+"'s password has been reset.");
 }
@@ -5246,11 +5282,19 @@ function saveProfEdit(i){
   renderTab('professions');
   showPopup('✅','Updated','Profession updated.');
 }
+function _addNewExpCat(){
+  var el=document.getElementById('newCatInp');
+  var nm=el?el.value.trim():'';
+  if(!nm){showPopup('⚠️','Required','Category name darein.');return;}
+  if(!EXP_CATEGORIES.includes(nm)){EXP_CATEGORIES.push(nm);FS.save('config','expcategories',{list:EXP_CATEGORIES});renderTab('expcategories');}
+  closeCustomPopup();
+  showPopup('✅','Added',nm+' category add ho gaya.');
+}
 function handleExpCatChange(sel){
   if(sel.value==='__manual__'){
-    const v=prompt('Enter new category name:');
-    if(v&&v.trim()){
-      const name=v.trim();
+    showCustomPopup('<div style="background:#fff;border-radius:14px;overflow:hidden;max-width:320px;width:88vw"><div style="background:#854F0B;padding:13px 16px;display:flex;justify-content:space-between;align-items:center"><div style="font-size:14px;font-weight:700;color:#fff">&#10133; New Category</div><button onclick="closeCustomPopup()" style="background:rgba(255,255,255,0.2);border:none;border-radius:50%;width:26px;height:26px;color:#fff;font-size:15px;cursor:pointer">&times;</button></div><div style="padding:16px"><label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:5px">Category Name *</label><input type="text" id="newCatInp" placeholder="e.g. Maintenance" autocomplete="new-password" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:14px;box-sizing:border-box;margin-bottom:12px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button onclick="closeCustomPopup()" style="background:#f5f5f5;color:#333;border:1px solid #ddd;padding:10px;border-radius:8px;font-size:13px;cursor:pointer">Cancel</button><button onclick="_addNewExpCat()" style="background:#854F0B;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">Add</button></div></div></div>');
+    if(false&&false){
+      const name='';
       if(!EXP_CATEGORIES.includes(name)){
         EXP_CATEGORIES.push(name);
         // Add option before __manual__

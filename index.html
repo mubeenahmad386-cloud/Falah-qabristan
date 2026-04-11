@@ -1228,18 +1228,17 @@ function renderLoginExtras(){
       bl.innerHTML='<div style="background:linear-gradient(135deg,#0F6E56,#1D9E75);border-radius:14px;padding:14px 16px;margin-bottom:14px;text-align:center"><div style="font-size:16px;font-weight:800;color:#fff;letter-spacing:0.5px">Accounts # &mdash; Fund Transfer</div><div style="font-size:13px;color:rgba(255,255,255,0.85);margin-top:3px;direction:rtl">\u0627\u06a9\u0627\u0624\u0646\u0679 \u0646\u0645\u0628\u0631 \u2014 \u0641\u0646\u0688 \u0679\u0631\u0627\u0646\u0633\u0641\u0631</div></div>'+ORG_CONFIG.bankAccounts.map(function(acc,ai){
   var initials=(acc.title||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
   var photoHtml=acc.photo?'<img src="'+acc.photo+'" style="width:70px;height:70px;border-radius:50%;object-fit:cover;border:3px solid #1D9E75;display:block">':'<div style="width:70px;height:70px;border-radius:50%;background:#E1F5EE;border:3px solid #1D9E75;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#0F6E56">'+initials+'</div>';
-  return '<div class="card" style="margin-bottom:12px">'+
-    '<div style="display:flex;align-items:center;gap:14px;margin-bottom:10px">'+
+  return '<div class="card" style="margin-bottom:10px;padding:12px">'+
+    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'+
       photoHtml+
       '<div style="flex:1;min-width:0">'+
-        '<div style="font-size:15px;font-weight:700">'+(acc.title||'\u2014')+'</div>'+
-        '<div style="font-size:13px;color:#185FA5;font-weight:600;margin-top:3px">'+(acc.bank||'\u2014')+'</div>'+
-        (acc.area?'<div style="font-size:11px;color:#888;margin-top:2px">'+'\ud83d\udccd'+' '+acc.area+'</div>':'')+
+        '<div style="font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(acc.title||'\u2014')+(acc.area?' <span style="font-size:11px;color:#888;font-weight:400">\u2014 '+acc.area+'</span>':'')+'</div>'+
+        '<div style="font-size:12px;color:#185FA5;font-weight:600;margin-top:2px">'+(acc.bank||'\u2014')+'</div>'+
       '</div>'+
     '</div>'+
-    '<div style="background:#E6F1FB;border-radius:10px;padding:10px 14px;margin-bottom:10px">'+
-      '<div style="font-size:10px;font-weight:700;color:#0C447C;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Account Number</div>'+
-      '<div style="font-size:18px;font-weight:800;letter-spacing:2px;color:#185FA5;font-family:monospace">'+(acc.number||'\u2014')+'</div>'+
+    '<div style="background:#E6F1FB;border-radius:8px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between">'+
+      '<div style="font-size:10px;font-weight:700;color:#0C447C">Account No</div>'+
+      '<div style="font-size:16px;font-weight:800;letter-spacing:2px;color:#185FA5;font-family:monospace">'+(acc.number||'\u2014')+'</div>'+
     '</div>'+
   '</div>';
 }).join('')+'<div style="background:#f0fff8;border-radius:12px;padding:14px 16px;border-right:4px solid #1D9E75;text-align:right;margin-top:4px"><div style="font-size:14px;font-weight:600;color:#0F6E56;direction:rtl;line-height:2">اللہ کی راہ میں دیجیئے تاکہ قبرستان میں جاری کاموں کو مکمل کیا جا سکے</div><div style="font-size:12px;color:#1D9E75;margin-top:5px;direction:rtl">رب کریم آپ کو دنیا و آخرت میں بہترین بدلہ عطا فرمائے ۔ آمین</div></div>';
@@ -4699,15 +4698,34 @@ function addContactNumber(){
   if(fi&&fi.files[0]){const r=new FileReader();r.onload=e=>finish(e.target.result);r.readAsDataURL(fi.files[0]);}
   else finish(null);
 }
-function editContactNumber(i){
-  const n=ORG_CONFIG.contactNumbers[i];if(!n)return;
+function _ecPhotoPreview(inp){
+  var f=inp.files[0];if(!f)return;
+  var r=new FileReader();
+  r.onload=function(ev){
+    var el=document.getElementById('ecPhotoPreview');
+    if(!el)return;
+    el.src=ev.target.result;
+    el.style.cssText='width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid #1D9E75;display:block';
+  };
+  r.readAsDataURL(f);
+}
+function _ecPhotoClick(){var el=document.getElementById('ecPhotoInp');if(el)el.click();}
+function editContactNumber(ci){
+  const n=ORG_CONFIG.contactNumbers[ci];if(!n)return;
   const areaOpts=AREAS.map(a=>'<option value="'+a+'"'+(a===n.area?' selected':'')+'>'+a+'</option>').join('');
+  const initials=(n.label||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+  const photoHtml=n.photo?'<img id="ecPhotoPreview" src="'+n.photo+'" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid #1D9E75;display:block">':'<div id="ecPhotoPreview" style="width:60px;height:60px;border-radius:50%;background:#E1F5EE;border:2px dashed #1D9E75;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#0F6E56">'+initials+'</div>';
   const html='<div style="background:#fff;border-radius:14px;overflow:hidden;max-width:340px;width:90vw">'+
     '<div style="background:#0F6E56;padding:13px 16px;display:flex;justify-content:space-between;align-items:center">'+
       '<div style="font-size:14px;font-weight:700;color:#fff">&#9998; Edit Contact</div>'+
       '<button onclick="closeCustomPopup()" style="background:rgba(255,255,255,0.2);border:none;border-radius:50%;width:28px;height:28px;color:#fff;font-size:16px;cursor:pointer">&times;</button>'+
     '</div>'+
     '<div style="padding:16px">'+
+      '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">'+
+        '<div onclick="_ecPhotoClick()" style="cursor:pointer;flex-shrink:0">'+photoHtml+'</div>'+
+        '<div style="font-size:11px;color:#888">Tap to change photo</div>'+
+                '<input type="file" id="ecPhotoInp" accept="image/*" style="display:none" onchange="_ecPhotoPreview(this)">'+
+      '</div>'+
       '<label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Label *</label>'+
       '<input type="text" id="ecLabel" value="'+n.label.replace(/"/g,'&quot;')+'" autocomplete="new-password" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:10px">'+
       '<label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Number *</label>'+
@@ -4716,7 +4734,7 @@ function editContactNumber(i){
       '<select id="ecArea" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:14px"><option value="">-- Select --</option>'+areaOpts+'</select>'+
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
         '<button onclick="closeCustomPopup()" style="background:#f5f5f5;color:#333;border:1px solid #ddd;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">Cancel</button>'+
-        '<button data-ci="'+i+'" onclick="saveContactEdit(this.dataset.ci)" style="background:#0F6E56;color:#fff;border:none;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">Save &#10003;</button>'+
+        '<button data-ci="'+ci+'" onclick="saveContactEdit(this.dataset.ci)" style="background:#0F6E56;color:#fff;border:none;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">Save &#10003;</button>'+
       '</div>'+
     '</div></div>';
   showCustomPopup('<div style="display:flex;justify-content:center;padding:16px 10px">'+html+'</div>');
@@ -4727,14 +4745,21 @@ function saveContactEdit(idx){
   var labelEl=document.getElementById('ecLabel');
   var numEl=document.getElementById('ecNumber');
   var areaEl=document.getElementById('ecArea');
+  var photoInp=document.getElementById('ecPhotoInp');
   var label=labelEl?labelEl.value.trim():'';
   var num=numEl?numEl.value.trim():'';
   if(!label||!num){showPopup('⚠️','Required','Label and number are required.');return;}
-  n.label=label;n.number=num;n.area=areaEl?areaEl.value:'';
-  FS.saveConfig();saveLocalCache();renderLoginExtras();
-  closeCustomPopup();
-  renderTab('orgsettings');
-  showPopup('✅','Updated','Contact updated.');
+  function doSave(photo){
+    n.label=label;n.number=num;n.area=areaEl?areaEl.value:'';
+    if(photo!==undefined)n.photo=photo;
+    FS.saveConfig();saveLocalCache();renderLoginExtras();
+    closeCustomPopup();
+    renderTab('orgsettings');
+    showPopup('✅','Updated','Contact updated.');
+  }
+  if(photoInp&&photoInp.files[0]){
+    var r=new FileReader();r.onload=function(ev){compressImg(ev.target.result,400,400,0.75,doSave);};r.readAsDataURL(photoInp.files[0]);
+  } else {doSave(undefined);}
 }
 function removeContactNumber(i){
   if(!ORG_CONFIG.contactNumbers)return;
@@ -4755,6 +4780,18 @@ function saveSocialLinks(){
   showPopup('✅','Saved','Social links saved. | سوشل لنکس محفوظ ہو گئے');
 }
 // previewBaQr removed
+function compressImg(dataUrl,maxW,maxH,quality,cb){
+  var img=new Image();
+  img.onload=function(){
+    var w=img.width,h=img.height;
+    if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}
+    if(h>maxH){w=Math.round(w*maxH/h);h=maxH;}
+    var cv=document.createElement('canvas');cv.width=w;cv.height=h;
+    cv.getContext('2d').drawImage(img,0,0,w,h);
+    cb(cv.toDataURL('image/jpeg',quality||0.7));
+  };
+  img.src=dataUrl;
+}
 function previewBaPhoto(){
   const f=document.getElementById('baPhotoInput').files[0];if(!f)return;
   const r=new FileReader();r.onload=e=>{
@@ -4778,8 +4815,8 @@ function addBankAccount(){
     renderTab('orgsettings');
     renderLoginExtras();
   }
-  if(fiPhoto.files[0]){
-    const r=new FileReader();r.onload=e=>finish(e.target.result);r.readAsDataURL(fiPhoto.files[0]);
+  if(fiPhoto&&fiPhoto.files[0]){
+    const r=new FileReader();r.onload=function(ev){compressImg(ev.target.result,400,400,0.75,finish);};r.readAsDataURL(fiPhoto.files[0]);
   } else {finish(null);}
 }
 function removeBankAccount(i){
@@ -4847,10 +4884,10 @@ function saveEditBank(){
     showPopup('✅','Updated','Bank account updated.');
     renderTab('orgsettings');
   }
-  if(fi.files[0]){
-    const r=new FileReader();r.onload=e=>finish(e.target.result);r.readAsDataURL(fi.files[0]);
+  if(fi&&fi.files[0]){
+    const r=new FileReader();r.onload=function(ev){compressImg(ev.target.result,400,400,0.75,finish);};r.readAsDataURL(fi.files[0]);
   } else {
-    finish(undefined); // keep existing photo
+    finish(undefined);
   }
 }
 

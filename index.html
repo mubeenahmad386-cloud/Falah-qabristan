@@ -1225,20 +1225,28 @@ function renderLoginExtras(){
   if(bl&&be){
     if(ORG_CONFIG.bankAccounts.length>0){
       be.style.display='none';
-      bl.innerHTML=ORG_CONFIG.bankAccounts.map(acc=>`<div class="card" style="margin-bottom:10px">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-          <div style="flex:1">
-            <div style="font-size:15px;font-weight:700">${acc.title||'—'}</div>
-            <div style="font-size:13px;color:#185FA5;font-weight:600;margin-top:4px">${acc.bank||'—'}</div>
-            <div style="font-size:15px;font-weight:700;letter-spacing:1px;margin-top:6px;background:#E6F1FB;color:#185FA5;padding:7px 12px;border-radius:8px;display:inline-block">${acc.number||'—'}</div>
-            ${acc.area?`<div style="font-size:12px;color:#888;margin-top:5px">📍 ${acc.area}</div>`:''}
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-            ${acc.photo?`<img src="${acc.photo}" style="width:72px;height:72px;border-radius:50%;border:2px solid #1D9E75;object-fit:cover">`:''}
-
-          </div>
-        </div>
-      </div>`).join('');
+      bl.innerHTML='<div style="background:linear-gradient(135deg,#0F6E56,#1D9E75);border-radius:14px;padding:14px 16px;margin-bottom:14px;text-align:center"><div style="font-size:16px;font-weight:800;color:#fff;letter-spacing:0.5px">Accounts # &mdash; Fund Transfer</div><div style="font-size:13px;color:rgba(255,255,255,0.85);margin-top:3px;direction:rtl">\u0627\u06a9\u0627\u0624\u0646\u0679 \u0646\u0645\u0628\u0631 \u2014 \u0641\u0646\u0688 \u0679\u0631\u0627\u0646\u0633\u0641\u0631</div></div>'+ORG_CONFIG.bankAccounts.map(function(acc,ai){
+  var initials=(acc.title||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+  var photoHtml=acc.photo?'<img src="'+acc.photo+'" style="width:70px;height:70px;border-radius:50%;object-fit:cover;border:3px solid #1D9E75;display:block">':'<div style="width:70px;height:70px;border-radius:50%;background:#E1F5EE;border:3px solid #1D9E75;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#0F6E56">'+initials+'</div>';
+  return '<div class="card" style="margin-bottom:12px">'+
+    '<div style="display:flex;align-items:center;gap:14px;margin-bottom:10px">'+
+      photoHtml+
+      '<div style="flex:1;min-width:0">'+
+        '<div style="font-size:15px;font-weight:700">'+(acc.title||'\u2014')+'</div>'+
+        '<div style="font-size:13px;color:#185FA5;font-weight:600;margin-top:3px">'+(acc.bank||'\u2014')+'</div>'+
+        (acc.area?'<div style="font-size:11px;color:#888;margin-top:2px">'+'\ud83d\udccd'+' '+acc.area+'</div>':'')+
+      '</div>'+
+    '</div>'+
+    '<div style="background:#E6F1FB;border-radius:10px;padding:10px 14px;margin-bottom:10px">'+
+      '<div style="font-size:10px;font-weight:700;color:#0C447C;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Account Number</div>'+
+      '<div style="font-size:18px;font-weight:800;letter-spacing:2px;color:#185FA5;font-family:monospace">'+(acc.number||'\u2014')+'</div>'+
+    '</div>'+
+    '<div style="background:#f0fff8;border-radius:10px;padding:10px 14px;border-right:4px solid #1D9E75;text-align:right">'+
+      '<div style="font-size:13px;font-weight:600;color:#0F6E56;direction:rtl;line-height:1.8">\u0627\u0644\u0644\u06c1 \u06a9\u06cc \u0631\u0627\u06c1 \u0645\u06cc\u06ba \u062f\u06cc\u062c\u06cc\u0626\u06d2 \u062a\u0627\u06a9\u06c1 \u062c\u0627\u0631\u06cc \u06a9\u0627\u0645\u0648\u06ba \u06a9\u0648 \u0645\u06a9\u0645\u0644 \u06a9\u06cc\u0627 \u062c\u0627 \u0633\u06a9\u06d2</div>'+
+      '<div style="font-size:11px;color:#1D9E75;margin-top:5px;direction:rtl">\u0631\u0628 \u06a9\u0631\u06cc\u0645 \u0622\u067e \u06a9\u0648 \u062f\u0646\u06cc\u0627 \u0648 \u0622\u062e\u0631\u062a \u0645\u06cc\u06ba \u0628\u06c1\u062a\u0631\u06cc\u0646 \u0628\u062f\u0644\u06c1 \u0639\u0637\u0627 \u0641\u0631\u0645\u0627\u0626\u06d2 \u06d4 \u0622\u0645\u06cc\u0646</div>'+
+    '</div>'+
+  '</div>';
+}).join('');
     } else {be.style.display='block';bl.innerHTML='';}
   }
 }
@@ -1321,22 +1329,34 @@ T.dash=function(){
     </div>
   </div>
   <!-- STATS COMPACT -->
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:10px">
-    <div onclick="selectTab('myentries')" style="background:#E1F5EE;border-radius:12px;padding:9px 6px;text-align:center;cursor:pointer">
-      <div style="font-size:9px;font-weight:700;color:#085041;text-transform:uppercase;letter-spacing:0.3px">${isUser?'My Income':'Income'}</div>
-      <div style="font-size:13px;font-weight:800;color:#0F6E56;margin-top:2px">${fmt(income)}</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+    <div onclick="selectTab('myentries')" style="background:#E1F5EE;border-radius:12px;padding:10px 10px 8px;cursor:pointer">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:9px;font-weight:700;color:#085041;text-transform:uppercase;letter-spacing:0.3px">${isUser?'My Income':'Income'} / آمدن</div>
+        <span style="font-size:9px;color:#1D9E75;font-weight:600">View →</span>
+      </div>
+      <div style="font-size:15px;font-weight:800;color:#0F6E56;margin-top:4px">${fmt(income)}</div>
     </div>
-    <div onclick="selectTab('myentries')" style="background:#FAEEDA;border-radius:12px;padding:9px 6px;text-align:center;cursor:pointer">
-      <div style="font-size:9px;font-weight:700;color:#633806;text-transform:uppercase;letter-spacing:0.3px">Expense</div>
-      <div style="font-size:13px;font-weight:800;color:#854F0B;margin-top:2px">${fmt(exp)}</div>
+    <div onclick="selectTab('myentries')" style="background:#FAEEDA;border-radius:12px;padding:10px 10px 8px;cursor:pointer">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:9px;font-weight:700;color:#633806;text-transform:uppercase;letter-spacing:0.3px">Expense / اخراج</div>
+        <span style="font-size:9px;color:#854F0B;font-weight:600">View →</span>
+      </div>
+      <div style="font-size:15px;font-weight:800;color:#854F0B;margin-top:4px">${fmt(exp)}</div>
     </div>
-    <div onclick="selectTab('transfer')" style="background:#F5EFFF;border-radius:12px;padding:9px 6px;text-align:center;cursor:pointer">
-      <div style="font-size:9px;font-weight:700;color:#4B0082;text-transform:uppercase;letter-spacing:0.3px">Transfer</div>
-      <div style="font-size:13px;font-weight:800;color:#6B21A8;margin-top:2px">${fmt(sent)}</div>
+    <div onclick="selectTab('transfer')" style="background:#F5EFFF;border-radius:12px;padding:10px 10px 8px;cursor:pointer">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:9px;font-weight:700;color:#4B0082;text-transform:uppercase;letter-spacing:0.3px">Transfer / ٹرانسفر</div>
+        <span style="font-size:9px;color:#6B21A8;font-weight:600">View →</span>
+      </div>
+      <div style="font-size:15px;font-weight:800;color:#6B21A8;margin-top:4px">${fmt(sent)}</div>
     </div>
-    <div onclick="selectTab('ledger')" style="background:#E6F1FB;border-radius:12px;padding:9px 6px;text-align:center;cursor:pointer">
-      <div style="font-size:9px;font-weight:700;color:#0C447C;text-transform:uppercase;letter-spacing:0.3px">Cash</div>
-      <div style="font-size:13px;font-weight:800;color:#185FA5;margin-top:2px">${fmt(cash)}</div>
+    <div onclick="selectTab('ledger')" style="background:#E6F1FB;border-radius:12px;padding:10px 10px 8px;cursor:pointer">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:9px;font-weight:700;color:#0C447C;text-transform:uppercase;letter-spacing:0.3px">Cash in Hand / نقدی</div>
+        <span style="font-size:9px;color:#185FA5;font-weight:600">View →</span>
+      </div>
+      <div style="font-size:15px;font-weight:800;color:#185FA5;margin-top:4px">${fmt(cash)}</div>
     </div>
   </div>
   ${!isUser&&pt>0?`<div class="info-box warning">📩 ${pt} pending transfer(s) — check Transfer tab.</div>`:''}
@@ -1382,8 +1402,8 @@ T.dash=function(){
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:6px">
       <button onclick="selectTab('contacts')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #ddd;background:#f5f5f5;cursor:pointer">
         <span style="font-size:18px">🔍</span>
-        <span style="font-size:9px;font-weight:700;color:#444">Search</span>
-        <span style="font-size:7px;color:#666;direction:rtl">تلاش</span>
+        <span style="font-size:9px;font-weight:700;color:#444">Contact List</span>
+        <span style="font-size:7px;color:#666;direction:rtl">رابطہ فہرست</span>
       </button>
       <button onclick="selectTab('bloodbank')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #FCBFBF;background:#FEF0F0;cursor:pointer">
         <span style="font-size:18px">🩸</span>
@@ -1417,8 +1437,8 @@ T.dash=function(){
       </button>
       <button onclick="window._infoCardFrom='dash';showScreen('contactScreen')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #c7d2fe;background:#f0f4ff;cursor:pointer">
         <span style="font-size:18px">📞</span>
-        <span style="font-size:9px;font-weight:700;color:#3730a3">Contact</span>
-        <span style="font-size:7px;color:#4f46e5;direction:rtl">رابطہ کریں</span>
+        <span style="font-size:9px;font-weight:700;color:#3730a3">Contact Us</span>
+        <span style="font-size:7px;color:#4f46e5;direction:rtl">ہم سے ملیں</span>
       </button>
     </div>
   </div>

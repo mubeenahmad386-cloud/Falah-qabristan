@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Falah e Qabristan</title>
 <style>
@@ -980,6 +983,11 @@ function doLogin(){
   const mobile=(document.getElementById('loginMobile').value||'').trim();
   const password=(document.getElementById('loginPassword').value||'').trim();
   if(!mobile||!password){showLoginError('Mobile number and password are required.');return;}
+  // If data not loaded yet, retry after loading
+  if(DB.users.length===0&&typeof fdb!=='undefined'&&fdb){
+    showLoginError('Loading data... please wait a moment and try again. | ڈیٹا لوڈ ہو رہا ہے...');
+    loadAllData().then(doLogin);return;
+  }
 
   const mDig=normMob(mobile);
   // Check all users including unapproved — better error messages
@@ -4063,7 +4071,7 @@ function finishExpense(desc,amount,date,area,hardcopyImg){
   popHtml+='<div style="font-size:11px;color:#888;margin-top:4px">'+newExp.date+'</div>';
   popHtml+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px">';
   popHtml+='<button onclick="closeExpSlip()" style="background:#f5f5f5;color:#555;border:1px solid #ddd;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">Close</button>';
-  popHtml+='<button data-eid="'+_savedExpId+'" onclick="closeCustomPopup();showExpenseSlip(this.dataset.eid)" style="background:#185FA5;color:#fff;border:none;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">&#128203; View Slip</button>';
+  popHtml+='<button data-eid="'+_savedExpId+'" onclick="var _eid=this.dataset.eid;closeCustomPopup();setTimeout(function(){showExpenseSlip(_eid);},150)" style="background:#185FA5;color:#fff;border:none;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">&#128203; View Slip</button>';
   popHtml+='</div></div></div>';
   showCustomPopup('<div style="display:flex;justify-content:center;padding:20px 10px">'+popHtml+'</div>');
   // Reset expense form
@@ -4088,7 +4096,10 @@ function printExpenseBill(id){
   const e=DB.expenses.find(x=>x.id===id);if(!e)return;
   const byUser=DB.users.find(u=>u.id===e.by)||{name:'Unknown',id:e.by};
   const printWin=window.open('','_blank','width=600,height=700');
-  printWin.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Expense Bill ${e.billNo}</title>
+  printWin.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0"><title>Expense Bill ${e.billNo}</title>
   <style>
     body{font-family:Arial,sans-serif;margin:0;padding:20px;color:#1a1a1a}
     .header{background:#1D9E75;color:#fff;padding:20px;text-align:center;border-radius:8px;margin-bottom:20px}
@@ -5877,6 +5888,129 @@ async function emSaveAssign(id,type){
   closeCustomPopup();
   showPopup('\u2705','Assigned','Entry assign ho gayi!',null,filterEM);
 }
+T.dailyupdate=function(){
+  if(!['admin','manager','developer'].includes(currentRole)){
+    return '<div class="card"><div style="text-align:center;padding:24px;color:#888">\u26d4 Access denied.</div></div>';
+  }
+  var from=window._duFrom||today();
+  var to=window._duTo||today();
+  return '<div class="card" id="duCard">'+
+    '<h3 style="margin-bottom:12px">&#128203; Daily Update Poster <span style="font-size:12px;color:#888;font-weight:400">&#1585;&#1608;&#1586;&#1575;&#1606;&#1729; &#1585;&#1662;&#1608;&#1585;&#1657;</span></h3>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'+
+      '<div><label style="font-size:11px;font-weight:600;color:#555;display:block;margin-bottom:4px">From Date</label>'+
+      '<input type="date" id="duFrom" value="'+from+'" onchange="window._duFrom=this.value;generateDailyPoster()" style="width:100%;padding:9px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box"></div>'+
+      '<div><label style="font-size:11px;font-weight:600;color:#555;display:block;margin-bottom:4px">To Date</label>'+
+      '<input type="date" id="duTo" value="'+to+'" onchange="window._duTo=this.value;generateDailyPoster()" style="width:100%;padding:9px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box"></div>'+
+    '</div>'+
+    '<div id="duPoster"></div>'+
+  '</div>';
+};
+
+function generateDailyPoster(){
+  var from=window._duFrom||today();
+  var to=window._duTo||today();
+  var el=document.getElementById('duPoster');if(!el)return;
+  var donations=DB.donations.filter(function(d){return d.date>=from&&d.date<=to;});
+  var expenses=DB.expenses.filter(function(e){return e.date>=from&&e.date<=to;});
+  var income=donations.reduce(function(s,x){return s+x.amount;},0);
+  var exp=expenses.reduce(function(s,x){return s+x.amount;},0);
+  var cash=income-exp;
+  var dateLabel=from===to?from:from+' \u0633\u06d2 '+to+' \u062a\u06a9';
+  var poster='<div id="duPosterContent" style="background:linear-gradient(160deg,#0a3d2e 0%,#0F6E56 50%,#1a5e4a 100%);border-radius:18px;padding:24px 20px;margin-top:10px;overflow:hidden;position:relative">'+
+    '<div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;border:2px solid rgba(255,255,255,0.05);border-radius:50%"></div>'+
+    '<div style="position:absolute;bottom:-20px;left:-20px;width:80px;height:80px;border:2px solid rgba(255,255,255,0.05);border-radius:50%"></div>'+
+    // Header
+    '<div style="text-align:center;margin-bottom:18px">'+
+      '<div style="font-size:11px;color:rgba(255,255,255,0.6);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">&#128197; '+dateLabel+'</div>'+
+      '<div style="font-size:18px;font-weight:800;color:#fff;letter-spacing:0.5px">&#1601;&#1604;&#1575;&#1581; &#1602;&#1576;&#1585;&#1587;&#1578;&#1575;&#1606; &#1705;&#1605;&#1610;&#1657;&#1740;</div>'+
+      '<div style="font-size:12px;color:rgba(255,255,255,0.7);margin-top:3px">&#1585;&#1608;&#1586;&#1575;&#1606;&#1729; &#1585;&#1662;&#1608;&#1585;&#1657; &mdash; Daily Update</div>'+
+      '<div style="width:60px;height:2px;background:rgba(255,255,255,0.3);margin:8px auto 0;border-radius:2px"></div>'+
+    '</div>'+
+    // Stats
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:18px">'+
+      '<div style="background:rgba(255,255,255,0.12);border-radius:12px;padding:12px 8px;text-align:center;border:1px solid rgba(255,255,255,0.1)">'+
+        '<div style="font-size:9px;color:rgba(255,255,255,0.65);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px">&#1570;&#1605;&#1583;&#1606; Income</div>'+
+        '<div style="font-size:18px;font-weight:800;color:#4ade80">'+fmt(income)+'</div>'+
+        '<div style="font-size:9px;color:rgba(255,255,255,0.5);margin-top:2px">Rs</div>'+
+      '</div>'+
+      '<div style="background:rgba(255,255,255,0.12);border-radius:12px;padding:12px 8px;text-align:center;border:1px solid rgba(255,255,255,0.1)">'+
+        '<div style="font-size:9px;color:rgba(255,255,255,0.65);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px">&#1575;&#1582;&#1585;&#1575;&#1580; Expense</div>'+
+        '<div style="font-size:18px;font-weight:800;color:#fb923c">'+fmt(exp)+'</div>'+
+        '<div style="font-size:9px;color:rgba(255,255,255,0.5);margin-top:2px">Rs</div>'+
+      '</div>'+
+      '<div style="background:rgba(255,255,255,0.15);border-radius:12px;padding:12px 8px;text-align:center;border:1px solid rgba(255,255,255,0.2)">'+
+        '<div style="font-size:9px;color:rgba(255,255,255,0.65);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px">&#1606;&#1602;&#1583;&#1740; Cash</div>'+
+        '<div style="font-size:18px;font-weight:800;color:#fff">'+fmt(cash)+'</div>'+
+        '<div style="font-size:9px;color:rgba(255,255,255,0.5);margin-top:2px">Rs</div>'+
+      '</div>'+
+    '</div>'+
+    // Entries count
+    '<div style="background:rgba(255,255,255,0.08);border-radius:10px;padding:10px 14px;margin-bottom:18px;display:flex;justify-content:space-between">'+
+      '<div style="font-size:11px;color:rgba(255,255,255,0.7)">&#128181; '+donations.length+' donations &bull; '+expenses.length+' expenses</div>'+
+    '</div>'+
+    // Islamic motivation
+    '<div style="background:rgba(255,255,255,0.06);border-radius:12px;padding:14px;border-right:3px solid rgba(255,255,255,0.3);text-align:right;margin-bottom:14px">'+
+      '<div style="font-size:14px;font-weight:600;color:#fef08a;direction:rtl;line-height:1.9;margin-bottom:6px">&#128204; &#1570;&#1574;&#1740;&#1722; &#1605;&#1604; &#1705;&#1585; &#1602;&#1576;&#1585;&#1587;&#1578;&#1575;&#1606; &#1705;&#1608; &#1576;&#1729;&#1578;&#1585; &#1587;&#1746; &#1576;&#1729;&#1578;&#1585; &#1576;&#1606;&#1575;&#1574;&#1740;&#1722;</div>'+
+      '<div style="font-size:12px;color:rgba(255,255,255,0.8);direction:rtl;line-height:1.8">آپ کی ہر نیکی آخرت میں نور بنائگی</div>'+
+      '<div style="font-size:11px;color:#86efac;margin-top:6px;direction:rtl">&#1580;&#1606;&#1729;&#1608;&#1722; &#1705;&#1740; &#1570;&#1585;&#1575;&#1605; &#1711;&#1575;&#1729; &mdash; &#1575;&#1604;&#1604;&#1729; &#1578;&#1593;&#1575;&#1604;&#1740;&#1657; &#1570;&#1662;&#1705;&#1608; &#1580;&#1586;&#1575;&#1626; &#1582;&#1610;&#1585; &#1593;&#1591;&#1575; &#1601;&#1585;&#1605;&#1575;&#1626;&#1746; &#1214; &#1570;&#1605;&#1740;&#1722;</div>'+
+    '</div>'+
+    // Footer
+    '<div style="text-align:center;margin-top:10px">'+
+      '<div style="font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:1px">FALAH E QABRISTAN COMMITTEE</div>'+
+    '</div>'+
+  '</div>'+
+  '<div style="display:flex;gap:8px;margin-top:10px">'+
+    '<button onclick="downloadReport(\'duPosterContent\',\'daily_update_'+from+'\',\'image\')" style="flex:1;background:#0F6E56;color:#fff;border:none;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">&#128247; Save Image</button>'+
+    '<button onclick="downloadReport(\'duPosterContent\',\'daily_update_'+from+'\',\'pdf\')" style="flex:1;background:#E24B4A;color:#fff;border:none;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">&#128196; PDF</button>'+
+  '</div>';
+  el.innerHTML=poster;
+}
+T.alldonations=function(){
+  var q=window._adQ||'';
+  var allD=[].concat(DB.donations).sort(function(a,b){return b.date.localeCompare(a.date);});
+  return '<div class="card">'+
+    '<h3 style="margin-bottom:10px">&#128181; Overall Donation History <span style="font-size:12px;color:#888;font-weight:400">&#1578;&#1605;&#1575;&#1605; &#1670;&#1606;&#1583;&#1729; &#1578;&#1575;&#1585;&#1740;&#1582;</span></h3>'+
+    '<div style="position:sticky;top:0;background:#fff;padding-bottom:8px;z-index:5">'+
+      '<div class="inp-wrap" style="margin-bottom:0">'+
+        '<span class="inp-icon">&#128269;</span>'+
+        '<input type="text" id="adQInp" value="'+q.replace(/"/g,'&quot;')+'" placeholder="Search donor name, ID, mobile or area..." oninput="window._adQ=this.value;filterAD()" autocomplete="new-password" style="font-size:13px">'+
+      '</div>'+
+    '</div>'+
+    '<div id="adBody"><p style="font-size:13px;color:#aaa;text-align:center;padding:20px">Loading...</p></div>'+
+  '</div>';
+};
+
+function filterAD(){
+  var el=document.getElementById('adBody');if(!el)return;
+  var q=(window._adQ||'').toLowerCase().trim();
+  var allD=[].concat(DB.donations).sort(function(a,b){return b.date.localeCompare(a.date);});
+  if(q){
+    allD=allD.filter(function(d){
+      var donor=DB.donors.find(function(x){return x.id===d.donorId;})||DB.users.find(function(x){return x.id===d.donorId;})||{name:'',mobile:'',area:'',id:''};
+      return (donor.name||'').toLowerCase().includes(q)||(donor.mobile||'').includes(q)||(donor.id||'').toLowerCase().includes(q)||(donor.area||'').toLowerCase().includes(q)||(d.donNo||'').toLowerCase().includes(q)||(d.amount+'').includes(q)||d.date.includes(q);
+    });
+  }
+  if(!allD.length){el.innerHTML='<p style="font-size:13px;color:#888;text-align:center;padding:20px">No donations found.</p>';return;}
+  var total=allD.reduce(function(s,x){return s+x.amount;},0);
+  var html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:8px 10px;background:#E1F5EE;border-radius:8px">';
+  html+='<span style="font-size:12px;font-weight:700;color:#085041">'+allD.length+' donations</span>';
+  html+='<span style="font-size:14px;font-weight:800;color:#0F6E56">Rs '+fmt(total)+'</span></div>';
+  allD.forEach(function(d){
+    var donor=DB.donors.find(function(x){return x.id===d.donorId;})||DB.users.find(function(x){return x.id===d.donorId;})||{name:d.donorId,photo:null,area:'',mobile:''};
+    var byU=DB.users.find(function(u){return u.id===d.by;})||{name:d.by||''};
+    var asnU=d.assignedTo?DB.users.find(function(u){return u.id===d.assignedTo;}):null;
+    var init=(donor.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+    var av=donor.photo?'<img src="'+donor.photo+'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1.5px solid #E1F5EE;flex-shrink:0">':'<div style="width:40px;height:40px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
+    html+='<div style="display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:0.5px solid #f5f5f5">';
+    html+=av;
+    html+='<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#1a1a1a">'+donor.name+'</div>';
+    html+='<div style="font-size:10px;color:#888;margin-top:1px"><span class="id-badge" style="font-size:9px">'+(d.donNo||d.id)+'</span> &bull; '+d.date+(donor.area?' &bull; '+donor.area:'')+'</div>';
+    html+='<div style="font-size:10px;color:#185FA5;margin-top:1px">by: '+byU.name+(asnU?' &rarr; '+asnU.name:'')+'</div></div>';
+    html+='<div style="font-size:14px;font-weight:800;color:#0F6E56;flex-shrink:0">Rs '+fmt(d.amount)+'</div>';
+    html+='</div>';
+  });
+  el.innerHTML=html;
+}
 T.datamanager=function(){
   return `<div class="card">
     
@@ -7534,6 +7668,7 @@ function getMenuConfig(){
   if(['admin','manager','developer'].includes(currentRole)) reports.items.push({icon:'📊', label:'Excel Export', tab:'excelexport'});
   if(['admin','manager','developer'].includes(currentRole)) reports.items.push({icon:'⭐', label:'Fundraising Stars', tab:'fundraisingstar'});
   if(['admin','manager','developer'].includes(currentRole)) reports.items.push({icon:'📋', label:'Donor Summary', tab:'donorsummary'});
+  if(['admin','manager','developer'].includes(currentRole)) reports.items.push({icon:'📋', label:'Daily Update', tab:'dailyupdate'});
 
   const donors = {
     key:'donors', title:'Donors / عطیہ دہندگان',
@@ -7542,6 +7677,7 @@ function getMenuConfig(){
       {icon:'🩸', label:'Blood Bank / بلڈ بینک', tab:'bloodbank'},
     ]
   };
+  donors.items.push({icon:'💰', label:'All Donations', tab:'alldonations'});
   if(currentRole!=='user'){
     donors.items.push(
       {icon:'✏️', label:'Donor Profile Update', tab:'donorprofileupdate'},
@@ -7613,7 +7749,7 @@ function openSubmenu(key){
   currentSubmenu = key;
 }
 
-const FORM_TABS_SET=new Set(['donation','expense','deceased','adddonor','transfer','profile','suggestion','donorprofileupdate','orgsettings','areas','professions','expcategories','approvals','lockuser','userslist','audit','datamanager','suggestions','bloodbank','smartsearch','smsreminders','complaint','complaints','contacts','superentry','notifications','excelexport','unknowndonors','missinginfo','myentries','area','balreport','expreport','entrymanager','fundraisingstar','donorsummary','ledger','usersreport','todaycollection','fundreport','top','deathcert','search','slip','donorlist','lastdonation']);
+const FORM_TABS_SET=new Set(['donation','expense','deceased','adddonor','transfer','profile','suggestion','donorprofileupdate','orgsettings','areas','professions','expcategories','approvals','lockuser','userslist','audit','datamanager','suggestions','bloodbank','smartsearch','smsreminders','complaint','complaints','contacts','superentry','alldonations','dailyupdate','notifications','excelexport','unknowndonors','missinginfo','myentries','area','balreport','expreport','entrymanager','fundraisingstar','donorsummary','ledger','usersreport','todaycollection','fundreport','top','deathcert','search','slip','donorlist','lastdonation']);
 
 function selectTab(tab){
   renderTab(tab);
@@ -7703,6 +7839,8 @@ function renderTab(key){
       missinginfo:()=>{window._miTab=window._miTab||'area';window._miSearch='';setTimeout(function(){if(window._miTab==='addedby')renderAddedByTab();else filterMI();},80);},
       unknowndonors:()=>{renderTab('unknowndonors');},
       contacts:()=>{window._contactArea='All';filterContacts('All');},
+      alldonations:()=>{window._adQ='';setTimeout(filterAD,80);},
+      dailyupdate:()=>{window._duFrom=window._duFrom||today();window._duTo=window._duTo||today();setTimeout(generateDailyPoster,80);},
       superentry:()=>{window._superEntryArea='All';filterSuperEntry('All');},
       lastdonation:()=>{window._ldArea='All';setTimeout(function(){filterLastDonation('All');},80);},
       bloodbank:()=>{window._bbArea='All';filterBloodBank('All');},
@@ -7808,7 +7946,7 @@ const TAB_LABELS={
   donorlist:'Donor List',slip:'Donor Slip',top:'Top Donors',transfer:'Transfer',
   decconfirm:'Confirm Deceased',approvals:'Approvals',lockuser:'Login Management',
   userslist:'Users List',professions:'Professions',audit:'Audit Log',areas:'Areas',
-  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',entrymanager:'Entry Manager',lastdonation:'Last Donation',excelexport:'Excel Export',entrymanager:'Entry Manager',fundraisingstar:'Fundraising Stars',donorsummary:'Donor Summary',myentries:'My Entries',unknowndonors:'Update Unknown',missinginfo:'Missing Information',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
+  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',entrymanager:'Entry Manager',lastdonation:'Last Donation',excelexport:'Excel Export',alldonations:'All Donations',dailyupdate:'Daily Update',entrymanager:'Entry Manager',fundraisingstar:'Fundraising Stars',donorsummary:'Donor Summary',myentries:'My Entries',unknowndonors:'Update Unknown',missinginfo:'Missing Information',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
 };
 
 // ============================================================
@@ -7961,6 +8099,9 @@ function _oldDownloadSlipPNG(elementId, filename){
 
   w.document.write(`<!DOCTYPE html><html><head>
 <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${filename||'slip'}</title>
 <style>
@@ -8051,6 +8192,9 @@ function downloadReport(elementId, filename, format){
   doc.open();
   doc.write(`<!DOCTYPE html><html><head>
 <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
 <title>${filename}</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}

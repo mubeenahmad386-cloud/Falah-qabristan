@@ -8106,6 +8106,8 @@ function getMenuConfig(){
   if(['manager','developer'].includes(currentRole)) forms.items.push({icon:'📋', label:'Expense / اخراجات', tab:'expense'});
   forms.items.push({icon:'⚰️', label:'Deceased / وفات', tab:'deceased'});
   if(currentRole==='admin') forms.items.push({icon:'✅', label:'Confirm / تصدیق', tab:'decconfirm'});
+  forms.items.push({icon:'📊', label:'My Entries / میری اندراجات', tab:'myentries'});
+  if(['admin','manager','developer'].includes(currentRole)) forms.items.push({icon:'🎨', label:'Death Poster / سوگوار خبر', tab:'deathposter'});
 
   const reports = {
     key:'reports', title:'Reports / رپورٹس',

@@ -6206,33 +6206,78 @@ function generateDeathPoster(){
 }
 T.renameaddedby=function(){
   if(currentRole!=='developer'){return '<div class="card"><div style="text-align:center;padding:24px;color:#888">\u26d4 Developer only.</div></div>';}
-  var users=DB.users.filter(function(u){return u.approved;});
-  var rows=users.map(function(u){
-    var count=DB.donors.filter(function(d){return d.addedBy===u.id;}).length;
-    return {u:u,count:count};
-  }).filter(function(r){return r.count>0;});
+  var rows=DB.users.filter(function(u){return u.approved;}).map(function(u){
+    return {u:u,count:DB.donors.filter(function(d){return d.addedBy===u.id;}).length};
+  }).filter(function(r){return r.count>0;}).sort(function(a,b){return b.count-a.count;});
 
   var html='<div class="card">';
-  html+='<h3 style="margin-bottom:6px">&#9998; Rename AddedBy</h3>';
-  html+='<p style="font-size:11px;color:#888;margin-bottom:14px">Agar kisi user ka naam change hua ho tu sab donors ki addedByName field update karein</p>';
+  html+='<h3 style="margin-bottom:4px">&#128100; Update AddedBy Name</h3>';
+  html+='<p style="font-size:11px;color:#888;margin-bottom:14px">Agar kisi user ka naam change hua ho, tu neeche se us user ka ID dhundh ke new naam likhein. Sab linked donors update ho jaenge.</p>';
+  
+  // ID search
+  html+='<div style="background:#F5F9FF;border-radius:10px;padding:12px;margin-bottom:16px;border:1px solid #B5D4F4">';
+  html+='<label style="font-size:12px;font-weight:700;color:#0C447C;display:block;margin-bottom:6px">User ID darein jo update karna hai:</label>';
+  html+='<div style="display:flex;gap:8px;margin-bottom:10px">';
+  html+='<input type="text" id="rabIdInp" placeholder="e.g. U-001" autocomplete="new-password" style="flex:1;padding:10px;border:1.5px solid #185FA5;border-radius:8px;font-size:13px">';
+  html+='<button onclick="_rabVerify()" style="background:#185FA5;color:#fff;border:none;padding:10px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">Verify</button>';
+  html+='</div>';
+  html+='<div id="rabVerifyResult"></div>';
+  html+='<label style="font-size:12px;font-weight:700;color:#0C447C;display:block;margin-bottom:6px;margin-top:10px">New Name (jo sab donors mein save hoga):</label>';
+  html+='<div style="display:flex;gap:8px">';
+  html+='<input type="text" id="rabNewName" placeholder="New display name" autocomplete="new-password" style="flex:1;padding:10px;border:1.5px solid #1D9E75;border-radius:8px;font-size:13px">';
+  html+='<button onclick="_rabUpdate()" style="background:#0F6E56;color:#fff;border:none;padding:10px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">Update</button>';
+  html+='</div>';
+  html+='</div>';
 
-  if(!rows.length){html+='<p style="font-size:13px;color:#888;text-align:center;padding:20px">Koi donor kisi user se linked nahi.</p></div>';return html;}
-
+  // Existing users with donors listed
+  html+='<div style="font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Current Linked Users</div>';
+  if(!rows.length){html+='<p style="font-size:13px;color:#888">Koi user kisi donor se linked nahi.</p>';}
   rows.forEach(function(r){
-    var u=r.u;
-    html+='<div style="padding:10px 0;border-bottom:0.5px solid #f0f0f0">';
-    html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">';
-    html+='<div style="flex:1"><div style="font-size:13px;font-weight:700">'+u.name+'</div><div style="font-size:10px;color:#888">'+u.id+' &bull; '+r.count+' donors</div></div>';
-    html+='</div>';
-    html+='<div style="display:flex;gap:8px;align-items:center">';
-    html+='<input type="text" id="rab_'+u.id+'" value="'+u.name.replace(/"/g,'&quot;')+'" placeholder="New display name" autocomplete="new-password" style="flex:1;padding:9px 10px;border:1.5px solid #1D9E75;border-radius:8px;font-size:13px">';
-    html+='<button data-uid="'+u.id+'" onclick="saveRenameAddedBy(this.dataset.uid)" style="background:#0F6E56;color:#fff;border:none;padding:9px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">Update</button>';
-    html+='</div>';
+    html+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid #f0f0f0">';
+    html+='<div style="flex:1"><div style="font-size:13px;font-weight:700">'+r.u.name+'</div><div style="font-size:10px;color:#888;margin-top:2px"><span class="id-badge" style="font-size:9px">'+r.u.id+'</span> &bull; '+r.count+' donors linked</div></div>';
+    html+='<button data-uid="'+r.u.id+'" data-uname="'+r.u.name.replace(/"/g,'&quot;')+'" onclick="document.getElementById(\'rabIdInp\').value=this.dataset.uid;document.getElementById(\'rabNewName\').value=this.dataset.uname;_rabVerify()" style="font-size:10px;background:#E6F1FB;color:#185FA5;border:1px solid #B5D4F4;padding:5px 10px;border-radius:7px;cursor:pointer">Select</button>';
     html+='</div>';
   });
   html+='</div>';
   return html;
 };
+
+function _rabVerify(){
+  var uid=(document.getElementById('rabIdInp')||{value:''}).value.trim();
+  var resEl=document.getElementById('rabVerifyResult');
+  if(!uid||!resEl)return;
+  var user=DB.users.find(function(u){return u.id===uid;});
+  if(!user){resEl.innerHTML='<div style="font-size:12px;color:#E24B4A;padding:6px 0">\u274c ID "'+uid+'" ka koi user nahi mila.</div>';return;}
+  var cnt=DB.donors.filter(function(d){return d.addedBy===uid;}).length;
+  var init=(user.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+  var av=user.photo?'<img src="'+user.photo+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover">':'<div style="width:32px;height:32px;border-radius:50%;background:#0F6E56;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">'+init+'</div>';
+  resEl.innerHTML='<div style="background:#E1F5EE;border-radius:8px;padding:8px 10px;display:flex;align-items:center;gap:8px">'+av+'<div><div style="font-size:13px;font-weight:700;color:#0F6E56">\u2714 '+user.name+'</div><div style="font-size:10px;color:#085041">'+cnt+' donors linked</div></div></div>';
+  if(document.getElementById('rabNewName')&&!document.getElementById('rabNewName').value)
+    document.getElementById('rabNewName').value=user.name;
+}
+
+async function _rabUpdate(){
+  var uid=(document.getElementById('rabIdInp')||{value:''}).value.trim();
+  var nm=(document.getElementById('rabNewName')||{value:''}).value.trim();
+  if(!uid){showPopup('\u26a0\ufe0f','Required','User ID darein.');return;}
+  if(!nm){showPopup('\u26a0\ufe0f','Required','New name darein.');return;}
+  var user=DB.users.find(function(u){return u.id===uid;});
+  if(!user){showPopup('\u274c','Error','User not found.');return;}
+  var affected=DB.donors.filter(function(d){return d.addedBy===uid;});
+  if(!affected.length){showPopup('\u26a0\ufe0f','None','Is user se koi donor linked nahi.');return;}
+  if(!confirm(affected.length+' donors ki addedByName "'+nm+'" kar dein?'))return;
+  showLoading(true);
+  var cnt=0;
+  for(var i=0;i<affected.length;i++){
+    affected[i].addedByName=nm;
+    try{await FS.save('donors',affected[i].id,affected[i]);cnt++;}catch(e){}
+  }
+  saveLocalCache();
+  showLoading(false);
+  showPopup('\u2705','Done!',cnt+' donors update ho gaye! addedByName = "'+nm+'"');
+  renderTab('renameaddedby');
+}
+;
 
 async function saveRenameAddedBy(userId){
   var el=document.getElementById('rab_'+userId);
@@ -6285,7 +6330,7 @@ T.wreminder=function(){
   html+='<p style="font-size:11px;color:#888;margin-bottom:10px">'+unpaid.length+' donors | '+thisMonth+' &bull; <span style="color:#0F6E56">'+Object.keys(hiddenRaw).length+' hidden</span></p>';
 
   // Search bar
-  html+='<div class="inp-wrap" style="margin-bottom:8px"><span class="inp-icon">&#128269;</span><input type="text" id="wrSearch" value="'+wrQ.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')+'" placeholder="Search name, mobile or area..." oninput="window._wrQ=this.value;filterWR()" autocomplete="new-password" style="font-size:13px"></div>';
+  html+='<div style="position:sticky;top:0;background:#fff;z-index:10;padding-bottom:6px;margin-bottom:2px"><div class="inp-wrap" style="margin-bottom:0"><span class="inp-icon">&#128269;</span><input type="text" id="wrSearch" tabindex="1" value="'+wrQ.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')+'" placeholder="Search name, mobile or area..." oninput="window._wrQ=this.value;filterWR()" autocomplete="off" style="font-size:13px;-webkit-user-select:text;user-select:text"></div></div>';
 
   // Area tabs
   html+='<div style="display:flex;gap:5px;overflow-x:auto;padding-bottom:5px;margin-bottom:10px">';
@@ -6318,6 +6363,8 @@ T.wreminder=function(){
     html+='<div style="font-size:10px;color:#888;margin-top:1px">'+d.id+' &bull; '+(d.mobile||'\u2014')+' &bull; '+(d.area||'\u2014')+'</div></div>';
     html+='<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">';
     if(waUrl)html+='<a href="'+waUrl+'" target="_blank" style="background:#25D366;color:#fff;padding:6px 10px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;text-decoration:none;text-align:center;display:block">&#128232; WA</a>';
+    var appUser=DB.users.find(function(u){return u.mobile&&d.mobile&&u.mobile.replace(/[^0-9]/g,'')===d.mobile.replace(/[^0-9]/g,'');});
+    if(appUser)html+='<button data-uid="'+appUser.id+'" data-dname="'+d.name.replace(/"/g,'&quot;')+'" onclick="wrRemindInApp(this.dataset.uid,this.dataset.dname)" style="background:#185FA5;color:#fff;border:none;padding:6px 8px;border-radius:7px;font-size:10px;font-weight:700;cursor:pointer;text-align:center">&#128276; App</button>';
     html+='<button data-hid="'+d.id+'" onclick="wrHide(this.dataset.hid)" style="background:#f5f5f5;color:#888;border:1px solid #ddd;padding:4px 8px;border-radius:7px;font-size:10px;cursor:pointer">Hide</button>';
     html+='</div></div>';
   });
@@ -6326,13 +6373,28 @@ T.wreminder=function(){
 };;
 
 function filterWR(){
-  window._wrQ=document.getElementById('wrSearch')?document.getElementById('wrSearch').value:'';
+  var el=document.getElementById('wrSearch');
+  window._wrQ=el?el.value:'';
+  var pos=el?el.selectionStart:0;
   renderTab('wreminder');
   setTimeout(function(){
-    var el=document.getElementById('wrSearch');
-    if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length);}
-  },80);
+    var inp=document.getElementById('wrSearch');
+    if(inp){
+      inp.focus();
+      try{inp.setSelectionRange(pos,pos);}catch(e){}
+    }
+  },50);
 }
+function wrRemindInApp(userId,donorName){
+  var thisMonth=today().substring(0,7);
+  var mMap={'01':'\u062c\u0646\u0648\u0631\u06cc','02':'\u0641\u0631\u0648\u0631\u06cc','03':'\u0645\u0627\u0631\u0686','04':'\u0627\u067e\u0631\u06cc\u0644','05':'\u0645\u0626\u06cc','06':'\u062c\u0648\u0646','07':'\u062c\u0648\u0644\u0627\u0626\u06cc','08':'\u0627\u06af\u0633\u062a','09':'\u0633\u062a\u0645\u0628\u0631','10':'\u0627\u06a9\u062a\u0648\u0628\u0631','11':'\u0646\u0648\u0645\u0628\u0631','12':'\u062f\u0633\u0645\u0628\u0631'};
+  var mName=mMap[thisMonth.split('-')[1]]||thisMonth;
+  var org=ORG_CONFIG.name||'Falah e Qabristan Committee';
+  var msg='\u0645\u062d\u062a\u0631\u0645 *'+donorName+'* \u0635\u0627\u062d\u0628\u060c \u0627\u0644\u0633\u0644\u0627\u0645 \u0639\u0644\u06cc\u06a9\u0645!\n\u06af\u0632\u0627\u0631\u0634 \u06c1\u06d2 \u06a9\u06c1 \u0622\u067e \u06a9\u06cc \u0645\u0627\u06c1 *'+mName+'* \u06a9\u06cc \u0627\u0645\u062f\u0627\u062f \u0627\u0628 \u062a\u06a9 *'+org+'* \u06a9\u0648 \u0645\u0648\u0635\u0648\u0644 \u0646\u06c1\u06cc\u06ba \u06c1\u0648 \u0633\u06a9\u06cc\u06d4 \u0628\u0631\u0627\u06c1 \u06a9\u0631\u0645 \u062c\u0644\u062f \u0627\u0632 \u062c\u0644\u062f \u0627\u067e\u0646\u0627 \u062d\u0635\u06c1 \u0627\u062f\u0627 \u0641\u0631\u0645\u0627\u0626\u06cc\u06ba\u06d4\n\u0635\u062f\u0642\u06c1\u0654 \u062c\u0627\u0631\u06cc\u06c1 \u06a9\u0627 \u06cc\u06c1 \u0633\u0641\u0631 \u062c\u0627\u0631\u06cc \u0631\u06a9\u06be\u06cc\u06ba\u06d4 \u062c\u0632\u0627\u06a9 \u0627\u0644\u0644\u06c1 \u062e\u06cc\u0631\u0627\u064b';
+  addNotification('reminder','\u0641\u0646\u0688 \u06cc\u0627\u062f \u062f\u06c1\u0627\u0646\u06cc',msg,userId);
+  showPopup('\u2705','Sent!',donorName+' \u06a9\u0648 app notification send ho gai!');
+}
+
 function wrHide(donorId){
   var hiddenKey='wr_hidden';
   var hiddenRaw;
@@ -6780,39 +6842,40 @@ T.missinginfo=function(){
 function renderAddedByTab(){
   var el=document.getElementById('miBody');
   if(!el)return;
-
-  var users=DB.users.filter(function(u){return u.approved&&!u.locked;});
   var selUserId=window._miAddedByUser||'';
+  var selUser=selUserId?DB.users.find(function(u){return u.id===selUserId;})||null:null;
   var missingDonors=DB.donors.filter(function(d){return !d.addedBy||!d.addedBy.trim();});
   var q=(window._miSearch||'').toLowerCase().trim();
   if(q)missingDonors=missingDonors.filter(function(d){return (d.name||'').toLowerCase().includes(q)||(d.mobile||'').includes(q)||(d.id||'').toLowerCase().includes(q);});
 
-  var userOpts=users.map(function(u){
-    return '<option value="'+u.id+'"'+(u.id===selUserId?' selected':'')+'>'+u.name+' ('+u.role+') &bull; '+(u.area||'—')+'</option>';
-  }).join('');
-
   var html='<div>';
-  // User dropdown
-  html+='<div style="margin-bottom:14px">';
-  html+='<label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:6px">Select User (Added By):</label>';
-  html+='<select id="miAddedByUserSel" onchange="window._miAddedByUser=this.value;renderAddedByTab()" style="width:100%;padding:11px 12px;border:1.5px solid #1D9E75;border-radius:10px;font-size:13px;background:#fff"><option value="">-- Select User --</option>'+userOpts+'</select>';
+  // Personal ID input
+  html+='<div style="margin-bottom:12px">';
+  html+='<label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:6px">User ka Personal ID darein (Added By):</label>';
+  html+='<div style="display:flex;gap:8px">';
+  html+='<input type="text" id="miAddedByIdInp" value="'+selUserId.replace(/"/g,'&quot;')+'" placeholder="e.g. U-001 or M001" autocomplete="new-password" style="flex:1;padding:10px 12px;border:1.5px solid #1D9E75;border-radius:10px;font-size:13px">';
+  html+='<button onclick="_miVerifyUser()" style="background:#0F6E56;color:#fff;border:none;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">Verify</button>';
+  html+='</div>';
+  if(selUser){
+    html+='<div style="margin-top:8px;background:#E1F5EE;border-radius:8px;padding:9px 12px;display:flex;align-items:center;gap:8px">';
+    var init2=(selUser.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+    html+=(selUser.photo?'<img src="'+selUser.photo+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover">':'<div style="width:32px;height:32px;border-radius:50%;background:#0F6E56;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff">'+init2+'</div>');
+    html+='<div><div style="font-size:13px;font-weight:700;color:#0F6E56">✔ '+selUser.name+'</div><div style="font-size:10px;color:#085041">'+selUser.role+' &bull; '+(selUser.area||'—')+'</div></div>';
+    html+='</div>';
+  }
   html+='</div>';
 
   if(!missingDonors.length){
-    html+='<div style="text-align:center;padding:20px;color:#0F6E56;font-size:13px;font-weight:600">&#10003; All donors have addedBy set!</div>';
-    html+='</div>';
+    html+='<div style="text-align:center;padding:20px;color:#0F6E56;font-size:13px;font-weight:600">&#10003; All donors have addedBy set!</div></div>';
     el.innerHTML=html;return;
   }
 
   html+='<div style="font-size:11px;color:#888;margin-bottom:8px">'+missingDonors.length+' donors without addedBy</div>';
-
-  // Select All + Save
   html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
   html+='<button onclick="miAddedBySelectAll()" style="padding:7px 14px;border-radius:8px;border:1px solid #1D9E75;background:#E1F5EE;color:#0F6E56;font-size:12px;font-weight:700;cursor:pointer">Select All</button>';
   html+='<button onclick="miSaveAddedBy()" style="padding:7px 18px;border-radius:8px;border:none;background:#0F6E56;color:#fff;font-size:12px;font-weight:700;cursor:pointer">&#10003; Save Selected</button>';
   html+='</div>';
 
-  // Donor list with checkboxes
   missingDonors.forEach(function(d){
     var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
     var av=d.photo?'<img src="'+d.photo+'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1.5px solid #E1F5EE;flex-shrink:0">':'<div style="width:40px;height:40px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
@@ -6825,6 +6888,17 @@ function renderAddedByTab(){
   html+='</div>';
   el.innerHTML=html;
 }
+
+function _miVerifyUser(){
+  var inp=document.getElementById('miAddedByIdInp');
+  var uid=inp?inp.value.trim():'';
+  if(!uid){showPopup('⚠️','Required','Personal ID darein.');return;}
+  var user=DB.users.find(function(u){return u.id===uid;});
+  if(!user){showPopup('❌','Not Found','ID "'+uid+'" ka koi user nahi mila.');return;}
+  window._miAddedByUser=uid;
+  renderAddedByTab();
+}
+
 
 function miAddedBySelectAll(){
   var checks=document.querySelectorAll('.mi-ab-chk');
@@ -8225,7 +8299,7 @@ function renderTab(key){
       contacts:()=>{window._contactArea='All';filterContacts('All');},
       alldonations:()=>{window._adQ='';setTimeout(filterAD,80);},
       deathposter:()=>{},
-      wreminder:()=>{window._wrArea=window._wrArea||'All';window._wrQ='';renderTab('wreminder');},
+      wreminder:()=>{window._wrArea='All';window._wrQ='';renderTab('wreminder');},
       dailyupdate:()=>{window._duFrom=window._duFrom||today();window._duTo=window._duTo||today();setTimeout(generateDailyPoster,80);},
       superentry:()=>{window._superEntryArea='All';filterSuperEntry('All');},
       lastdonation:()=>{window._ldArea='All';setTimeout(function(){filterLastDonation('All');},80);},

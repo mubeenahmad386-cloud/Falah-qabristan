@@ -884,6 +884,11 @@ function saveLoginHistory(user){
     if(hist.length>200)hist=hist.slice(0,200);
     localStorage.setItem(key,JSON.stringify(hist));
   }catch(e){}
+  // Also save to Firebase for developer view
+  if(fdb){
+    var entry={id:user.id,name:user.name,role:user.role,date:today(),time:new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit',hour12:true}),ts:Date.now(),device:navigator.userAgent.includes('iPhone')?'iPhone':navigator.userAgent.includes('Android')?'Android':'Desktop'};
+    fdb.collection('loginHistory').add(entry).catch(function(){});
+  }
 }
 function getLoginHistory(){
   try{return JSON.parse(localStorage.getItem('fq_login_history')||'[]');}catch(e){return [];}
@@ -994,7 +999,7 @@ function doLogin(){
   const user=DB.users.find(u=>normMob(u.mobile)===mDig&&u.password===password&&u.approved);
   if(user){
     if(user.locked){showLoginError('Your login is locked. Contact the developer.');return;}
-    hideLoginError();currentUser=user;currentRole=user.role;saveSession();saveLoginHistory(user);loadDashboard();return;
+    hideLoginError();currentUser=user;currentRole=user.role;saveSession();saveLoginHistory(user);loadDashboard();loadUserNotifications(user.id);return;
   }
   const wrongPwd=DB.users.find(u=>normMob(u.mobile)===mDig&&u.approved);
   if(wrongPwd){showLoginError('Incorrect password. Please try again. | پاس ورڈ غلط ہے');return;}
@@ -1006,7 +1011,7 @@ function doLogin(){
   const userCaseInsensitive=DB.users.find(u=>normMob(u.mobile)===mDig&&(u.password||'').toLowerCase()===(password||'').toLowerCase()&&u.approved);
   if(userCaseInsensitive){
     if(userCaseInsensitive.locked){showLoginError('Your login is locked.');return;}
-    hideLoginError();currentUser=userCaseInsensitive;currentRole=userCaseInsensitive.role;saveSession();saveLoginHistory(userCaseInsensitive);loadDashboard();return;
+    hideLoginError();currentUser=userCaseInsensitive;currentRole=userCaseInsensitive.role;saveSession();saveLoginHistory(userCaseInsensitive);loadDashboard();loadUserNotifications(userCaseInsensitive.id);return;
   }
   showPopup('❌','User Not Found','No account found with this mobile number. | یہ موبائل نمبر رجسٹرڈ نہیں ہے','Create Account',()=>showScreen('regRoleScreen'));
 }
@@ -6082,31 +6087,34 @@ function filterAD(){
 }
 T.deathposter=function(){
   return '<div class="card">'+
-    '<h3 style="margin-bottom:4px">&#127754; Death Poster / \u0633\u0648\u06af\u0648\u0627\u0631 \u062e\u0628\u0631</h3>'+
-    '<p style="font-size:11px;color:#888;margin-bottom:14px">\u0645\u0631\u062d\u0648\u0645 \u06a9\u06cc \u0645\u0639\u0644\u0648\u0645\u0627\u062a \u062f\u0631\u062c \u06a9\u0631\u06cc\u06ba \u2014 \u067e\u0648\u0633\u0679\u0631 \u062a\u06cc\u0627\u0631 \u06c1\u0648 \u062c\u0627\u0626\u06d2 \u06af\u0627</p>'+
-    '<label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">\u0645\u0631\u062d\u0648\u0645 \u06a9\u0627 \u0646\u0627\u0645 *</label>'+
-    '<input type="text" id="dpName" placeholder="\u067e\u0648\u0631\u0627 \u0646\u0627\u0645 \u0644\u06a9\u06be\u06cc\u06ba" autocomplete="new-password" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:14px;box-sizing:border-box;margin-bottom:10px">'+
-    '<label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">\u0648\u0627\u0644\u062f \u06a9\u0627 \u0646\u0627\u0645</label>'+
-    '<input type="text" id="dpFather" placeholder="\u0648\u0627\u0644\u062f / \u0634\u0648\u06c1\u0631 / \u0648\u0644\u06cc \u06a9\u0627 \u0646\u0627\u0645" autocomplete="new-password" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:10px">'+
-    '<label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">\u0639\u0644\u0627\u0642\u06c1</label>'+
-    '<select id="dpArea" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:10px">'+
-      '<option value="">-- \u0639\u0644\u0627\u0642\u06c1 \u0645\u0646\u062a\u062e\u0628 \u06a9\u0631\u06cc\u06ba --</option>'+
-      AREAS.map(function(a){return '<option value="'+a+'">'+a+'</option>';}).join('')+
-    '</select>'+
+    '<h3 style="margin-bottom:4px">&#127754; Death Poster</h3>'+
+    '<p style="font-size:11px;color:#888;margin-bottom:14px">\u0645\u0631\u062d\u0648\u0645 \u06a9\u06cc \u0645\u0639\u0644\u0648\u0645\u0627\u062a \u062f\u0631\u062c \u06a9\u0631\u06cc\u06ba</p>'+
+    '<label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">\u0645\u0631\u062d\u0648\u0645 \u06a9\u0627 \u0646\u0627\u0645 *</label>'+
+    '<input type="text" id="dpName" placeholder="\u067e\u0648\u0631\u0627 \u0646\u0627\u0645" autocomplete="new-password" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:14px;box-sizing:border-box;margin-bottom:10px">'+
+    '<label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">\u0648\u0627\u0644\u062f / \u0648\u0644\u06cc \u06a9\u0627 \u0646\u0627\u0645</label>'+
+    '<input type="text" id="dpFather" placeholder="\u0648\u0627\u0644\u062f \u06cc\u0627 \u0634\u0648\u06c1\u0631 \u06a9\u0627 \u0646\u0627\u0645" autocomplete="new-password" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:10px">'+
+    '<label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">\u0631\u06cc\u0645\u0627\u0631\u06a9\u0633 (\u0645\u0631\u062d\u0648\u0645 \u06a9\u06d2 \u0628\u0627\u0631\u06d2 \u0645\u06cc\u06ba)</label>'+
+    '<input type="text" id="dpRemarks" placeholder="\u0645\u062b\u0644\u0627\u064b: \u0628\u06cc\u0679\u06d2 \u062e\u0627\u0644\u062f \u06a9\u06d2 \u0648\u0627\u0644\u062f \u06c1\u06cc\u06ba" autocomplete="off" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:10px">'+
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'+
-      '<div><label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">\u0627\u0646\u062a\u0642\u0627\u0644 \u06a9\u06cc \u062a\u0627\u0631\u06cc\u062e *</label>'+
+      '<div><label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">\u0639\u0644\u0627\u0642\u06c1</label>'+
+      '<select id="dpArea" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box"><option value="">-- \u0639\u0644\u0627\u0642\u06c1 --</option>'+AREAS.map(function(a){return '<option value="'+a+'">'+a+'</option>';}).join('')+'</select></div>'+
+      '<div><label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">\u062a\u0627\u0631\u06cc\u062e \u0627\u0646\u062a\u0642\u0627\u0644 *</label>'+
       '<input type="date" id="dpDate" value="'+today()+'" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box"></div>'+
-      '<div><label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">\u0646\u0645\u0627\u0632 \u062c\u0646\u0627\u0632\u06c1 \u06a9\u0627 \u0648\u0642\u062a</label>'+
-      '<input type="text" id="dpTime" placeholder="\u0645\u062b\u0644\u0627\u064b 10:00 AM \u0628\u0639\u062f \u0646\u0645\u0627\u0632 \u0638\u06c1\u0631" autocomplete="off" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box"></div>'+
     '</div>'+
-    '<label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">\u0646\u0645\u0627\u0632 \u062c\u0646\u0627\u0632\u06c1 \u0643\u06cc \u062c\u06af\u06c1</label>'+
-    '<input type="text" id="dpPlace" placeholder="\u0645\u062b\u0644\u0627\u064b \u062c\u0627\u0645\u0639 \u0645\u0633\u062c\u062f \u0628\u0648\u063a\u06be\u0627\u0646\u06cc" autocomplete="off" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:10px">'+
-    '<label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">\u0644\u0648\u0627\u062d\u0642\u06cc\u0646 / \u0631\u0627\u0628\u0637\u06c1 \u0646\u0645\u0628\u0631\u0627\u062a (optional)</label>'+
+    '<label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">\u0645\u0646\u0648\u0627\u0644 \u067e\u062a\u06c1 (optional)</label>'+
+    '<input type="text" id="dpAddress" placeholder="\u0645\u06a9\u0627\u0646 \u0646\u0645\u0628\u0631, \u06af\u0644\u06cc, \u0645\u062d\u0644\u06c1..." autocomplete="off" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:10px">'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'+
+      '<div><label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">\u0646\u0645\u0627\u0632 \u062c\u0646\u0627\u0632\u06c1 \u06a9\u0627 \u0648\u0642\u062a</label>'+
+      '<input type="text" id="dpTime" placeholder="\u0628\u0639\u062f \u0646\u0645\u0627\u0632 \u0638\u06c1\u0631" autocomplete="off" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box"></div>'+
+      '<div><label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">\u0646\u0645\u0627\u0632 \u062c\u0646\u0627\u0632\u06c1 \u06a9\u06cc \u062c\u06af\u06c1</label>'+
+      '<input type="text" id="dpPlace" placeholder="\u062c\u0627\u0645\u0639 \u0645\u0633\u062c\u062f..." autocomplete="off" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box"></div>'+
+    '</div>'+
+    '<label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">\u0644\u0648\u0627\u062d\u0642\u06cc\u0646 / \u0631\u0627\u0628\u0637\u06c1 \u0646\u0645\u0628\u0631\u0627\u062a (optional)</label>'+
     '<textarea id="dpRefs" rows="2" placeholder="\u0645\u062b\u0644\u0627\u064b Muhammad Ali: 0300-1234567" style="resize:none;font-size:12px;margin-bottom:14px"></textarea>'+
     '<button onclick="generateDeathPoster()" style="width:100%;background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;border:none;padding:13px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">&#127754; Poster Tayar Karein</button>'+
     '<div id="dpPosterWrap" style="margin-top:14px"></div>'+
   '</div>';
-};
+};;
 
 function _dpDownload(type){
   var nm=document.getElementById('dpName');
@@ -6114,96 +6122,117 @@ function _dpDownload(type){
   downloadReport('dpPosterContent',fn,type);
 }
 function generateDeathPoster(){
-  var name=document.getElementById('dpName').value.trim();
-  var father=document.getElementById('dpFather').value.trim();
-  var area=document.getElementById('dpArea').value;
-  var date=document.getElementById('dpDate').value;
-  var time=document.getElementById('dpTime').value.trim();
-  var place=document.getElementById('dpPlace').value.trim();
-  var refs=document.getElementById('dpRefs').value.trim();
+  var name=(document.getElementById('dpName')||{value:''}).value.trim();
+  var father=(document.getElementById('dpFather')||{value:''}).value.trim();
+  var remarks=(document.getElementById('dpRemarks')||{value:''}).value.trim();
+  var area=(document.getElementById('dpArea')||{value:''}).value;
+  var address=(document.getElementById('dpAddress')||{value:''}).value.trim();
+  var date=(document.getElementById('dpDate')||{value:today()}).value;
+  var time=(document.getElementById('dpTime')||{value:''}).value.trim();
+  var place=(document.getElementById('dpPlace')||{value:''}).value.trim();
+  var refs=(document.getElementById('dpRefs')||{value:''}).value.trim();
   if(!name){showPopup('\u26a0\ufe0f','Required','Marhoom ka naam darj karein.');return;}
-  
+
   var org=ORG_CONFIG.name||'Falah e Qabristan Committee';
-  var orgUr=ORG_CONFIG.urduName||'\u0641\u0644\u0627\u062d \u0642\u0628\u0631\u0633\u062a\u0627\u0646 \u06a9\u0645\u06cc\u0679\u06cc';
   var logo=ORG_CONFIG.logo||'';
   var fullAddr=ORG_CONFIG.fullAddress||ORG_CONFIG.address||'';
 
-  // Format date in Urdu style
   var dObj=new Date(date);
   var months=['\u062c\u0646\u0648\u0631\u06cc','\u0641\u0631\u0648\u0631\u06cc','\u0645\u0627\u0631\u0686','\u0627\u067e\u0631\u06cc\u0644','\u0645\u0626\u06cc','\u062c\u0648\u0646','\u062c\u0648\u0644\u0627\u0626\u06cc','\u0627\u06af\u0633\u062a','\u0633\u062a\u0645\u0628\u0631','\u0627\u06a9\u062a\u0648\u0628\u0631','\u0646\u0648\u0645\u0628\u0631','\u062f\u0633\u0645\u0628\u0631'];
   var dateStr=dObj.getDate()+' '+months[dObj.getMonth()]+' '+dObj.getFullYear();
 
-  // Build refs HTML
   var refsHtml='';
   if(refs){
-    refsHtml='<div style="margin-top:12px;padding:10px 14px;background:rgba(255,255,255,0.06);border-radius:8px;text-align:right">'+
-      '<div style="font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">Lawahiqeen / \u0644\u0648\u0627\u062d\u0642\u06cc\u0646</div>'+
-      refs.split('\n').map(function(r){return '<div style="font-size:12px;color:rgba(255,255,255,0.8);margin-top:3px">'+r+'</div>';}).join('')+
+    refsHtml='<div style="margin-top:10px;padding:9px 12px;background:rgba(255,255,255,0.06);border-radius:8px;text-align:right">'+
+      '<div style="font-size:9px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px">\u0644\u0648\u0627\u062d\u0642\u06cc\u0646</div>'+
+      refs.split('\n').map(function(r){return r.trim()?'<div style="font-size:11px;color:rgba(255,255,255,0.75);margin-top:3px">'+r+'</div>':'';}).join('')+
     '</div>';
   }
 
-  var poster='<div id="dpPosterContent" style="background:linear-gradient(170deg,#0d1117 0%,#1a1a2e 40%,#16213e 100%);border-radius:18px;padding:24px 20px;overflow:hidden;position:relative">'+
-    // Decorative circles
-    '<div style="position:absolute;top:-40px;right:-40px;width:150px;height:150px;border:1.5px solid rgba(255,255,255,0.04);border-radius:50%"></div>'+
-    '<div style="position:absolute;bottom:-30px;left:-30px;width:100px;height:100px;border:1.5px solid rgba(255,255,255,0.04);border-radius:50%"></div>'+
-    // Bismillah
-    '<div style="text-align:center;font-size:16px;color:rgba(255,215,0,0.8);margin-bottom:12px;font-family:serif;direction:rtl">\u0628\u0650\u0633\u0652\u0645\u0650 \u0627\u0644\u0644\u0651\u06c1\u0650 \u0627\u0644\u0631\u0651\u064e\u062d\u0652\u0645\u064e\u0646\u0650 \u0627\u0644\u0631\u0651\u064e\u062d\u0650\u064a\u0645\u0650</div>'+
-    // Inna Lillahi
-    '<div style="text-align:center;margin-bottom:16px">'+
-      '<div style="font-size:18px;color:#c8a96e;font-family:serif;direction:rtl;line-height:1.8">\u0625\u0650\u0646\u0651\u064e\u0627 \u0644\u0650\u0644\u0651\u06c1\u0650 \u0648\u064e\u0625\u0650\u0646\u0651\u064e\u0627 \u0625\u0650\u0644\u064e\u064a\u0652\u06c1\u0650 \u0631\u064e\u0627\u062c\u0650\u0639\u064f\u0648\u0646\u064e</div>'+
-      '<div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:3px">\u0628\u06cc\u0634\u06a9 \u06c1\u0645 \u0627\u0644\u0644\u06c1 \u06a9\u06d2 \u06c1\u06cc\u06ba \u0627\u0648\u0631 \u0627\u0633\u06cc \u06a9\u06cc \u0637\u0631\u0641 \u0644\u0648\u0679\u0646\u06d2 \u0648\u0627\u0644\u06d2 \u06c1\u06cc\u06ba</div>'+
-    '</div>'+
-    // Org header with logo
-    '<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.1)">'+
-      (logo?'<img src="'+logo+'" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid rgba(200,169,110,0.5)">':'')+
-      '<div style="text-align:center">'+
-        '<div style="font-size:14px;font-weight:800;color:#c8a96e;letter-spacing:0.5px">'+org+'</div>'+
-        (orgUr?'<div style="font-size:12px;color:rgba(200,169,110,0.8);direction:rtl;margin-top:2px">'+orgUr+'</div>':'')+
-      '</div>'+
-    '</div>'+
-    // Sad news header
-    '<div style="text-align:center;margin-bottom:18px">'+
-      '<div style="background:rgba(200,169,110,0.12);border:1px solid rgba(200,169,110,0.3);border-radius:8px;padding:7px 16px;display:inline-block;margin-bottom:12px">'+
-        '<div style="font-size:11px;color:#c8a96e;font-weight:700;letter-spacing:2px;text-transform:uppercase">Sad News / \u0633\u0648\u06af\u0648\u0627\u0631 \u062e\u0628\u0631</div>'+
-      '</div>'+
-      '<div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:0.3px;margin-bottom:4px">'+name+'</div>'+
-      (father?'<div style="font-size:13px;color:rgba(255,255,255,0.65);direction:rtl">\u0648\u0627\u0644\u062f: '+father+'</div>':'')+
-      (area?'<div style="font-size:12px;color:rgba(200,169,110,0.7);margin-top:4px">&#128205; '+area+'</div>':'')+
-    '</div>'+
-    // Janaza details
-    '<div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:14px;margin-bottom:12px">'+
-      '<div style="text-align:center;font-size:11px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Namaz-e-Janaza / \u0646\u0645\u0627\u0632 \u062c\u0646\u0627\u0632\u06c1</div>'+
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
-        '<div style="text-align:center;padding:8px;background:rgba(255,255,255,0.05);border-radius:8px">'+
-          '<div style="font-size:9px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Date / \u062a\u0627\u0631\u06cc\u062e</div>'+
-          '<div style="font-size:13px;font-weight:700;color:#fff">'+dateStr+'</div>'+
-        '</div>'+
-        (time?'<div style="text-align:center;padding:8px;background:rgba(255,255,255,0.05);border-radius:8px">'+
-          '<div style="font-size:9px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">Time / \u0648\u0642\u062a</div>'+
-          '<div style="font-size:13px;font-weight:700;color:#fff;direction:rtl">'+time+'</div>'+
-        '</div>':'')+
-      '</div>'+
-      (place?'<div style="text-align:center;margin-top:8px;padding:8px;background:rgba(255,255,255,0.05);border-radius:8px">'+
-        '<div style="font-size:9px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">Venue / \u062c\u06af\u06c1</div>'+
-        '<div style="font-size:12px;color:#fff;direction:rtl">'+place+'</div>'+
-      '</div>':'')+
-    '</div>'+
-    refsHtml+
-    // Dua
-    '<div style="text-align:center;margin:14px 0;padding:10px;border-top:1px solid rgba(255,255,255,0.08);border-bottom:1px solid rgba(255,255,255,0.08)">'+
-      '<div style="font-size:13px;color:#c8a96e;direction:rtl;line-height:1.9">\u0627\u0644\u0644\u06c1 \u062a\u0639\u0627\u0644\u06cc\u0670 \u0645\u0631\u062d\u0648\u0645 \u06a9\u06cc \u0645\u063a\u0641\u0631\u062a \u0641\u0631\u0645\u0627\u0626\u06cc\u06ba \u060c \u062c\u0646\u062a \u0627\u0644\u0641\u0631\u062f\u0648\u0633 \u0645\u06cc\u06ba \u0627\u0639\u0644\u06cc\u0670 \u0645\u0642\u0627\u0645 \u0639\u0637\u0627 \u0641\u0631\u0645\u0627\u0626\u06cc\u06ba</div>'+
-      '<div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:5px;direction:rtl">\u0627\u0648\u0631 \u0633\u0648\u06af\u0648\u0627\u0631\u0648\u06ba \u06a9\u0648 \u0635\u0628\u0631 \u062c\u0645\u06cc\u0644 \u0639\u0637\u0627 \u0641\u0631\u0645\u0627\u0626\u06cc\u06ba \u06d4 \u0622\u0645\u06cc\u06ba</div>'+
-    '</div>'+
-    // Footer
-    (fullAddr?'<div style="text-align:center;font-size:10px;color:rgba(255,255,255,0.35);direction:rtl;margin-top:8px">'+fullAddr+'</div>':'')+
-  '</div>'+
-  '<div style="display:flex;gap:8px;margin-top:10px">'+
-    '<button data-dltype="image" onclick="_dpDownload(this.dataset.dltype)" style="flex:1;background:#1a1a2e;color:#c8a96e;border:1px solid #c8a96e;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">&#128247; Image Download</button>'+
-    '<button data-dltype="pdf" onclick="_dpDownload(this.dataset.dltype)" style="flex:1;background:#E24B4A;color:#fff;border:none;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">&#128196; PDF</button>'+
-  '</div>';
+  // Width 400px for WhatsApp share size
+  var poster='<div id="dpPosterContent" style="width:400px;max-width:100%;background:#0d1117;border-radius:14px;overflow:hidden;font-family:Georgia,serif">';
+  
+  // ── Top header: اطلاع عام ──
+  poster+='<div style="background:linear-gradient(135deg,#1a1a2e,#16213e);padding:16px 20px 14px;text-align:center;border-bottom:1px solid rgba(200,169,110,0.25)">';
+  poster+='<div style="font-size:28px;font-weight:900;color:#c8a96e;letter-spacing:1px;direction:rtl;line-height:1.2">\u0627\u0637\u0644\u0627\u0639 \u0639\u0627\u0645</div>';
+  poster+='</div>';
+  
+  // ── Inna Lillahi ──
+  poster+='<div style="background:#111827;padding:10px 20px;text-align:center;border-bottom:1px solid rgba(200,169,110,0.15)">';
+  poster+='<div style="font-size:15px;color:#c8a96e;direction:rtl;line-height:1.8">\u0625\u0650\u0646\u0651\u064e\u0627 \u0644\u0650\u0644\u0651\u06c1\u0650 \u0648\u064e\u0625\u0650\u0646\u0651\u064e\u0627 \u0625\u0650\u0644\u064e\u064a\u0652\u06c1\u0650 \u0631\u064e\u0627\u062c\u0650\u0639\u064f\u0648\u0646\u064e</div>';
+  poster+='</div>';
+
+  // ── Org header ──
+  poster+='<div style="display:flex;align-items:center;justify-content:center;gap:10px;padding:12px 20px;border-bottom:1px solid rgba(255,255,255,0.07)">';
+  if(logo)poster+='<img src="'+logo+'" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(200,169,110,0.4)">';
+  poster+='<div style="text-align:center"><div style="font-size:13px;font-weight:800;color:#c8a96e">'+org+'</div></div>';
+  poster+='</div>';
+
+  // ── Marhoom main block ──
+  poster+='<div style="padding:18px 20px 14px;text-align:center;background:#0d1117">';
+  poster+='<div style="font-size:24px;font-weight:900;color:#fff;letter-spacing:0.3px;margin-bottom:4px">'+name+'</div>';
+  if(father)poster+='<div style="font-size:13px;color:rgba(255,255,255,0.6);direction:rtl;margin-bottom:4px">\u0648\u0627\u0644\u062f: '+father+'</div>';
+  if(remarks)poster+='<div style="font-size:12px;color:rgba(200,169,110,0.75);direction:rtl;margin-bottom:4px;font-style:italic">'+remarks+'</div>';
+  if(area||address){
+    poster+='<div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px">';
+    if(area)poster+='\uD83D\uDCCD '+area;
+    if(area&&address)poster+=' \u2014 ';
+    if(address)poster+=address;
+    poster+='</div>';
+  }
+  poster+='</div>';
+
+  // ── Namaz e Janaza details ──
+  poster+='<div style="background:rgba(255,255,255,0.04);margin:0 14px 14px;border-radius:10px;padding:12px;border:1px solid rgba(255,255,255,0.08)">';
+  poster+='<div style="text-align:center;font-size:10px;color:rgba(200,169,110,0.6);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">\u0646\u0645\u0627\u0632 \u062c\u0646\u0627\u0632\u06c1</div>';
+  poster+='<div style="display:grid;grid-template-columns:1fr'+(time?' 1fr':'')+';gap:8px">';
+  poster+='<div style="text-align:center;padding:8px;background:rgba(255,255,255,0.05);border-radius:7px">';
+  poster+='<div style="font-size:8px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">\u062a\u0627\u0631\u06cc\u062e</div>';
+  poster+='<div style="font-size:12px;font-weight:700;color:#fff">'+dateStr+'</div>';
+  poster+='</div>';
+  if(time){
+    poster+='<div style="text-align:center;padding:8px;background:rgba(255,255,255,0.05);border-radius:7px">';
+    poster+='<div style="font-size:8px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">\u0648\u0642\u062a</div>';
+    poster+='<div style="font-size:12px;font-weight:700;color:#fff;direction:rtl">'+time+'</div>';
+    poster+='</div>';
+  }
+  poster+='</div>';
+  if(place){
+    poster+='<div style="text-align:center;margin-top:8px;padding:8px;background:rgba(255,255,255,0.05);border-radius:7px">';
+    poster+='<div style="font-size:8px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">\u062c\u06af\u06c1</div>';
+    poster+='<div style="font-size:12px;color:#fff;direction:rtl">'+place+'</div>';
+    poster+='</div>';
+  }
+  poster+='</div>';
+
+  refsHtml=refsHtml?'<div style="margin:0 14px 14px">'+refsHtml+'</div>':'';
+  poster+=refsHtml;
+
+  // ── Invitation to attend ──
+  poster+='<div style="margin:0 14px 14px;background:rgba(200,169,110,0.08);border-radius:10px;padding:12px 14px;border-right:3px solid #c8a96e;text-align:right">';
+  poster+='<div style="font-size:12px;color:rgba(255,255,255,0.85);direction:rtl;line-height:1.9">\u062a\u0645\u0627\u0645 \u0627\u062d\u0628\u0627\u0628 \u0633\u06d2 \u06af\u0632\u0627\u0631\u0634 \u06c1\u06d2 \u06a9\u06c1 \u0646\u0645\u0627\u0632 \u062c\u0646\u0627\u0632\u06c1 \u0645\u06cc\u06ba \u0644\u0627\u0632\u0645\u06cc \u0634\u0631\u06a9\u062a \u0641\u0631\u0645\u0627\u0626\u06cc\u06ba \u0627\u0648\u0631 \u062f\u0639\u0627\u0626\u06d2 \u062f\u06cc\u06ba\u06d4</div>';
+  poster+='</div>';
+
+  // ── Dua ──
+  poster+='<div style="text-align:center;padding:10px 20px;border-top:1px solid rgba(255,255,255,0.07);border-bottom:1px solid rgba(255,255,255,0.07);margin-bottom:12px">';
+  poster+='<div style="font-size:13px;color:#c8a96e;direction:rtl;line-height:2">\u0627\u0644\u0644\u06c1 \u062a\u0639\u0627\u0644\u06cc\u0670 \u0645\u0631\u062d\u0648\u0645 \u06a9\u06cc \u0645\u063a\u0641\u0631\u062a \u0641\u0631\u0645\u0627\u0626\u06cc\u06ba \u060c \u062c\u0646\u062a \u0627\u0644\u0641\u0631\u062f\u0648\u0633 \u0645\u06cc\u06ba \u0627\u0639\u0644\u06cc\u0670 \u0645\u0642\u0627\u0645 \u0639\u0637\u0627 \u0641\u0631\u0645\u0627\u0626\u06cc\u06ba</div>';
+  poster+='<div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px;direction:rtl">\u0627\u0648\u0631 \u0633\u0648\u06af\u0648\u0627\u0631\u0648\u06ba \u06a9\u0648 \u0635\u0628\u0631 \u062c\u0645\u06cc\u0644 \u0639\u0637\u0627 \u0641\u0631\u0645\u0627\u0626\u06cc\u06ba \u06d4 \u0622\u0645\u06cc\u06ba</div>';
+  poster+='</div>';
+
+  // ── Footer ──
+  if(fullAddr)poster+='<div style="text-align:center;font-size:9px;color:rgba(255,255,255,0.25);padding:0 16px 12px;direction:rtl">'+fullAddr+'</div>';
+  poster+='</div>';
+
+  // Download buttons
+  poster+='<div style="display:flex;gap:8px;margin-top:10px">';
+  poster+='<button data-dt="image" onclick="_dpDownload(this.dataset.dt)" style="flex:1;background:#1a1a2e;color:#c8a96e;border:1px solid #c8a96e;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">&#128247; Image</button>';
+  poster+='<button data-dt="pdf" onclick="_dpDownload(this.dataset.dt)" style="flex:1;background:#E24B4A;color:#fff;border:none;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">&#128196; PDF</button>';
+  poster+='</div>';
+
   document.getElementById('dpPosterWrap').innerHTML=poster;
   document.getElementById('dpPosterWrap').scrollIntoView({behavior:'smooth'});
 }
+
 T.renameaddedby=function(){
   if(currentRole!=='developer'){return '<div class="card"><div style="text-align:center;padding:24px;color:#888">\u26d4 Developer only.</div></div>';}
   var rows=DB.users.filter(function(u){return u.approved;}).map(function(u){
@@ -6275,7 +6304,7 @@ async function _rabUpdate(){
   saveLocalCache();
   showLoading(false);
   showPopup('\u2705','Done!',cnt+' donors update ho gaye! addedByName = "'+nm+'"');
-  renderTab('renameaddedby');
+  renderTab('renameaddedby','loginreport');
 }
 ;
 
@@ -6295,6 +6324,84 @@ async function saveRenameAddedBy(userId){
   saveLocalCache();
   showLoading(false);
   showPopup('\u2705','Updated',cnt+' donors update ho gaye!');
+}
+T.loginreport=function(){
+  if(currentRole!=='developer'){return '<div class="card"><div style="text-align:center;padding:24px;color:#888">\u26d4 Developer only.</div></div>';}
+  var from=window._lrFrom||today();
+  var to=window._lrTo||today();
+  return '<div class="card">'+
+    '<h3 style="margin-bottom:4px">&#128203; Daily Login Report</h3>'+
+    '<p style="font-size:11px;color:#888;margin-bottom:12px">Kis user ne kab kab login kiya</p>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'+
+      '<div><label style="font-size:11px;font-weight:600;color:#555;display:block;margin-bottom:3px">From Date</label>'+
+      '<input type="date" id="lrFrom" value="'+from+'" onchange="window._lrFrom=this.value;renderLoginReport()" style="width:100%;padding:9px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box"></div>'+
+      '<div><label style="font-size:11px;font-weight:600;color:#555;display:block;margin-bottom:3px">To Date</label>'+
+      '<input type="date" id="lrTo" value="'+to+'" onchange="window._lrTo=this.value;renderLoginReport()" style="width:100%;padding:9px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box"></div>'+
+    '</div>'+
+    '<div id="lrBody"><div style="text-align:center;padding:20px;color:#888;font-size:13px">Loading...</div></div>'+
+  '</div>';
+};
+
+function renderLoginReport(){
+  var el=document.getElementById('lrBody');
+  if(!el)return;
+  var from=window._lrFrom||today();
+  var to=window._lrTo||today();
+  el.innerHTML='<div style="text-align:center;padding:16px;color:#888;font-size:12px">&#128197; Loading from Firebase...</div>';
+  if(!fdb){el.innerHTML='<p style="color:#E24B4A;font-size:13px">Firebase not connected.</p>';return;}
+  fdb.collection('loginHistory')
+    .where('date','>=',from)
+    .where('date','<=',to)
+    .orderBy('date','desc')
+    .orderBy('ts','desc')
+    .limit(200)
+    .get()
+    .then(function(snap){
+      var entries=[];
+      snap.forEach(function(doc){entries.push(doc.data());});
+      if(!entries.length){el.innerHTML='<p style="text-align:center;padding:16px;color:#888;font-size:13px">Is range mein koi login nahi mila.</p>';return;}
+      // Group by date
+      var byDate={};
+      entries.forEach(function(e){
+        if(!byDate[e.date])byDate[e.date]=[];
+        byDate[e.date].push(e);
+      });
+      var html='<div style="background:#E1F5EE;border-radius:8px;padding:8px 12px;margin-bottom:12px;display:flex;justify-content:space-between"><span style="font-size:12px;font-weight:700;color:#085041">'+entries.length+' total logins</span><span style="font-size:12px;color:#0F6E56">'+Object.keys(byDate).length+' days</span></div>';
+      Object.keys(byDate).sort().reverse().forEach(function(date){
+        var dayEntries=byDate[date];
+        html+='<div style="margin-bottom:14px">';
+        html+='<div style="font-size:11px;font-weight:700;color:#185FA5;background:#E6F1FB;padding:5px 10px;border-radius:6px;margin-bottom:8px">&#128197; '+date+' &mdash; '+dayEntries.length+' logins</div>';
+        // Group by user for this day
+        var byUser={};
+        dayEntries.forEach(function(e){
+          var key=e.id;
+          if(!byUser[key])byUser[key]={name:e.name,role:e.role,times:[],device:e.device};
+          byUser[key].times.push(e.time);
+        });
+        Object.keys(byUser).forEach(function(uid){
+          var u=byUser[uid];
+          var init=u.name.split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+          var uObj=DB.users.find(function(x){return x.id===uid;})||{photo:null};
+          var av=uObj.photo?'<img src="'+uObj.photo+'" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:1.5px solid #E1F5EE;flex-shrink:0">':'<div style="width:34px;height:34px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
+          var devIcon=u.device==='iPhone'?'&#127820;':u.device==='Android'?'&#129354;':'&#128187;';
+          html+='<div style="display:flex;align-items:flex-start;gap:9px;padding:8px 0;border-bottom:0.5px solid #f5f5f5">'+av;
+          html+='<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#1a1a1a">'+u.name+'</div>';
+          html+='<div style="font-size:10px;color:#888;margin-top:1px">'+devIcon+' '+u.device+' &bull; <span class="id-badge" style="font-size:9px">'+uid+'</span> &bull; '+u.role+'</div>';
+          html+='<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:5px">';
+          u.times.forEach(function(t){
+            html+='<span style="background:#E6F1FB;color:#0C447C;border-radius:12px;padding:2px 8px;font-size:10px;font-weight:600">'+t+'</span>';
+          });
+          html+='</div></div>';
+          html+='<div style="font-size:18px;font-weight:900;color:#0F6E56;flex-shrink:0">'+u.times.length+'&#215;</div>';
+          html+='</div>';
+        });
+        html+='</div>';
+      });
+      el.innerHTML=html;
+    })
+    .catch(function(e){
+      el.innerHTML='<p style="color:#E24B4A;font-size:12px">Error: '+e.message+'</p>';
+    });
 }
 T.wreminder=function(){
   if(!['admin','manager','developer'].includes(currentRole)){
@@ -6390,10 +6497,32 @@ function wrRemindInApp(userId,donorName){
   var mMap={'01':'\u062c\u0646\u0648\u0631\u06cc','02':'\u0641\u0631\u0648\u0631\u06cc','03':'\u0645\u0627\u0631\u0686','04':'\u0627\u067e\u0631\u06cc\u0644','05':'\u0645\u0626\u06cc','06':'\u062c\u0648\u0646','07':'\u062c\u0648\u0644\u0627\u0626\u06cc','08':'\u0627\u06af\u0633\u062a','09':'\u0633\u062a\u0645\u0628\u0631','10':'\u0627\u06a9\u062a\u0648\u0628\u0631','11':'\u0646\u0648\u0645\u0628\u0631','12':'\u062f\u0633\u0645\u0628\u0631'};
   var mName=mMap[thisMonth.split('-')[1]]||thisMonth;
   var org=ORG_CONFIG.name||'Falah e Qabristan Committee';
-  var msg='\u0645\u062d\u062a\u0631\u0645 *'+donorName+'* \u0635\u0627\u062d\u0628\u060c \u0627\u0644\u0633\u0644\u0627\u0645 \u0639\u0644\u06cc\u06a9\u0645!\n\u06af\u0632\u0627\u0631\u0634 \u06c1\u06d2 \u06a9\u06c1 \u0622\u067e \u06a9\u06cc \u0645\u0627\u06c1 *'+mName+'* \u06a9\u06cc \u0627\u0645\u062f\u0627\u062f \u0627\u0628 \u062a\u06a9 *'+org+'* \u06a9\u0648 \u0645\u0648\u0635\u0648\u0644 \u0646\u06c1\u06cc\u06ba \u06c1\u0648 \u0633\u06a9\u06cc\u06d4 \u0628\u0631\u0627\u06c1 \u06a9\u0631\u0645 \u062c\u0644\u062f \u0627\u0632 \u062c\u0644\u062f \u0627\u067e\u0646\u0627 \u062d\u0635\u06c1 \u0627\u062f\u0627 \u0641\u0631\u0645\u0627\u0626\u06cc\u06ba\u06d4\n\u0635\u062f\u0642\u06c1\u0654 \u062c\u0627\u0631\u06cc\u06c1 \u06a9\u0627 \u06cc\u06c1 \u0633\u0641\u0631 \u062c\u0627\u0631\u06cc \u0631\u06a9\u06be\u06cc\u06ba\u06d4 \u062c\u0632\u0627\u06a9 \u0627\u0644\u0644\u06c1 \u062e\u06cc\u0631\u0627\u064b';
-  addNotification('reminder','\u0641\u0646\u0688 \u06cc\u0627\u062f \u062f\u06c1\u0627\u0646\u06cc',msg,userId);
-  showPopup('\u2705','Sent!',donorName+' \u06a9\u0648 app notification send ho gai!');
+  var title='\u0641\u0646\u0688 \u06cc\u0627\u062f \u062f\u06c1\u0627\u0646\u06cc \u2014 '+mName;
+  var msg='\u0645\u062d\u062a\u0631\u0645 *'+donorName+'* \u0635\u0627\u062d\u0628! \u0622\u067e \u06a9\u06cc \u0645\u0627\u06c1 *'+mName+'* \u06a9\u06cc \u0627\u0645\u062f\u0627\u062f \u0627\u0628 \u062a\u06a9 *'+org+'* \u06a9\u0648 \u0645\u0648\u0635\u0648\u0644 \u0646\u06c1\u06cc\u06ba \u06c1\u0648 \u0633\u06a9\u06cc\u06d4 \u0628\u0631\u0627\u06c1 \u06a9\u0631\u0645 \u062c\u0644\u062f \u0627\u0632 \u062c\u0644\u062f \u0627\u062f\u0627 \u0641\u0631\u0645\u0627\u0626\u06cc\u06ba\u06d4 \u0635\u062f\u0642\u06c1\u0654 \u062c\u0627\u0631\u06cc\u06c1 \u06a9\u0627 \u06cc\u06c1 \u0633\u0641\u0631 \u062c\u0627\u0631\u06cc \u0631\u06a9\u06be\u06cc\u06ba\u06d4';
+  // Save notification to Firebase under user's own notifications collection
+  var notif={
+    id:'N'+Date.now(),
+    type:'reminder',
+    title:title,
+    message:msg,
+    link:'',
+    date:today(),
+    time:new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'}),
+    read:false,
+    forUser:userId
+  };
+  if(fdb){
+    fdb.collection('notifications').doc(userId).collection('items').add(notif)
+      .then(function(){showPopup('\u2705','Sent!',donorName+' \u06a9\u0648 app notification send ho gai!');})
+      .catch(function(e){
+        // Fallback: save in user's pending notifications in DB
+        showPopup('\u2705','Sent!',donorName+' \u06a9\u0648 notification send karne ki koshish ki gai.');
+      });
+  } else {
+    showPopup('\u26a0\ufe0f','Error','Firebase connection nahi hai.');
+  }
 }
+
 
 function wrHide(donorId){
   var hiddenKey='wr_hidden';
@@ -7393,6 +7522,25 @@ function filterContacts(area){
 // ============================================================
 // In-app notification system
 let DB_NOTIFICATIONS=[];
+async function loadUserNotifications(userId){
+  if(!fdb||!userId)return;
+  try{
+    var snap=await fdb.collection('notifications').doc(userId).collection('items')
+      .orderBy('date','desc').limit(30).get();
+    if(!snap.empty){
+      var items=[];
+      snap.forEach(function(doc){items.push(doc.data());});
+      // Merge with existing (avoid duplicates by id)
+      var existing=DB_NOTIFICATIONS.map(function(n){return n.id;});
+      items.forEach(function(n){
+        if(existing.indexOf(n.id)<0)DB_NOTIFICATIONS.push(n);
+      });
+      DB_NOTIFICATIONS.sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
+      if(DB_NOTIFICATIONS.length>50)DB_NOTIFICATIONS=DB_NOTIFICATIONS.slice(0,50);
+      updateNotifBadge();
+    }
+  }catch(e){console.log('loadUserNotifications:',e);}
+}
 function addNotification(type,title,message,link){
   const n={id:'N'+Date.now(),type,title,message,link:link||'',date:today(),time:new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'}),read:false};
   DB_NOTIFICATIONS.unshift(n);
@@ -8164,6 +8312,7 @@ function getMenuConfig(){
       {icon:'📋', label:'Audit Log / لاگ', tab:'audit'},
       {icon:'🗄️', label:'Data Manager', tab:'datamanager'},
       {icon:'✏️', label:'Rename AddedBy', tab:'renameaddedby'},
+      {icon:'📋', label:'Login Report', tab:'loginreport'},
       ...(currentRole==='developer'?[{icon:'⚙️', label:'Entry Manager', tab:'entrymanager'}]:[]),
     );
   }
@@ -8302,6 +8451,7 @@ function renderTab(key){
       alldonations:()=>{window._adQ='';setTimeout(filterAD,80);},
       deathposter:()=>{},
       wreminder:()=>{window._wrArea='All';window._wrQ='';renderTab('wreminder');},
+      loginreport:()=>{window._lrFrom=window._lrFrom||today();window._lrTo=window._lrTo||today();renderTab('loginreport');setTimeout(renderLoginReport,120);},
       dailyupdate:()=>{window._duFrom=window._duFrom||today();window._duTo=window._duTo||today();setTimeout(generateDailyPoster,80);},
       superentry:()=>{window._superEntryArea='All';filterSuperEntry('All');},
       lastdonation:()=>{window._ldArea='All';setTimeout(function(){filterLastDonation('All');},80);},
@@ -8408,7 +8558,7 @@ const TAB_LABELS={
   donorlist:'Donor List',slip:'Donor Slip',top:'Top Donors',transfer:'Transfer',
   decconfirm:'Confirm Deceased',approvals:'Approvals',lockuser:'Login Management',
   userslist:'Users List',professions:'Professions',audit:'Audit Log',areas:'Areas',
-  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',entrymanager:'Entry Manager',lastdonation:'Last Donation',excelexport:'Excel Export',alldonations:'All Donations',deathposter:'Death Poster',wreminder:'WhatsApp Reminder',renameaddedby:'Rename AddedBy',deathposter:'Death Poster',dailyupdate:'Daily Update',entrymanager:'Entry Manager',fundraisingstar:'Fundraising Stars',donorsummary:'Donor Summary',myentries:'My Entries',unknowndonors:'Update Unknown',missinginfo:'Missing Information',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
+  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',entrymanager:'Entry Manager',lastdonation:'Last Donation',excelexport:'Excel Export',alldonations:'All Donations',deathposter:'Death Poster',wreminder:'WhatsApp Reminder',loginreport:'Login Report',renameaddedby:'Rename AddedBy',deathposter:'Death Poster',dailyupdate:'Daily Update',entrymanager:'Entry Manager',fundraisingstar:'Fundraising Stars',donorsummary:'Donor Summary',myentries:'My Entries',unknowndonors:'Update Unknown',missinginfo:'Missing Information',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
 };
 
 // ============================================================

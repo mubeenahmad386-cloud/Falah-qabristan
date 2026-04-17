@@ -4706,13 +4706,19 @@ function addContactNumber(){
   const fi=document.getElementById('cnPhotoInp');
   if(!label||!number){showPopup('⚠️','Required','Label and number are required. | لیبل اور نمبر ضروری ہے');return;}
   if(!ORG_CONFIG.contactNumbers)ORG_CONFIG.contactNumbers=[];
-  function finish(photo){
+  async function finish(photo){
     ORG_CONFIG.contactNumbers.push({label,number,area,photo:photo||null});
-    FS.saveConfig();saveLocalCache();renderLoginExtras();
-    document.getElementById('cnLabel').value='';
-    document.getElementById('cnNumber').value='';
-    showPopup('✅','Added','Contact number added. | نمبر شامل ہو گیا');
-    renderTab('orgsettings');
+    try{
+      await FS.saveConfig();
+      saveLocalCache();
+      renderLoginExtras();
+      const lbl=document.getElementById('cnLabel');if(lbl)lbl.value='';
+      const num=document.getElementById('cnNumber');if(num)num.value='';
+      const prev=document.getElementById('cnPhotoPreview');if(prev){prev.src='';prev.style.display='none';}
+      const plus=document.getElementById('cnPhotoPlus');if(plus)plus.style.display='block';
+      showPopup('✅','Added','Contact number saved! | نمبر شامل ہو گیا');
+      renderTab('orgsettings');
+    }catch(e){showPopup('❌','Error','Save failed: '+e.message);}
   }
   if(fi&&fi.files[0]){const r=new FileReader();r.onload=e=>finish(e.target.result);r.readAsDataURL(fi.files[0]);}
   else finish(null);
@@ -6005,6 +6011,30 @@ T.alldonations=function(){
   '</div>';
 };
 
+function showDonorHistory(donorId){
+  var donor=DB.donors.find(function(d){return d.id===donorId;})||DB.users.find(function(u){return u.id===donorId;})||{name:donorId,photo:null};
+  var dons=[].concat(DB.donations.filter(function(d){return d.donorId===donorId;})).sort(function(a,b){return b.date.localeCompare(a.date);});
+  var total=dons.reduce(function(s,x){return s+x.amount;},0);
+  var init=(donor.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+  var av=donor.photo?'<img src="'+donor.photo+'" style="width:50px;height:50px;border-radius:50%;object-fit:cover;border:2px solid #1D9E75">':'<div style="width:50px;height:50px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#0F6E56">'+init+'</div>';
+  var rows=dons.length?dons.map(function(d,i){
+    var byU=DB.users.find(function(u){return u.id===d.by;})||{name:d.by||''};
+    return '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:0.5px solid #f5f5f5"><div><div style="font-size:12px;font-weight:700;color:#1a1a1a">'+(d.donNo||d.id)+'</div><div style="font-size:10px;color:#888;margin-top:1px">'+d.date+' &bull; by: '+byU.name+'</div>'+(d.desc?'<div style="font-size:10px;color:#aaa;margin-top:1px">'+d.desc+'</div>':'')+' </div><div style="font-size:14px;font-weight:800;color:#0F6E56;flex-shrink:0">Rs '+fmt(d.amount)+'</div></div>';
+  }).join(''):'<p style="font-size:13px;color:#888;text-align:center;padding:16px">No donations found.</p>';
+  var html='<div style="background:#fff;border-radius:14px;overflow:hidden;max-width:400px;width:92vw">'+
+    '<div style="background:#0F6E56;padding:13px 16px;display:flex;justify-content:space-between;align-items:center">'+
+      '<div style="font-size:14px;font-weight:700;color:#fff">Donation History</div>'+
+      '<button onclick="closeCustomPopup()" style="background:rgba(255,255,255,0.2);border:none;border-radius:50%;width:28px;height:28px;color:#fff;font-size:16px;cursor:pointer">&times;</button>'+
+    '</div>'+
+    '<div style="padding:14px">'+
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #eee">'+av+
+        '<div><div style="font-size:14px;font-weight:700">'+donor.name+'</div>'+
+        '<div style="font-size:11px;color:#888;margin-top:2px">'+dons.length+' donations &bull; Total: <b style="color:#0F6E56">Rs '+fmt(total)+'</b></div></div>'+
+      '</div>'+
+      '<div style="max-height:55vh;overflow-y:auto">'+rows+'</div>'+
+    '</div></div>';
+  showCustomPopup('<div style="display:flex;justify-content:center;padding:16px 10px">'+html+'</div>');
+}
 function filterAD(){
   var el=document.getElementById('adBody');if(!el)return;
   var q=(window._adQ||'').toLowerCase().trim();
@@ -6031,7 +6061,10 @@ function filterAD(){
     html+='<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#1a1a1a">'+donor.name+'</div>';
     html+='<div style="font-size:10px;color:#888;margin-top:1px"><span class="id-badge" style="font-size:9px">'+(d.donNo||d.id)+'</span> &bull; '+d.date+(donor.area?' &bull; '+donor.area:'')+'</div>';
     html+='<div style="font-size:10px;color:#185FA5;margin-top:1px">by: '+byU.name+(asnU?' &rarr; '+asnU.name:'')+'</div></div>';
-    html+='<div style="font-size:14px;font-weight:800;color:#0F6E56;flex-shrink:0">Rs '+fmt(d.amount)+'</div>';
+    html+='<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">';
+    html+='<div style="font-size:14px;font-weight:800;color:#0F6E56">Rs '+fmt(d.amount)+'</div>';
+    html+='<button data-adid="'+donor.id+'" onclick="showDonorHistory(this.dataset.adid)" style="background:#185FA5;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer">History</button>';
+    html+='</div>';
     html+='</div>';
   });
   el.innerHTML=html;
@@ -6186,13 +6219,16 @@ T.wreminder=function(){
 
   var html='<div class="card">';
   html+='<h3 style="margin-bottom:4px">&#128241; WhatsApp Reminder</h3>';
-  html+='<p style="font-size:11px;color:#888;margin-bottom:12px">'+unpaid.length+' donors without '+thisMonth+' donation &bull; <span style="color:#0F6E56">'+Object.keys(hiddenRaw).length+' hidden (10 days)</span></p>';
+  html+='<p style="font-size:11px;color:#888;margin-bottom:10px">'+unpaid.length+' donors without '+thisMonth+' donation &bull; <span style="color:#0F6E56">'+Object.keys(hiddenRaw).length+' hidden</span></p>';
+  html+='<div class="inp-wrap" style="margin-bottom:10px"><span class="inp-icon">&#128269;</span><input type="text" id="wrSearch" value="'+wrQ.replace(/"/g,'&quot;')+'" placeholder="Search name, mobile or area..." oninput="window._wrQ=this.value;filterWR()" autocomplete="new-password" style="font-size:13px"></div>';
 
   if(!unpaid.length){
     html+='<div style="text-align:center;padding:30px"><div style="font-size:32px">&#9989;</div><div style="font-size:14px;color:#0F6E56;font-weight:700;margin-top:8px">Is maah sab ne donation di hai!</div></div>';
     html+='</div>';return html;
   }
 
+  // Search
+  var wrQ=window._wrQ||'';
   // Area filter buttons
   var areas=['All',...new Set(unpaid.map(function(d){return d.area||'';}).filter(Boolean)).values()].sort();
   var selArea=window._wrArea||'All';
@@ -6203,7 +6239,8 @@ T.wreminder=function(){
   });
   html+='</div>';
 
-  var filtered=selArea==='All'?unpaid:unpaid.filter(function(d){return (d.area||'')===selArea;});
+  var filtered=(selArea==='All'?unpaid:unpaid.filter(function(d){return (d.area||'')===selArea;}));
+  if(wrQ){var ql=wrQ.toLowerCase();filtered=filtered.filter(function(d){return (d.name||'').toLowerCase().includes(ql)||(d.mobile||'').includes(ql)||(d.area||'').toLowerCase().includes(ql)||(d.id||'').toLowerCase().includes(ql);});}
   html+='<div style="font-size:11px;color:#888;margin-bottom:8px">'+filtered.length+' donors</div>';
 
   filtered.forEach(function(d){
@@ -6230,6 +6267,14 @@ T.wreminder=function(){
   return html;
 };
 
+function filterWR(){
+  window._wrQ=document.getElementById('wrSearch')?document.getElementById('wrSearch').value:'';
+  renderTab('wreminder');
+  setTimeout(function(){
+    var el=document.getElementById('wrSearch');
+    if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length);}
+  },80);
+}
 function wrHide(donorId){
   var hiddenKey='wr_hidden';
   var hiddenRaw;
@@ -6237,6 +6282,57 @@ function wrHide(donorId){
   hiddenRaw[donorId]=Date.now();
   localStorage.setItem(hiddenKey,JSON.stringify(hiddenRaw));
   renderTab('wreminder');
+}
+function _showBulkUserPicker(opts){
+  var html='<div style="background:#fff;border-radius:14px;overflow:hidden;max-width:340px;width:90vw">'+
+    '<div style="background:#0F6E56;padding:13px 16px;display:flex;justify-content:space-between;align-items:center">'+
+      '<div style="font-size:14px;font-weight:700;color:#fff">Boghani Donors — Set Added By</div>'+
+      '<button onclick="closeCustomPopup()" style="background:rgba(255,255,255,0.2);border:none;border-radius:50%;width:28px;height:28px;color:#fff;font-size:16px;cursor:pointer">&times;</button>'+
+    '</div>'+
+    '<div style="padding:16px">'+
+      '<label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:6px">Select User:</label>'+
+      '<select id="bulkUserSel" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:12px"><option value="">-- Select --</option>'+opts+'</select>'+
+      '<button onclick="_runBulkBoghani()" style="width:100%;background:#0F6E56;color:#fff;border:none;padding:11px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">Apply to All Boghani Donors</button>'+
+    '</div></div>';
+  showCustomPopup('<div style="display:flex;justify-content:center;padding:16px 10px">'+html+'</div>');
+}
+function _runBulkBoghani(){
+  var v=document.getElementById('bulkUserSel');
+  var uid=v?v.value:'';
+  if(!uid)return;
+  closeCustomPopup();
+  setTimeout(function(){_doBulkBoghani(uid);},100);
+}
+async function bulkSetBoghaniAddedBy(){
+  var asif=DB.users.find(function(u){return (u.name||'').toLowerCase().replace(/\s+/g,' ').includes('muhammad asif');});
+  if(!asif){
+    var users=DB.users.filter(function(u){return u.approved;});
+    var opts=users.map(function(u){return '<option value="'+u.id+'">'+u.name+' ('+u.id+')</option>';}).join('');
+    _showBulkUserPicker(opts);
+    return;
+  }
+  _doBulkBoghani(asif.id);
+}
+
+async function _doBulkBoghani(userId){
+  var user=DB.users.find(function(u){return u.id===userId;});
+  if(!user){showPopup('⚠️','Error','User not found.');return;}
+  var boghani=DB.donors.filter(function(d){
+    return (d.area||'').toLowerCase()==='boghani'&&(!d.addedBy||!d.addedBy.trim());
+  });
+  if(!boghani.length){showPopup('✅','Done','Sab Boghani donors ka addedBy pehle se set hai!');return;}
+  if(!confirm(boghani.length+' Boghani donors ko "'+user.name+'" se link karna chahte hain?'))return;
+  showLoading(true);
+  var cnt=0;
+  for(var i=0;i<boghani.length;i++){
+    boghani[i].addedBy=userId;
+    boghani[i].addedByName=user.name;
+    boghani[i].addedDate=today();
+    try{await FS.save('donors',boghani[i].id,boghani[i]);cnt++;}catch(e){}
+  }
+  saveLocalCache();
+  showLoading(false);
+  showPopup('✅','Done!',cnt+' Boghani donors ko '+user.name+' se link kar diya!');
 }
 T.datamanager=function(){
   return `<div class="card">
@@ -6747,9 +6843,9 @@ function filterMI(){
   var areaOpts=areas.map(function(a){return '<option value="'+a+'">'+a+'</option>';}).join('');
   var bloodOpts=['A+','A-','B+','B-','AB+','AB-','O+','O-'].map(function(b){return '<option value="'+b+'">'+b+'</option>';}).join('');
   var profOpts=PROF_LIST.map(function(p){return '<option value="'+p.en+'">'+p.en+(p.ur?' \u2014 '+p.ur:'')+'</option>';}).join('');
-  var colMap={area:'#0F6E56',blood:'#185FA5',prof:'#854F0B'};
+  var colMap={area:'#0F6E56',blood:'#185FA5',prof:'#854F0B',addedby:'#0F6E56'};
   var btnCol=colMap[activeTab]||'#0F6E56';
-  var bdrCol={area:'#1D9E75',blood:'#185FA5',prof:'#BA7517'}[activeTab]||'#1D9E75';
+  var bdrCol={area:'#1D9E75',blood:'#185FA5',prof:'#BA7517',addedby:'#1D9E75'}[activeTab]||'#1D9E75';
   var html='<div style="font-size:11px;color:#888;margin-bottom:8px">'+list.length+' donors</div>';
   list.forEach(function(d){
     var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
@@ -7859,7 +7955,7 @@ function getMenuConfig(){
     homeItems.push({icon:'⚠️',label:'Update Unknown'+(_uc>0?' ('+_uc+')':''),tab:'unknowndonors'});
     var _mi=DB.donors.filter(function(d){return !d.area||!d.bloodGroup||!d.profession;}).length;
     homeItems.push({icon:'📋',label:'Missing Info'+(_mi>0?' ('+_mi+')':''),tab:'missinginfo'});
-    homeItems.push({icon:'📱', label:'WA Reminder', tab:'wreminder'});
+    homeItems.push({icon:'🔔', label:'WA Reminder', tab:'wreminder'});
   }
   if(currentRole!=='user'){
     homeItems.push(
@@ -8065,11 +8161,12 @@ function renderTab(key){
     const initMap={
       notifications:()=>{updateNotifBadge();},
       entrymanager:()=>{window._emTab=window._emTab||'donations';window._emSearch='';setTimeout(filterEM,80);},
-      missinginfo:()=>{window._miTab=window._miTab||'area';window._miSearch='';setTimeout(function(){if(window._miTab==='addedby')renderAddedByTab();else filterMI();},80);},
+      missinginfo:()=>{window._miTab=window._miTab||'area';window._miSearch='';setTimeout(function(){var el=document.getElementById('miBody');if(!el)return;if(window._miTab==='addedby')renderAddedByTab();else filterMI();},120);},
       unknowndonors:()=>{renderTab('unknowndonors');},
       contacts:()=>{window._contactArea='All';filterContacts('All');},
       alldonations:()=>{window._adQ='';setTimeout(filterAD,80);},
-      wreminder:()=>{window._wrArea='All';renderTab('wreminder');},
+      deathposter:()=>{},
+      wreminder:()=>{window._wrArea=window._wrArea||'All';window._wrQ='';renderTab('wreminder');},
       dailyupdate:()=>{window._duFrom=window._duFrom||today();window._duTo=window._duTo||today();setTimeout(generateDailyPoster,80);},
       superentry:()=>{window._superEntryArea='All';filterSuperEntry('All');},
       lastdonation:()=>{window._ldArea='All';setTimeout(function(){filterLastDonation('All');},80);},
@@ -8176,7 +8273,7 @@ const TAB_LABELS={
   donorlist:'Donor List',slip:'Donor Slip',top:'Top Donors',transfer:'Transfer',
   decconfirm:'Confirm Deceased',approvals:'Approvals',lockuser:'Login Management',
   userslist:'Users List',professions:'Professions',audit:'Audit Log',areas:'Areas',
-  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',entrymanager:'Entry Manager',lastdonation:'Last Donation',excelexport:'Excel Export',alldonations:'All Donations',wreminder:'WhatsApp Reminder',deathposter:'Death Poster',dailyupdate:'Daily Update',entrymanager:'Entry Manager',fundraisingstar:'Fundraising Stars',donorsummary:'Donor Summary',myentries:'My Entries',unknowndonors:'Update Unknown',missinginfo:'Missing Information',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
+  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',entrymanager:'Entry Manager',lastdonation:'Last Donation',excelexport:'Excel Export',alldonations:'All Donations',deathposter:'Death Poster',wreminder:'WhatsApp Reminder',deathposter:'Death Poster',dailyupdate:'Daily Update',entrymanager:'Entry Manager',fundraisingstar:'Fundraising Stars',donorsummary:'Donor Summary',myentries:'My Entries',unknowndonors:'Update Unknown',missinginfo:'Missing Information',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
 };
 
 // ============================================================

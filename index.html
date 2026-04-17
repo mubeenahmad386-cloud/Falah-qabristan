@@ -5649,71 +5649,82 @@ T.donorsummary=function(){
 ;
 ;
 ;
+function _fsDownload(t){downloadReport('fundraisingStarContent','fundraising_stars',t);}
 T.fundraisingstar=function(){
-  var users=DB.users.filter(function(u){return u.approved&&!u.locked&&u.role!=='developer';});
+  var users=DB.users.filter(function(u){return u.approved&&!u.locked;});
   var rows=users.map(function(u){
     var myDonors=DB.donors.filter(function(d){return d.addedBy===u.id;});
     var donorsAdded=myDonors.length;
-    var totalFromMyDonors=DB.donations.filter(function(d){
+    var total=DB.donations.filter(function(d){
       return myDonors.some(function(m){return m.id===d.donorId;});
     }).reduce(function(s,x){return s+x.amount;},0);
-    return {u:u,donorsAdded:donorsAdded,totalFromMyDonors:totalFromMyDonors};
+    return {u:u,donorsAdded:donorsAdded,total:total};
   }).filter(function(r){return r.donorsAdded>0;})
-    .sort(function(a,b){return b.totalFromMyDonors-a.totalFromMyDonors;});
+    .sort(function(a,b){return b.total-a.total;});
 
-  var medals=['\U0001f947','\U0001f948','\U0001f949'];
+  var medals=['🥇','🥈','🥉'];
+  var rCol=[
+    {bg:'#FFFDE7',bdr:'#F9A825',acc:'#F57F17',txt:'#fff'},
+    {bg:'#FAFAFA',bdr:'#9E9E9E',acc:'#616161',txt:'#fff'},
+    {bg:'#FFF3E0',bdr:'#FF8F00',acc:'#E65100',txt:'#fff'}
+  ];
+  var dCol={bg:'#fff',bdr:'#e0e0e0',acc:'#185FA5',txt:'#fff'};
+
   var html='<div class="card" id="fundraisingStarContent">';
-  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">';
-  html+='<h3 style="margin:0">\u2b50 Fundraising Stars</h3>';
-  html+='<div style="display:flex;gap:6px">';
-  html+='<button onclick="downloadReport(\'fundraisingStarContent\',\'fundraising_stars\',\'pdf\')" style="background:#E24B4A;color:#fff;border:none;padding:5px 10px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer">\U0001f4c4 PDF</button>';
-  html+='<button onclick="downloadReport(\'fundraisingStarContent\',\'fundraising_stars\',\'image\')" style="background:#185FA5;color:#fff;border:none;padding:5px 10px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer">\U0001f5bc\ufe0f Image</button>';
+  html+='<div style="background:linear-gradient(135deg,#0a3d2e,#0F6E56);border-radius:12px;padding:16px;margin-bottom:14px">';
+  html+='<div style="display:flex;justify-content:space-between;align-items:flex-start">';
+  html+='<div><div style="font-size:17px;font-weight:900;color:#fff">⭐ Fundraising Stars</div>';
+  html+='<div style="font-size:10px;color:rgba(255,255,255,0.6);margin-top:3px;direction:rtl">جس نے ڈونر شامل کیے اور وصولی ہوئی</div></div>';
+  html+='<div style="display:flex;gap:5px">';
+  html+='<button data-dt="image" onclick="_fsDownload(this.dataset.dt)" style="background:rgba(255,255,255,0.18);color:#fff;border:1px solid rgba(255,255,255,0.3);padding:5px 9px;border-radius:7px;font-size:10px;font-weight:700;cursor:pointer">🖼️ Img</button>';
+  html+='<button data-dt="pdf" onclick="_fsDownload(this.dataset.dt)" style="background:#E24B4A;color:#fff;border:none;padding:5px 9px;border-radius:7px;font-size:10px;font-weight:700;cursor:pointer">📄 PDF</button>';
   html+='</div></div>';
-  html+='<p style="font-size:11px;color:#888;margin-bottom:14px">\u062c\u0633 \u06cc\u0648\u0632\u0631 \u0646\u06d2 \u062c\u062a\u0646\u06d2 \u0688\u0648\u0646\u0631 \u0634\u0627\u0645\u0644 \u06a9\u06cc\u06d2 \u0627\u0648\u0631 \u0627\u0646 \u0633\u06d2 \u06a9\u062a\u0646\u06cc \u0627\u0645\u062f\u0646\u06cc \u06c1\u0648\u0626\u06cc</p>';
+  var tD=rows.reduce(function(s,r){return s+r.donorsAdded;},0);
+  var tA=rows.reduce(function(s,r){return s+r.total;},0);
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px">';
+  html+='<div style="background:rgba(255,255,255,0.1);border-radius:8px;padding:8px 6px;text-align:center"><div style="font-size:9px;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:0.5px">Stars</div><div style="font-size:22px;font-weight:900;color:#fff">'+rows.length+'</div></div>';
+  html+='<div style="background:rgba(255,255,255,0.1);border-radius:8px;padding:8px 6px;text-align:center"><div style="font-size:9px;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:0.5px">Donors</div><div style="font-size:22px;font-weight:900;color:#fff">'+tD+'</div></div>';
+  html+='<div style="background:rgba(255,255,255,0.1);border-radius:8px;padding:8px 6px;text-align:center"><div style="font-size:9px;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:0.5px">Total</div><div style="font-size:12px;font-weight:800;color:#4ade80;margin-top:4px">'+fmt(tA)+'</div></div>';
+  html+='</div></div>';
 
   if(!rows.length){
-    html+='<div style="text-align:center;padding:30px;color:#888"><div style="font-size:32px">&#128203;</div><div style="font-size:13px;margin-top:8px">Ab tak kisi user ne donor add nahi kiya.</div><div style="font-size:11px;margin-top:4px;color:#aaa">Missing Info \u2192 Donor Add By se assign karein</div></div>';
-    html+='</div>';return html;
+    html+='<div style="text-align:center;padding:30px;color:#888"><div style="font-size:36px">📋</div><div style="margin-top:8px;font-size:13px">Ab tak kisi ne donor add nahi kiya.</div><div style="font-size:11px;color:#aaa;margin-top:4px">Missing Info → Donor Add By se assign karein</div></div></div>';
+    return html;
   }
 
-  rows.forEach(function(r,idx){
+  rows.forEach(function(r,i){
     var u=r.u;
-    var medal=idx<3?medals[idx]:'';
+    var col=i<3?rCol[i]:dCol;
     var init=(u.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-    var av=u.photo?'<img src="'+u.photo+'" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid #1D9E75;flex-shrink:0">':'<div style="width:52px;height:52px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#0F6E56;border:2px solid #1D9E75;flex-shrink:0">'+init+'</div>';
-    var rankBg=idx===0?'#FFFDE7':idx===1?'#FAFAFA':idx===2?'#FFF3E0':'#fff';
-    var rankBorder=idx===0?'#F9A825':idx===1?'#9E9E9E':idx===2?'#FF8F00':'#eee';
-
-    html+='<div style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;margin-bottom:10px;background:'+rankBg+';border:1.5px solid '+rankBorder+'">';
-    // Rank
-    html+='<div style="text-align:center;flex-shrink:0;min-width:28px">';
-    html+='<div style="font-size:'+(idx<3?'22':'14')+'px;font-weight:700;color:#888">'+(medal||(idx+1))+'</div>';
-    html+='</div>';
-    // Avatar
-    html+=av;
-    // Info
-    html+='<div style="flex:1;min-width:0">';
-    html+='<div style="font-size:14px;font-weight:800;color:#1a1a1a">'+u.name+'</div>';
-    html+='<div style="font-size:10px;color:#888;margin-top:2px"><span class="id-badge" style="font-size:9px">'+u.id+'</span> &bull; '+(u.area||'\u2014')+' &bull; <span style="font-weight:600">'+u.role+'</span></div>';
-    // Donor stats
-    html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">';
-    // Donors Added card
-    html+='<div style="background:rgba(255,255,255,0.8);border-radius:8px;padding:8px 10px;border:1px solid rgba(0,0,0,0.05)">';
-    html+='<div style="font-size:9px;font-weight:700;color:#085041;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:3px">\u0688\u0648\u0646\u0631 \u0634\u0627\u0645\u0644 \u06a9\u06cc\u06d2</div>';
-    html+='<div style="font-size:22px;font-weight:900;color:#0F6E56;line-height:1">'+r.donorsAdded+'</div>';
-    html+='<div style="font-size:9px;color:#888;margin-top:3px">donors added</div>';
-    html+='</div>';
-    // Total from donors card
-    html+='<div style="background:rgba(255,255,255,0.8);border-radius:8px;padding:8px 10px;border:1px solid rgba(0,0,0,0.05)">';
-    html+='<div style="font-size:9px;font-weight:700;color:#0C447C;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:3px">\u0627\u0646 \u0633\u06d2 \u0648\u0635\u0648\u0644\u06cc</div>';
-    html+='<div style="font-size:14px;font-weight:800;color:#185FA5;line-height:1.2">Rs '+fmt(r.totalFromMyDonors)+'</div>';
-    html+='<div style="font-size:9px;color:#888;margin-top:3px">total received</div>';
-    html+='</div>';
+    var av=u.photo?'<img src="'+u.photo+'" style="width:58px;height:58px;border-radius:50%;object-fit:cover;border:3px solid '+col.bdr+'">':'<div style="width:58px;height:58px;border-radius:50%;background:#fff;border:3px solid '+col.bdr+';display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:'+col.acc+'">'+init+'</div>';
+    var pct=rows[0].total>0?Math.round((r.total/rows[0].total)*100):0;
+    html+='<div style="background:'+col.bg+';border:1.5px solid '+col.bdr+';border-radius:14px;padding:14px 14px 12px;margin-bottom:10px;position:relative">';
+    html+='<div style="position:absolute;top:10px;right:12px;background:'+col.acc+';color:'+col.txt+';border-radius:20px;padding:3px 11px;font-size:11px;font-weight:800">'+(i<3?medals[i]:'#'+(i+1))+'</div>';
+    html+='<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">'+av+'<div style="flex:1;min-width:0;padding-right:38px">';
+    html+='<div style="font-size:15px;font-weight:800;color:#1a1a1a">'+u.name+'</div>';
+    html+='<div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:4px">';
+    html+='<span class="id-badge" style="font-size:9px">'+u.id+'</span>';
+    html+='<span style="font-size:10px;background:rgba(0,0,0,0.07);color:#555;padding:2px 7px;border-radius:10px;font-weight:600;text-transform:capitalize">'+u.role+'</span>';
+    if(u.area)html+='<span style="font-size:10px;color:#888">• '+u.area+'</span>';
     html+='</div></div></div>';
+    html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">';
+    html+='<div style="background:rgba(255,255,255,0.8);border-radius:10px;padding:10px 12px;border:1px solid rgba(0,0,0,0.05)">';
+    html+='<div style="font-size:9px;font-weight:700;color:#085041;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:2px">ڈونر شامل</div>';
+    html+='<div style="font-size:30px;font-weight:900;color:#0F6E56;line-height:1.1">'+r.donorsAdded+'</div>';
+    html+='<div style="font-size:9px;color:#aaa;margin-top:2px">donors added</div>';
+    html+='</div>';
+    html+='<div style="background:rgba(255,255,255,0.8);border-radius:10px;padding:10px 12px;border:1px solid rgba(0,0,0,0.05)">';
+    html+='<div style="font-size:9px;font-weight:700;color:#0C447C;text-transform:uppercase;letter-spacing:0.4px;margin-bottom:2px">ان سے وصولی</div>';
+    html+='<div style="font-size:17px;font-weight:900;color:#185FA5;line-height:1.2">Rs '+fmt(r.total)+'</div>';
+    html+='<div style="font-size:9px;color:#aaa;margin-top:2px">total received</div>';
+    html+='</div></div>';
+    html+='<div><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:9px;color:#888">Collection vs #1</span><span style="font-size:9px;font-weight:700;color:'+col.acc+'">'+pct+'%</span></div>';
+    html+='<div style="background:rgba(0,0,0,0.07);border-radius:10px;height:6px"><div style="background:'+col.acc+';width:'+pct+'%;height:100%;border-radius:10px"></div></div></div>';
+    html+='</div>';
   });
   html+='</div>';
   return html;
-};
+};;
 ;
 ;
 T.entrymanager=function(){
@@ -6063,7 +6074,7 @@ function filterAD(){
     html+='<div style="font-size:10px;color:#185FA5;margin-top:1px">by: '+byU.name+(asnU?' &rarr; '+asnU.name:'')+'</div></div>';
     html+='<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">';
     html+='<div style="font-size:14px;font-weight:800;color:#0F6E56">Rs '+fmt(d.amount)+'</div>';
-    html+='<button data-adid="'+donor.id+'" onclick="showDonorHistory(this.dataset.adid)" style="background:#185FA5;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer">History</button>';
+    html+='<button data-adid="'+d.donorId+'" onclick="showDonorHistory(this.dataset.adid)" style="background:#185FA5;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer">History</button>';
     html+='</div>';
     html+='</div>';
   });
@@ -6193,20 +6204,67 @@ function generateDeathPoster(){
   document.getElementById('dpPosterWrap').innerHTML=poster;
   document.getElementById('dpPosterWrap').scrollIntoView({behavior:'smooth'});
 }
+T.renameaddedby=function(){
+  if(currentRole!=='developer'){return '<div class="card"><div style="text-align:center;padding:24px;color:#888">\u26d4 Developer only.</div></div>';}
+  var users=DB.users.filter(function(u){return u.approved;});
+  var rows=users.map(function(u){
+    var count=DB.donors.filter(function(d){return d.addedBy===u.id;}).length;
+    return {u:u,count:count};
+  }).filter(function(r){return r.count>0;});
+
+  var html='<div class="card">';
+  html+='<h3 style="margin-bottom:6px">&#9998; Rename AddedBy</h3>';
+  html+='<p style="font-size:11px;color:#888;margin-bottom:14px">Agar kisi user ka naam change hua ho tu sab donors ki addedByName field update karein</p>';
+
+  if(!rows.length){html+='<p style="font-size:13px;color:#888;text-align:center;padding:20px">Koi donor kisi user se linked nahi.</p></div>';return html;}
+
+  rows.forEach(function(r){
+    var u=r.u;
+    html+='<div style="padding:10px 0;border-bottom:0.5px solid #f0f0f0">';
+    html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">';
+    html+='<div style="flex:1"><div style="font-size:13px;font-weight:700">'+u.name+'</div><div style="font-size:10px;color:#888">'+u.id+' &bull; '+r.count+' donors</div></div>';
+    html+='</div>';
+    html+='<div style="display:flex;gap:8px;align-items:center">';
+    html+='<input type="text" id="rab_'+u.id+'" value="'+u.name.replace(/"/g,'&quot;')+'" placeholder="New display name" autocomplete="new-password" style="flex:1;padding:9px 10px;border:1.5px solid #1D9E75;border-radius:8px;font-size:13px">';
+    html+='<button data-uid="'+u.id+'" onclick="saveRenameAddedBy(this.dataset.uid)" style="background:#0F6E56;color:#fff;border:none;padding:9px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">Update</button>';
+    html+='</div>';
+    html+='</div>';
+  });
+  html+='</div>';
+  return html;
+};
+
+async function saveRenameAddedBy(userId){
+  var el=document.getElementById('rab_'+userId);
+  var newName=el?el.value.trim():'';
+  if(!newName){showPopup('\u26a0\ufe0f','Required','Naam darj karein.');return;}
+  var affectedDonors=DB.donors.filter(function(d){return d.addedBy===userId;});
+  if(!affectedDonors.length){showPopup('\u26a0\ufe0f','None','Is user se koi donor linked nahi.');return;}
+  if(!confirm(affectedDonors.length+' donors ki addedByName update karein to "'+newName+'"?'))return;
+  showLoading(true);
+  var cnt=0;
+  for(var i=0;i<affectedDonors.length;i++){
+    affectedDonors[i].addedByName=newName;
+    try{await FS.save('donors',affectedDonors[i].id,affectedDonors[i]);cnt++;}catch(e){}
+  }
+  saveLocalCache();
+  showLoading(false);
+  showPopup('\u2705','Updated',cnt+' donors update ho gaye!');
+}
 T.wreminder=function(){
   if(!['admin','manager','developer'].includes(currentRole)){
     return '<div class="card"><div style="text-align:center;padding:24px;color:#888">\u26d4 Access denied.</div></div>';
   }
   var thisMonth=today().substring(0,7);
   var hiddenKey='wr_hidden';
-  var hiddenRaw;
-  try{hiddenRaw=JSON.parse(localStorage.getItem(hiddenKey)||'{}');}catch(e){hiddenRaw={};}
-  var now=Date.now();
-  // Remove expired hidden (older than 10 days)
-  Object.keys(hiddenRaw).forEach(function(k){if(now-hiddenRaw[k]>10*24*60*60*1000)delete hiddenRaw[k];});
-  localStorage.setItem(hiddenKey,JSON.stringify(hiddenRaw));
+  var hiddenRaw={};
+  try{
+    hiddenRaw=JSON.parse(localStorage.getItem(hiddenKey)||'{}');
+    var now=Date.now();
+    Object.keys(hiddenRaw).forEach(function(k){if(now-hiddenRaw[k]>10*24*60*60*1000)delete hiddenRaw[k];});
+    localStorage.setItem(hiddenKey,JSON.stringify(hiddenRaw));
+  }catch(e){hiddenRaw={};}
   
-  // Donors without this month donation and not hidden
   var unpaid=DB.donors.filter(function(d){
     if(hiddenRaw[d.id])return false;
     return !DB.donations.some(function(x){return x.donorId===d.id&&x.date.substring(0,7)===thisMonth;});
@@ -6214,58 +6272,58 @@ T.wreminder=function(){
 
   var org=ORG_CONFIG.name||'Falah e Qabristan Committee';
   var bankList=ORG_CONFIG.bankAccounts&&ORG_CONFIG.bankAccounts.length>0
-    ? ORG_CONFIG.bankAccounts.map(function(b){return b.bank+': '+b.number;}).join(' | ')
-    : '';
+    ?ORG_CONFIG.bankAccounts.map(function(b){return b.bank+': '+b.number;}).join(' | '):'';
+
+  var wrQ=window._wrQ||'';
+  var wrArea=window._wrArea||'All';
+  var areas=['All'];
+  unpaid.forEach(function(d){if(d.area&&areas.indexOf(d.area)<0)areas.push(d.area);});
+  areas.sort();
 
   var html='<div class="card">';
-  html+='<h3 style="margin-bottom:4px">&#128241; WhatsApp Reminder</h3>';
-  html+='<p style="font-size:11px;color:#888;margin-bottom:10px">'+unpaid.length+' donors without '+thisMonth+' donation &bull; <span style="color:#0F6E56">'+Object.keys(hiddenRaw).length+' hidden</span></p>';
-  html+='<div class="inp-wrap" style="margin-bottom:10px"><span class="inp-icon">&#128269;</span><input type="text" id="wrSearch" value="'+wrQ.replace(/"/g,'&quot;')+'" placeholder="Search name, mobile or area..." oninput="window._wrQ=this.value;filterWR()" autocomplete="new-password" style="font-size:13px"></div>';
+  html+='<h3 style="margin-bottom:4px">&#128276; WA Reminder</h3>';
+  html+='<p style="font-size:11px;color:#888;margin-bottom:10px">'+unpaid.length+' donors | '+thisMonth+' &bull; <span style="color:#0F6E56">'+Object.keys(hiddenRaw).length+' hidden</span></p>';
 
-  if(!unpaid.length){
-    html+='<div style="text-align:center;padding:30px"><div style="font-size:32px">&#9989;</div><div style="font-size:14px;color:#0F6E56;font-weight:700;margin-top:8px">Is maah sab ne donation di hai!</div></div>';
-    html+='</div>';return html;
-  }
+  // Search bar
+  html+='<div class="inp-wrap" style="margin-bottom:8px"><span class="inp-icon">&#128269;</span><input type="text" id="wrSearch" value="'+wrQ.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')+'" placeholder="Search name, mobile or area..." oninput="window._wrQ=this.value;filterWR()" autocomplete="new-password" style="font-size:13px"></div>';
 
-  // Search
-  var wrQ=window._wrQ||'';
-  // Area filter buttons
-  var areas=['All',...new Set(unpaid.map(function(d){return d.area||'';}).filter(Boolean)).values()].sort();
-  var selArea=window._wrArea||'All';
-  html+='<div style="display:flex;gap:5px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px">';
+  // Area tabs
+  html+='<div style="display:flex;gap:5px;overflow-x:auto;padding-bottom:5px;margin-bottom:10px">';
   areas.forEach(function(a){
-    var act=a===selArea;
-    html+='<button data-wra="'+a+'" onclick="window._wrArea=this.dataset.wra;renderTab(\'wreminder\')" style="padding:5px 12px;border-radius:20px;border:'+(act?'none':'1px solid #ddd')+';background:'+(act?'#0F6E56':'#f5f5f5')+';color:'+(act?'#fff':'#333')+';font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">'+a+'</button>';
+    var act=a===wrArea;
+    html+='<button data-wra="'+a+'" onclick="window._wrArea=this.dataset.wra;renderTab(\'wreminder\')" style="padding:5px 11px;border-radius:20px;border:'+(act?'none':'1px solid #ddd')+';background:'+(act?'#0F6E56':'#f5f5f5')+';color:'+(act?'#fff':'#333')+';font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0">'+a+'</button>';
   });
   html+='</div>';
 
-  var filtered=(selArea==='All'?unpaid:unpaid.filter(function(d){return (d.area||'')===selArea;}));
-  if(wrQ){var ql=wrQ.toLowerCase();filtered=filtered.filter(function(d){return (d.name||'').toLowerCase().includes(ql)||(d.mobile||'').includes(ql)||(d.area||'').toLowerCase().includes(ql)||(d.id||'').toLowerCase().includes(ql);});}
+  // Filter
+  var filtered=wrArea==='All'?unpaid.slice():unpaid.filter(function(d){return (d.area||'')===wrArea;});
+  if(wrQ){var ql=wrQ.toLowerCase();filtered=filtered.filter(function(d){return (d.name||'').toLowerCase().includes(ql)||(d.mobile||'').includes(ql)||(d.area||'').toLowerCase().includes(ql);});}
+
+  if(!filtered.length){
+    html+='<p style="font-size:13px;color:#888;text-align:center;padding:20px">&#9989; Koi pending donor nahi mila.</p>';
+    html+='</div>';return html;
+  }
+
   html+='<div style="font-size:11px;color:#888;margin-bottom:8px">'+filtered.length+' donors</div>';
 
   filtered.forEach(function(d){
     var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-    var av=d.photo?'<img src="'+d.photo+'" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1.5px solid #E1F5EE;flex-shrink:0">':'<div style="width:42px;height:42px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
+    var av=d.photo?'<img src="'+d.photo+'" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1.5px solid #E1F5EE;flex-shrink:0">':'<div style="width:42px;height:42px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
     var mob=(d.mobile||'').replace(/[^0-9]/g,'');
-    
-    // Build WhatsApp message
     var msg='\uD83C\uDF3F \u0628\u0633\u0645 \u0627\u0644\u0644\u06c1 \u0627\u0644\u0631\u062d\u0645\u0646 \u0627\u0644\u0631\u062d\u06cc\u0645 \uD83C\uDF3F\n\n\u0622\u0626\u06cc\u06ba \u06c1\u0645 \u0633\u0628 \u0645\u0644 \u06a9\u0631 \u0627\u067e\u0646\u06d2 \u067e\u06cc\u0627\u0631\u0648\u06ba \u06a9\u06cc \u0622\u062e\u0631\u06cc \u0622\u0631\u0627\u0645 \u06af\u0627\u06c1\u060c \u0642\u0628\u0631\u0633\u062a\u0627\u0646\u060c \u06a9\u0648 \u0635\u0627\u0641 \u0633\u062a\u06be\u0631\u0627\u060c \u0628\u0627\u0648\u0642\u0627\u0631 \u0627\u0648\u0631 \u062e\u0648\u0628\u0635\u0648\u0631\u062a \u0628\u0646\u0627\u0646\u06d2 \u0645\u06cc\u06ba \u0627\u067e\u0646\u0627 \u06a9\u0631\u062f\u0627\u0631 \u0627\u062f\u0627 \u06a9\u0631\u06cc\u06ba\u06d4\n\n\u0645\u062d\u062a\u0631\u0645 *'+d.name+'* \u0635\u0627\u062d\u0628!\n\u0622\u067e \u06a9\u0627 \u0627\u0633 \u0645\u0627\u06c1 \u06a9\u0627 \u0641\u0646\u0688 \u062a\u0627\u062d\u0627\u0644 *'+org+'* \u06a9\u0648 \u0645\u0648\u0635\u0648\u0644 \u0646\u06c1\u06cc\u06ba \u06c1\u0648 \u0633\u06a9\u0627\u06d4 \u06af\u0632\u0627\u0631\u0634 \u06c1\u06d2 \u06a9\u06c1 \u0627\u0633 \u0646\u06cc\u06a9 \u0627\u0648\u0631 \u0627\u062c\u0631\u0650 \u0639\u0638\u06cc\u0645 \u0648\u0627\u0644\u06d2 \u06a9\u0627\u0645 \u0645\u06cc\u06ba \u062a\u0627\u062e\u06cc\u0631 \u0646\u06c1 \u06a9\u0631\u06cc\u06ba \u0627\u0648\u0631 \u062c\u0644\u062f \u0627\u0632 \u062c\u0644\u062f \u0627\u067e\u0646\u0627 \u062d\u0635\u06c1 \u0627\u062f\u0627 \u0641\u0631\u0645\u0627\u0626\u06cc\u06ba\u06d4\n\n\u06cc\u0627\u062f \u0631\u06a9\u06be\u06cc\u06ba! \u0642\u0628\u0631\u0633\u062a\u0627\u0646 \u06a9\u06cc \u062f\u06cc\u06a9\u06be \u0628\u06be\u0627\u0644 \u0635\u0631\u0641 \u0627\u06cc\u06a9 \u0630\u0645\u06c1 \u062f\u0627\u0631\u06cc \u0646\u06c1\u06cc\u06ba \u0628\u0644\u06a9\u06c1 *\u0635\u062f\u0642\u06c1\u0654 \u062c\u0627\u0631\u06cc\u06c1* \u06c1\u06d2\u060c \u062c\u0633 \u06a9\u0627 \u0627\u062c\u0631 \u062f\u0646\u06cc\u0627 \u0648 \u0622\u062e\u0631\u062a \u0645\u06cc\u06ba \u0645\u0644\u062a\u0627 \u06c1\u06d2\u06d4'+(bankList?'\n\n\uD83C\uDFE6 *\u0627\u06a9\u0627\u0624\u0646\u0679 \u0646\u0645\u0628\u0631:*\n'+bankList:'')+'\n\n\u0622\u0626\u06cc\u06ba! \u0645\u0644 \u06a9\u0631 \u0627\u0633 \u0639\u0645\u0644\u0650 \u062e\u06cc\u0631 \u0645\u06cc\u06ba \u062d\u0635\u06c1 \u0688\u0627\u0644\u06cc\u06ba \u0627\u0648\u0631 \u0627\u067e\u0646\u06d2 \u0644\u06cc\u06d2 \u062f\u0627\u0626\u0645\u06cc \u0627\u062c\u0631 \u06a9\u0627 \u0630\u0631\u06cc\u0639\u06c1 \u0628\u0646\u0627\u0626\u06cc\u06ba\u06d4\n\n\u062c\u0632\u0627\u06a9\u0645 \u0627\u0644\u0644\u06c1 \u062e\u06cc\u0631\u0627\u064b \u06a9\u062b\u06cc\u0631\u0627\u064b \uD83E\uDD32';
-    
-    var waUrl='https://wa.me/92'+mob.replace(/^0/,'')+'?text='+encodeURIComponent(msg);
-    
+    var waUrl=mob?'https://wa.me/92'+mob.replace(/^0/,'')+'?text='+encodeURIComponent(msg):'';
     html+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid #f5f5f5">';
     html+=av;
     html+='<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#1a1a1a">'+d.name+'</div>';
     html+='<div style="font-size:10px;color:#888;margin-top:1px">'+d.id+' &bull; '+(d.mobile||'\u2014')+' &bull; '+(d.area||'\u2014')+'</div></div>';
-    html+='<div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">';
-    html+='<a href="'+waUrl+'" target="_blank" style="background:#25D366;color:#fff;border:none;padding:6px 10px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;text-decoration:none;display:block;text-align:center">&#128232; WhatsApp</a>';
-    html+='<button data-hid="'+d.id+'" onclick="wrHide(this.dataset.hid)" style="background:#f5f5f5;color:#888;border:1px solid #ddd;padding:5px 8px;border-radius:7px;font-size:10px;cursor:pointer">Hide 10d</button>';
+    html+='<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">';
+    if(waUrl)html+='<a href="'+waUrl+'" target="_blank" style="background:#25D366;color:#fff;padding:6px 10px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;text-decoration:none;text-align:center;display:block">&#128232; WA</a>';
+    html+='<button data-hid="'+d.id+'" onclick="wrHide(this.dataset.hid)" style="background:#f5f5f5;color:#888;border:1px solid #ddd;padding:4px 8px;border-radius:7px;font-size:10px;cursor:pointer">Hide</button>';
     html+='</div></div>';
   });
-
   html+='</div>';
   return html;
-};
+};;
 
 function filterWR(){
   window._wrQ=document.getElementById('wrSearch')?document.getElementById('wrSearch').value:'';
@@ -6723,7 +6781,7 @@ function renderAddedByTab(){
   var el=document.getElementById('miBody');
   if(!el)return;
 
-  var users=DB.users.filter(function(u){return u.approved&&!u.locked&&u.role!=='developer';});
+  var users=DB.users.filter(function(u){return u.approved&&!u.locked;});
   var selUserId=window._miAddedByUser||'';
   var missingDonors=DB.donors.filter(function(d){return !d.addedBy||!d.addedBy.trim();});
   var q=(window._miSearch||'').toLowerCase().trim();
@@ -7955,7 +8013,7 @@ function getMenuConfig(){
     homeItems.push({icon:'⚠️',label:'Update Unknown'+(_uc>0?' ('+_uc+')':''),tab:'unknowndonors'});
     var _mi=DB.donors.filter(function(d){return !d.area||!d.bloodGroup||!d.profession;}).length;
     homeItems.push({icon:'📋',label:'Missing Info'+(_mi>0?' ('+_mi+')':''),tab:'missinginfo'});
-    homeItems.push({icon:'🔔', label:'WA Reminder', tab:'wreminder'});
+    homeItems.push({icon:'📣', label:'WA Reminder', tab:'wreminder'});
   }
   if(currentRole!=='user'){
     homeItems.push(
@@ -8029,6 +8087,7 @@ function getMenuConfig(){
       {icon:'👥', label:'Users List / صارفین', tab:'userslist'},
       {icon:'📋', label:'Audit Log / لاگ', tab:'audit'},
       {icon:'🗄️', label:'Data Manager', tab:'datamanager'},
+      {icon:'✏️', label:'Rename AddedBy', tab:'renameaddedby'},
       ...(currentRole==='developer'?[{icon:'⚙️', label:'Entry Manager', tab:'entrymanager'}]:[]),
     );
   }
@@ -8074,7 +8133,7 @@ function openSubmenu(key){
   currentSubmenu = key;
 }
 
-const FORM_TABS_SET=new Set(['donation','expense','deceased','adddonor','transfer','profile','suggestion','donorprofileupdate','orgsettings','areas','professions','expcategories','approvals','lockuser','userslist','audit','datamanager','suggestions','bloodbank','smartsearch','smsreminders','complaint','complaints','contacts','superentry','alldonations','dailyupdate','deathposter','wreminder','notifications','excelexport','unknowndonors','missinginfo','myentries','area','balreport','expreport','entrymanager','fundraisingstar','donorsummary','ledger','usersreport','todaycollection','fundreport','top','deathcert','search','slip','donorlist','lastdonation']);
+const FORM_TABS_SET=new Set(['donation','expense','deceased','adddonor','transfer','profile','suggestion','donorprofileupdate','orgsettings','areas','professions','expcategories','approvals','lockuser','userslist','audit','datamanager','suggestions','bloodbank','smartsearch','smsreminders','complaint','complaints','contacts','superentry','alldonations','dailyupdate','deathposter','wreminder','notifications','excelexport','unknowndonors','missinginfo','myentries','area','balreport','expreport','entrymanager','fundraisingstar','donorsummary','ledger','usersreport','todaycollection','fundreport','top','deathcert','search','slip','donorlist','lastdonation','renameaddedby']);
 
 function selectTab(tab){
   renderTab(tab);
@@ -8273,7 +8332,7 @@ const TAB_LABELS={
   donorlist:'Donor List',slip:'Donor Slip',top:'Top Donors',transfer:'Transfer',
   decconfirm:'Confirm Deceased',approvals:'Approvals',lockuser:'Login Management',
   userslist:'Users List',professions:'Professions',audit:'Audit Log',areas:'Areas',
-  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',entrymanager:'Entry Manager',lastdonation:'Last Donation',excelexport:'Excel Export',alldonations:'All Donations',deathposter:'Death Poster',wreminder:'WhatsApp Reminder',deathposter:'Death Poster',dailyupdate:'Daily Update',entrymanager:'Entry Manager',fundraisingstar:'Fundraising Stars',donorsummary:'Donor Summary',myentries:'My Entries',unknowndonors:'Update Unknown',missinginfo:'Missing Information',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
+  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',entrymanager:'Entry Manager',lastdonation:'Last Donation',excelexport:'Excel Export',alldonations:'All Donations',deathposter:'Death Poster',wreminder:'WhatsApp Reminder',renameaddedby:'Rename AddedBy',deathposter:'Death Poster',dailyupdate:'Daily Update',entrymanager:'Entry Manager',fundraisingstar:'Fundraising Stars',donorsummary:'Donor Summary',myentries:'My Entries',unknowndonors:'Update Unknown',missinginfo:'Missing Information',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
 };
 
 // ============================================================

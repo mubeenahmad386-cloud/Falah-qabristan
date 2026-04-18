@@ -1258,7 +1258,7 @@ function renderLoginExtras(){
       '<div style="display:flex;align-items:center;gap:12px">'+photoHtml+
       '<div style="flex:1;min-width:0">'+
         '<div style="font-size:15px;font-weight:900;color:#fff;margin-bottom:5px">'+( acc.title||'\u2014')+(acc.area?' <span style=\'font-size:10px;color:rgba(255,255,255,0.4);font-weight:400\'>\u2014 '+acc.area+'</span>':'')+'</div>'+
-        '<div style="font-size:12px;color:rgba(200,169,110,0.8);font-weight:700;font-family:monospace">'+(acc.bank||'\u2014')+' &nbsp; | &nbsp; '+(acc.number||'\u2014')+'</div>'+
+        '<div style="font-size:15px;font-weight:900;color:#fff;font-family:monospace">'+(acc.bank||'\u2014')+' - '+(acc.number||'\u2014')+'</div>'+
       '</div></div>'+
     '</div>';
   }).join('')+
@@ -6534,7 +6534,10 @@ T.renameaddedby=function(){
   html+='</div>';
   if(browseArea){
     var areaDonors=DB.donors.filter(function(d){return (d.area||'')===browseArea;});
-    html+='<div style="font-size:11px;color:#888;margin-bottom:8px">'+areaDonors.length+' donors in '+browseArea+'</div>';
+     var rabBrowseQ=window._rabBrowseQ||'';
+     if(rabBrowseQ){var rql=rabBrowseQ.toLowerCase();areaDonors=areaDonors.filter(function(d){return (d.name||'').toLowerCase().includes(rql)||(d.mobile||'').includes(rql)||(d.id||'').toLowerCase().includes(rql);});}
+     html+='<div class="inp-wrap" style="margin-bottom:8px"><span class="inp-icon">&#128269;</span><input type="text" id="rabBrowseSearch" value="'+rabBrowseQ.replace(/"/g,'&quot;')+'" placeholder="Search donor name, mobile, ID..." oninput="window._rabBrowseQ=this.value;_rabBrowseFilter()" autocomplete="off" style="font-size:12px"></div>';
+     html+='<div style="font-size:11px;color:#888;margin-bottom:8px">'+areaDonors.length+' donors in '+browseArea+'</div>';
     if(!areaDonors.length){
       html+='<p style="font-size:12px;color:#888">Koi donor nahi.</p>';
     } else {
@@ -6569,6 +6572,15 @@ T.renameaddedby=function(){
   return html;
 };
 
+function _rabBrowseFilter(){
+  var el=document.getElementById('rabBrowseSearch');
+  window._rabBrowseQ=el?el.value:'';
+  renderTab('renameaddedby');
+  setTimeout(function(){
+    var inp=document.getElementById('rabBrowseSearch');
+    if(inp){inp.focus();try{inp.setSelectionRange(inp.value.length,inp.value.length);}catch(e){}}
+  },60);
+}
 async function _rabBrowseChange(donorId, newUserId){
   var donor=DB.donors.find(function(d){return d.id===donorId;});
   if(!donor)return;

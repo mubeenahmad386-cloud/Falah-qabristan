@@ -50,7 +50,7 @@ label{display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:5px;
 .badge-developer{background:#f5e8ff;color:#6b21a8}
 .badge-user{background:#f5f5f5;color:#666}
 .badge-donor{background:#E1F5EE;color:#0F6E56}
-.entry-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:0.5px solid #f5f5f5}
+.entry-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #e8e8e8}
 .entry-name{font-size:13px;font-weight:600;color:#1a1a1a}
 .entry-sub{font-size:11px;color:#999;margin-top:2px}
 .entry-amt{font-size:13px;font-weight:700;color:#0F6E56}
@@ -80,7 +80,7 @@ label{display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:5px;
 .content-area{padding:16px}
 /* CARD */
 .card{background:var(--card);border:0.5px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,0.04)}
-.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #f0f0f0}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #e8e8e8}
 .card-title{font-size:15px;font-weight:700}
 h2{font-size:16px;font-weight:700;margin-bottom:10px}
 h3{font-size:14px;font-weight:600;margin-bottom:8px}
@@ -138,7 +138,7 @@ input[type=file]{padding:6px}
 .info-box.info{background:#E6F1FB;color:#185FA5;border:1px solid #378ADD}
 .info-box.danger{background:#FCEBEB;color:#A32D2D;border:1px solid #E24B4A}
 /* ENTRIES */
-.entry-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:0.5px solid #f5f5f5}
+.entry-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #e8e8e8}
 .entry-row:last-child{border-bottom:none}
 .entry-name{font-size:13px;font-weight:600}
 .entry-sub{font-size:11px;color:var(--muted);margin-top:2px}
@@ -171,7 +171,7 @@ input[type=file]{padding:6px}
 .cert-sub{font-size:12px;opacity:0.85;margin-top:2px}
 /* DC CERT */
 .dc-stamp{width:60px;height:60px;border-radius:50%;border:3px solid var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:22px;background:#fff}
-.dc-field{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid #f0f0f0;font-size:13px}
+.dc-field{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid #e8e8e8;font-size:13px}
 .dc-field:last-child{border-bottom:none}
 .dc-key{color:#888;min-width:110px;font-size:12px}
 .bi-title{display:flex;flex-direction:column;gap:1px}
@@ -191,7 +191,7 @@ input[type=file]{padding:6px}
 .avatar-box img{width:100%;height:100%;object-fit:cover}
 /* LEDGER */
 .ledger-hdr{display:grid;grid-template-columns:76px 1fr 78px 78px 80px;gap:4px;font-size:11px;font-weight:700;color:#888;padding:6px 0;border-bottom:2px solid #ddd}
-.ledger-row{display:grid;grid-template-columns:76px 1fr 78px 78px 80px;gap:4px;font-size:11px;padding:6px 0;border-bottom:0.5px solid #f0f0f0;align-items:center}
+.ledger-row{display:grid;grid-template-columns:76px 1fr 78px 78px 80px;gap:4px;font-size:11px;padding:6px 0;border-bottom:1px solid #e8e8e8;align-items:center}
 /* DONOR RANK */
 .donor-rank-card{border-radius:12px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;border:1px solid transparent}
 /* TRANSFER */
@@ -901,7 +901,7 @@ function openLoginHistory(){
   else{
     hist.forEach(function(h){
       var roleColor=h.role==='developer'?'#993556':h.role==='admin'?'#185FA5':h.role==='manager'?'#854F0B':'#0F6E56';
-      html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid #f0f0f0">';
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #e8e8e8">';
       html+='<div><div style="font-size:13px;font-weight:600">'+h.name+'</div>';
       html+='<div style="font-size:10px;color:#888;margin-top:1px">'+h.id+' • <span style="color:'+roleColor+';font-weight:600">'+h.role+'</span> • '+h.device+'</div></div>';
       html+='<div style="text-align:right"><div style="font-size:12px;font-weight:600">'+h.date+'</div><div style="font-size:11px;color:#888">'+h.time+'</div></div>';
@@ -1238,23 +1238,41 @@ function renderLoginExtras(){
   if(bl&&be){
     if(ORG_CONFIG.bankAccounts.length>0){
       be.style.display='none';
-      bl.innerHTML='<div style="background:linear-gradient(135deg,#0F6E56,#1D9E75);border-radius:14px;padding:14px 16px;margin-bottom:14px;text-align:center"><div style="font-size:16px;font-weight:800;color:#fff;letter-spacing:0.5px">Accounts # &mdash; Fund Transfer</div><div style="font-size:13px;color:rgba(255,255,255,0.85);margin-top:3px;direction:rtl">\u0627\u06a9\u0627\u0624\u0646\u0679 \u0646\u0645\u0628\u0631 \u2014 \u0641\u0646\u0688 \u0679\u0631\u0627\u0646\u0633\u0641\u0631</div></div>'+ORG_CONFIG.bankAccounts.map(function(acc,ai){
-  var initials=(acc.title||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-  var photoHtml=acc.photo?'<img src="'+acc.photo+'" style="width:70px;height:70px;border-radius:50%;object-fit:cover;border:3px solid #1D9E75;display:block">':'<div style="width:70px;height:70px;border-radius:50%;background:#E1F5EE;border:3px solid #1D9E75;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#0F6E56">'+initials+'</div>';
-  return '<div class="card" style="margin-bottom:10px;padding:12px">'+
-    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'+
-      photoHtml+
+      bl.innerHTML='<div id="bankPosterContent" style="background:linear-gradient(160deg,#062716 0%,#0F6E56 55%,#0a3d2e 100%);border-radius:16px;padding:20px 18px;max-width:380px;margin:0 auto;overflow:hidden;position:relative">'+
+  '<div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;border:1.5px solid rgba(255,255,255,0.04);border-radius:50%"></div>'+
+  // Org header
+  '<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.12)">'+(ORG_CONFIG.logo?'<img src="'+ORG_CONFIG.logo+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(255,255,255,0.3)">':'')+
+  '<div style="text-align:center"><div style="font-size:14px;font-weight:800;color:#fff">'+(ORG_CONFIG.name||'Falah e Qabristan Committee')+'</div>'+(ORG_CONFIG.urduName?'<div style="font-size:11px;color:rgba(255,255,255,0.6);direction:rtl;margin-top:1px">'+ORG_CONFIG.urduName+'</div>':'')+
+  '</div></div>'+
+  // Heading
+  '<div style="text-align:center;margin-bottom:16px">'+
+    '<div style="background:rgba(200,169,110,0.15);border:1px solid rgba(200,169,110,0.3);border-radius:8px;padding:6px 18px;display:inline-block">'+
+      '<div style="font-size:13px;font-weight:800;color:#c8a96e;letter-spacing:0.5px;direction:rtl">\u0627\u06a9\u0627\u0624\u0646\u0679 \u0646\u0645\u0628\u0631 \u2014 Fund Transfer</div>'+
+    '</div>'+
+  '</div>'+
+  // Accounts
+  ORG_CONFIG.bankAccounts.map(function(acc,ai){
+    var initials=(acc.title||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+    var photoHtml=acc.photo?'<img src="'+acc.photo+'" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid rgba(200,169,110,0.5);flex-shrink:0">':'<div style="width:48px;height:48px;border-radius:50%;background:rgba(200,169,110,0.15);border:2px solid rgba(200,169,110,0.3);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#c8a96e;flex-shrink:0">'+initials+'</div>';
+    return '<div style="background:rgba(0,0,0,0.25);border-radius:12px;padding:14px 16px;margin-bottom:10px;border:1px solid rgba(255,255,255,0.08)">'+
+      '<div style="display:flex;align-items:center;gap:12px">'+photoHtml+
       '<div style="flex:1;min-width:0">'+
-        '<div style="font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(acc.title||'\u2014')+(acc.area?' <span style="font-size:11px;color:#888;font-weight:400">\u2014 '+acc.area+'</span>':'')+'</div>'+
-        '<div style="font-size:12px;color:#185FA5;font-weight:600;margin-top:2px">'+(acc.bank||'\u2014')+'</div>'+
-      '</div>'+
-    '</div>'+
-    '<div style="background:#E6F1FB;border-radius:8px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between">'+
-      '<div style="font-size:10px;font-weight:700;color:#0C447C">Account No</div>'+
-      '<div style="font-size:16px;font-weight:800;letter-spacing:2px;color:#185FA5;font-family:monospace">'+(acc.number||'\u2014')+'</div>'+
-    '</div>'+
-  '</div>';
-}).join('')+'<div style="background:#f0fff8;border-radius:12px;padding:14px 16px;border-right:4px solid #1D9E75;text-align:right;margin-top:4px"><div style="font-size:14px;font-weight:600;color:#0F6E56;direction:rtl;line-height:2">اللہ کی راہ میں دیجیئے تاکہ قبرستان میں جاری کاموں کو مکمل کیا جا سکے</div><div style="font-size:12px;color:#1D9E75;margin-top:5px;direction:rtl">رب کریم آپ کو دنیا و آخرت میں بہترین بدلہ عطا فرمائے ۔ آمین</div></div>';
+        '<div style="font-size:15px;font-weight:900;color:#fff;margin-bottom:5px">'+( acc.title||'\u2014')+(acc.area?' <span style=\'font-size:10px;color:rgba(255,255,255,0.4);font-weight:400\'>\u2014 '+acc.area+'</span>':'')+'</div>'+
+        '<div style="font-size:12px;color:rgba(200,169,110,0.8);font-weight:700;font-family:monospace">'+(acc.bank||'\u2014')+' &nbsp; | &nbsp; '+(acc.number||'\u2014')+'</div>'+
+      '</div></div>'+
+    '</div>';
+  }).join('')+
+  // Dua
+  '<div style="background:rgba(255,255,255,0.06);border-radius:10px;padding:12px 14px;border-right:3px solid rgba(200,169,110,0.5);text-align:right;margin-top:4px">'+
+    '<div style="font-size:12px;color:rgba(255,255,255,0.85);direction:rtl;line-height:1.9">\u0627\u0644\u0644\u06c1 \u06a9\u06cc \u0631\u0627\u06c1 \u0645\u06cc\u06ba \u062f\u06cc\u062c\u06cc\u0626\u06d2 \u062a\u0627\u06a9\u06c1 \u0642\u0628\u0631\u0633\u062a\u0627\u0646 \u0645\u06cc\u06ba \u062c\u0627\u0631\u06cc \u06a9\u0627\u0645\u0648\u06ba \u06a9\u0648 \u0645\u06a9\u0645\u0644 \u06a9\u06cc\u0627 \u062c\u0627 \u0633\u06a9\u06d2</div>'+
+    '<div style="font-size:11px;color:rgba(200,169,110,0.7);margin-top:5px;direction:rtl">\u0631\u0628 \u06a9\u0631\u06cc\u0645 \u0622\u067e \u06a9\u0648 \u062f\u0646\u06cc\u0627 \u0648 \u0622\u062e\u0631\u062a \u0645\u06cc\u06ba \u0628\u06c1\u062a\u0631\u06cc\u0646 \u0628\u062f\u0644\u06c1 \u0639\u0637\u0627 \u0641\u0631\u0645\u0627\u0626\u06d2 \u06d4 \u0622\u0645\u06cc\u06ba</div>'+
+  '</div>'+
+  (ORG_CONFIG.fullAddress||ORG_CONFIG.address?'<div style="text-align:center;font-size:9px;color:rgba(255,255,255,0.25);margin-top:10px;direction:rtl">'+(ORG_CONFIG.fullAddress||ORG_CONFIG.address)+'</div>':'')+
+'</div>'+
+'<div style="display:flex;gap:8px;margin-top:10px">'+
+  '<button data-dt="image" onclick="downloadReport(\'bankPosterContent\',\'fund_transfer_poster\',this.dataset.dt)" style="flex:1;background:#0F6E56;color:#fff;border:none;padding:10px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">&#128247; Image</button>'+
+  '<button data-dt="pdf" onclick="downloadReport(\'bankPosterContent\',\'fund_transfer_poster\',this.dataset.dt)" style="flex:1;background:#E24B4A;color:#fff;border:none;padding:10px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">&#128196; PDF</button>'+
+'</div>';
     } else {be.style.display='block';bl.innerHTML='';}
   }
 }
@@ -1271,7 +1289,7 @@ function getTabs(){
     {label:'Area / علاقہ',key:'area'},
     {label:'Expense Rpt / اخراجات',key:'expreport'},
     {label:'Ledger / کھاتہ',key:'ledger'},
-    {label:'Balance / بیلنس',key:'balreport'}
+    {label:'User Cash in Hand',key:'balreport'}
   ];
   // Users Report: only manager, developer (NOT user, NOT admin)
   if(['manager','developer'].includes(currentRole)) t.push({label:'Users / صارفین',key:'usersreport'});
@@ -1377,7 +1395,7 @@ T.dash=function(){
       </div>
       ${!isUser?`<button onclick="selectTab('myentries')" style="font-size:10px;color:#1D9E75;background:none;border:none;cursor:pointer;font-weight:600">View All →</button>`:''}
     </div>
-    ${myD.length===0?'<p style="font-size:11px;color:#888">No entries found.</p>':myD.slice(-2).reverse().map(d=>{const dn=findDonorById(d.donorId)||{name:currentUser.name,area:currentUser.area||''};return `<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:0.5px solid #f5f5f5">${avatarHtml(dn.photo,dn.name,22)}<div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${isUser?d.desc||'Donation':dn.name}</div><div style="font-size:10px;color:#aaa">${d.date}</div></div><div style="font-size:11px;font-weight:700;color:#0F6E56;white-space:nowrap">${fmt(d.amount)}</div></div>`;}).join('')}
+    ${myD.length===0?'<p style="font-size:11px;color:#888">No entries found.</p>':myD.slice(-2).reverse().map(d=>{const dn=findDonorById(d.donorId)||{name:currentUser.name,area:currentUser.area||''};return `<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid #e8e8e8">${avatarHtml(dn.photo,dn.name,22)}<div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${isUser?d.desc||'Donation':dn.name}</div><div style="font-size:10px;color:#aaa">${d.date}</div></div><div style="font-size:11px;font-weight:700;color:#0F6E56;white-space:nowrap">${fmt(d.amount)}</div></div>`;}).join('')}
   </div>
   <!-- QUICK ACTIONS -->
   ${!isUser?`
@@ -1515,7 +1533,7 @@ T.transfer=function(){
       <h3 style="margin:0;font-size:14px;font-weight:700">📤 Last 5 Transfers</h3>
     </div>
     ${last5.map(t=>{const tu=DB.users.find(u=>u.id===t.to)||{name:'?'};return `
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:0.5px solid #f0f0f0">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #e8e8e8">
         <div style="flex:1"><div style="font-size:13px;font-weight:600;color:#1a1a1a">${tu.name}</div>
         <div style="font-size:11px;color:#888;margin-top:2px">${t.date}${t.note?' • '+t.note:''}</div></div>
         <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:5px">
@@ -1544,7 +1562,7 @@ T.transfer=function(){
   ${recvd.length>0?`<div class="card" style="padding:18px">
     <h3 style="margin-bottom:12px;font-size:14px;font-weight:700">📥 Received History</h3>
     ${recvd.slice(-5).reverse().map(t=>{const fu=DB.users.find(u=>u.id===t.from)||{name:'?'};return `
-      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid #f0f0f0;font-size:13px">
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #e8e8e8;font-size:13px">
         <div><div style="font-weight:600">${fu.name}</div><div style="font-size:11px;color:#888;margin-top:1px">${t.date}</div></div>
         <div style="font-size:15px;font-weight:700;color:#0F6E56">+${fmt(t.amount)}</div>
       </div>`;}).join('')}
@@ -1662,7 +1680,7 @@ function showDonorSuggestions(val){
   box.style.display='block';
   box.innerHTML=unique.map(d=>`
     <div onclick="selectDonorSuggestion('${d.id}')"
-      style="display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;border-bottom:0.5px solid #f5f5f5;transition:background 0.1s"
+      style="display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;border-bottom:1px solid #e8e8e8;transition:background 0.1s"
       onmouseenter="this.style.background='#f0fff8'"
       onmouseleave="this.style.background=''">
       ${avatarHtml(d.photo,d.name,34)}
@@ -2191,7 +2209,7 @@ T.area=function(){
     <div style="display:grid;grid-template-columns:1fr 75px 75px 75px;gap:4px 6px;font-size:11px;font-weight:600;color:#888;padding:4px 0;border-bottom:1px solid #ddd">
       <span>Area</span><span style="text-align:right">Income</span><span style="text-align:right">Expenses</span><span style="text-align:right">Cash</span>
     </div>
-    ${AREAS.filter(a=>byArea[a].income>0||byArea[a].expense>0).map(a=>`<div style="display:grid;grid-template-columns:1fr 75px 75px 75px;gap:4px 6px;padding:6px 0;border-bottom:0.5px solid #f0f0f0;font-size:12px">
+    ${AREAS.filter(a=>byArea[a].income>0||byArea[a].expense>0).map(a=>`<div style="display:grid;grid-template-columns:1fr 75px 75px 75px;gap:4px 6px;padding:6px 0;border-bottom:1px solid #e8e8e8;font-size:12px">
       <span style="font-weight:500">${a}</span>
       <span style="text-align:right;color:#0F6E56">${fmt(byArea[a].income)}</span>
       <span style="text-align:right;color:#E24B4A">${fmt(byArea[a].expense)}</span>
@@ -2246,7 +2264,7 @@ function genExpReport(allTime){
     const safeId='cat_'+cat.replace(/[^a-zA-Z0-9]/g,'_');
     const entriesHtml=data.entries.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(e=>{
       const byU=DB.users.find(u=>u.id===e.by)||{name:e.by,role:'?'};
-      return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid #f0f0f0">
+      return `<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #e8e8e8">
         <div style="flex:1">
           <div style="font-size:12px;font-weight:500">${e.desc} <span style="font-size:10px;background:#FAEEDA;color:#854F0B;padding:1px 6px;border-radius:10px">${e.billNo||'—'}</span></div>
           <div style="font-size:11px;color:#888;margin-top:1px">${e.date} • ${e.vendor||'—'} • ${e.area||'—'} • By: ${byU.name}</div>
@@ -2399,23 +2417,23 @@ T.balreport=function(){
         <div style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase;margin-bottom:8px">Income Sources</div>
         ${f.donations.length===0?'<p style="font-size:12px;color:#aaa;margin-bottom:8px">No donation entries.</p>':f.donations.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5).map(d=>{
           const dn=DB.donors.find(x=>x.id===d.donorId)||{name:'Unknown',area:''};
-          return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid #f0f0f0;font-size:12px">
+          return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #e8e8e8;font-size:12px">
             <span style="color:#555">${d.date} — ${dn.name} (${dn.area})</span>
             <span style="color:#0F6E56;font-weight:600">+${fmt(d.amount)}</span>
           </div>`;
         }).join('')}
         ${f.donations.length>5?`<div style="font-size:11px;color:#aaa;padding:4px 0">...aur ${f.donations.length-5} entries</div>`:''}
         ${f.recvT.length>0?`<div style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase;margin:8px 0 4px">Received Transfers</div>`:''}
-        ${f.recvT.map(t=>{const fu=DB.users.find(x=>x.id===t.from)||{name:'?'};return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid #f0f0f0;font-size:12px"><span style="color:#555">${t.date} — From: ${fu.name}</span><span style="color:#0F6E56;font-weight:600">+${fmt(t.amount)}</span></div>`;}).join('')}
+        ${f.recvT.map(t=>{const fu=DB.users.find(x=>x.id===t.from)||{name:'?'};return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #e8e8e8;font-size:12px"><span style="color:#555">${t.date} — From: ${fu.name}</span><span style="color:#0F6E56;font-weight:600">+${fmt(t.amount)}</span></div>`;}).join('')}
 
         <div style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase;margin:10px 0 6px">Expenses</div>
-        ${f.expenses.length===0?'<p style="font-size:12px;color:#aaa;margin-bottom:8px">No expenses yet.</p>':f.expenses.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(e=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid #f0f0f0;font-size:12px">
+        ${f.expenses.length===0?'<p style="font-size:12px;color:#aaa;margin-bottom:8px">No expenses yet.</p>':f.expenses.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(e=>`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #e8e8e8;font-size:12px">
             <span style="color:#555">${e.date} — ${e.desc} <span style="font-size:10px;color:#aaa">(${e.area})</span></span>
             <span style="color:#E24B4A;font-weight:600">-${fmt(e.amount)}</span>
           </div>`).join('')}
 
         ${f.sentT.length>0?`<div style="font-size:11px;font-weight:700;color:#666;text-transform:uppercase;margin:10px 0 6px">Sent Transfers</div>`:''}
-        ${f.sentT.map(t=>{const tu=DB.users.find(x=>x.id===t.to)||{name:'?'};return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid #f0f0f0;font-size:12px"><span style="color:#555">${t.date} — To: ${tu.name}</span><span style="color:#E24B4A;font-weight:600">-${fmt(t.amount)}</span></div>`;}).join('')}
+        ${f.sentT.map(t=>{const tu=DB.users.find(x=>x.id===t.to)||{name:'?'};return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #e8e8e8;font-size:12px"><span style="color:#555">${t.date} — To: ${tu.name}</span><span style="color:#E24B4A;font-weight:600">-${fmt(t.amount)}</span></div>`;}).join('')}
 
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:12px;padding-top:10px;border-top:1px solid #eee">
           <div style="background:#E1F5EE;border-radius:8px;padding:8px;text-align:center">
@@ -2519,7 +2537,7 @@ T.usersreport=function(){
         </div>
       </div>
       <div id="area_${a.replace(/\s/g,'_')}" style="display:none;margin-left:20px;border-left:2px solid #1D9E7540;padding-left:10px;margin-bottom:6px">
-        ${users.map(u=>`<div style="padding:8px 0;border-bottom:0.5px solid #f0f0f0">
+        ${users.map(u=>`<div style="padding:8px 0;border-bottom:1px solid #e8e8e8">
           <div style="font-size:13px;font-weight:700;color:#1a1a1a">${u.name}</div>
           <div style="font-size:11px;color:#888;margin-top:2px"><span class="id-badge" style="font-size:10px">${u.id}</span> &nbsp;${u.mobile||'—'}</div>
         </div>`).join('')}
@@ -2538,7 +2556,7 @@ T.usersreport=function(){
         </div>
       </div>
       <div id="prof_${p.replace(/\s/g,'_')}" style="display:none;margin-left:20px;border-left:2px solid #185FA540;padding-left:10px;margin-bottom:6px">
-        ${users.map(u=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid #f0f0f0">
+        ${users.map(u=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #e8e8e8">
           ${avatarHtml(u.photo,u.name,28)}
           <div style="flex:1">
             <div style="font-size:13px;font-weight:500">${u.name} <span class="id-badge">${u.id}</span></div>
@@ -3108,7 +3126,7 @@ function genTop10(){
   var html='';
   ranked.forEach(function(item,i){
     var d=item.donor;
-    html+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid #f0f0f0">'+
+    html+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #e8e8e8">'+
       '<div style="font-size:16px;width:28px;text-align:center;flex-shrink:0">'+(medals[i]||'<span style="font-size:12px;font-weight:700;color:#888">'+(i+1)+'</span>')+'</div>'+
       '<div style="flex:1;min-width:0">'+
         '<div style="font-size:13px;font-weight:700;color:#1a1a1a">'+d.name+'</div>'+
@@ -3715,7 +3733,7 @@ function openMyDonationsQuick(){
       <div style="font-size:15px;font-weight:700;margin-bottom:10px">💰 My Donations</div>
       ${myD.length===0?'<p style="color:#888;font-size:13px">No donations yet.</p>':myD.map(d=>{
         const dn=DB.donors.find(x=>x.id===d.donorId)||{name:'?'};
-        return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid #f0f0f0">
+        return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #e8e8e8">
           <div style="flex:1">
             <div style="font-size:12px;font-weight:600">${dn.name}</div>
             <div style="font-size:10px;color:#888">${d.date} • ${d.desc||'Donation'}</div>
@@ -3743,7 +3761,7 @@ function openMyExpensesQuick(){
       <button onclick="closePopup()" style="position:absolute;top:8px;right:10px;background:none;border:none;font-size:20px;cursor:pointer;color:#aaa">✕</button>
       <div style="font-size:15px;font-weight:700;margin-bottom:10px">📋 My Expenses</div>
       ${myE.length===0?'<p style="color:#888;font-size:13px">No expenses yet.</p>':myE.map(e=>`
-        <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid #f0f0f0">
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #e8e8e8">
           <div style="flex:1">
             <div style="font-size:12px;font-weight:600">${e.desc}</div>
             <div style="font-size:10px;color:#888">${e.date} • ${e.billNo}</div>
@@ -4273,11 +4291,11 @@ function filterBloodBank(area){
   el.innerHTML=`<div class="card">
     <div style="font-size:12px;font-weight:600;color:#888;margin-bottom:10px">${filtered.length} donor${filtered.length!==1?'s':''} found | ملے</div>
     ${filtered.map(d=>`
-      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid #f5f5f5" onclick="openDonorProfile('${d.id}')" style="cursor:pointer">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #e8e8e8" onclick="openDonorProfile('${d.id}')" style="cursor:pointer">
         <div style="flex-shrink:0">${avatarHtml(d.photo,d.name,50)}</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:700">${d.name}</div>
-          <div style="font-size:11px;color:#888;margin-top:2px">📍 ${d.area||'—'}</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">📍 ${d.area||'—'} &bull; <span style="color:#185FA5">${d.mobile||'—'}</span></div>
           <div style="margin-top:4px">
             <span style="background:#FCEBEB;color:#E24B4A;font-weight:700;font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid #E24B4A">🩸 ${d.bloodGroup}</span>
           </div>
@@ -4316,7 +4334,7 @@ function renderDPUList(donors,q){
       var av=d.photo?'<img src="'+d.photo+'" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:1.5px solid #E1F5EE;flex-shrink:0">':'<div style="width:44px;height:44px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
       var liveTotal=DB.donations.filter(function(x){return x.donorId===d.id;}).reduce(function(s,x){return s+x.amount;},0);
       var mob=(d.mobile||'').replace(/^(\d{4})(\d+)/,'$1-$2');
-      html+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid #f5f5f5">'+av+'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#1a1a1a">'+d.name+' <span class="id-badge" style="font-size:9px">'+d.id+'</span></div><div style="font-size:11px;color:#888;margin-top:2px">'+mob+' &bull; '+(d.area||'<span style="color:#E24B4A">No area</span>')+'</div><div style="font-size:11px;font-weight:600;color:#0F6E56;margin-top:1px">Total: Rs '+fmt(liveTotal)+'</div></div><button data-did="'+d.id+'" onclick="openEditDonorProfile(this.dataset.did)" style="background:#1D9E75;color:#fff;border:none;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0">&#9998; Edit</button></div>';
+      html+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #e8e8e8">'+av+'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#1a1a1a">'+d.name+' <span class="id-badge" style="font-size:9px">'+d.id+'</span></div><div style="font-size:11px;color:#888;margin-top:2px">'+mob+' &bull; '+(d.area||'<span style="color:#E24B4A">No area</span>')+'</div><div style="font-size:11px;font-weight:600;color:#0F6E56;margin-top:1px">Total: Rs '+fmt(liveTotal)+'</div></div><button data-did="'+d.id+'" onclick="openEditDonorProfile(this.dataset.did)" style="background:#1D9E75;color:#fff;border:none;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0">&#9998; Edit</button></div>';
     });
   });
   return html;
@@ -4346,7 +4364,7 @@ function filterDPU(){
       var av=d.photo?'<img src="'+d.photo+'" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:1.5px solid #E1F5EE;flex-shrink:0">':'<div style="width:44px;height:44px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
       var liveTotal=DB.donations.filter(function(x){return x.donorId===d.id;}).reduce(function(s,x){return s+x.amount;},0);
       var mob=(d.mobile||'');
-      html+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid #f5f5f5">'+av+'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#1a1a1a">'+d.name+' <span class="id-badge" style="font-size:9px">'+d.id+'</span></div><div style="font-size:11px;color:#888;margin-top:2px">'+mob+' &bull; '+(d.area||'<span style="color:#E24B4A">No area</span>')+'</div><div style="font-size:11px;font-weight:600;color:#0F6E56;margin-top:1px">Total: Rs '+fmt(liveTotal)+'</div></div><button data-did="'+d.id+'" onclick="openEditDonorProfile(this.dataset.did)" style="background:#1D9E75;color:#fff;border:none;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0">&#9998; Edit</button></div>';
+      html+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #e8e8e8">'+av+'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#1a1a1a">'+d.name+' <span class="id-badge" style="font-size:9px">'+d.id+'</span></div><div style="font-size:11px;color:#888;margin-top:2px">'+mob+' &bull; '+(d.area||'<span style="color:#E24B4A">No area</span>')+'</div><div style="font-size:11px;font-weight:600;color:#0F6E56;margin-top:1px">Total: Rs '+fmt(liveTotal)+'</div></div><button data-did="'+d.id+'" onclick="openEditDonorProfile(this.dataset.did)" style="background:#1D9E75;color:#fff;border:none;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0">&#9998; Edit</button></div>';
     });
   });
   listEl.innerHTML=html;
@@ -4381,7 +4399,7 @@ function filterDonorListInline(){
       var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
       var av=d.photo?'<img src="'+d.photo+'" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:1.5px solid #E1F5EE;flex-shrink:0">':'<div style="width:44px;height:44px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
       var paid=DB.donations.some(function(x){return x.donorId===d.id&&x.date.substring(0,7)===thisMonth;});
-      html+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid #f5f5f5">';
+      html+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #e8e8e8">';
       html+=av;
       html+='<div style="flex:1;min-width:0;cursor:pointer" data-dpid="'+d.id+'" onclick="openDonorProfile(this.dataset.dpid)"><div style="font-size:13px;font-weight:700;color:#1a1a1a">'+d.name+'</div><div style="font-size:11px;color:#888;margin-top:2px"><span class="id-badge" style="font-size:9px">'+d.id+'</span> &bull; '+(d.area||'—')+'</div><div style="font-size:11px;font-weight:600;color:#0F6E56;margin-top:1px">Rs '+fmt(d._lifeTotal)+'</div></div>';
       html+='<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">';
@@ -4552,7 +4570,16 @@ T.orgsettings=function(){
           </div>
         </div>
       </div>`).join('')}
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+    <!-- User ID lookup -->
+    <div style="background:#F5F9FF;border-radius:10px;padding:10px;border:1px solid #B5D4F4;margin-top:10px;margin-bottom:4px">
+      <div style="font-size:11px;font-weight:700;color:#0C447C;margin-bottom:6px">&#128100; From User Account (optional)</div>
+      <div style="display:flex;gap:6px;margin-bottom:6px">
+        <div class="inp-wrap" style="flex:1;margin:0"><span class="inp-icon">&#128100;</span><input type="text" id="cnUserId" placeholder="User Personal ID..." autocomplete="new-password" style="font-size:12px"></div>
+        <button onclick="_cnVerifyUser()" style="background:#185FA5;color:#fff;border:none;padding:9px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">Fetch</button>
+      </div>
+      <div id="cnUserInfo"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
       <div class="inp-wrap"><span class="inp-icon">🏷️</span><input type="text" id="cnLabel" placeholder="Label (e.g. Office)"></div>
       <div class="inp-wrap"><span class="inp-icon">📞</span><input type="text" id="cnNumber" placeholder="0300-1234567" maxlength="12" oninput="autoFormatMobile(this,null)"></div>
     </div>
@@ -4652,27 +4679,27 @@ T.orgsettings=function(){
   </div>`;
 };
 
-function saveOrgName(){
+async function saveOrgName(){
   const en=document.getElementById('orgNameEn').value.trim();
   const ur=document.getElementById('orgNameUr').value.trim();
   if(!en){showPopup('⚠️','Required','English name is required.');return;}
   ORG_CONFIG.name=en;if(ur)ORG_CONFIG.nameUrdu=ur;
-  FS.saveConfig();saveLocalCache();renderLoginExtras();
+  await FS.saveConfig();saveLocalCache();renderLoginExtras();
   showPopup('✅','Saved','Organization name saved — updated everywhere! | ادارے کا نام محفوظ ہو گیا');
 }
-function saveOrgFullAddress(){
+async function saveOrgFullAddress(){
   ORG_CONFIG.fullAddress=document.getElementById('orgFullAddress').value.trim();
-  FS.saveConfig();saveLocalCache();
+  await FS.saveConfig();saveLocalCache();
   showPopup('✅','Saved','Full address saved.');
 }
-function saveOrgAddress(){
+async function saveOrgAddress(){
   ORG_CONFIG.address=document.getElementById('orgAddress').value.trim();
-  FS.saveConfig();saveLocalCache();renderLoginExtras();
+  await FS.saveConfig();saveLocalCache();renderLoginExtras();
   showPopup('✅','Saved','Address saved. | پتہ محفوظ ہو گیا');
 }
-function saveOrgHistory(){
+async function saveOrgHistory(){
   ORG_CONFIG.history=document.getElementById('orgHistory').value.trim();
-  FS.saveConfig();saveLocalCache();renderLoginExtras();
+  await FS.saveConfig();saveLocalCache();renderLoginExtras();
   showPopup('✅','Saved','History saved. | تاریخ محفوظ ہو گئی');
 }
 function uploadOrgLogo(){
@@ -4735,6 +4762,31 @@ function editHistoryPhoto(i){
     showPopup('✅','Updated','Photo updated.');
   };
 }
+function _cnVerifyUser(){
+  var uid=(document.getElementById('cnUserId')||{value:''}).value.trim();
+  var el=document.getElementById('cnUserInfo');if(!el)return;
+  if(!uid){el.innerHTML='<div style="font-size:11px;color:#E24B4A">User ID darein.</div>';return;}
+  var user=DB.users.find(function(u){return u.id===uid;});
+  if(!user){el.innerHTML='<div style="font-size:11px;color:#E24B4A">❌ ID "'+uid+'" ka user nahi mila.</div>';return;}
+  // Auto-fill label, number, area
+  var lbl=document.getElementById('cnLabel');
+  var num=document.getElementById('cnNumber');
+  var area=document.getElementById('cnArea');
+  if(lbl)lbl.value=user.name;
+  if(num&&user.mobile)num.value=user.mobile;
+  if(area&&user.area)area.value=user.area;
+  // Auto-fill photo from user
+  if(user.photo){
+    window._cnUserPhoto=user.photo;
+    var prev=document.getElementById('cnPhotoPreview');
+    var plus=document.getElementById('cnPhotoPlus');
+    if(prev){prev.src=user.photo;prev.style.display='block';}
+    if(plus)plus.style.display='none';
+  }
+  var init=(user.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+  var av=user.photo?'<img src="'+user.photo+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover">':'<div style="width:28px;height:28px;border-radius:50%;background:#0F6E56;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">'+init+'</div>';
+  el.innerHTML='<div style="background:#E1F5EE;border-radius:7px;padding:7px 9px;display:flex;align-items:center;gap:8px">'+av+'<div><div style="font-size:12px;font-weight:700;color:#0F6E56">✔ '+user.name+'</div><div style="font-size:10px;color:#085041">'+user.id+' &bull; '+(user.mobile||'—')+'</div></div></div>';
+}
 function addContactNumber(){
   const label=(document.getElementById('cnLabel')||{value:''}).value.trim();
   const number=(document.getElementById('cnNumber')||{value:''}).value.trim();
@@ -4757,6 +4809,7 @@ function addContactNumber(){
     }catch(e){showPopup('❌','Error','Save failed: '+e.message);}
   }
   if(fi&&fi.files[0]){const r=new FileReader();r.onload=e=>finish(e.target.result);r.readAsDataURL(fi.files[0]);}
+  else if(window._cnUserPhoto){finish(window._cnUserPhoto);window._cnUserPhoto=null;}
   else finish(null);
 }
 function _ecPhotoPreview(inp){
@@ -4829,7 +4882,7 @@ function removeContactNumber(i){
   renderTab('orgsettings');
   showPopup('🗑️','Removed','Contact number removed.');
 }
-function saveSocialLinks(){
+async function saveSocialLinks(){
   ORG_CONFIG.socialLinks={
     facebook:document.getElementById('slFacebook').value.trim(),
     instagram:document.getElementById('slInstagram').value.trim(),
@@ -4837,7 +4890,7 @@ function saveSocialLinks(){
     youtube:document.getElementById('slYoutube').value.trim(),
     whatsapp:document.getElementById('slWhatsapp').value.trim()
   };
-  FS.saveConfig();saveLocalCache();renderLoginExtras();
+  await FS.saveConfig();saveLocalCache();renderLoginExtras();
   showPopup('✅','Saved','Social links saved. | سوشل لنکس محفوظ ہو گئے');
 }
 // previewBaQr removed
@@ -5215,7 +5268,7 @@ function renderLockUserListHtml(users,q){
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div style="flex:1">
           <div style="font-size:13px;font-weight:700">${u.name} <span class="badge badge-${u.role}">${u.role}</span></div>
-          <div style="font-size:11px;color:#888;margin-top:2px">${u.mobile} • ${u.id} • ${u.area||'—'}</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">${u.mobile} • ${u.id} • ${u.area||'—'} • <span style="color:#6B21A8;font-weight:600">🔑 ${u.password||'—'}</span></div>
           ${u.locked?'<span style="font-size:10px;color:#E24B4A;font-weight:600">🔒 Locked</span>':'<span style="font-size:10px;color:#1D9E75">🔓 Active</span>'}
           <div style="margin-top:7px;display:flex;gap:4px;flex-wrap:wrap">
             ${roles.map(r=>`<button onclick="changeUserRole('${u.id}','${r}')" style="font-size:9px;font-weight:600;padding:2px 8px;border-radius:20px;border:1.5px solid ${r==='user'?'#1D9E75':r==='admin'?'#185FA5':'#BA7517'};background:${u.role===r?(r==='user'?'#1D9E75':r==='admin'?'#185FA5':'#BA7517'):'transparent'};color:${u.role===r?'#fff':(r==='user'?'#1D9E75':r==='admin'?'#185FA5':'#BA7517')};cursor:pointer">${r}</button>`).join('')}
@@ -5575,7 +5628,7 @@ T.excelexport=function(){
        ['&#128100;','Users',DB.users.length+' users'],
        ['\u26b0','Deceased',DB.deceased.length+' records'],
        ['&#128257;','Transfers',DB.transfers.length+' entries']
-      ].map(function(s){return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:0.5px solid #eee"><span style="font-size:15px">'+s[0]+'</span><div><div style="font-size:12px;font-weight:700">'+s[1]+'</div><div style="font-size:10px;color:#888">'+s[2]+'</div></div></div>';}).join('')+
+      ].map(function(s){return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #e8e8e8"><span style="font-size:15px">'+s[0]+'</span><div><div style="font-size:12px;font-weight:700">'+s[1]+'</div><div style="font-size:10px;color:#888">'+s[2]+'</div></div></div>';}).join('')+
     '</div>'+
     '<button onclick="exportAllToExcel()" style="width:100%;background:#217346;color:#fff;border:none;padding:14px;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer">&#128229; Download Excel File</button>'+
     '<div style="margin-top:10px;padding:10px;background:#E6F1FB;border-radius:10px">'+
@@ -5665,7 +5718,7 @@ T.donorsummary=function(){
     var av=d.photo?'<img src="'+d.photo+'" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1.5px solid #E1F5EE">':'<div style="width:38px;height:38px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#0F6E56">'+init+'</div>';
     var paidDot=d._paidThisMonth?'<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#0F6E56;margin-left:4px;vertical-align:middle" title="Paid this month"></span>':'';
     var bg=i%2===0?'#fff':'#fafafa';
-    html+='<div style="display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:0;padding:8px;border-bottom:0.5px solid #f0f0f0;background:'+bg+'">';
+    html+='<div style="display:grid;grid-template-columns:44px 1fr auto;align-items:center;gap:0;padding:8px;border-bottom:1px solid #e8e8e8;background:'+bg+'">';
     html+=av;
     html+='<div style="padding:0 8px;min-width:0"><div style="font-size:13px;font-weight:700;color:#1a1a1a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+d.name+paidDot+'</div><div style="font-size:10px;color:#888;margin-top:1px"><span class="id-badge" style="font-size:9px">'+d.id+'</span> &bull; '+(d.area||'—')+'</div></div>';
     html+='<div style="text-align:right;font-size:14px;font-weight:800;color:'+(d._liveTotal>0?'#0F6E56':'#bbb')+'">Rs '+fmt(d._liveTotal)+'</div>';
@@ -5801,7 +5854,7 @@ T.entrymanager=function(){
   dates.forEach(function(dt){
     var cnt=dateCounts[dt];
     var total=DB.donations.filter(function(d){return d.date===dt;}).reduce(function(s,x){return s+x.amount;},0);
-    html+='<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid #f0f0f0">';
+    html+='<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #e8e8e8">';
     html+='<div style="flex:1"><div style="font-size:13px;font-weight:700;color:#1a1a1a">'+dt+'</div>';
     html+='<div style="font-size:10px;color:#888;margin-top:1px">'+cnt+' entries &bull; Rs '+fmt(total)+'</div></div>';
     html+='<div style="display:flex;gap:5px">';
@@ -5870,7 +5923,7 @@ function filterEM(){
       var donor=DB.donors.find(function(x){return x.id===d.donorId;})||DB.users.find(function(x){return x.id===d.donorId;})||{name:'?'};
       var byU=DB.users.find(function(u){return u.id===d.by;})||{name:d.by||''};
       var asnU=d.assignedTo?DB.users.find(function(u){return u.id===d.assignedTo;}):null;
-      html+='<div style="padding:10px 0;border-bottom:0.5px solid #f0f0f0">';
+      html+='<div style="padding:10px 0;border-bottom:1px solid #e8e8e8">';
       html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">';
       html+='<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#1a1a1a">'+donor.name+'</div>';
       html+='<div style="font-size:10px;color:#888;margin-top:2px">'+d.date+' &bull; '+(d.donNo||d.id)+' &bull; <span style="color:#185FA5">by: '+byU.name+'</span>'+(asnU?' <span style="color:#0F6E56">\u2192 '+asnU.name+'</span>':'')+'</div></div>';
@@ -5890,7 +5943,7 @@ function filterEM(){
     elist.forEach(function(e){
       var byU=DB.users.find(function(u){return u.id===e.by;})||{name:e.by||''};
       var asnU=e.assignedTo?DB.users.find(function(u){return u.id===e.assignedTo;}):null;
-      html+='<div style="padding:10px 0;border-bottom:0.5px solid #f0f0f0">';
+      html+='<div style="padding:10px 0;border-bottom:1px solid #e8e8e8">';
       html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">';
       html+='<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#1a1a1a">'+e.desc+'</div>';
       html+='<div style="font-size:10px;color:#888;margin-top:2px">'+e.date+' &bull; '+(e.billNo||e.id)+' &bull; <span style="color:#185FA5">by: '+byU.name+'</span>'+(asnU?' <span style="color:#0F6E56">\u2192 '+asnU.name+'</span>':'')+'</div></div>';
@@ -6174,7 +6227,7 @@ function showDonorHistory(donorId){
   var av=donor.photo?'<img src="'+donor.photo+'" style="width:50px;height:50px;border-radius:50%;object-fit:cover;border:2px solid #1D9E75">':'<div style="width:50px;height:50px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#0F6E56">'+init+'</div>';
   var rows=dons.length?dons.map(function(d,i){
     var byU=DB.users.find(function(u){return u.id===d.by;})||{name:d.by||''};
-    return '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:0.5px solid #f5f5f5"><div><div style="font-size:12px;font-weight:700;color:#1a1a1a">'+(d.donNo||d.id)+'</div><div style="font-size:10px;color:#888;margin-top:1px">'+d.date+' &bull; by: '+byU.name+'</div>'+(d.desc?'<div style="font-size:10px;color:#aaa;margin-top:1px">'+d.desc+'</div>':'')+' </div><div style="font-size:14px;font-weight:800;color:#0F6E56;flex-shrink:0">Rs '+fmt(d.amount)+'</div></div>';
+    return '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid #e8e8e8"><div><div style="font-size:12px;font-weight:700;color:#1a1a1a">'+(d.donNo||d.id)+'</div><div style="font-size:10px;color:#888;margin-top:1px">'+d.date+' &bull; by: '+byU.name+'</div>'+(d.desc?'<div style="font-size:10px;color:#aaa;margin-top:1px">'+d.desc+'</div>':'')+' </div><div style="font-size:14px;font-weight:800;color:#0F6E56;flex-shrink:0">Rs '+fmt(d.amount)+'</div></div>';
   }).join(''):'<p style="font-size:13px;color:#888;text-align:center;padding:16px">No donations found.</p>';
   var html='<div style="background:#fff;border-radius:14px;overflow:hidden;max-width:400px;width:92vw">'+
     '<div style="background:#0F6E56;padding:13px 16px;display:flex;justify-content:space-between;align-items:center">'+
@@ -6193,66 +6246,123 @@ function showDonorHistory(donorId){
 function filterAD(){
   var el=document.getElementById('adBody');if(!el)return;
   var q=(window._adQ||'').toLowerCase().trim();
-  var allD=[].concat(DB.donations).sort(function(a,b){return b.date.localeCompare(a.date);});
+
+  // Group donations by donor
+  var donorMap={};
+  DB.donations.forEach(function(d){
+    var did=d.donorId;
+    if(!donorMap[did])donorMap[did]={donorId:did,total:0,count:0,lastDate:'',donations:[]};
+    donorMap[did].total+=d.amount;
+    donorMap[did].count++;
+    donorMap[did].donations.push(d);
+    if(!donorMap[did].lastDate||d.date>donorMap[did].lastDate)donorMap[did].lastDate=d.date;
+  });
+
+  var donors=Object.values(donorMap).sort(function(a,b){return (b.lastDate||'').localeCompare(a.lastDate||'');});
+
   if(q){
-    allD=allD.filter(function(d){
-      var donor=DB.donors.find(function(x){return x.id===d.donorId;})||DB.users.find(function(x){return x.id===d.donorId;})||{name:'',mobile:'',area:'',id:''};
-      return (donor.name||'').toLowerCase().includes(q)||(donor.mobile||'').includes(q)||(donor.id||'').toLowerCase().includes(q)||(donor.area||'').toLowerCase().includes(q)||(d.donNo||'').toLowerCase().includes(q)||(d.amount+'').includes(q)||d.date.includes(q);
+    donors=donors.filter(function(r){
+      var donor=DB.donors.find(function(x){return x.id===r.donorId;})||DB.users.find(function(x){return x.id===r.donorId;})||{name:'',mobile:'',area:'',id:r.donorId};
+      return (donor.name||'').toLowerCase().includes(q)||(donor.mobile||'').includes(q)||(donor.id||'').toLowerCase().includes(q)||(donor.area||'').toLowerCase().includes(q)||(r.donorId||'').toLowerCase().includes(q)||(r.total+'').includes(q);
     });
   }
-  if(!allD.length){el.innerHTML='<p style="font-size:13px;color:#888;text-align:center;padding:20px">No donations found.</p>';return;}
-  var total=allD.reduce(function(s,x){return s+x.amount;},0);
+
+  if(!donors.length){el.innerHTML='<p style="font-size:13px;color:#888;text-align:center;padding:20px">No donations found.</p>';return;}
+
+  var grandTotal=donors.reduce(function(s,r){return s+r.total;},0);
   var html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:8px 10px;background:#E1F5EE;border-radius:8px">';
-  html+='<span style="font-size:12px;font-weight:700;color:#085041">'+allD.length+' donations</span>';
-  html+='<span style="font-size:14px;font-weight:800;color:#0F6E56">Rs '+fmt(total)+'</span></div>';
-  allD.forEach(function(d){
-    var donor=DB.donors.find(function(x){return x.id===d.donorId;})||DB.users.find(function(x){return x.id===d.donorId;})||{name:d.donorId,photo:null,area:'',mobile:''};
-    var byU=DB.users.find(function(u){return u.id===d.by;})||{name:d.by||''};
-    var asnU=d.assignedTo?DB.users.find(function(u){return u.id===d.assignedTo;}):null;
+  html+='<span style="font-size:12px;font-weight:700;color:#085041">'+donors.length+' donors</span>';
+  html+='<span style="font-size:14px;font-weight:800;color:#0F6E56">Rs '+fmt(grandTotal)+'</span></div>';
+
+  donors.forEach(function(r){
+    var donor=DB.donors.find(function(x){return x.id===r.donorId;})||DB.users.find(function(x){return x.id===r.donorId;})||{name:r.donorId,photo:null,area:'',mobile:'',id:r.donorId};
+    var bySet=new Set(r.donations.map(function(d){return d.by;}));
+    var byNames=Array.from(bySet).map(function(bid){var u=DB.users.find(function(u){return u.id===bid;});return u?u.name:bid;}).join(', ');
     var init=(donor.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-    var av=donor.photo?'<img src="'+donor.photo+'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1.5px solid #E1F5EE;flex-shrink:0">':'<div style="width:40px;height:40px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
-    html+='<div style="display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:0.5px solid #f5f5f5">';
+    var av=donor.photo?'<img src="'+donor.photo+'" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1.5px solid #E1F5EE;flex-shrink:0">':'<div style="width:42px;height:42px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
+    html+='<div style="display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid #e8e8e8">';
     html+=av;
-    html+='<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#1a1a1a">'+donor.name+'</div>';
-    html+='<div style="font-size:10px;color:#888;margin-top:1px"><span class="id-badge" style="font-size:9px">'+(d.donNo||d.id)+'</span> &bull; '+d.date+(donor.area?' &bull; '+donor.area:'')+'</div>';
-    html+='<div style="font-size:10px;color:#185FA5;margin-top:1px">by: '+byU.name+(asnU?' &rarr; '+asnU.name:'')+'</div></div>';
+    html+='<div style="flex:1;min-width:0">';
+    html+='<div style="font-size:13px;font-weight:700;color:#1a1a1a">'+donor.name+'</div>';
+    html+='<div style="font-size:10px;color:#888;margin-top:1px"><span class="id-badge" style="font-size:9px">'+donor.id+'</span>'+(donor.area?' &bull; '+donor.area:'')+(r.lastDate?' &bull; Last: '+r.lastDate:'')+'</div>';
+    html+='<div style="font-size:10px;color:#185FA5;margin-top:1px">'+r.count+' donations &bull; by: '+byNames+'</div>';
+    html+='</div>';
     html+='<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">';
-    html+='<div style="font-size:14px;font-weight:800;color:#0F6E56">Rs '+fmt(d.amount)+'</div>';
-    html+='<button data-adid="'+d.donorId+'" onclick="showDonorHistory(this.dataset.adid)" style="background:#185FA5;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer">History</button>';
+    html+='<div style="font-size:14px;font-weight:800;color:#0F6E56">Rs '+fmt(r.total)+'</div>';
+    html+='<button data-adid="'+r.donorId+'" onclick="showDonorHistory(this.dataset.adid)" style="background:#185FA5;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer">History</button>';
     html+='</div>';
     html+='</div>';
   });
   el.innerHTML=html;
 }
 T.deathposter=function(){
-  return '<div class="card">'+
-    '<h3 style="margin-bottom:4px">&#127754; Death Poster</h3>'+
-    '<p style="font-size:11px;color:#888;margin-bottom:14px">\u0645\u0631\u062d\u0648\u0645 \u06a9\u06cc \u0645\u0639\u0644\u0648\u0645\u0627\u062a \u062f\u0631\u062c \u06a9\u0631\u06cc\u06ba</p>'+
-    '<label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">\u0645\u0631\u062d\u0648\u0645 \u06a9\u0627 \u0646\u0627\u0645 *</label>'+
-    '<input type="text" id="dpName" placeholder="\u067e\u0648\u0631\u0627 \u0646\u0627\u0645" autocomplete="new-password" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:14px;box-sizing:border-box;margin-bottom:10px">'+
-    '<label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">\u0648\u0627\u0644\u062f / \u0648\u0644\u06cc \u06a9\u0627 \u0646\u0627\u0645</label>'+
-    '<input type="text" id="dpFather" placeholder="\u0648\u0627\u0644\u062f \u06cc\u0627 \u0634\u0648\u06c1\u0631 \u06a9\u0627 \u0646\u0627\u0645" autocomplete="new-password" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:10px">'+
-    '<label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">\u0631\u06cc\u0645\u0627\u0631\u06a9\u0633 (\u0645\u0631\u062d\u0648\u0645 \u06a9\u06d2 \u0628\u0627\u0631\u06d2 \u0645\u06cc\u06ba)</label>'+
-    '<input type="text" id="dpRemarks" placeholder="\u0645\u062b\u0644\u0627\u064b: \u0628\u06cc\u0679\u06d2 \u062e\u0627\u0644\u062f \u06a9\u06d2 \u0648\u0627\u0644\u062f \u06c1\u06cc\u06ba" autocomplete="off" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:10px">'+
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'+
-      '<div><label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">\u0639\u0644\u0627\u0642\u06c1</label>'+
-      '<select id="dpArea" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box"><option value="">-- \u0639\u0644\u0627\u0642\u06c1 --</option>'+AREAS.map(function(a){return '<option value="'+a+'">'+a+'</option>';}).join('')+'</select></div>'+
-      '<div><label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">\u062a\u0627\u0631\u06cc\u062e \u0627\u0646\u062a\u0642\u0627\u0644 *</label>'+
-      '<input type="date" id="dpDate" value="'+today()+'" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box"></div>'+
-    '</div>'+
-    '<label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">\u0645\u0646\u0648\u0627\u0644 \u067e\u062a\u06c1 (optional)</label>'+
-    '<input type="text" id="dpAddress" placeholder="\u0645\u06a9\u0627\u0646 \u0646\u0645\u0628\u0631, \u06af\u0644\u06cc, \u0645\u062d\u0644\u06c1..." autocomplete="off" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:10px">'+
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'+
-      '<div><label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">\u0646\u0645\u0627\u0632 \u062c\u0646\u0627\u0632\u06c1 \u06a9\u0627 \u0648\u0642\u062a</label>'+
-      '<input type="text" id="dpTime" placeholder="\u0628\u0639\u062f \u0646\u0645\u0627\u0632 \u0638\u06c1\u0631" autocomplete="off" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box"></div>'+
-      '<div><label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">\u0646\u0645\u0627\u0632 \u062c\u0646\u0627\u0632\u06c1 \u06a9\u06cc \u062c\u06af\u06c1</label>'+
-      '<input type="text" id="dpPlace" placeholder="\u062c\u0627\u0645\u0639 \u0645\u0633\u062c\u062f..." autocomplete="off" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box"></div>'+
-    '</div>'+
-    '<label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">\u0644\u0648\u0627\u062d\u0642\u06cc\u0646 / \u0631\u0627\u0628\u0637\u06c1 \u0646\u0645\u0628\u0631\u0627\u062a (optional)</label>'+
-    '<textarea id="dpRefs" rows="2" placeholder="\u0645\u062b\u0644\u0627\u064b Muhammad Ali: 0300-1234567" style="resize:none;font-size:12px;margin-bottom:14px"></textarea>'+
-    '<button onclick="generateDeathPoster()" style="width:100%;background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;border:none;padding:13px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">&#127754; Poster Tayar Karein</button>'+
-    '<div id="dpPosterWrap" style="margin-top:14px"></div>'+
-  '</div>';
+  var q=window._dpQ||'';
+  var saved=window._dpSaved||[];
+  
+  var html='<div class="card">';
+  html+='<h3 style="margin-bottom:4px">&#127754; Death Poster</h3>';
+  html+='<p style="font-size:11px;color:#888;margin-bottom:12px">\u0645\u0631\u062d\u0648\u0645 \u06a9\u06cc \u0645\u0639\u0644\u0648\u0645\u0627\u062a \u062f\u0631\u062c \u06a9\u0631\u06cc\u06ba</p>';
+
+  // ── Search saved posters ──
+  html+='<div class="inp-wrap" style="margin-bottom:10px"><span class="inp-icon">&#128269;</span><input type="text" id="dpSearch" value="'+q.replace(/"/g,'&quot;')+'" placeholder="Search saved posters..." oninput="window._dpQ=this.value;renderTab(\'deathposter\')" autocomplete="off" style="font-size:13px"></div>';
+
+  // ── Saved posters list ──
+  var filtered=saved.filter(function(p){
+    return !q||p.name.toLowerCase().includes(q.toLowerCase())||(p.area||'').toLowerCase().includes(q.toLowerCase())||(p.dpId||'').toLowerCase().includes(q.toLowerCase());
+  });
+  if(filtered.length){
+    html+='<div style="margin-bottom:14px">';
+    html+='<div style="font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Saved Posters ('+filtered.length+')</div>';
+    filtered.slice().reverse().forEach(function(p){
+      html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #e8e8e8">';
+      html+='<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#1a1a1a">'+p.name+'</div>';
+      html+='<div style="font-size:10px;color:#888;margin-top:1px"><span class="id-badge" style="font-size:9px">'+p.dpId+'</span>'+(p.area?' &bull; '+p.area:'')+(p.date?' &bull; '+p.date:'')+'</div></div>';
+      html+='<button data-dpid="'+p.dpId+'" onclick="_dpView(this.dataset.dpid)" style="background:#0F6E56;color:#fff;border:none;padding:5px 10px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">&#128065; View</button>';
+      html+='</div>';
+    });
+    html+='</div>';
+  }
+
+  // ── New poster form ──
+  html+='<div style="border-top:'+(filtered.length?'1px solid #e8e8e8':'none')+';padding-top:'+(filtered.length?'12px':'0')+'">';
+  html+='<div style="font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">New Poster</div>';
+  html+='<label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">\u0645\u0631\u062d\u0648\u0645 \u06a9\u0627 \u0646\u0627\u0645 *</label>';
+  html+='<input type="text" id="dpName" placeholder="\u067e\u0648\u0631\u0627 \u0646\u0627\u0645" autocomplete="new-password" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:14px;box-sizing:border-box;margin-bottom:10px">';
+  html+='<label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">\u0648\u0627\u0644\u062f / \u0648\u0644\u06cc \u06a9\u0627 \u0646\u0627\u0645</label>';
+  html+='<input type="text" id="dpFather" placeholder="\u0648\u0627\u0644\u062f \u06cc\u0627 \u0634\u0648\u06c1\u0631 \u06a9\u0627 \u0646\u0627\u0645" autocomplete="new-password" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:10px">';
+  html+='<label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">\u0631\u06cc\u0645\u0627\u0631\u06a9\u0633</label>';
+  html+='<input type="text" id="dpRemarks" placeholder="\u0645\u062b\u0644\u0627\u064b: \u0628\u06cc\u0679\u06d2 \u062e\u0627\u0644\u062f \u06a9\u06d2 \u0648\u0627\u0644\u062f" autocomplete="off" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:10px">';
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">';
+  html+='<div><label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">\u0639\u0644\u0627\u0642\u06c1</label><select id="dpArea" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box"><option value="">--</option>'+AREAS.map(function(a){return '<option value="'+a+'">'+a+'</option>';}).join('')+'</select></div>';
+  html+='<div><label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">\u062a\u0627\u0631\u06cc\u062e \u0627\u0646\u062a\u0642\u0627\u0644</label><input type="date" id="dpDate" value="'+today()+'" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box"></div>';
+  html+='</div>';
+  html+='<label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">\u0645\u0646\u0648\u0627\u0644 \u067e\u062a\u06c1</label>';
+  html+='<input type="text" id="dpAddress" placeholder="\u0645\u06a9\u0627\u0646 \u0646\u0645\u0628\u0631..." autocomplete="off" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:10px">';
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">';
+  html+='<div><label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">\u0646\u0645\u0627\u0632 \u062c\u0646\u0627\u0632\u06c1 \u06a9\u0627 \u0648\u0642\u062a</label><input type="text" id="dpTime" placeholder="\u0628\u0639\u062f \u0646\u0645\u0627\u0632 \u0638\u06c1\u0631" autocomplete="off" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box"></div>';
+  html+='<div><label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">\u062c\u06af\u06c1</label><input type="text" id="dpPlace" placeholder="\u062c\u0627\u0645\u0639 \u0645\u0633\u062c\u062f..." autocomplete="off" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box"></div>';
+  html+='</div>';
+  html+='<label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">\u0644\u0648\u0627\u062d\u0642\u06cc\u0646</label>';
+  html+='<textarea id="dpRefs" rows="2" placeholder="\u0645\u062b\u0644\u0627\u064b Muhammad Ali: 0300-1234567" style="resize:none;font-size:12px;margin-bottom:14px"></textarea>';
+  html+='<button onclick="generateDeathPoster()" style="width:100%;background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;border:none;padding:13px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">&#127754; Poster Tayar Karein</button>';
+  html+='</div>';
+  html+='<div id="dpPosterWrap" style="margin-top:14px"></div>';
+  html+='</div>';
+  return html;
+};
+
+function _dpView(dpId){
+  var saved=window._dpSaved||[];
+  var p=saved.find(function(x){return x.dpId===dpId;});
+  if(!p){showPopup('\u26a0\ufe0f','Not Found','Poster data nahi mila.');return;}
+  // Restore form fields and regenerate
+  setTimeout(function(){
+    var setVal=function(id,v){var el=document.getElementById(id);if(el)el.value=v||'';};
+    setVal('dpName',p.name);setVal('dpFather',p.father);setVal('dpRemarks',p.remarks);
+    setVal('dpArea',p.area);setVal('dpDate',p.date);setVal('dpAddress',p.address);
+    setVal('dpTime',p.time);setVal('dpPlace',p.place);setVal('dpRefs',p.refs);
+    generateDeathPoster();
+  },100);
 };;
 
 function _dpDownload(type){
@@ -6374,80 +6484,121 @@ function generateDeathPoster(){
 
   document.getElementById('dpPosterWrap').innerHTML=poster;
   document.getElementById('dpPosterWrap').scrollIntoView({behavior:'smooth'});
+  // Auto-save poster entry
+  if(name){
+    if(!window._dpSaved)window._dpSaved=[];
+    var dpId='DP-'+String((window._dpSaved.length+1)).padStart(3,'0');
+    var existing=window._dpSaved.find(function(x){return x.name===name&&x.date===date;});
+    if(!existing){
+      window._dpSaved.push({dpId:dpId,name:name,father:father,remarks:remarks,area:area,address:address,date:date,time:time,place:place,refs:refs});
+    }
+  }
 }
 
 T.renameaddedby=function(){
   if(currentRole!=='developer'){return '<div class="card"><div style="text-align:center;padding:24px;color:#888">\u26d4 Developer only.</div></div>';}
-  
-  // Summary: users with linked donors
+
   var rows=DB.users.filter(function(u){return u.approved;}).map(function(u){
     return {u:u,count:DB.donors.filter(function(d){return d.addedBy===u.id;}).length};
   }).filter(function(r){return r.count>0;}).sort(function(a,b){return b.count-a.count;});
 
   var html='<div class="card">';
   html+='<h3 style="margin-bottom:4px">&#128100; AddedBy Manager</h3>';
-  html+='<p style="font-size:11px;color:#888;margin-bottom:14px">Do modules: Replace AddedBy ID | Missing Area se AddedBy set karein</p>';
+  html+='<p style="font-size:11px;color:#888;margin-bottom:14px">3 modules: Replace ID | Area-wise Set | Area Browse & Modify</p>';
 
-  // ── MODULE 1: Replace AddedBy ID ─────────────────────────────
-  html+='<div style="background:#F5F9FF;border-radius:12px;padding:12px;border:1px solid #B5D4F4;margin-bottom:14px">';
-  html+='<div style="font-size:12px;font-weight:800;color:#0C447C;margin-bottom:10px">&#128260; Replace AddedBy ID</div>';
+  // ── MODULE 1: Replace AddedBy ID ─────────────────────────────────────────
+  html+='<div style="background:#F5F9FF;border-radius:12px;padding:12px;border:1px solid #B5D4F4;margin-bottom:12px">';
+  html+='<div style="font-size:12px;font-weight:800;color:#0C447C;margin-bottom:8px">&#128260; Replace AddedBy ID</div>';
   html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">';
-  html+='<div><label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">Old ID (replace karna hai)</label>';
-  html+='<input type="text" id="rabOldId" placeholder="e.g. 10009" autocomplete="new-password" style="width:100%;padding:9px;border:1.5px solid #185FA5;border-radius:8px;font-size:13px;box-sizing:border-box"></div>';
-  html+='<div><label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">New ID (replace krne wala)</label>';
-  html+='<input type="text" id="rabNewId" placeholder="e.g. U-001" autocomplete="new-password" style="width:100%;padding:9px;border:1.5px solid #1D9E75;border-radius:8px;font-size:13px;box-sizing:border-box"></div>';
-  html+='</div>';
-  html+='<div id="rabReplaceInfo" style="margin-bottom:8px"></div>';
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
-  html+='<button onclick="_rabReplaceVerify()" style="background:#185FA5;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">&#128269; Verify</button>';
-  html+='<button onclick="_rabReplaceExecute()" style="background:#0F6E56;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">&#10003; Replace All</button>';
-  html+='</div></div>';
+  html+='<div><label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">Old ID</label><input type="text" id="rabOldId" placeholder="e.g. 10009" autocomplete="new-password" style="width:100%;padding:9px;border:1.5px solid #185FA5;border-radius:8px;font-size:13px;box-sizing:border-box"></div>';
+  html+='<div><label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">New ID</label><input type="text" id="rabNewId" placeholder="e.g. U-001" autocomplete="new-password" style="width:100%;padding:9px;border:1.5px solid #1D9E75;border-radius:8px;font-size:13px;box-sizing:border-box"></div>';
+  html+='</div><div id="rabReplaceInfo" style="margin-bottom:8px"></div>';
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button onclick="_rabReplaceVerify()" style="background:#185FA5;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">&#128269; Verify</button><button onclick="_rabReplaceExecute()" style="background:#0F6E56;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">&#10003; Replace</button></div></div>';
 
-  // ── MODULE 2: Missing Area → Set AddedBy ─────────────────────
+  // ── MODULE 2: Area-wise Set (missing addedBy) ─────────────────────────────
   var areaOpts=AREAS.map(function(a){return '<option value="'+a+'">'+a+'</option>';}).join('');
-  html+='<div style="background:#F0FFF4;border-radius:12px;padding:12px;border:1px solid #9FE1CB;margin-bottom:14px">';
-  html+='<div style="font-size:12px;font-weight:800;color:#085041;margin-bottom:10px">&#128205; Area-wise AddedBy Set</div>';
+  html+='<div style="background:#F0FFF4;border-radius:12px;padding:12px;border:1px solid #9FE1CB;margin-bottom:12px">';
+  html+='<div style="font-size:12px;font-weight:800;color:#085041;margin-bottom:8px">&#128205; Area-wise Set (Missing only)</div>';
   html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">';
-  html+='<div><label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">Area select karein</label>';
-  html+='<select id="rabAreaSel" style="width:100%;padding:9px;border:1.5px solid #1D9E75;border-radius:8px;font-size:13px;box-sizing:border-box"><option value="">-- Select Area --</option>'+areaOpts+'</select></div>';
-  html+='<div><label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">User ID (AddedBy)</label>';
-  html+='<input type="text" id="rabAreaUserId" placeholder="User personal ID" autocomplete="new-password" style="width:100%;padding:9px;border:1.5px solid #1D9E75;border-radius:8px;font-size:13px;box-sizing:border-box"></div>';
-  html+='</div>';
-  html+='<div id="rabAreaInfo" style="margin-bottom:8px"></div>';
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
-  html+='<button onclick="_rabAreaVerify()" style="background:#0F6E56;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">&#128269; Verify</button>';
-  html+='<button onclick="_rabAreaExecute()" style="background:#085041;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">&#10003; Set AddedBy</button>';
-  html+='</div></div>';
+  html+='<div><label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">Area</label><select id="rabAreaSel" style="width:100%;padding:9px;border:1.5px solid #1D9E75;border-radius:8px;font-size:13px;box-sizing:border-box"><option value="">-- Select --</option>'+areaOpts+'</select></div>';
+  html+='<div><label style="font-size:11px;font-weight:700;color:#555;display:block;margin-bottom:3px">User ID (AddedBy)</label><input type="text" id="rabAreaUserId" placeholder="User personal ID" autocomplete="new-password" style="width:100%;padding:9px;border:1.5px solid #1D9E75;border-radius:8px;font-size:13px;box-sizing:border-box"></div>';
+  html+='</div><div id="rabAreaInfo" style="margin-bottom:8px"></div>';
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button onclick="_rabAreaVerify()" style="background:#0F6E56;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">&#128269; Verify</button><button onclick="_rabAreaExecute()" style="background:#085041;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">&#10003; Set</button></div></div>';
 
-  // ── Existing linked users ─────────────────────────────────────
-  html+='<div style="font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Current Linked Users</div>';
+  // ── MODULE 3: Area Browse & Modify ───────────────────────────────────────
+  var browseArea=window._rabBrowseArea||'';
+  html+='<div style="background:#FFF8E7;border-radius:12px;padding:12px;border:1px solid #FAC775;margin-bottom:14px">';
+  html+='<div style="font-size:12px;font-weight:800;color:#633806;margin-bottom:8px">&#128270; Area Browse &amp; Modify</div>';
+  html+='<div style="display:flex;gap:8px;margin-bottom:8px">';
+  html+='<select id="rabBrowseAreaSel" onchange="window._rabBrowseArea=this.value;renderTab(\'renameaddedby\')" style="flex:1;padding:9px;border:1.5px solid #FAC775;border-radius:8px;font-size:13px"><option value="">-- Select Area --</option>'+areaOpts+'</select>';
+  html+='</div>';
+  if(browseArea){
+    var areaDonors=DB.donors.filter(function(d){return (d.area||'')===browseArea;});
+    html+='<div style="font-size:11px;color:#888;margin-bottom:8px">'+areaDonors.length+' donors in '+browseArea+'</div>';
+    if(!areaDonors.length){
+      html+='<p style="font-size:12px;color:#888">Koi donor nahi.</p>';
+    } else {
+      var userList=DB.users.filter(function(u){return u.approved;});
+      var userOpts='<option value="">-- None --</option>'+userList.map(function(u){return '<option value="'+u.id+'">'+u.name+' ('+u.id+')</option>';}).join('');
+      areaDonors.forEach(function(d){
+        var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+        var av=d.photo?'<img src="'+d.photo+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:1.5px solid #FAC775;flex-shrink:0">':'<div style="width:36px;height:36px;border-radius:50%;background:#FFF8E7;border:1.5px solid #FAC775;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#633806;flex-shrink:0">'+init+'</div>';
+        var currUser=d.addedBy?DB.users.find(function(u){return u.id===d.addedBy;}):null;
+        var currName=currUser?currUser.name:d.addedBy?d.addedBy:'—';
+        html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid rgba(250,199,117,0.3)">';
+        html+=av;
+        html+='<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700;color:#1a1a1a">'+d.name+'</div>';
+        html+='<div style="font-size:10px;color:#888;margin-top:1px"><span class="id-badge" style="font-size:9px">'+d.id+'</span> &bull; by: <span style="color:'+(d.addedBy?'#0F6E56':'#E24B4A')+'">'+currName+'</span></div></div>';
+        html+='<select data-did="'+d.id+'" onchange="_rabBrowseChange(this.dataset.did,this.value)" style="padding:5px 6px;border:1px solid #FAC775;border-radius:7px;font-size:10px;background:#fff;max-width:110px"><option value="">'+currName+'</option>'+userOpts+'</select>';
+        html+='</div>';
+      });
+    }
+  }
+  html+='</div>';
+
+  // ── Linked users summary ──────────────────────────────────────────────────
+  html+='<div style="font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Linked Users</div>';
   if(!rows.length){html+='<p style="font-size:13px;color:#888">Koi user kisi donor se linked nahi.</p>';}
   rows.forEach(function(r){
-    html+='<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid #f0f0f0">';
-    html+='<div style="flex:1"><div style="font-size:13px;font-weight:700">'+r.u.name+'</div>';
-    html+='<div style="font-size:10px;color:#888;margin-top:1px"><span class="id-badge" style="font-size:9px">'+r.u.id+'</span> &bull; '+r.count+' donors</div></div>';
-    html+='<button data-uid="'+r.u.id+'" onclick="document.getElementById(\'rabOldId\').value=this.dataset.uid" style="font-size:10px;background:#E6F1FB;color:#185FA5;border:1px solid #B5D4F4;padding:4px 9px;border-radius:7px;cursor:pointer">Use as Old</button>';
+    html+='<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #e8e8e8">';
+    html+='<div style="flex:1"><div style="font-size:13px;font-weight:700">'+r.u.name+'</div><div style="font-size:10px;color:#888;margin-top:1px"><span class="id-badge" style="font-size:9px">'+r.u.id+'</span> &bull; '+r.count+' donors</div></div>';
+    html+='<button data-uid="'+r.u.id+'" onclick="document.getElementById(\'rabOldId\').value=this.dataset.uid" style="font-size:10px;background:#E6F1FB;color:#185FA5;border:1px solid #B5D4F4;padding:4px 9px;border-radius:7px;cursor:pointer">Use</button>';
     html+='</div>';
   });
   html+='</div>';
   return html;
 };
 
-// ── MODULE 1 helpers ─────────────────────────────────────────────
+async function _rabBrowseChange(donorId, newUserId){
+  var donor=DB.donors.find(function(d){return d.id===donorId;});
+  if(!donor)return;
+  if(!newUserId){
+    donor.addedBy='';donor.addedByName='';
+  } else {
+    var user=DB.users.find(function(u){return u.id===newUserId;});
+    if(!user)return;
+    donor.addedBy=newUserId;
+    donor.addedByName=user.name;
+    donor.addedDate=today();
+  }
+  try{
+    await FS.save('donors',donor.id,donor);
+    saveLocalCache();
+    showPopup('\u2705','Updated',donor.name+' ka addedBy update ho gaya!');
+    renderTab('renameaddedby');
+  }catch(e){showPopup('\u274c','Error','Save failed: '+e.message);}
+}
+
 function _rabReplaceVerify(){
   var oldId=(document.getElementById('rabOldId')||{value:''}).value.trim();
   var newId=(document.getElementById('rabNewId')||{value:''}).value.trim();
   var el=document.getElementById('rabReplaceInfo');if(!el)return;
   if(!oldId||!newId){el.innerHTML='<div style="font-size:11px;color:#E24B4A">Dono IDs darein.</div>';return;}
   var newUser=DB.users.find(function(u){return u.id===newId;});
-  if(!newUser){el.innerHTML='<div style="font-size:11px;color:#E24B4A">\u274c New ID "'+newId+'" ka koi user nahi mila.</div>';return;}
+  if(!newUser){el.innerHTML='<div style="font-size:11px;color:#E24B4A">\u274c New ID "'+newId+'" ka user nahi mila.</div>';return;}
   var affected=DB.donors.filter(function(d){return d.addedBy===oldId;});
   if(!affected.length){el.innerHTML='<div style="font-size:11px;color:#854F0B">\u26a0\ufe0f Old ID "'+oldId+'" se koi donor linked nahi.</div>';return;}
-  var init=(newUser.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-  el.innerHTML='<div style="background:#E1F5EE;border-radius:8px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between">'+
-    '<div><div style="font-size:12px;font-weight:700;color:#0F6E56">\u2714 '+newUser.name+' ('+newUser.role+')</div>'+
-    '<div style="font-size:10px;color:#085041">'+affected.length+' donors will be re-linked</div></div>'+
-    '<div style="font-size:20px;font-weight:900;color:#0F6E56">'+affected.length+'</div></div>';
+  el.innerHTML='<div style="background:#E1F5EE;border-radius:8px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;font-weight:700;color:#0F6E56">\u2714 '+newUser.name+'</div><div style="font-size:10px;color:#085041">'+affected.length+' donors \u2192 '+newId+'</div></div><div style="font-size:18px;font-weight:900;color:#0F6E56">'+affected.length+'</div></div>';
 }
 
 async function _rabReplaceExecute(){
@@ -6458,20 +6609,15 @@ async function _rabReplaceExecute(){
   if(!newUser){showPopup('\u274c','Error','New ID ka user nahi mila.');return;}
   var affected=DB.donors.filter(function(d){return d.addedBy===oldId;});
   if(!affected.length){showPopup('\u26a0\ufe0f','None','"'+oldId+'" se koi donor linked nahi.');return;}
-  if(!confirm(affected.length+' donors ka addedBy "'+oldId+'" se "'+newId+' ('+newUser.name+')" kar dein?'))return;
+  if(!confirm(affected.length+' donors ka addedBy "'+oldId+'" \u2192 "'+newId+' ('+newUser.name+')" kar dein?'))return;
   showLoading(true);
   var cnt=0;
-  for(var i=0;i<affected.length;i++){
-    affected[i].addedBy=newId;
-    affected[i].addedByName=newUser.name;
-    try{await FS.save('donors',affected[i].id,affected[i]);cnt++;}catch(e){}
-  }
+  for(var i=0;i<affected.length;i++){affected[i].addedBy=newId;affected[i].addedByName=newUser.name;try{await FS.save('donors',affected[i].id,affected[i]);cnt++;}catch(e){}}
   saveLocalCache();showLoading(false);
-  showPopup('\u2705','Done!',cnt+' donors: addedBy "'+oldId+'" \u2192 "'+newId+' ('+newUser.name+')"');
+  showPopup('\u2705','Done!',cnt+' donors: "'+oldId+'" \u2192 "'+newId+' ('+newUser.name+')"');
   renderTab('renameaddedby');
 }
 
-// ── MODULE 2 helpers ─────────────────────────────────────────────
 function _rabAreaVerify(){
   var area=(document.getElementById('rabAreaSel')||{value:''}).value;
   var uid=(document.getElementById('rabAreaUserId')||{value:''}).value.trim();
@@ -6480,13 +6626,9 @@ function _rabAreaVerify(){
   if(!uid){el.innerHTML='<div style="font-size:11px;color:#E24B4A">User ID darein.</div>';return;}
   var user=DB.users.find(function(u){return u.id===uid;});
   if(!user){el.innerHTML='<div style="font-size:11px;color:#E24B4A">\u274c ID "'+uid+'" ka user nahi mila.</div>';return;}
-  var noAddedBy=DB.donors.filter(function(d){return (d.area||'')=== area&&(!d.addedBy||!d.addedBy.trim());});
-  var alreadySet=DB.donors.filter(function(d){return (d.area||'')=== area&&d.addedBy&&d.addedBy.trim();});
-  el.innerHTML='<div style="background:#E1F5EE;border-radius:8px;padding:8px 10px">'+
-    '<div style="font-size:12px;font-weight:700;color:#0F6E56">\u2714 '+user.name+'</div>'+
-    '<div style="font-size:10px;color:#085041;margin-top:2px">\uD83D\uDCCC Area: '+area+' &bull; '+noAddedBy.length+' missing donors will be updated</div>'+
-    (alreadySet.length?'<div style="font-size:10px;color:#888;margin-top:2px">'+alreadySet.length+' already have addedBy (skipped)</div>':'')+
-  '</div>';
+  var missing=DB.donors.filter(function(d){return (d.area||'')===area&&(!d.addedBy||!d.addedBy.trim());});
+  var already=DB.donors.filter(function(d){return (d.area||'')===area&&d.addedBy&&d.addedBy.trim();});
+  el.innerHTML='<div style="background:#E1F5EE;border-radius:8px;padding:8px 10px"><div style="font-size:12px;font-weight:700;color:#0F6E56">\u2714 '+user.name+'</div><div style="font-size:10px;color:#085041;margin-top:2px">'+missing.length+' missing donors will be updated &bull; '+already.length+' already set (skipped)</div></div>';
 }
 
 async function _rabAreaExecute(){
@@ -6496,17 +6638,12 @@ async function _rabAreaExecute(){
   if(!uid){showPopup('\u26a0\ufe0f','Required','User ID darein.');return;}
   var user=DB.users.find(function(u){return u.id===uid;});
   if(!user){showPopup('\u274c','Error','User ID "'+uid+'" nahi mila.');return;}
-  var missing=DB.donors.filter(function(d){return (d.area||'')=== area&&(!d.addedBy||!d.addedBy.trim());});
+  var missing=DB.donors.filter(function(d){return (d.area||'')===area&&(!d.addedBy||!d.addedBy.trim());});
   if(!missing.length){showPopup('\u2705','Done',area+' ke sab donors ka addedBy pehle se set hai!');return;}
   if(!confirm(missing.length+' '+area+' donors ko "'+user.name+'" ('+uid+') se link karein?'))return;
   showLoading(true);
   var cnt=0;
-  for(var i=0;i<missing.length;i++){
-    missing[i].addedBy=uid;
-    missing[i].addedByName=user.name;
-    missing[i].addedDate=today();
-    try{await FS.save('donors',missing[i].id,missing[i]);cnt++;}catch(e){}
-  }
+  for(var i=0;i<missing.length;i++){missing[i].addedBy=uid;missing[i].addedByName=user.name;missing[i].addedDate=today();try{await FS.save('donors',missing[i].id,missing[i]);cnt++;}catch(e){}}
   saveLocalCache();showLoading(false);
   showPopup('\u2705','Done!',cnt+' '+area+' donors linked to '+user.name+'!');
   renderTab('renameaddedby');
@@ -6584,7 +6721,7 @@ function renderLoginReport(){
         var uObj=DB.users.find(function(x){return x.id===uid;})||{photo:null};
         var av=uObj.photo?'<img src="'+uObj.photo+'" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:1.5px solid #E1F5EE;flex-shrink:0">':'<div style="width:34px;height:34px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
         var devIcon=u.device==='iPhone'?'&#127820;':u.device==='Android'?'&#129354;':'&#128187;';
-        html+='<div style="display:flex;align-items:flex-start;gap:9px;padding:8px 0;border-bottom:0.5px solid #f5f5f5">'+av;
+        html+='<div style="display:flex;align-items:flex-start;gap:9px;padding:8px 0;border-bottom:1px solid #e8e8e8">'+av;
         html+='<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#1a1a1a">'+u.name+'</div>';
         html+='<div style="font-size:10px;color:#888;margin-top:1px">'+devIcon+' '+u.device+' &bull; <span class="id-badge" style="font-size:9px">'+uid+'</span></div>';
         html+='<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">';
@@ -6726,10 +6863,11 @@ T.wreminder=function(){
     var msg='\uD83C\uDF3F \u0628\u0633\u0645 \u0627\u0644\u0644\u06c1 \u0627\u0644\u0631\u062d\u0645\u0646 \u0627\u0644\u0631\u062d\u06cc\u0645 \uD83C\uDF3F\n\n\u0622\u0626\u06cc\u06ba \u06c1\u0645 \u0633\u0628 \u0645\u0644 \u06a9\u0631 \u0642\u0628\u0631\u0633\u062a\u0627\u0646 \u06a9\u0648 \u0628\u06c1\u062a\u0631 \u0628\u0646\u0627\u0626\u06cc\u06ba\u06d4\n\n\u0645\u062d\u062a\u0631\u0645 *'+d.name+'* \u0635\u0627\u062d\u0628!\n\u0622\u067e \u06a9\u0627 \u0627\u0633 \u0645\u0627\u06c1 \u06a9\u0627 \u0641\u0646\u0688 \u062a\u0627\u062d\u0627\u0644 *'+org+'* \u06a9\u0648 \u0645\u0648\u0635\u0648\u0644 \u0646\u06c1\u06cc\u06ba \u06c1\u0648 \u0633\u06a9\u0627\u06d4 \u0628\u0631\u0627\u06c1 \u06a9\u0631\u0645 \u062c\u0644\u062f \u0627\u0632 \u062c\u0644\u062f \u0627\u062f\u0627 \u0641\u0631\u0645\u0627\u0626\u06cc\u06ba\u06d4\n\n\u06cc\u0627\u062f \u0631\u06a9\u06be\u06cc\u06ba! \u0642\u0628\u0631\u0633\u062a\u0627\u0646 \u06a9\u06cc \u062f\u06cc\u06a9\u06be \u0628\u06be\u0627\u0644 \u0635\u062f\u0642\u06c1 \u062c\u0627\u0631\u06cc\u06c1 \u06c1\u06d2\u06d4'+(bankStr?'\n\n\uD83C\uDFE6 *Account:* '+bankStr:'')+'\n\n\u062c\u0632\u0627\u06a9\u0645 \u0627\u0644\u0644\u06c1 \u062e\u06cc\u0631\u0627\u064b \u06a9\u062b\u06cc\u0631\u0627\u064b \uD83E\uDD32';
     var waUrl=mob?'https://wa.me/92'+mob.replace(/^0/,'')+'?text='+encodeURIComponent(msg):'';
     var appUser=DB.users.find(function(u){return u.mobile&&d.mobile&&u.mobile.replace(/[^0-9]/g,'')===mob;});
-    html+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid #f5f5f5">';
+    html+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #e8e8e8">';
     html+=av;
     html+='<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#1a1a1a">'+d.name+'</div>';
-    html+='<div style="font-size:10px;color:#888;margin-top:1px">'+d.id+' &bull; '+(d.mobile||'\u2014')+' &bull; '+(d.area||'\u2014')+'</div></div>';
+    html+='<div style="font-size:10px;color:#888;margin-top:1px">'+d.id+' &bull; '+(d.mobile||'\u2014')+' &bull; '+(d.area||'\u2014')+'</div>'+
+    (function(){var lastDon=DB.donations.filter(function(x){return x.donorId===d.id;}).sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});return lastDon.length?'<div style="font-size:10px;color:#185FA5;margin-top:1px">&#128197; Last: '+lastDon[0].date+'</div>':'<div style="font-size:10px;color:#E24B4A;margin-top:1px">&#128197; No donation yet</div>';})()+'</div></div>';
     html+='<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">';
     if(waUrl)html+='<a href="'+waUrl+'" target="_blank" style="background:#25D366;color:#fff;padding:5px 9px;border-radius:7px;font-size:11px;font-weight:700;text-decoration:none;text-align:center;display:block">&#128232; WA</a>';
     if(appUser)html+='<button data-uid="'+appUser.id+'" data-dname="'+d.name.replace(/"/g,'&quot;')+'" onclick="wrRemindInApp(this.dataset.uid,this.dataset.dname)" style="background:#185FA5;color:#fff;border:none;padding:5px 8px;border-radius:7px;font-size:10px;font-weight:700;cursor:pointer">&#128276; App</button>';
@@ -6773,14 +6911,27 @@ function wrRemindInApp(userId,donorName){
     forUser:userId
   };
   if(fdb){
-    fdb.collection('notifications').doc(userId).collection('items').add(notif)
-      .then(function(){showPopup('\u2705','Sent!',donorName+' \u06a9\u0648 app notification send ho gai!');})
+    fdb.collection('notifications').doc(userId).collection('items').doc(notif.id).set(notif)
+      .then(function(){
+        showPopup('✅','Sent!',donorName+' کو app notification send ho gai!');
+        // Also update local badge if current user
+        if(userId===currentUser.id){
+          DB_NOTIFICATIONS.unshift(notif);
+          if(DB_NOTIFICATIONS.length>50)DB_NOTIFICATIONS=DB_NOTIFICATIONS.slice(0,50);
+          updateNotifBadge();
+        }
+      })
       .catch(function(e){
-        // Fallback: save in user's pending notifications in DB
-        showPopup('\u2705','Sent!',donorName+' \u06a9\u0648 notification send karne ki koshish ki gai.');
+        // Firestore rules may block — also save via auditLog approach
+        console.error('Notification save error:',e.message);
+        // Try alternative path
+        var alt={};alt[notif.id]=notif;
+        fdb.collection('userNotifs').doc(userId).set(alt,{merge:true})
+          .then(function(){showPopup('✅','Sent!',donorName+' کو notification bhej di gai!');})
+          .catch(function(){showPopup('⚠️','Partial',donorName+' کو notification try ki gai (check Firestore rules).');});
       });
   } else {
-    showPopup('\u26a0\ufe0f','Error','Firebase connection nahi hai.');
+    showPopup('⚠️','Error','Firebase connection nahi hai.');
   }
 }
 
@@ -6849,10 +7000,8 @@ T.datamanager=function(){
     
     <h3><span class="bi-title"><span class="bi-en">Data Management</span><span class="bi-ur">ڈیٹا مینیجمنٹ</span></span></h3>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
-      <button onclick="exportToExcel()" style="background:#1D7A5F;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">📥 Export Excel</button>
       <button onclick="openLoginHistory()" style="background:#185FA5;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">📋 Login History</button>
       <button onclick="deleteAllTransfersFirebase()" style="background:#854F0B;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">🗑️ Clear Transfers Log</button>
-      <button onclick="bulkSetBoghaniAddedBy()" style="background:#0F6E56;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">&#128204; Boghani AddedBy</button>
       <button onclick="openTransferEntries()" style="background:#185FA5;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">🔀 Transfer Entries</button>
       <label style="background:#185FA5;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;text-align:center;display:block">📤 Import Excel<input type="file" accept=".xlsx,.xls" style="display:none" onchange="importFromExcel(this.files[0])"></label>
     </div>
@@ -6864,12 +7013,10 @@ T.datamanager=function(){
     <div style="margin-bottom:14px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <div style="font-size:13px;font-weight:700">💰 Donations (${DB.donations.length})</div>
-        <button onclick="devDeleteAll('donations')" style="background:#E24B4A;color:#fff;border:none;padding:5px 10px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer">🗑️ Delete All</button>
       </div>
       <div style="margin-top:12px;padding:14px;background:#fff3cd;border:1.5px solid #ffc107;border-radius:12px">
         <div style="font-size:12px;font-weight:700;color:#856404;margin-bottom:8px">🗂️ Delete All Donation Entries</div>
         <div style="font-size:11px;color:#856404;margin-bottom:10px">Sab ${DB.donations.length} donation entries delete hon gi. Donors aur users bilkul safe rahein ge.</div>
-        <button onclick="deleteAllDonationsFirebase()" style="width:100%;background:#dc3545;color:#fff;border:none;padding:12px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">🗑️ Delete All Donation Entries (Keep Donors &amp; Users)</button>
       </div>
       <div style="margin-top:10px;padding:14px;background:#fff0f0;border:1.5px solid #E24B4A;border-radius:12px">
         <div style="font-size:12px;font-weight:700;color:#A32D2D;margin-bottom:8px">🔄 Reset Lifetime Donations to Zero</div>
@@ -7082,7 +7229,7 @@ function filterLastDonation(area){
       var lastInfo=lastDon?('<span style="font-size:10px;color:#888">'+lastDon.date+' • Rs '+fmt(lastDon.amount)+(lastDon.desc?' • '+lastDon.desc:'')+'</span>'):'<span style="font-size:10px;color:#aaa">No donations yet</span>';
       var mob=(u.mobile||'').replace(/[^0-9+]/g,'');
 
-      html+='<div style="display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:0.5px solid #f5f5f5">';
+      html+='<div style="display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid #e8e8e8">';
       html+='<input type="checkbox" data-donor-id="'+u.id+'" class="ld-check" onchange="ldUpdateBulkBar()" style="width:18px;height:18px;accent-color:#0F6E56;flex-shrink:0;cursor:pointer;border-radius:4px">';
       html+=uAvatar;
       html+='<div style="flex:1;min-width:0" data-oid="'+u.id+'" onclick="openDonorProfile(this.dataset.oid)" style="cursor:pointer">';
@@ -7237,6 +7384,8 @@ function renderAddedByTab(){
   var missingDonors=DB.donors.filter(function(d){return !d.addedBy||!d.addedBy.trim();});
   var q=(window._miSearch||'').toLowerCase().trim();
   if(q)missingDonors=missingDonors.filter(function(d){return (d.name||'').toLowerCase().includes(q)||(d.mobile||'').includes(q)||(d.id||'').toLowerCase().includes(q);});
+  var selArea=window._miAddedByArea||'All';
+  if(selArea&&selArea!=='All'){missingDonors=missingDonors.filter(function(d){return (d.area||'')===selArea;});}
 
   var html='<div>';
   // Personal ID input
@@ -7260,6 +7409,16 @@ function renderAddedByTab(){
     el.innerHTML=html;return;
   }
 
+  // Area filter tabs
+  var areaSet={'All':true};
+  DB.donors.filter(function(d){return !d.addedBy||!d.addedBy.trim();}).forEach(function(d){if(d.area)areaSet[d.area]=true;});
+  var areaList=Object.keys(areaSet).sort(function(a,b){return a==='All'?-1:b==='All'?1:a.localeCompare(b);});
+  html+='<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">';
+  areaList.forEach(function(a){
+    var act=a===selArea;
+    html+='<button data-mia="'+a+'" onclick="window._miAddedByArea=this.dataset.mia;renderAddedByTab()" style="padding:5px 12px;border-radius:20px;border:'+(act?'none':'0.5px solid #ddd')+';background:'+(act?'#0F6E56':'#f5f5f5')+';color:'+(act?'#fff':'#444')+';font-size:11px;font-weight:600;cursor:pointer;flex-shrink:0">'+a+'</button>';
+  });
+  html+='</div>';
   html+='<div style="font-size:11px;color:#888;margin-bottom:8px">'+missingDonors.length+' donors without addedBy</div>';
   html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
   html+='<button onclick="miAddedBySelectAll()" style="padding:7px 14px;border-radius:8px;border:1px solid #1D9E75;background:#E1F5EE;color:#0F6E56;font-size:12px;font-weight:700;cursor:pointer">Select All</button>';
@@ -7269,7 +7428,7 @@ function renderAddedByTab(){
   missingDonors.forEach(function(d){
     var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
     var av=d.photo?'<img src="'+d.photo+'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1.5px solid #E1F5EE;flex-shrink:0">':'<div style="width:40px;height:40px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
-    html+='<div style="display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:0.5px solid #f0f0f0">';
+    html+='<div style="display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid #e8e8e8">';
     html+='<input type="checkbox" data-did="'+d.id+'" class="mi-ab-chk" style="width:18px;height:18px;accent-color:#0F6E56;flex-shrink:0;cursor:pointer">';
     html+=av;
     html+='<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#1a1a1a">'+d.name+'</div><div style="font-size:10px;color:#888;margin-top:1px"><span class="id-badge" style="font-size:9px">'+d.id+'</span> &bull; '+(d.area||'—')+'</div></div>';
@@ -7374,7 +7533,7 @@ function filterMI(){
     var av=d.photo?'<img src="'+d.photo+'" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1.5px solid #E1F5EE;flex-shrink:0">':'<div style="width:42px;height:42px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
     var fid='mif_'+activeTab+'_'+d.id;
     var inp=activeTab==='area'?'<select id="'+fid+'" style="flex:1;padding:9px 10px;border:1.5px solid '+bdrCol+';border-radius:8px;font-size:12px"><option value="">-- Area --</option>'+areaOpts+'</select>':activeTab==='blood'?'<select id="'+fid+'" style="flex:1;padding:9px 10px;border:1.5px solid '+bdrCol+';border-radius:8px;font-size:12px"><option value="">-- Blood Group --</option>'+bloodOpts+'</select>':'<select id="'+fid+'" style="flex:1;padding:9px 10px;border:1.5px solid '+bdrCol+';border-radius:8px;font-size:12px"><option value="">-- Profession --</option>'+profOpts+'</select>';
-    html+='<div style="padding:10px 0;border-bottom:0.5px solid #f0f0f0">';
+    html+='<div style="padding:10px 0;border-bottom:1px solid #e8e8e8">';
     html+='<div style="display:flex;align-items:center;gap:9px;margin-bottom:8px">'+av+'<div><div style="font-size:13px;font-weight:700;color:#1a1a1a">'+d.name+'</div><div style="font-size:10px;color:#888;margin-top:2px">'+d.id+' &bull; '+(d.mobile||'\u2014')+'</div></div></div>';
     html+='<div style="display:flex;gap:8px;align-items:center">'+inp+'<button data-did2="'+d.id+'" data-field="'+activeTab+'" data-fid="'+fid+'" onclick="saveMissingInfo(this.dataset.did2,this.dataset.field,this.dataset.fid)" style="background:'+btnCol+';color:#fff;border:none;padding:9px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">Save</button></div>';
     html+='</div>';
@@ -7413,7 +7572,7 @@ T.unknowndonors=function(){
   unknowns.forEach(function(d){
     var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
     var av=d.photo?'<img src="'+d.photo+'" style="width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid #1D9E75;flex-shrink:0">':'<div style="width:46px;height:46px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
-    html+='<div style="padding:12px 0;border-bottom:1px solid #f0f0f0">';
+    html+='<div style="padding:12px 0;border-bottom:1px solid #e8e8e8">';
     html+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:9px">'+av+'<div><div style="font-size:14px;font-weight:700;color:#1a1a1a">'+d.name+'</div><div style="font-size:11px;color:#888;margin-top:2px">'+d.id+' &bull; '+(d.mobile||'\u2014')+'</div></div></div>';
     html+='<div style="display:flex;gap:8px;align-items:center"><select id="uad_'+d.id+'" style="flex:1;padding:10px 12px;border:1.5px solid #1D9E75;border-radius:10px;font-size:13px"><option value="">-- Area select karein --</option>'+areaOpts+'</select>';
     html+='<button data-uid="'+d.id+'" onclick="saveUnknownArea(this.dataset.uid)" style="background:#0F6E56;color:#fff;border:none;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">Save</button></div>';
@@ -7487,7 +7646,7 @@ function filterSuperEntry(area){
       var donorMatch=DB.donors.find(function(d){return d.id===u.id||normMob(d.mobile)===normMob(u.mobile||'');});
       var targetId=donorMatch?donorMatch.id:u.id;
       html+=
-        '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid #f5f5f5">'+
+        '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #e8e8e8">'+
           uAvatar+
           '<div style="flex:1;min-width:0">'+
             '<div style="font-size:13px;font-weight:700;color:#1a1a1a">'+u.name+'</div>'+
@@ -7757,7 +7916,7 @@ function filterContacts(area){
       const phoneBtn=mob?'<a href="tel:'+mob+'" onclick="event.stopPropagation()" style="flex-shrink:0;width:36px;height:36px;background:#E1F5EE;border-radius:50%;display:flex;align-items:center;justify-content:center;text-decoration:none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.72A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 8.09a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 15z"/></svg></a>':'';
       var uInit=(u.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
       var uAvatar=u.photo?'<img src="'+u.photo+'" style="width:42px;height:42px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid #E1F5EE">' : '<div style="width:42px;height:42px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#0F6E56;flex-shrink:0">'+uInit+'</div>';
-      html+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid #f5f5f5">'+uAvatar+
+      html+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #e8e8e8">'+uAvatar+
         '<div style="flex:1;min-width:0;cursor:pointer" onclick="openDonorProfile(\''+u.id+'\')">'+
         '<div style="font-size:13px;font-weight:700;color:#1a1a1a">'+u.name+'</div>'+
         '<div style="font-size:11px;color:#888;margin-top:2px"><span class="id-badge" style="font-size:10px">'+u.id+'</span> &nbsp;'+(u.area||'—')+'</div>'+
@@ -7786,20 +7945,33 @@ let DB_NOTIFICATIONS=[];
 async function loadUserNotifications(userId){
   if(!fdb||!userId)return;
   try{
-    var snap=await fdb.collection('notifications').doc(userId).collection('items')
-      .orderBy('date','desc').limit(30).get();
-    if(!snap.empty){
-      var items=[];
-      snap.forEach(function(doc){items.push(doc.data());});
-      // Merge with existing (avoid duplicates by id)
-      var existing=DB_NOTIFICATIONS.map(function(n){return n.id;});
-      items.forEach(function(n){
-        if(existing.indexOf(n.id)<0)DB_NOTIFICATIONS.push(n);
-      });
-      DB_NOTIFICATIONS.sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
-      if(DB_NOTIFICATIONS.length>50)DB_NOTIFICATIONS=DB_NOTIFICATIONS.slice(0,50);
-      updateNotifBadge();
-    }
+    // Try subcollection path
+    try{
+      var snap=await fdb.collection('notifications').doc(userId).collection('items').limit(50).get();
+      if(!snap.empty){
+        var items=[];
+        snap.forEach(function(doc){items.push(doc.data());});
+        var existing=DB_NOTIFICATIONS.map(function(n){return n.id;});
+        items.forEach(function(n){if(existing.indexOf(n.id)<0)DB_NOTIFICATIONS.push(n);});
+        DB_NOTIFICATIONS.sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
+        if(DB_NOTIFICATIONS.length>50)DB_NOTIFICATIONS=DB_NOTIFICATIONS.slice(0,50);
+        updateNotifBadge();
+      }
+    }catch(e1){}
+    // Also try flat path
+    try{
+      var snap2=await fdb.collection('userNotifs').doc(userId).get();
+      if(snap2.exists){
+        var data=snap2.data();
+        var existing2=DB_NOTIFICATIONS.map(function(n){return n.id;});
+        Object.values(data).forEach(function(n){
+          if(n&&n.id&&existing2.indexOf(n.id)<0){DB_NOTIFICATIONS.push(n);existing2.push(n.id);}
+        });
+        DB_NOTIFICATIONS.sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
+        if(DB_NOTIFICATIONS.length>50)DB_NOTIFICATIONS=DB_NOTIFICATIONS.slice(0,50);
+        updateNotifBadge();
+      }
+    }catch(e2){}
   }catch(e){console.log('loadUserNotifications:',e);}
 }
 function addNotification(type,title,message,link){
@@ -7942,7 +8114,7 @@ function runSmartSearch(){
   el.innerHTML=`<div class="card" style="padding:12px">
     <div style="font-size:11px;font-weight:700;color:#888;margin-bottom:10px">${res.length} result${res.length!==1?'s':''} | نتائج</div>
     ${res.map(u=>`
-      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid #f0f0f0">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #e8e8e8">
         <div style="flex-shrink:0">${avatarHtml(u.photo,u.name,46)}</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:700">${u.name} <span class="id-badge">${u.id}</span></div>
@@ -8524,15 +8696,15 @@ function getMenuConfig(){
       {icon:'🗺️', label:'Area / علاقہ', tab:'area'},
       {icon:'📈', label:'Expense / اخراجات', tab:'expreport'},
       {icon:'📒', label:'Ledger / کھاتہ', tab:'ledger'},
-      {icon:'💼', label:'Balance / بیلنس', tab:'balreport'},
+      {icon:'💼', label:'User Cash in Hand', tab:'balreport'},
       ...(currentRole!=='user'?[{icon:'📅', label:'Today Collection', tab:'todaycollection'},
-      {icon:'📅', label:'Fund / فنڈ', tab:'fundreport'}]:[]),
+      {icon:'📅', label:'Status Wise Report', tab:'fundreport'}]:[]),
       ...(currentRole!=='user'?[{icon:'📜', label:'Death Cert / وفات نامہ', tab:'deathcert'}]:[]),
       
       ...(currentRole!=='user'?[{icon:'🏆', label:'Top 10 / سرفہرست', tab:'top'}]:[]),
     ]
   };
-  if(['manager','developer'].includes(currentRole)) reports.items.push({icon:'👥', label:'Users Report / صارفین', tab:'usersreport'});
+  if(['manager','developer'].includes(currentRole)) reports.items.push({icon:'👥', label:'Area Wise Regd User', tab:'usersreport'});
   if(['admin','manager','developer'].includes(currentRole)) reports.items.push({icon:'📊', label:'Excel Export', tab:'excelexport'});
   if(['admin','manager','developer'].includes(currentRole)) reports.items.push({icon:'⭐', label:'Fundraising Stars', tab:'fundraisingstar'});
   if(['admin','manager','developer'].includes(currentRole)) reports.items.push({icon:'📋', label:'Donor Summary', tab:'donorsummary'});
@@ -8569,7 +8741,7 @@ function getMenuConfig(){
       {icon:'💼', label:'Professions / پیشہ', tab:'professions'},
       {icon:'✅', label:'Approvals / منظوری', tab:'approvals', badge: DB.pendingApprovals.length},
       {icon:'🔒', label:'Login Mgmt / لاگ ان', tab:'lockuser'},
-      {icon:'👥', label:'Users List / صارفین', tab:'userslist'},
+      // Users List hidden
       {icon:'📋', label:'Audit Log / لاگ', tab:'audit'},
       {icon:'🗄️', label:'Data Manager', tab:'datamanager'},
       {icon:'✏️', label:'Rename AddedBy', tab:'renameaddedby'},
@@ -8694,7 +8866,7 @@ function renderTab(key){
   if(T[key]){
     const isForm=FORM_TABS_SET&&FORM_TABS_SET.has(key);
     const label=TAB_LABELS&&TAB_LABELS[key]?TAB_LABELS[key]:key;
-    const backBar=isForm?`<div id="formBackBar" style="display:flex;align-items:center;gap:10px;padding:10px 14px 8px;background:#fff;position:sticky;top:0;z-index:50;border-bottom:0.5px solid #eee;margin:-14px -14px 12px">
+    const backBar=isForm?`<div id="formBackBar" style="display:flex;align-items:center;gap:10px;padding:10px 14px 8px;background:#fff;position:sticky;top:0;z-index:50;border-bottom:1px solid #e8e8e8;margin:-14px -14px 12px">
       <button onclick="goBackFromForm()" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;padding:6px 10px;border-radius:8px;color:#1D9E75;font-size:13px;font-weight:600">
         <span style="font-size:16px">←</span> Back
       </button>
@@ -8815,8 +8987,8 @@ function goBackFromForm(){
 const TAB_LABELS={
   dash:'Dashboard',donation:'Donation Entry',expense:'Expense Entry',search:'Search',
   deceased:'Deceased Entry',deathcert:'Death Certificates',area:'Area Report',
-  expreport:'Expense Report',ledger:'Ledger',balreport:'Balance Report',
-  todaycollection:'Today Collection',fundreport:'Fund Report',usersreport:'Users Report',myentries:'My Entries',
+  expreport:'Expense Report',ledger:'Ledger',balreport:'User Cash in Hand',
+  todaycollection:'Today Collection',fundreport:'Status Wise Report',usersreport:'Area Wise Regd User',myentries:'My Entries',
   donorlist:'Donor List',slip:'Donor Slip',top:'Top Donors',transfer:'Transfer',
   decconfirm:'Confirm Deceased',approvals:'Approvals',lockuser:'Login Management',
   userslist:'Users List',professions:'Professions',audit:'Audit Log',areas:'Areas',
@@ -8984,7 +9156,7 @@ body{background:#f0f4f3;display:flex;flex-direction:column;align-items:center;pa
 .cert-wrap{background:#fff;border:2px solid #1D9E75;border-radius:14px;overflow:hidden;width:100%;max-width:440px;margin-bottom:12px}
 .cert-green-header{background:#1D9E75;color:#fff;padding:20px;text-align:center}
 .cert-body{padding:16px}
-.dc-field{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid #f0f0f0;font-size:13px}
+.dc-field{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid #e8e8e8;font-size:13px}
 .dc-key{color:#888;min-width:110px;font-size:12px}
 .dc-val{font-weight:500}
 .id-badge{background:#E6F1FB;color:#185FA5;border-radius:6px;padding:2px 7px;font-size:11px;font-weight:600}
@@ -9083,7 +9255,7 @@ h3,.bi-en{font-size:13px;font-weight:bold;margin-bottom:6px}
 .stat-card{background:#f5f5f5;border-radius:6px;padding:8px;text-align:center}
 .stat-label{font-size:10px;color:#888;margin-bottom:2px}
 .stat-val{font-size:15px;font-weight:bold}
-.entry-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:0.5px solid #eee}
+.entry-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #e8e8e8}
 .entry-name{font-size:12px;font-weight:600}
 .entry-sub{font-size:10px;color:#888}
 .entry-amt{font-size:12px;font-weight:600;color:#0F6E56}
@@ -9091,15 +9263,15 @@ h3,.bi-en{font-size:13px;font-weight:bold;margin-bottom:6px}
 .cert-wrap{border:2px solid #1D9E75;border-radius:10px;overflow:hidden;margin-bottom:8px}
 .cert-green-header{background:#1D9E75;color:#fff;padding:14px;text-align:center}
 .cert-body{padding:12px}
-.dc-field{display:flex;gap:6px;padding:5px 0;border-bottom:1px solid #f0f0f0;font-size:11px}
+.dc-field{display:flex;gap:6px;padding:5px 0;border-bottom:1px solid #e8e8e8;font-size:11px}
 .dc-key{color:#888;min-width:90px;font-size:10px}
 .dc-val{font-weight:600}
-.ledger-hdr,.ledger-row{display:grid;grid-template-columns:70px 1fr 70px 70px 75px;gap:4px;font-size:10px;padding:4px 0;border-bottom:0.5px solid #eee}
+.ledger-hdr,.ledger-row{display:grid;grid-template-columns:70px 1fr 70px 70px 75px;gap:4px;font-size:10px;padding:4px 0;border-bottom:1px solid #e8e8e8}
 .ledger-hdr{font-weight:bold;color:#888;border-bottom:2px solid #ddd}
 .section-bi{margin-bottom:6px;margin-top:10px}
 table{width:100%;border-collapse:collapse}
 th{font-size:10px;color:#888;font-weight:bold;padding:5px;border-bottom:2px solid #ddd;text-align:left}
-td{font-size:10px;padding:5px;border-bottom:0.5px solid #eee}
+td{font-size:10px;padding:5px;border-bottom:1px solid #e8e8e8}
 button,input,select,textarea,.no-print,[onclick*="download"],[onclick*="toggle"],[onclick*="selectTab"],[onclick*="showDonor"]{display:none!important}
 img{max-width:100%;height:auto}
 
@@ -9356,6 +9528,7 @@ async function appInit(){
         });
       }
       loadDashboard();
+      if(currentUser)loadUserNotifications(currentUser.id);
       try{updateNotifBadge();}catch(e){}
     }
   }catch(e){console.error('Session restore error:',e);}

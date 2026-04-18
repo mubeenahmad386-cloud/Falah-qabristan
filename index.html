@@ -5765,145 +5765,89 @@ T.fundraisingstar=function(){
 ;
 T.entrymanager=function(){
   if(currentRole!=='developer'){return '<div class="card"><div style="text-align:center;padding:24px;color:#888">\u26d4 Developer only.</div></div>';}
-  
+
+  // Build date summary — how many entries per date
+  var dateCounts={};
+  DB.donations.forEach(function(d){
+    var dt=d.date||'Unknown';
+    if(!dateCounts[dt])dateCounts[dt]=0;
+    dateCounts[dt]++;
+  });
+  var dates=Object.keys(dateCounts).sort().reverse().slice(0,60);
+
   var html='<div class="card">';
   html+='<h3 style="margin-bottom:4px">&#9998; Donation Entry Manager</h3>';
-  html+='<p style="font-size:11px;color:#888;margin-bottom:14px">Donation entries ko find karke modify ya delete karein</p>';
+  html+='<p style="font-size:11px;color:#888;margin-bottom:14px">Date wise entries dekhen aur date replace karein</p>';
 
-  // ── Search section ──────────────────────────────────────────────
-  html+='<div style="background:#F5F9FF;border-radius:12px;padding:12px;border:1px solid #B5D4F4;margin-bottom:14px">';
-  html+='<div style="font-size:12px;font-weight:800;color:#0C447C;margin-bottom:8px">&#128269; Find Entry</div>';
+  // ── Date Replace Module ──────────────────────────────────────────
+  html+='<div style="background:#FEF0F0;border-radius:12px;padding:12px;border:1px solid #F09595;margin-bottom:14px">';
+  html+='<div style="font-size:12px;font-weight:800;color:#A32D2D;margin-bottom:8px">&#128260; Replace Entry Date</div>';
+  html+='<p style="font-size:11px;color:#854F0B;margin-bottom:8px">Ek date ki sab entries dusri date se replace karein</p>';
   html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">';
-  html+='<div><label style="font-size:11px;font-weight:600;color:#555;display:block;margin-bottom:3px">Entry No / Donor ID / Name</label>';
-  html+='<input type="text" id="emSearch" placeholder="IN-0001 ya donor naam..." autocomplete="new-password" style="width:100%;padding:9px;border:1.5px solid #185FA5;border-radius:8px;font-size:13px;box-sizing:border-box"></div>';
-  html+='<div><label style="font-size:11px;font-weight:600;color:#555;display:block;margin-bottom:3px">Date Range</label>';
-  html+='<div style="display:flex;gap:4px;align-items:center">';
-  html+='<input type="date" id="emFrom" style="flex:1;padding:9px 4px;border:1.5px solid #185FA5;border-radius:8px;font-size:11px;box-sizing:border-box">';
-  html+='<span style="font-size:10px;color:#888">to</span>';
-  html+='<input type="date" id="emTo" style="flex:1;padding:9px 4px;border:1.5px solid #185FA5;border-radius:8px;font-size:11px;box-sizing:border-box">';
+  html+='<div><label style="font-size:11px;font-weight:600;color:#555;display:block;margin-bottom:3px">Old Date (replace krni hai)</label>';
+  html+='<input type="date" id="emOldDate" style="width:100%;padding:9px;border:1.5px solid #E24B4A;border-radius:8px;font-size:13px;box-sizing:border-box"></div>';
+  html+='<div><label style="font-size:11px;font-weight:600;color:#555;display:block;margin-bottom:3px">New Date (replace krne wali)</label>';
+  html+='<input type="date" id="emNewDate" style="width:100%;padding:9px;border:1.5px solid #0F6E56;border-radius:8px;font-size:13px;box-sizing:border-box"></div>';
+  html+='</div>';
+  html+='<div id="emDateInfo" style="margin-bottom:8px"></div>';
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+  html+='<button onclick="emDateVerify()" style="background:#185FA5;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">&#128269; Verify</button>';
+  html+='<button onclick="emDateReplace()" style="background:#E24B4A;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">&#10003; Replace All</button>';
   html+='</div></div>';
-  html+='</div>';
-  html+='<button onclick="emSearch()" style="width:100%;background:#185FA5;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">&#128269; Search Entries</button>';
-  html+='</div>';
 
-  html+='<div id="emResults"></div>';
+  // ── Date Summary List ─────────────────────────────────────────────
+  html+='<div style="font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Date-wise Entry Count (Last 60 dates)</div>';
+  if(!dates.length){html+='<p style="font-size:13px;color:#888">Koi donation entry nahi hai.</p></div>';return html;}
+  dates.forEach(function(dt){
+    var cnt=dateCounts[dt];
+    var total=DB.donations.filter(function(d){return d.date===dt;}).reduce(function(s,x){return s+x.amount;},0);
+    html+='<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid #f0f0f0">';
+    html+='<div style="flex:1"><div style="font-size:13px;font-weight:700;color:#1a1a1a">'+dt+'</div>';
+    html+='<div style="font-size:10px;color:#888;margin-top:1px">'+cnt+' entries &bull; Rs '+fmt(total)+'</div></div>';
+    html+='<div style="display:flex;gap:5px">';
+    html+='<button data-dt="'+dt+'" onclick="document.getElementById(\'emOldDate\').value=this.dataset.dt" style="font-size:10px;background:#E6F1FB;color:#185FA5;border:1px solid #B5D4F4;padding:4px 8px;border-radius:6px;cursor:pointer">Use</button>';
+    html+='</div></div>';
+  });
   html+='</div>';
   return html;
 };
 
-function emSearch(){
-  var el=document.getElementById('emResults');if(!el)return;
-  var q=(document.getElementById('emSearch')||{value:''}).value.trim().toLowerCase();
-  var from=(document.getElementById('emFrom')||{value:''}).value;
-  var to=(document.getElementById('emTo')||{value:''}).value;
-  if(!q&&!from&&!to){el.innerHTML='<p style="font-size:13px;color:#888;text-align:center;padding:12px">Kuch search karein ya date range select karein.</p>';return;}
-  var results=DB.donations.filter(function(d){
-    var donor=DB.donors.find(function(x){return x.id===d.donorId;})||DB.users.find(function(x){return x.id===d.donorId;})||{name:d.donorId||'',mobile:''};
-    var byU=DB.users.find(function(u){return u.id===d.by;})||{name:d.by||''};
-    var matchQ=!q||(d.id||'').toLowerCase().includes(q)||(d.donNo||'').toLowerCase().includes(q)||(donor.name||'').toLowerCase().includes(q)||(donor.id||'').toLowerCase().includes(q)||(d.desc||'').toLowerCase().includes(q)||(d.amount+'').includes(q)||(byU.name||'').toLowerCase().includes(q);
-    var matchFrom=!from||(d.date||'')>=from;
-    var matchTo=!to||(d.date||'')<=to;
-    return matchQ&&matchFrom&&matchTo;
-  }).sort(function(a,b){return (b.date||'').localeCompare(a.date||'');}).slice(0,50);
-  if(!results.length){el.innerHTML='<p style="font-size:13px;color:#888;text-align:center;padding:12px">Koi entry nahi mili.</p>';return;}
-  var html='<div style="font-size:11px;color:#888;margin-bottom:8px">'+results.length+' entries found (max 50)</div>';
-  results.forEach(function(d){
-    var donor=DB.donors.find(function(x){return x.id===d.donorId;})||DB.users.find(function(x){return x.id===d.donorId;})||{name:d.donorId||'Unknown',photo:null};
-    var byU=DB.users.find(function(u){return u.id===d.by;})||{name:d.by||''};
-    var init=(donor.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-    var av=donor.photo?'<img src="'+donor.photo+'" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1.5px solid #E1F5EE;flex-shrink:0">':'<div style="width:38px;height:38px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
-    html+='<div style="padding:10px 0;border-bottom:0.5px solid #f0f0f0">';
-    html+='<div style="display:flex;align-items:center;gap:9px;margin-bottom:8px">'+av;
-    html+='<div style="flex:1;min-width:0">';
-    html+='<div style="font-size:13px;font-weight:700;color:#1a1a1a">'+donor.name+'</div>';
-    html+='<div style="font-size:10px;color:#888;margin-top:1px"><span class="id-badge" style="font-size:9px">'+(d.donNo||d.id)+'</span> &bull; '+d.date+' &bull; by: '+byU.name+'</div>';
-    if(d.desc)html+='<div style="font-size:10px;color:#888">'+d.desc+'</div>';
-    html+='</div>';
-    html+='<div style="font-size:15px;font-weight:800;color:#0F6E56;flex-shrink:0">Rs '+fmt(d.amount)+'</div>';
-    html+='</div>';
-    html+='<div style="display:flex;gap:6px">';
-    html+='<button data-eid="'+d.id+'" onclick="emOpenEdit(this.dataset.eid)" style="flex:1;background:#185FA5;color:#fff;border:none;padding:8px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer">&#9998; Edit</button>';
-    html+='<button data-eid="'+d.id+'" onclick="emDeleteEntry(this.dataset.eid)" style="flex:1;background:#E24B4A;color:#fff;border:none;padding:8px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer">&#128465; Delete</button>';
-    html+='</div>';
-    html+='</div>';
-  });
-  el.innerHTML=html;
+function emDateVerify(){
+  var oldDate=(document.getElementById('emOldDate')||{value:''}).value;
+  var newDate=(document.getElementById('emNewDate')||{value:''}).value;
+  var el=document.getElementById('emDateInfo');if(!el)return;
+  if(!oldDate||!newDate){el.innerHTML='<div style="font-size:11px;color:#E24B4A">Dono dates darein.</div>';return;}
+  if(oldDate===newDate){el.innerHTML='<div style="font-size:11px;color:#854F0B">\u26a0\ufe0f Dono dates same hain!</div>';return;}
+  var affected=DB.donations.filter(function(d){return d.date===oldDate;});
+  var total=affected.reduce(function(s,x){return s+x.amount;},0);
+  if(!affected.length){el.innerHTML='<div style="font-size:11px;color:#E24B4A">\u274c "'+oldDate+'" ki koi entry nahi mili.</div>';return;}
+  el.innerHTML='<div style="background:#E1F5EE;border-radius:8px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center">'+
+    '<div><div style="font-size:12px;font-weight:700;color:#0F6E56">\u2714 '+affected.length+' entries found</div>'+
+    '<div style="font-size:10px;color:#085041">'+oldDate+' \u2192 '+newDate+' &bull; Total: Rs '+fmt(total)+'</div></div>'+
+    '<div style="font-size:18px;font-weight:900;color:#0F6E56">'+affected.length+'</div></div>';
 }
 
-function emOpenEdit(eid){
-  var d=DB.donations.find(function(x){return x.id===eid;});
-  if(!d){showPopup('\u26a0\ufe0f','Not Found','Entry nahi mili.');return;}
-  var donor=DB.donors.find(function(x){return x.id===d.donorId;})||{name:d.donorId||''};
-  // Get all users for by dropdown
-  var byOpts=DB.users.filter(function(u){return u.approved;}).map(function(u){
-    return '<option value="'+u.id+'"'+(u.id===d.by?' selected':'')+'>'+u.name+' ('+u.id+')</option>';
-  }).join('');
-  var asnOpts='<option value="">-- None --</option>'+DB.users.filter(function(u){return u.approved;}).map(function(u){
-    return '<option value="'+u.id+'"'+(u.id===d.assignedTo?' selected':'')+'>'+u.name+' ('+u.id+')</option>';
-  }).join('');
-  var html='<div style="background:#fff;border-radius:14px;overflow:hidden;max-width:380px;width:92vw">'+
-    '<div style="background:#185FA5;padding:13px 16px;display:flex;justify-content:space-between;align-items:center">'+
-      '<div style="font-size:14px;font-weight:700;color:#fff">&#9998; Edit Donation Entry</div>'+
-      '<button onclick="closeCustomPopup()" style="background:rgba(255,255,255,0.2);border:none;border-radius:50%;width:28px;height:28px;color:#fff;font-size:16px;cursor:pointer">&times;</button>'+
-    '</div>'+
-    '<div style="padding:14px">'+
-      '<div style="background:#E6F1FB;border-radius:8px;padding:8px 10px;margin-bottom:12px;font-size:12px;color:#0C447C">'+
-        '<b>'+(d.donNo||d.id)+'</b> &bull; Donor: '+donor.name+
-      '</div>'+
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'+
-        '<div><label style="font-size:11px;font-weight:600;color:#555;display:block;margin-bottom:3px">Amount *</label>'+
-        '<input type="number" id="emAmt" value="'+d.amount+'" style="width:100%;padding:9px;border:1.5px solid #1D9E75;border-radius:8px;font-size:13px;box-sizing:border-box"></div>'+
-        '<div><label style="font-size:11px;font-weight:600;color:#555;display:block;margin-bottom:3px">Date *</label>'+
-        '<input type="date" id="emDate" value="'+d.date+'" style="width:100%;padding:9px;border:1.5px solid #1D9E75;border-radius:8px;font-size:13px;box-sizing:border-box"></div>'+
-      '</div>'+
-      '<label style="font-size:11px;font-weight:600;color:#555;display:block;margin-bottom:3px">Description</label>'+
-      '<input type="text" id="emDesc" value="'+(d.desc||'').replace(/"/g,'&quot;')+'" autocomplete="off" style="width:100%;padding:9px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:10px">'+
-      '<label style="font-size:11px;font-weight:600;color:#555;display:block;margin-bottom:3px">Entered By</label>'+
-      '<select id="emBy" style="width:100%;padding:9px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:10px">'+byOpts+'</select>'+
-      '<label style="font-size:11px;font-weight:600;color:#555;display:block;margin-bottom:3px">Assigned To</label>'+
-      '<select id="emAsgn" style="width:100%;padding:9px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:14px">'+asnOpts+'</select>'+
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
-        '<button onclick="closeCustomPopup()" style="background:#f5f5f5;color:#333;border:1px solid #ddd;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">Cancel</button>'+
-        '<button data-eid="'+eid+'" onclick="emSaveEdit(this.dataset.eid)" style="background:#0F6E56;color:#fff;border:none;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">Save &#10003;</button>'+
-      '</div>'+
-    '</div></div>';
-  showCustomPopup('<div style="display:flex;justify-content:center;padding:16px 10px">'+html+'</div>');
-}
-
-async function emSaveEdit(eid){
-  var d=DB.donations.find(function(x){return x.id===eid;});
-  if(!d){showPopup('\u26a0\ufe0f','Error','Entry nahi mili.');return;}
-  var amt=parseInt((document.getElementById('emAmt')||{value:0}).value)||0;
-  var date=(document.getElementById('emDate')||{value:''}).value;
-  var desc=(document.getElementById('emDesc')||{value:''}).value.trim();
-  var by=(document.getElementById('emBy')||{value:''}).value;
-  var asgn=(document.getElementById('emAsgn')||{value:''}).value;
-  if(!amt||!date){showPopup('\u26a0\ufe0f','Required','Amount aur date darein.');return;}
-  d.amount=amt;d.date=date;d.desc=desc;
-  if(by)d.by=by;
-  if(asgn)d.assignedTo=asgn;else delete d.assignedTo;
-  try{
-    await FS.save('donations',d.id,d);
-    saveLocalCache();
-    closeCustomPopup();
-    showPopup('\u2705','Updated','Entry update ho gai!');
-    emSearch();
-  }catch(e){showPopup('\u274c','Error','Save failed: '+e.message);}
-}
-
-async function emDeleteEntry(eid){
-  var d=DB.donations.find(function(x){return x.id===eid;});
-  if(!d){showPopup('\u26a0\ufe0f','Error','Entry nahi mili.');return;}
-  var donor=DB.donors.find(function(x){return x.id===d.donorId;})||{name:d.donorId};
-  if(!confirm('Delete: Rs '+fmt(d.amount)+' ('+d.date+') from '+donor.name+'?\nYeh action undo nahi ho sakti!'))return;
-  DB.donations=DB.donations.filter(function(x){return x.id!==eid;});
-  try{
-    if(fdb)await fdb.collection('donations').doc(eid).delete();
-    saveLocalCache();
-    showPopup('\u2705','Deleted','Entry delete ho gai.');
-    emSearch();
-  }catch(e){showPopup('\u274c','Error','Delete failed: '+e.message);}
+async function emDateReplace(){
+  var oldDate=(document.getElementById('emOldDate')||{value:''}).value;
+  var newDate=(document.getElementById('emNewDate')||{value:''}).value;
+  if(!oldDate||!newDate){showPopup('\u26a0\ufe0f','Required','Dono dates darein.');return;}
+  if(oldDate===newDate){showPopup('\u26a0\ufe0f','Same','Dates same hain, kuch nahi badle ga.');return;}
+  var affected=DB.donations.filter(function(d){return d.date===oldDate;});
+  if(!affected.length){showPopup('\u26a0\ufe0f','Not Found','"'+oldDate+'" ki koi entry nahi mili.');return;}
+  if(!confirm(affected.length+' entries ki date "'+oldDate+'" se "'+newDate+'" kar dein?\nYeh undo nahi ho sakta!'))return;
+  showLoading(true);
+  var cnt=0;
+  for(var i=0;i<affected.length;i++){
+    affected[i].date=newDate;
+    try{await FS.save('donations',affected[i].id,affected[i]);cnt++;}catch(e){}
+  }
+  saveLocalCache();
+  showLoading(false);
+  showPopup('\u2705','Done!',cnt+' entries: "'+oldDate+'" \u2192 "'+newDate+'"');
+  renderTab('entrymanager');
 };
+
+;
 
 function filterEM(){
   var tab=window._emTab||'donations';
@@ -8753,6 +8697,7 @@ function renderTab(key){
       deathposter:()=>{},
       wreminder:()=>{window._wrArea='All';window._wrQ='';},
       loginreport:()=>{window._lrFrom=window._lrFrom||today();window._lrTo=window._lrTo||today();setTimeout(renderLoginReport,150);},
+      renameaddedby:()=>{},
       dailyupdate:()=>{window._duFrom=window._duFrom||today();window._duTo=window._duTo||today();setTimeout(generateDailyPoster,80);},
       superentry:()=>{window._superEntryArea='All';filterSuperEntry('All');},
       lastdonation:()=>{window._ldArea='All';setTimeout(function(){filterLastDonation('All');},80);},

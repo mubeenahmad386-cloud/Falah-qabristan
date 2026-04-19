@@ -6616,7 +6616,7 @@ T.renameaddedby=function(){
 function _rabBrowseFilter(){
   var el=document.getElementById('rabBrowseSearch');
   window._rabBrowseQ=el?el.value:'';
-  renderTab('renameaddedby','deleteddonations','deletedexpenses','modifieddonations','modifiedexpenses','donormanager','auditdept');
+  renderTab('renameaddedby','deleteddonations','deletedexpenses','modifieddonations','modifiedexpenses','donormanager','auditdept','overalldetail');
   setTimeout(function(){
     var inp=document.getElementById('rabBrowseSearch');
     if(inp){inp.focus();try{inp.setSelectionRange(inp.value.length,inp.value.length);}catch(e){}}
@@ -6841,103 +6841,102 @@ function renderLoginReport(){
 T.deleteddonations=function(){
   if(!['admin','manager','developer'].includes(currentRole)){return '<div class="card"><div style="text-align:center;padding:24px;color:#888">\u26d4 Access denied.</div></div>';}
   var logs=DB.auditLog.filter(function(l){return l.type==='delete_donation'||l.action==='Deleted Donation'||l.action==='Delete Donation';}).sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
-  var html='<div class="card"><h3 style="margin-bottom:4px">&#128465; Deleted Income Entries</h3><p style="font-size:11px;color:#888;margin-bottom:12px">'+logs.length+' deleted donations</p>';
+  var html='<div class="card"><h3 style="margin-bottom:4px">Deleted Income Entries</h3><p style="font-size:11px;color:#888;margin-bottom:12px">'+logs.length+' deleted donations</p>';
   if(!logs.length){html+='<p style="font-size:13px;color:#888;text-align:center;padding:20px">No deleted entries found.</p></div>';return html;}
   logs.forEach(function(l){
     var byU=DB.users.find(function(u){return u.id===l.by;})||{name:l.byName||l.by||'?'};
+    // Try to get donor from entryData or target
+    var donorId='';var donorName='';
+    if(l.entryData){try{var ed=JSON.parse(l.entryData);donorId=ed.donorId||'';var don=DB.donors.find(function(d){return d.id===donorId;});donorName=don?don.name:donorId;}catch(e){}}
+    if(!donorId)donorId=l.target||'';
     html+='<div style="padding:9px 0;border-bottom:1px solid #e8e8e8">';
-    html+='<div style="display:flex;justify-content:space-between;align-items:flex-start">';
-    html+='<div><div style="font-size:13px;font-weight:700;color:#E24B4A">'+l.detail+'</div>';
-    html+='<div style="font-size:10px;color:#888;margin-top:2px">'+l.target+' &bull; '+l.date+(l.time?' '+l.time:'')+'</div>';
-    html+='<div style="font-size:10px;color:#185FA5;margin-top:2px">Deleted by: '+byU.name+'</div></div>';
-    html+='</div></div>';
+    html+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">';
+    html+='<div style="flex:1"><div style="font-size:12px;font-weight:700;color:#E24B4A">'+l.detail+'</div>';
+    if(donorName)html+='<div style="font-size:11px;color:#0F6E56;margin-top:2px">Donor: '+donorName+' <span class="id-badge" style="font-size:9px">'+donorId+'</span></div>';
+    else if(donorId)html+='<div style="font-size:11px;color:#888;margin-top:2px">Donor ID: <span class="id-badge" style="font-size:9px">'+donorId+'</span></div>';
+    html+='<div style="font-size:10px;color:#888;margin-top:2px">'+l.date+(l.time?' '+l.time:'')+'</div>';
+    html+='<div style="font-size:10px;color:#185FA5;margin-top:1px">Deleted by: '+byU.name+'</div></div></div>';
+    html+='</div>';
   });
   html+='</div>';return html;
-};
+};;
 T.deletedexpenses=function(){
   if(!['admin','manager','developer'].includes(currentRole)){return '<div class="card"><div style="text-align:center;padding:24px;color:#888">\u26d4 Access denied.</div></div>';}
   var logs=DB.auditLog.filter(function(l){return l.type==='delete_expense'||l.action==='Deleted Expense'||l.action==='Delete Expense';}).sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
-  var html='<div class="card"><h3 style="margin-bottom:4px">&#128465; Deleted Expense Entries</h3><p style="font-size:11px;color:#888;margin-bottom:12px">'+logs.length+' deleted expenses</p>';
+  var html='<div class="card"><h3 style="margin-bottom:4px">Deleted Expense Entries</h3><p style="font-size:11px;color:#888;margin-bottom:12px">'+logs.length+' deleted expenses</p>';
   if(!logs.length){html+='<p style="font-size:13px;color:#888;text-align:center;padding:20px">No deleted entries found.</p></div>';return html;}
   logs.forEach(function(l){
     var byU=DB.users.find(function(u){return u.id===l.by;})||{name:l.byName||l.by||'?'};
+    var entryId=l.entryId||l.target||'';
     html+='<div style="padding:9px 0;border-bottom:1px solid #e8e8e8">';
-    html+='<div style="font-size:13px;font-weight:700;color:#E24B4A">'+l.detail+'</div>';
-    html+='<div style="font-size:10px;color:#888;margin-top:2px">'+l.target+' &bull; '+l.date+(l.time?' '+l.time:'')+'</div>';
-    html+='<div style="font-size:10px;color:#185FA5;margin-top:2px">Deleted by: '+byU.name+'</div>';
+    html+='<div style="font-size:12px;font-weight:700;color:#E24B4A">'+l.detail+'</div>';
+    if(entryId)html+='<div style="font-size:10px;color:#888;margin-top:2px">Entry: <span class="id-badge" style="font-size:9px">'+entryId+'</span></div>';
+    html+='<div style="font-size:10px;color:#888;margin-top:2px">'+l.date+(l.time?' '+l.time:'')+'</div>';
+    html+='<div style="font-size:10px;color:#185FA5;margin-top:1px">Deleted by: '+byU.name+'</div>';
     html+='</div>';
   });
   html+='</div>';return html;
-};
+};;
 T.modifieddonations=function(){
   if(!['admin','manager','developer'].includes(currentRole)){return '<div class="card"><div style="text-align:center;padding:24px;color:#888">\u26d4 Access denied.</div></div>';}
   var logs=DB.auditLog.filter(function(l){return l.type==='modify_donation'||l.action==='Modified Donation';}).sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
-  var html='<div class="card"><h3 style="margin-bottom:4px">&#9998; Modified Income Entries</h3><p style="font-size:11px;color:#888;margin-bottom:12px">'+logs.length+' modified donations</p>';
+  var html='<div class="card"><h3 style="margin-bottom:4px">Modified Income Entries</h3><p style="font-size:11px;color:#888;margin-bottom:12px">'+logs.length+' modified donations</p>';
   if(!logs.length){html+='<p style="font-size:13px;color:#888;text-align:center;padding:20px">No modified entries found.</p></div>';return html;}
   logs.forEach(function(l){
     var byU=DB.users.find(function(u){return u.id===l.by;})||{name:l.byName||l.by||'?'};
+    var donorName='';var donorId=l.target||'';
+    if(l.entryData){try{var ed=JSON.parse(l.entryData);if(ed.donorId){donorId=ed.donorId;var don=DB.donors.find(function(d){return d.id===donorId;});donorName=don?don.name:donorId;}}catch(e){}}
+    if(!donorName){var don2=DB.donors.find(function(d){return d.id===donorId;});donorName=don2?don2.name:'';}
     html+='<div style="padding:9px 0;border-bottom:1px solid #e8e8e8">';
-    html+='<div style="font-size:13px;font-weight:700;color:#854F0B">'+l.target+'</div>';
-    html+='<div style="font-size:11px;color:#555;margin-top:2px">'+l.detail+'</div>';
+    html+='<div style="font-size:12px;font-weight:700;color:#854F0B">'+l.detail+'</div>';
+    if(donorName)html+='<div style="font-size:11px;color:#0F6E56;margin-top:2px">Donor: '+donorName+' <span class="id-badge" style="font-size:9px">'+donorId+'</span></div>';
+    else if(donorId)html+='<div style="font-size:10px;color:#888;margin-top:2px">Entry: <span class="id-badge" style="font-size:9px">'+donorId+'</span></div>';
     html+='<div style="font-size:10px;color:#888;margin-top:2px">'+l.date+(l.time?' '+l.time:'')+'</div>';
-    html+='<div style="font-size:10px;color:#185FA5;margin-top:2px">Modified by: '+byU.name+'</div>';
+    html+='<div style="font-size:10px;color:#185FA5;margin-top:1px">Modified by: '+byU.name+'</div>';
     html+='</div>';
   });
   html+='</div>';return html;
-};
+};;
 T.modifiedexpenses=function(){
   if(!['admin','manager','developer'].includes(currentRole)){return '<div class="card"><div style="text-align:center;padding:24px;color:#888">\u26d4 Access denied.</div></div>';}
   var logs=DB.auditLog.filter(function(l){return l.type==='modify_expense'||l.action==='Modified Expense';}).sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
-  var html='<div class="card"><h3 style="margin-bottom:4px">&#9998; Modified Expense Entries</h3><p style="font-size:11px;color:#888;margin-bottom:12px">'+logs.length+' modified expenses</p>';
+  var html='<div class="card"><h3 style="margin-bottom:4px">Modified Expense Entries</h3><p style="font-size:11px;color:#888;margin-bottom:12px">'+logs.length+' modified expenses</p>';
   if(!logs.length){html+='<p style="font-size:13px;color:#888;text-align:center;padding:20px">No modified entries found.</p></div>';return html;}
   logs.forEach(function(l){
     var byU=DB.users.find(function(u){return u.id===l.by;})||{name:l.byName||l.by||'?'};
+    var entryId=l.entryId||l.target||'';
     html+='<div style="padding:9px 0;border-bottom:1px solid #e8e8e8">';
-    html+='<div style="font-size:13px;font-weight:700;color:#854F0B">'+l.target+'</div>';
-    html+='<div style="font-size:11px;color:#555;margin-top:2px">'+l.detail+'</div>';
+    html+='<div style="font-size:12px;font-weight:700;color:#854F0B">'+l.detail+'</div>';
+    if(entryId)html+='<div style="font-size:10px;color:#888;margin-top:2px">Entry: <span class="id-badge" style="font-size:9px">'+entryId+'</span></div>';
     html+='<div style="font-size:10px;color:#888;margin-top:2px">'+l.date+(l.time?' '+l.time:'')+'</div>';
-    html+='<div style="font-size:10px;color:#185FA5;margin-top:2px">Modified by: '+byU.name+'</div>';
+    html+='<div style="font-size:10px;color:#185FA5;margin-top:1px">Modified by: '+byU.name+'</div>';
     html+='</div>';
   });
   html+='</div>';return html;
-};
+};;
 T.donormanager=function(){
   var q=window._dmQ||'';
   var area=window._dmArea||'All';
-  
-  // Filter donors
-  var donors=DB.donors.slice();
-  if(area&&area!=='All')donors=donors.filter(function(d){return (d.area||'')===area;});
-  if(q){
-    var ql=q.toLowerCase();
-    donors=donors.filter(function(d){return (d.name||'').toLowerCase().includes(ql)||(d.id||'').toLowerCase().includes(ql)||(d.mobile||'').includes(ql)||(d.area||'').toLowerCase().includes(ql)||(d.addedByName||d.addedBy||'').toLowerCase().includes(ql);});
-  }
-  donors.sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
-
-  // Build area list
   var areaList=['All'];
   DB.donors.forEach(function(d){if(d.area&&areaList.indexOf(d.area)<0)areaList.push(d.area);});
   areaList.sort(function(a,b){return a==='All'?-1:b==='All'?1:a.localeCompare(b);});
-
+  var donors=DB.donors.slice();
+  if(area&&area!=='All')donors=donors.filter(function(d){return (d.area||'')===area;});
+  if(q){var ql=q.toLowerCase();donors=donors.filter(function(d){return (d.name||'').toLowerCase().includes(ql)||(d.id||'').toLowerCase().includes(ql)||(d.mobile||'').includes(ql)||(d.area||'').toLowerCase().includes(ql)||(d.addedByName||d.addedBy||'').toLowerCase().includes(ql);});}
+  donors.sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
   var html='<div class="card">';
-  html+='<h3 style="margin-bottom:4px">&#128100; Donor Manager</h3>';
-  html+='<p style="font-size:11px;color:#888;margin-bottom:10px">'+DB.donors.length+' total donors &bull; search, filter, modify</p>';
-
-  // Search
+  html+='<h3 style="margin-bottom:4px">Donor Manager</h3>';
+  html+='<p style="font-size:11px;color:#888;margin-bottom:10px">'+DB.donors.length+' total donors</p>';
   html+='<div class="inp-wrap" style="margin-bottom:8px"><span class="inp-icon">&#128269;</span><input type="text" id="dmSearch" value="'+q.replace(/"/g,'&quot;')+'" placeholder="Search name, ID, mobile, area, added by..." oninput="window._dmQ=this.value;_dmFilter()" autocomplete="off" style="font-size:13px"></div>';
-
-  // Area tabs
   html+='<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">';
   areaList.forEach(function(a){
     var act=a===area;
-    html+='<button data-dma="'+a+'" onclick="window._dmArea=this.dataset.dma;renderTab(\'donormanager\')" style="padding:5px 12px;border-radius:20px;border:'+(act?'none':'0.5px solid #ddd')+';background:'+(act?'#0F6E56':'#f5f5f5')+';color:'+(act?'#fff':'#444')+';font-size:11px;font-weight:600;cursor:pointer;flex-shrink:0">'+a+'</button>';
+    html+='<button data-dma="'+a+'" onclick="window._dmArea=this.dataset.dma;window._dmQ=\'\';renderTab(window._auditSub?\'auditdept\':\'donormanager\')" style="padding:5px 12px;border-radius:20px;border:'+(act?'none':'0.5px solid #ddd')+';background:'+(act?'#0F6E56':'#f5f5f5')+';color:'+(act?'#fff':'#444')+';font-size:11px;font-weight:600;cursor:pointer;flex-shrink:0">'+a+'</button>';
   });
   html+='</div>';
-
+  html+='<div id="dmDonorList">';
   html+='<div style="font-size:11px;color:#888;margin-bottom:8px">'+donors.length+' donors shown</div>';
-
-  if(!donors.length){html+='<p style="font-size:13px;color:#888;text-align:center;padding:16px">No donors found.</p></div>';return html;}
-
+  if(!donors.length){html+='<p style="font-size:13px;color:#888;text-align:center;padding:16px">No donors found.</p></div></div>';return html;}
   donors.forEach(function(d){
     var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
     var av=d.photo?'<img src="'+d.photo+'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1.5px solid #E1F5EE;flex-shrink:0">':'<div style="width:40px;height:40px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
@@ -6945,26 +6944,59 @@ T.donormanager=function(){
     var addedByName=addedByUser?addedByUser.name:(d.addedByName||d.addedBy||'\u2014');
     html+='<div style="display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid #e8e8e8">';
     html+=av;
-    html+='<div style="flex:1;min-width:0">';
-    html+='<div style="font-size:13px;font-weight:700;color:#1a1a1a">'+d.name+'</div>';
+    html+='<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#1a1a1a">'+d.name+'</div>';
     html+='<div style="font-size:10px;color:#888;margin-top:1px"><span class="id-badge" style="font-size:9px">'+d.id+'</span>'+(d.area?' &bull; '+d.area:'')+'</div>';
-    html+='<div style="font-size:10px;color:#185FA5;margin-top:1px">Added by: '+addedByName+'</div>';
-    html+='</div>';
-    html+='<button data-did="'+d.id+'" onclick="_dmOpenEdit(this.dataset.did)" style="background:#185FA5;color:#fff;border:none;padding:7px 11px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">&#9998; Edit</button>';
+    html+='<div style="font-size:10px;color:#185FA5;margin-top:1px">Added by: '+addedByName+'</div></div>';
+    html+='<button data-did="'+d.id+'" onclick="_dmOpenEdit(this.dataset.did)" style="background:#185FA5;color:#fff;border:none;padding:7px 11px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">Edit</button>';
     html+='</div>';
   });
-  html+='</div>';
+  html+='</div></div>';
   return html;
-};
+};;
 
 function _dmFilter(){
-  window._dmQ=document.getElementById('dmSearch')?document.getElementById('dmSearch').value:'';
-  var pos=document.getElementById('dmSearch')?document.getElementById('dmSearch').selectionStart:0;
-  renderTab('donormanager');
-  setTimeout(function(){
-    var el=document.getElementById('dmSearch');
-    if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(e){}}
-  },50);
+  var el=document.getElementById('dmSearch');
+  window._dmQ=el?el.value:'';
+  var pos=el?el.selectionStart:0;
+  // Re-render only donor list, don't full renderTab (to preserve keyboard)
+  var wrap=document.getElementById('tabContent');
+  if(wrap){
+    var curHtml=window._auditSub==='donormanager'?T.auditdept():T.donormanager();
+    wrap.querySelector&&(wrap.innerHTML=wrap.innerHTML); // no-op trick
+    // Just re-render the donor list portion
+    var listEl=document.getElementById('dmDonorList');
+    if(listEl){
+      // Filter and re-render list only
+      var q=window._dmQ||'';
+      var area=window._dmArea||'All';
+      var donors=DB.donors.slice();
+      if(area&&area!=='All')donors=donors.filter(function(d){return (d.area||'')===area;});
+      if(q){var ql=q.toLowerCase();donors=donors.filter(function(d){return (d.name||'').toLowerCase().includes(ql)||(d.id||'').toLowerCase().includes(ql)||(d.mobile||'').includes(ql)||(d.area||'').toLowerCase().includes(ql)||(d.addedByName||d.addedBy||'').toLowerCase().includes(ql);});}
+      donors.sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
+      var html='<div style="font-size:11px;color:#888;margin-bottom:8px">'+donors.length+' donors shown</div>';
+      if(!donors.length){html='<p style="font-size:13px;color:#888;text-align:center;padding:16px">No donors found.</p>';listEl.innerHTML=html;return;}
+      donors.forEach(function(d){
+        var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+        var av=d.photo?'<img src="'+d.photo+'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1.5px solid #E1F5EE;flex-shrink:0">':'<div style="width:40px;height:40px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
+        var addedByUser=d.addedBy?DB.users.find(function(u){return u.id===d.addedBy;}):null;
+        var addedByName=addedByUser?addedByUser.name:(d.addedByName||d.addedBy||'—');
+        html+='<div style="display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid #e8e8e8">';
+        html+=av;
+        html+='<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#1a1a1a">'+d.name+'</div>';
+        html+='<div style="font-size:10px;color:#888;margin-top:1px"><span class="id-badge" style="font-size:9px">'+d.id+'</span>'+(d.area?' &bull; '+d.area:'')+'</div>';
+        html+='<div style="font-size:10px;color:#185FA5;margin-top:1px">Added by: '+addedByName+'</div></div>';
+        html+='<button data-did="'+d.id+'" onclick="_dmOpenEdit(this.dataset.did)" style="background:#185FA5;color:#fff;border:none;padding:7px 11px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">Edit</button>';
+        html+='</div>';
+      });
+      listEl.innerHTML=html;
+    } else {
+      // Fallback: full re-render
+      if(window._auditSub==='donormanager')renderTab('auditdept');
+      else renderTab('donormanager');
+      setTimeout(function(){var inp=document.getElementById('dmSearch');if(inp){inp.focus();try{inp.setSelectionRange(pos,pos);}catch(e){}}},60);
+    }
+    setTimeout(function(){var inp=document.getElementById('dmSearch');if(inp){inp.focus();try{inp.setSelectionRange(pos,pos);}catch(e){}}},30);
+  }
 }
 
 function _dmOpenEdit(donorId){
@@ -7020,34 +7052,98 @@ async function _dmSaveEdit(donorId){
 }
 T.auditdept=function(){
   var sub=window._auditSub||'';
-  // If no sub selected, show menu grid
   if(!sub){
     var items=[
-      {icon:'\U0001f4cb',label:'Audit Log',desc:'All activity logs',tab:'audit',color:'#185FA5'},
-      {icon:'\U0001f5d1\ufe0f',label:'Deleted Income',desc:'Deleted donation entries',tab:'deleteddonations',color:'#E24B4A'},
-      {icon:'\U0001f5d1\ufe0f',label:'Deleted Expenses',desc:'Deleted expense entries',tab:'deletedexpenses',color:'#E24B4A'},
-      {icon:'\u270f\ufe0f',label:'Modified Income',desc:'Edited donation entries',tab:'modifieddonations',color:'#854F0B'},
-      {icon:'\u270f\ufe0f',label:'Modified Expenses',desc:'Edited expense entries',tab:'modifiedexpenses',color:'#854F0B'},
-      {icon:'\U0001f465',label:'Donor Manager',desc:'View & edit donor records',tab:'donormanager',color:'#0F6E56'},
+      {label:'Audit Log',desc:'All activity logs',tab:'audit'},
+      {label:'Deleted Income',desc:'Deleted donations with donor detail',tab:'deleteddonations'},
+      {label:'Deleted Expenses',desc:'Deleted expenses with user detail',tab:'deletedexpenses'},
+      {label:'Modified Income',desc:'Edited donations with donor detail',tab:'modifieddonations'},
+      {label:'Modified Expenses',desc:'Edited expenses with user detail',tab:'modifiedexpenses'},
+      {label:'Donor Manager',desc:'View, search & modify donors',tab:'donormanager'},
+      {label:'Overall Detail',desc:'All donors with ID, name, area, added by',tab:'overalldetail'},
     ];
     var html='<div class="card">';
-    html+='<h3 style="margin-bottom:4px">&#128226; Audit Department</h3>';
+    html+='<h3 style="margin-bottom:4px">Audit Department</h3>';
     html+='<p style="font-size:11px;color:#888;margin-bottom:14px">Module select karein</p>';
-    html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
+    html+='<div style="display:flex;flex-direction:column;gap:8px">';
     items.forEach(function(it){
-      html+='<button data-sub="'+it.tab+'" onclick="window._auditSub=this.dataset.sub;renderTab(\'auditdept\')" style="background:#fff;border:1.5px solid #e8e8e8;border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.2s">';
-      html+='<div style="font-size:22px;margin-bottom:6px">'+it.icon+'</div>';
-      html+='<div style="font-size:12px;font-weight:800;color:#1a1a1a;margin-bottom:3px">'+it.label+'</div>';
-      html+='<div style="font-size:10px;color:#888;line-height:1.4">'+it.desc+'</div>';
+      html+='<button data-sub="'+it.tab+'" onclick="window._auditSub=this.dataset.sub;renderTab(\'auditdept\')" style="background:#f9f9f9;border:1px solid #e8e8e8;border-radius:10px;padding:12px 14px;text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center">';
+      html+='<div><div style="font-size:13px;font-weight:800;color:#1a1a1a">'+it.label+'</div>';
+      html+='<div style="font-size:11px;color:#888;margin-top:2px">'+it.desc+'</div></div>';
+      html+='<span style="font-size:16px;color:#888">&#8250;</span>';
       html+='</button>';
     });
     html+='</div></div>';
     return html;
   }
-  // Show sub module with back button injected via wrapper
-  var subHtml=T[sub]?T[sub]():'';
-  return '<div><button onclick="window._auditSub=\'\';renderTab(\'auditdept\')" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#0F6E56;font-size:13px;font-weight:700;cursor:pointer;padding:0 0 10px">&#8592; Back to Audit Dept</button>'+subHtml+'</div>';
+  // Sub module - render with back button at top
+  var subHtml=T[sub]?T[sub]():'<div class="card"><p style="color:#888">Module not found.</p></div>';
+  // Wrap with back button div
+  var backBtn='<div style="margin-bottom:10px"><button onclick="window._auditSub=\'\';renderTab(\'auditdept\')" style="display:flex;align-items:center;gap:6px;background:none;border:1px solid #e8e8e8;border-radius:8px;color:#185FA5;font-size:12px;font-weight:700;cursor:pointer;padding:7px 12px">&#8592; Audit Department</button></div>';
+  return backBtn+subHtml;
+};;
+T.overalldetail=function(){
+  var q=window._odQ||'';
+  var area=window._odArea||'All';
+  var areaList=['All'];
+  DB.donors.forEach(function(d){if(d.area&&areaList.indexOf(d.area)<0)areaList.push(d.area);});
+  areaList.sort(function(a,b){return a==='All'?-1:b==='All'?1:a.localeCompare(b);});
+  var donors=DB.donors.slice();
+  if(area&&area!=='All')donors=donors.filter(function(d){return (d.area||'')===area;});
+  if(q){var ql=q.toLowerCase();donors=donors.filter(function(d){return (d.name||'').toLowerCase().includes(ql)||(d.id||'').toLowerCase().includes(ql)||(d.mobile||'').includes(ql)||(d.area||'').toLowerCase().includes(ql)||(d.addedByName||d.addedBy||'').toLowerCase().includes(ql);});}
+  donors.sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
+  var html='<div class="card">';
+  html+='<h3 style="margin-bottom:4px">Overall Detail</h3>';
+  html+='<p style="font-size:11px;color:#888;margin-bottom:10px">'+DB.donors.length+' total donors</p>';
+  html+='<div class="inp-wrap" style="margin-bottom:8px"><span class="inp-icon">&#128269;</span><input type="text" id="odSearch" value="'+q.replace(/"/g,'&quot;')+'" placeholder="Search name, ID, mobile, area, added by..." oninput="window._odQ=this.value;_odFilter()" autocomplete="off" style="font-size:13px"></div>';
+  html+='<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">';
+  areaList.forEach(function(a){
+    var act=a===area;
+    html+='<button data-oda="'+a+'" onclick="window._odArea=this.dataset.oda;window._odQ=\'\';renderTab(\'auditdept\')" style="padding:5px 12px;border-radius:20px;border:'+(act?'none':'0.5px solid #ddd')+';background:'+(act?'#0F6E56':'#f5f5f5')+';color:'+(act?'#fff':'#444')+';font-size:11px;font-weight:600;cursor:pointer;flex-shrink:0">'+a+'</button>';
+  });
+  html+='</div>';
+  html+='<div id="odDonorList">';
+  html+='<div style="font-size:11px;color:#888;margin-bottom:8px">'+donors.length+' donors shown</div>';
+  if(!donors.length){html+='<p style="font-size:13px;color:#888;text-align:center;padding:16px">No donors found.</p></div></div>';return html;}
+  donors.forEach(function(d){
+    var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+    var av=d.photo?'<img src="'+d.photo+'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1.5px solid #E1F5EE;flex-shrink:0">':'<div style="width:40px;height:40px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
+    var addedByUser=d.addedBy?DB.users.find(function(u){return u.id===d.addedBy;}):null;
+    var addedByName=addedByUser?addedByUser.name:(d.addedByName||d.addedBy||'\u2014');
+    html+='<div style="display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid #e8e8e8">';
+    html+=av;
+    html+='<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#1a1a1a">'+d.name+'</div>';
+    html+='<div style="font-size:10px;color:#888;margin-top:1px"><span class="id-badge" style="font-size:9px">'+d.id+'</span>'+(d.area?' &bull; '+d.area:'')+'</div>';
+    html+='<div style="font-size:10px;color:#185FA5;margin-top:1px">Added by: '+addedByName+'</div></div>';
+    html+='<button data-did="'+d.id+'" onclick="_dmOpenEdit(this.dataset.did)" style="background:#185FA5;color:#fff;border:none;padding:7px 11px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">Edit</button>';
+    html+='</div>';
+  });
+  html+='</div></div>';
+  return html;
 };
+function _odFilter(){
+  var el=document.getElementById('odSearch');
+  window._odQ=el?el.value:'';
+  var pos=el?el.selectionStart:0;
+  var listEl=document.getElementById('odDonorList');
+  if(listEl){
+    var q=window._odQ||'';var area=window._odArea||'All';
+    var donors=DB.donors.slice();
+    if(area&&area!=='All')donors=donors.filter(function(d){return (d.area||'')===area;});
+    if(q){var ql=q.toLowerCase();donors=donors.filter(function(d){return (d.name||'').toLowerCase().includes(ql)||(d.id||'').toLowerCase().includes(ql)||(d.mobile||'').includes(ql)||(d.area||'').toLowerCase().includes(ql)||(d.addedByName||d.addedBy||'').toLowerCase().includes(ql);});}
+    donors.sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
+    var html='<div style="font-size:11px;color:#888;margin-bottom:8px">'+donors.length+' donors shown</div>';
+    donors.forEach(function(d){
+      var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+      var av=d.photo?'<img src="'+d.photo+'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:1.5px solid #E1F5EE;flex-shrink:0">':'<div style="width:40px;height:40px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
+      var addedByUser=d.addedBy?DB.users.find(function(u){return u.id===d.addedBy;}):null;
+      var addedByName=addedByUser?addedByUser.name:(d.addedByName||d.addedBy||'\u2014');
+      html+='<div style="display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid #e8e8e8">'+av+'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">'+d.name+'</div><div style="font-size:10px;color:#888;margin-top:1px"><span class="id-badge" style="font-size:9px">'+d.id+'</span>'+(d.area?' &bull; '+d.area:'')+'</div><div style="font-size:10px;color:#185FA5;margin-top:1px">Added by: '+addedByName+'</div></div><button data-did="'+d.id+'" onclick="_dmOpenEdit(this.dataset.did)" style="background:#185FA5;color:#fff;border:none;padding:7px 11px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">Edit</button></div>';
+    });
+    listEl.innerHTML=html;
+  }
+  setTimeout(function(){var inp=document.getElementById('odSearch');if(inp){inp.focus();try{inp.setSelectionRange(pos,pos);}catch(e){}}},30);
+}
 T.wreminder=function(){
   if(!['admin','manager','developer'].includes(currentRole)){
     return '<div class="card"><div style="text-align:center;padding:24px;color:#888">\u26d4 Access denied.</div></div>';
@@ -9261,7 +9357,7 @@ const TAB_LABELS={
   donorlist:'Donor List',slip:'Donor Slip',top:'Top Donors',transfer:'Transfer',
   decconfirm:'Confirm Deceased',approvals:'Approvals',lockuser:'Login Management',
   userslist:'Users List',professions:'Professions',audit:'Audit Log',areas:'Areas',
-  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',entrymanager:'Entry Manager',lastdonation:'Last Donation',excelexport:'Excel Export',alldonations:'All Donations',deathposter:'Death Poster',wreminder:'WhatsApp Reminder',loginreport:'Login Report',auditdept:'Audit Department',deleteddonations:'Deleted Income',deletedexpenses:'Deleted Expenses',modifieddonations:'Modified Income',modifiedexpenses:'Modified Expenses',donormanager:'Donor Manager',renameaddedby:'Rename AddedBy',deathposter:'Death Poster',dailyupdate:'Daily Update',entrymanager:'Entry Manager',fundraisingstar:'Fundraising Stars',donorsummary:'Donor Summary',myentries:'My Entries',unknowndonors:'Update Unknown',missinginfo:'Missing Information',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
+  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',entrymanager:'Entry Manager',lastdonation:'Last Donation',excelexport:'Excel Export',alldonations:'All Donations',deathposter:'Death Poster',wreminder:'WhatsApp Reminder',loginreport:'Login Report',auditdept:'Audit Department',deleteddonations:'Deleted Income',deletedexpenses:'Deleted Expenses',modifieddonations:'Modified Income',modifiedexpenses:'Modified Expenses',donormanager:'Donor Manager',overalldetail:'Overall Detail',renameaddedby:'Rename AddedBy',deathposter:'Death Poster',dailyupdate:'Daily Update',entrymanager:'Entry Manager',fundraisingstar:'Fundraising Stars',donorsummary:'Donor Summary',myentries:'My Entries',unknowndonors:'Update Unknown',missinginfo:'Missing Information',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
 };
 
 // ============================================================

@@ -556,7 +556,10 @@ input[type=file]{padding:6px}
 <!-- SUBMENU DRAWER -->
 <div class="submenu-drawer" id="submenuDrawer">
   <div class="submenu-handle" onclick="closeSubmenu()"></div>
-  <div class="submenu-title" id="submenuTitle">Menu</div>
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:0 4px 0 0">
+    <div class="submenu-title" id="submenuTitle">Menu</div>
+    <button onclick="closeSubmenu()" style="background:rgba(0,0,0,0.08);border:none;border-radius:50%;width:28px;height:28px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">&times;</button>
+  </div>
   <div class="submenu-grid" id="submenuGrid"></div>
 </div>
 
@@ -4538,8 +4541,86 @@ function adminApproveDeceased(id){
 
 // ---- ORG SETTINGS (developer only) ----
 T.orgsettings=function(){
-  var baseHtml=_orgSettingsExtra();
-  return baseHtml+renderCommitteeSettings('committee')+renderCommitteeSettings('supportingstaff');
+  var sl=ORG_CONFIG.socialLinks||{};
+  var banks=ORG_CONFIG.bankAccounts||[];
+  var html='';
+  // Org Name
+  html+='<div class="card"><h3>\U0001f3e2 Organization Name</h3>';
+  html+='<label>Name (English) *</label><input type="text" id="orgNameEn" value="'+(ORG_CONFIG.name||'Falah e Qabristan').replace(/"/g,'&quot;')+'" placeholder="Organization name">';
+  html+='<label>Name (Urdu)</label><input type="text" id="orgNameUr" value="'+(ORG_CONFIG.nameUrdu||'\u0641\u0644\u0627\u062d \u0642\u0628\u0631\u0633\u062a\u0627\u0646').replace(/"/g,'&quot;')+'" placeholder="\u0627\u0631\u062f\u0648 \u0645\u06cc\u06ba \u0646\u0627\u0645">';
+  html+='<button class="btn btn-primary" style="margin-top:8px" onclick="saveOrgName()">Save Name</button></div>';
+  // Logo
+  html+='<div class="card"><h3>\U0001f3f7\ufe0f Organization Logo</h3>';
+  html+='<div style="display:flex;align-items:center;gap:14px"><div style="width:80px;height:60px;border:2px dashed #ccc;border-radius:10px;overflow:hidden;cursor:pointer;background:#f9f9f9;display:flex;align-items:center;justify-content:center" onclick="document.getElementById(\'orgLogoInput\').click()">';
+  html+='<img id="orgLogoPreview" src="'+(ORG_CONFIG.logo||'')+'" style="display:'+(ORG_CONFIG.logo?'block':'none')+';max-width:100%;max-height:100%;object-fit:contain">';
+  html+='<span id="orgLogoPlus" style="'+(ORG_CONFIG.logo?'display:none;':'')+' font-size:11px;color:#aaa;text-align:center">\U0001f5bc\ufe0f Upload</span></div>';
+  html+='<div><div style="font-size:13px;font-weight:500">'+(ORG_CONFIG.logo?'Logo uploaded \u2705':'No logo uploaded')+'</div>';
+  html+=(ORG_CONFIG.logo?'<button class="btn btn-sm btn-danger" style="margin-top:6px" onclick="removeLogo()">Remove</button>':'')+
+  '</div></div><input type="file" accept="image/*" id="orgLogoInput" style="display:none" onchange="uploadOrgLogo()"></div>';
+  // Address
+  html+='<div class="card"><h3>Address</h3>';
+  html+='<textarea id="orgAddress" rows="2" style="resize:none">'+(ORG_CONFIG.address||'')+'</textarea>';
+  html+='<button class="btn btn-primary" style="margin-top:8px" onclick="saveOrgAddress()">Save Address</button>';
+  html+='<label style="margin-top:10px;display:block">Full Address (for posters)</label>';
+  html+='<textarea id="orgFullAddress" rows="2" style="resize:none;font-size:13px">'+(ORG_CONFIG.fullAddress||'')+'</textarea>';
+  html+='<button class="btn btn-primary" style="margin-top:6px" onclick="saveOrgFullAddress()">Save Full Address</button></div>';
+  // Contact Numbers
+  html+='<div class="card"><h3>\U0001f4de Contact Numbers</h3><p style="font-size:12px;color:#888;margin-bottom:10px">Shown on Contact page</p>';
+  (ORG_CONFIG.contactNumbers||[]).forEach(function(n,i){
+    html+='<div style="background:#f0fff8;border-radius:10px;border:1px solid #1D9E75;margin-bottom:6px;padding:10px;display:flex;align-items:center;gap:10px">';
+    html+=(n.photo?'<img src="'+n.photo+'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid #1D9E75;flex-shrink:0">':'');
+    html+='<div style="flex:1"><div style="font-size:12px;font-weight:700;color:#0F6E56">'+n.label+(n.area?' \u2014 '+n.area:'')+'</div>';
+    html+='<div style="font-size:13px;font-weight:600;color:#185FA5">'+n.number+'</div></div>';
+    html+='<div style="display:flex;flex-direction:column;gap:4px"><button class="btn-xs" style="background:#1D9E75;color:#fff;border:none;cursor:pointer" onclick="editContactNumber('+i+')">&#9998;</button>';
+    html+='<button class="btn-xs" style="background:#E24B4A;color:#fff;border:none;cursor:pointer" onclick="removeContactNumber('+i+')">\U0001f5d1\ufe0f</button></div></div>';
+  });
+  html+='<div style="background:#F5F9FF;border-radius:10px;padding:10px;border:1px solid #B5D4F4;margin-top:8px">';
+  html+='<div style="font-size:11px;font-weight:700;color:#0C447C;margin-bottom:6px">&#128100; From User Account</div>';
+  html+='<div style="display:flex;gap:6px;margin-bottom:6px"><div class="inp-wrap" style="flex:1;margin:0"><span class="inp-icon">&#128100;</span><input type="text" id="cnUserId" placeholder="User ID..." autocomplete="new-password" style="font-size:12px"></div>';
+  html+='<button onclick="_cnVerifyUser()" style="background:#185FA5;color:#fff;border:none;padding:9px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">Fetch</button></div>';
+  html+='<div id="cnUserInfo" style="margin-bottom:6px"></div></div>';
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">';
+  html+='<div class="inp-wrap"><span class="inp-icon">\U0001f3f7\ufe0f</span><input type="text" id="cnLabel" placeholder="Label (e.g. Office)"></div>';
+  html+='<div class="inp-wrap"><span class="inp-icon">\U0001f4de</span><input type="text" id="cnNumber" placeholder="0300-1234567" maxlength="12" oninput="autoFormatMobile(this,null)"></div></div>';
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">';
+  html+='<div class="inp-wrap"><span class="inp-icon">\U0001f4cd</span><select id="cnArea"><option value="">-- Area --</option>'+AREAS.map(function(a){return '<option value="'+a+'">'+a+'</option>';}).join('')+'</select></div>';
+  html+='<div style="display:flex;align-items:center;gap:8px"><div style="width:44px;height:44px;border-radius:50%;overflow:hidden;border:2px dashed #1D9E75;cursor:pointer;background:#f0fff8;display:flex;align-items:center;justify-content:center;flex-shrink:0" onclick="document.getElementById(\'cnPhotoInp\').click()">';
+  html+='<img id="cnPhotoPreview" src="" style="display:none;width:100%;height:100%;object-fit:cover"><span id="cnPhotoPlus" style="font-size:18px">\U0001f4f8</span></div>';
+  html+='<input type="file" id="cnPhotoInp" accept="image/*" style="display:none" onchange="previewImg(\'cnPhotoInp\',\'cnPhotoPreview\',\'cnPhotoPlus\')"></div></div>';
+  html+='<button class="btn btn-primary" style="margin-top:8px" onclick="addContactNumber()">+ Add Number</button></div>';
+  // Social Links
+  html+='<div class="card"><h3>\U0001f310 Social Media Links</h3>';
+  html+='<label>\U0001f4d8 Facebook</label><input type="url" id="slFacebook" value="'+(sl.facebook||'')+'" placeholder="https://facebook.com/...">';
+  html+='<label>\U0001f4f8 Instagram</label><input type="url" id="slInstagram" value="'+(sl.instagram||'')+'" placeholder="https://instagram.com/...">';
+  html+='<label>\u25b6\ufe0f YouTube</label><input type="url" id="slYoutube" value="'+(sl.youtube||'')+'" placeholder="https://youtube.com/...">';
+  html+='<button class="btn btn-primary" style="margin-top:8px" onclick="saveSocialLinks()">Save Links</button></div>';
+  // Bank Accounts
+  html+='<div class="card"><h3>\U0001f3e6 Bank Accounts</h3>';
+  banks.forEach(function(acc,i){
+    html+='<div style="background:#f9f9f9;border-radius:10px;padding:12px;margin-bottom:8px;border:1px solid #eee;display:flex;justify-content:space-between;align-items:flex-start;gap:8px">';
+    html+='<div style="flex:1"><div style="font-size:14px;font-weight:700">'+acc.title+'</div>';
+    html+='<div style="font-size:12px;color:#185FA5;font-weight:600">'+acc.bank+'</div>';
+    html+='<div style="font-size:13px;font-weight:700;letter-spacing:1px;margin-top:4px;background:#E6F1FB;color:#185FA5;padding:4px 8px;border-radius:6px;display:inline-block">'+acc.number+'</div>';
+    html+=(acc.area?'<div style="font-size:11px;color:#888;margin-top:4px">\U0001f4cd '+acc.area+'</div>':'');
+    html+='<div style="display:flex;gap:6px;margin-top:6px"><button class="btn-xs" style="background:#1D9E75;color:#fff;border:none;cursor:pointer" onclick="openEditBank('+i+')">&#9998; Edit</button>';
+    html+='<button class="btn-xs" style="background:#E24B4A;color:#fff;border:none;cursor:pointer" onclick="removeBankAccount('+i+')">\U0001f5d1\ufe0f Remove</button></div></div>';
+    html+=(acc.photo?'<img src="'+acc.photo+'" style="width:56px;height:56px;border-radius:50%;border:2px solid #1D9E75;object-fit:cover;flex-shrink:0">':'');
+    html+='</div>';
+  });
+  html+='<div id="bankEditSection" style="display:none"></div>';
+  html+='<div style="border-top:1px solid #eee;margin-top:10px;padding-top:10px"><div style="font-size:13px;font-weight:600;margin-bottom:8px">Add New Account</div>';
+  html+='<label>Account Title *</label><div class="inp-wrap"><span class="inp-icon">\U0001f3e6</span><input type="text" id="baTitle" placeholder="e.g. Falah e Qabristan Fund"></div>';
+  html+='<label>Bank Name *</label><div class="inp-wrap"><span class="inp-icon">\U0001f3db\ufe0f</span><input type="text" id="baBank" placeholder="e.g. HBL, MCB"></div>';
+  html+='<label>Account Number *</label><div class="inp-wrap"><span class="inp-icon">\U0001f522</span><input type="text" id="baNumber" placeholder="Account number"></div>';
+  html+='<label>Area</label><div class="inp-wrap"><span class="inp-icon">\U0001f4cd</span><select id="baArea"><option value="">-- Select Area --</option>'+AREAS.map(function(a){return '<option value="'+a+'">'+a+'</option>';}).join('')+'</select></div>';
+  html+='<div style="width:64px;height:64px;border:2px dashed #ccc;border-radius:50%;overflow:hidden;cursor:pointer;background:#f5f5f5;display:flex;align-items:center;justify-content:center;margin:8px 0" onclick="document.getElementById(\'baPhotoInput\').click()">';
+  html+='<img id="baPhotoPreview" src="" style="display:none;width:100%;height:100%;object-fit:cover"><span id="baPhotoPlus">\U0001f4f8</span></div>';
+  html+='<input type="file" accept="image/*" id="baPhotoInput" style="display:none" onchange="previewBaPhoto()">';
+  html+='<button class="btn btn-primary" style="margin-top:10px" onclick="addBankAccount()">Add Account</button></div></div>';
+  // Committee + Staff
+  html+=renderCommitteeSettings('committee');
+  html+=renderCommitteeSettings('supportingstaff');
+  return html;
 };
 function saveContactEdit(idx){
   var n=ORG_CONFIG.contactNumbers[parseInt(idx)];if(!n)return;
@@ -9008,6 +9089,8 @@ function getMenuConfig(){
       {icon:'🏠', label:'Dashboard / ڈیش بورڈ', tab:'dash'},
       {icon:'💵', label:'Last Donation', tab:'lastdonation'},
       {icon:'📒', label:'Contacts / رابطے', tab:'contacts'},
+      {icon:'🎯', label:'Committee Members', tab:'committeemembers'},
+      {icon:'👤', label:'Supporting Staff', tab:'supportingstaff'},
 
       {icon:'🔔', label:'Notifications / اطلاعات', tab:'notifications'},
       {icon:'👤', label:'Add Donor / ڈونر شامل', tab:'adddonor'},

@@ -1570,7 +1570,7 @@ T.transfer=function(){
         <div style="font-size:11px;color:#888;margin-top:2px">${t.date}${t.note?' • '+t.note:''}</div></div>
         <div style="text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:5px">
           <div style="font-size:15px;font-weight:800;color:#E24B4A">-${fmt(t.amount)}</div>
-          ${t.received?'<span style="background:#E1F5EE;color:#0F6E56;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">✓ Received</span>':`<div style="display:flex;gap:6px;align-items:center"><span style="background:#FAEEDA;color:#854F0B;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">⏳ Pending</span><button onclick="sendTransferReminder('${t.id}')" style="background:#25D366;color:#fff;border:none;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;cursor:pointer">📲 Remind</button></div>`}
+          ${t.received?'<span style="background:#E1F5EE;color:#0F6E56;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">✓ Received</span>':`<div style="display:flex;gap:6px;align-items:center"><span style="background:#FAEEDA;color:#854F0B;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">⏳ Pending</span><button onclick="sendTransferReminder('${t.id}')" style="background:#25D366;color:#fff;border:none;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;cursor:pointer">📲 Remind</button><button onclick="deleteTransfer('${t.id}')" style="background:#E24B4A;color:#fff;border:none;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;cursor:pointer">🗑 Delete</button></div>`}
         </div>
       </div>`;}).join('')}
   </div>`:``}
@@ -3742,11 +3742,35 @@ function _doTransferConfirmed(toId,amount,note){
   // Re-render to show blank form + updated history
   renderTab('transfer');
 }
-function markReceived(tid){
+async function deleteTransfer(tid){
+  var t=DB.transfers.find(function(x){return x.id===tid;});
+  if(!t){showPopup('⚠️','Error','Transfer not found.');return;}
+  if(t.received){showPopup('⚠️','Cannot Delete','Transfer already received nahi ho sakta delete.');return;}
+  var tu=DB.users.find(function(u){return u.id===t.to;})||{name:t.to||'?'};
+  if(!confirm('Transfer delete karein? Rs '+fmt(t.amount)+' \u2192 '+tu.name+' (Ab tak received nahi tha)'))return;;
+  DB.transfers=DB.transfers.filter(function(x){return x.id!==tid;});
+  try{
+    if(fdb)await fdb.collection('transfers').doc(tid).delete();
+    saveLocalCache();
+    var alId='AL'+Date.now();
+    var al={id:alId,by:currentUser.id,byName:currentUser.name,action:'Transfer Deleted',target:'Rs '+fmt(t.amount),detail:'To: '+(tu.name)+' | '+t.date+' | Not received',date:today(),time:new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'})};
+    DB.auditLog.push(al);FS.save('auditLog',alId,al);
+    showPopup('✅','Deleted','Transfer delete ho gai!');
+    renderTab('transfer');
+  }catch(e){showPopup('❌','Error','Delete failed: '+e.message);}
+}
+async function markReceived(tid){
   const t=DB.transfers.find(x=>x.id===tid);if(!t)return;
-  t.received=true;FS.save('transfers',t.id,t);
-  DB.auditLog.push({by:currentUser.id,action:'Transfer Received',target:'Rs '+fmt(t.amount),detail:'From '+t.from,date:today()});
-  showPopup('✅','Amount Received','Rs '+fmt(t.amount)+' added to your balance.');
+  t.received=true;
+  t.receivedDate=today();
+  t.receivedBy=currentUser.id;
+  await FS.save('transfers',t.id,t);
+  saveLocalCache();
+  const alId='AL'+Date.now();
+  const al={id:alId,by:currentUser.id,byName:currentUser.name,action:'Transfer Received',target:'Rs '+fmt(t.amount),detail:'From '+t.from+' | '+t.date,date:today(),time:new Date().toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'})};
+  DB.auditLog.push(al);FS.save('auditLog',alId,al);
+  addNotification('transfer','Amount Received','Rs '+fmt(t.amount)+' received from '+(DB.users.find(u=>u.id===t.from)||{name:t.from}).name);
+  showPopup('✅','Amount Received','Rs '+fmt(t.amount)+' آپ کے بیلنس میں شامل ہو گئی!');
   renderTab('transfer');
 }
 
@@ -7297,78 +7321,98 @@ T.wreminder=function(){
   // Hidden list
   var hiddenRaw={};
   try{hiddenRaw=JSON.parse(localStorage.getItem('wr_hidden')||'{}');}catch(e){hiddenRaw={};}
-  var now=Date.now();var changed=false;
-  Object.keys(hiddenRaw).forEach(function(k){if(now-hiddenRaw[k]>864000000){delete hiddenRaw[k];changed=true;}});
+  var now2=Date.now();var changed=false;
+  Object.keys(hiddenRaw).forEach(function(k){if(now2-hiddenRaw[k]>864000000){delete hiddenRaw[k];changed=true;}});
   if(changed){try{localStorage.setItem('wr_hidden',JSON.stringify(hiddenRaw));}catch(e){}}
 
-  var showHidden=window._wrShowHidden||false;
-
-  // Unpaid donors
-  var unpaid=[];
+  // All unpaid donors
+  var unpaidAll=[];
   DB.donors.forEach(function(d){
     var hasDon=DB.donations.some(function(x){return x.donorId===d.id&&(x.date||'').substring(0,7)===thisMonth;});
-    if(!hasDon)unpaid.push(d);
+    if(!hasDon)unpaidAll.push(d);
   });
-  unpaid.sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
 
-  var wrArea=window._wrArea||'All';
+  var wrArea=window._wrArea||'';  // '' = show area grid
   var wrQ=window._wrQ||'';
-
-  // Area list from ALL unpaid donors (not filtered)
-  var areaSet={'All':true};
-  unpaid.forEach(function(d){if(d.area)areaSet[d.area]=true;});
-  var areas=Object.keys(areaSet).sort(function(a,b){return a==='All'?-1:b==='All'?1:a.localeCompare(b);});
+  var showHidden=window._wrShowHidden||false;
 
   var html='<div class="card">';
   html+='<h3 style="margin-bottom:4px">&#128227; WA Reminder</h3>';
-  html+='<p style="font-size:11px;color:#888;margin-bottom:8px"><b>'+unpaid.length+'</b> unpaid &bull; '+thisMonth+' &bull; <span style="color:#888">'+Object.keys(hiddenRaw).length+' hidden</span></p>';
+  html+='<p style="font-size:11px;color:#888;margin-bottom:12px"><b>'+unpaidAll.filter(function(d){return !hiddenRaw[d.id];}).length+'</b> unpaid &bull; '+thisMonth+'</p>';
 
-  // ── Area tabs FIRST ──────────────────────────────────────
-  html+='<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px">';
-  areas.forEach(function(a){
-    var act=a===wrArea;
-    html+='<button data-wra="'+a+'" onclick="window._wrArea=this.dataset.wra;window._wrQ=\'\';renderTab(\'wreminder\')" style="padding:5px 12px;border-radius:20px;border:'+(act?'none':'0.5px solid #ddd')+';background:'+(act?'#0F6E56':'#f5f5f5')+';color:'+(act?'#fff':'#444')+';font-size:11px;font-weight:600;cursor:pointer;flex-shrink:0">'+a+'</button>';
-  });
-  html+='</div>';
+  // ── AREA GRID (no area selected) ──────────────────────────
+  if(!wrArea){
+    // Build area map
+    var areaMap={};
+    unpaidAll.forEach(function(d){
+      if(!d.area)d.area='Unknown';
+      if(!areaMap[d.area])areaMap[d.area]=0;
+      if(!hiddenRaw[d.id])areaMap[d.area]++;
+    });
+    var areas=Object.keys(areaMap).sort();
+    var totalUnpaid=unpaidAll.filter(function(d){return !hiddenRaw[d.id];}).length;
+    html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">';
+    // All button
+    html+='<button onclick="window._wrArea=\'All\';window._wrQ=\'\';renderTab(\'wreminder\')" style="background:#0F6E56;color:#fff;border:none;border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer">';
+    html+='<div style="font-size:22px;margin-bottom:4px">&#128227;</div>';
+    html+='<div style="font-size:13px;font-weight:800">All Areas</div>';
+    html+='<div style="font-size:18px;font-weight:900;margin-top:3px">'+totalUnpaid+'</div>';
+    html+='<div style="font-size:10px;opacity:0.8">unpaid donors</div>';
+    html+='</button>';
+    areas.forEach(function(a){
+      var cnt=areaMap[a]||0;
+      html+='<button data-wa="'+a+'" onclick="window._wrArea=this.dataset.wa;window._wrQ=\'\';renderTab(\'wreminder\')" style="background:#f9f9f9;border:1px solid #e8e8e8;border-radius:12px;padding:14px 10px;text-align:center;cursor:pointer">';
+      html+='<div style="font-size:13px;font-weight:800;color:#1a1a1a;margin-bottom:4px">'+a+'</div>';
+      html+='<div style="font-size:20px;font-weight:900;color:'+(cnt>0?'#E24B4A':'#0F6E56')+'">'+(cnt>0?cnt:'&#10003;')+'</div>';
+      html+='<div style="font-size:10px;color:#888;margin-top:2px">'+(cnt>0?'unpaid':'all paid')+'</div>';
+      html+='</button>';
+    });
+    html+='</div>';
+    // Hidden toggle
+    html+='<button onclick="window._wrShowHidden=!window._wrShowHidden;renderTab(\'wreminder\')" style="width:100%;background:'+(showHidden?'#185FA5':'#f5f5f5')+';color:'+(showHidden?'#fff':'#555')+';border:1px solid '+(showHidden?'#185FA5':'#ddd')+';padding:8px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:10px">'+(showHidden?'\u2611 Hidden Donors Band Karein':'&#128065; Show Hidden Donors ('+Object.keys(hiddenRaw).length+')')+'</button>';
+    if(showHidden){
+      var hiddenDonors=DB.donors.filter(function(d){return hiddenRaw[d.id];});
+      html+='<div style="background:#E6F1FB;border-radius:10px;padding:10px;margin-bottom:10px">';
+      html+='<div style="font-size:11px;font-weight:700;color:#0C447C;margin-bottom:8px">Hidden ('+hiddenDonors.length+')</div>';
+      if(!hiddenDonors.length){html+='<p style="font-size:12px;color:#888">Koi hidden nahi.</p>';}
+      hiddenDonors.forEach(function(d){
+        var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+        var av=d.photo?'<img src="'+d.photo+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0">':'<div style="width:32px;height:32px;border-radius:50%;background:#B5D4F4;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#0C447C;flex-shrink:0">'+init+'</div>';
+        var hidAgo=Math.floor((now2-hiddenRaw[d.id])/(1000*3600*24));
+        html+='<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:0.5px solid rgba(21,115,191,0.15)">'+av;
+        html+='<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700">'+d.name+'</div>';
+        html+='<div style="font-size:10px;color:#888">'+(d.area||'')+ ' &bull; '+hidAgo+'d ago</div></div>';
+        html+='<button data-hid="'+d.id+'" onclick="wrUnhide(this.dataset.hid)" style="background:#0F6E56;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer">Unhide</button>';
+        html+='</div>';
+      });
+      html+='</div>';
+    }
+    html+='</div>';
+    return html;
+  }
 
-  // ── Search bar ───────────────────────────────────────────
-  html+='<div class="inp-wrap" style="margin-bottom:8px">';
+  // ── DONOR LIST (area selected) ────────────────────────────
+  // Back button
+  html+='<button onclick="window._wrArea=\'\';window._wrQ=\'\';renderTab(\'wreminder\')" style="display:flex;align-items:center;gap:6px;background:none;border:1px solid #e8e8e8;border-radius:8px;color:#0F6E56;font-size:12px;font-weight:700;cursor:pointer;padding:7px 12px;margin-bottom:10px">&#8592; Areas</button>';
+
+  html+='<div style="font-size:13px;font-weight:800;color:#1a1a1a;margin-bottom:10px">'+wrArea+'</div>';
+
+  // Search
+  html+='<div class="inp-wrap" style="margin-bottom:10px">';
   html+='<span class="inp-icon">&#128269;</span>';
   html+='<input type="text" id="wrSearch" value="'+wrQ.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'" placeholder="Search name, mobile, ID..." oninput="window._wrQ=this.value;_wrFilter()" autocomplete="off" style="font-size:13px">';
   html+='</div>';
 
-  // ── Show/Hide Hidden button ──────────────────────────────
-  html+='<button onclick="window._wrShowHidden=!window._wrShowHidden;renderTab(\'wreminder\')" style="width:100%;background:'+(showHidden?'#185FA5':'#f5f5f5')+';color:'+(showHidden?'#fff':'#555')+';border:1px solid '+(showHidden?'#185FA5':'#ddd')+';padding:8px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:10px">'+(showHidden?'&#9745; Hidden Donors dikhaye ja rahe hain — Click to hide':'&#128065; Show Hidden Donors ('+Object.keys(hiddenRaw).length+')')+'</button>';
-
-  if(showHidden){
-    // Show hidden donors
-    var hiddenDonors=DB.donors.filter(function(d){return hiddenRaw[d.id];});
-    html+='<div style="background:#E6F1FB;border-radius:10px;padding:10px;margin-bottom:10px">';
-    html+='<div style="font-size:11px;font-weight:700;color:#0C447C;margin-bottom:8px">Hidden Donors ('+hiddenDonors.length+')</div>';
-    if(!hiddenDonors.length){html+='<p style="font-size:12px;color:#888">Koi hidden donor nahi.</p>';}
-    hiddenDonors.forEach(function(d){
-      var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-      var av=d.photo?'<img src="'+d.photo+'" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0">':'<div style="width:34px;height:34px;border-radius:50%;background:#B5D4F4;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#0C447C;flex-shrink:0">'+init+'</div>';
-      var hiddenAgo=Math.floor((now-hiddenRaw[d.id])/(1000*3600*24));
-      html+='<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:0.5px solid rgba(21,115,191,0.15)">';
-      html+=av;
-      html+='<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700">'+d.name+'</div>';
-      html+='<div style="font-size:10px;color:#888">'+d.area+' &bull; '+hiddenAgo+' days ago</div></div>';
-      html+='<button data-hid="'+d.id+'" onclick="wrUnhide(this.dataset.hid)" style="background:#0F6E56;color:#fff;border:none;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer">Unhide</button>';
-      html+='</div>';
-    });
-    html+='</div>';
-  }
-
-  // ── Filtered list ─────────────────────────────────────────
-  var list=(wrArea==='All')?unpaid.filter(function(d){return !hiddenRaw[d.id];}):unpaid.filter(function(d){return (d.area||'')===wrArea&&!hiddenRaw[d.id];});
+  // Filter donors
+  var list=(wrArea==='All')?unpaidAll.filter(function(d){return !hiddenRaw[d.id];}):unpaidAll.filter(function(d){return (d.area||'Unknown')===wrArea&&!hiddenRaw[d.id];});
   if(wrQ){
     var ql=wrQ.toLowerCase();
     list=list.filter(function(d){return (d.name||'').toLowerCase().includes(ql)||(d.mobile||'').includes(ql)||(d.area||'').toLowerCase().includes(ql)||(d.id||'').toLowerCase().includes(ql);});
   }
+  list.sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
 
   html+='<div id="wrList">';
-  html+='<div style="font-size:11px;color:#888;margin-bottom:8px">'+list.length+' donors showing</div>';
+  html+='<div style="font-size:11px;color:#888;margin-bottom:8px">'+list.length+' donors</div>';
   if(!list.length){
     html+='<div style="text-align:center;padding:24px;color:#0F6E56"><div style="font-size:24px">&#9989;</div><div style="font-size:13px;font-weight:700;margin-top:6px">Sab ne donation di hai!</div></div>';
     html+='</div></div>';return html;
@@ -7385,7 +7429,7 @@ T.wreminder=function(){
     html+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #e8e8e8">';
     html+=av;
     html+='<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#1a1a1a">'+d.name+'</div>';
-    html+='<div style="font-size:10px;color:#888;margin-top:1px">'+d.id+' &bull; '+(d.mobile||'\u2014')+' &bull; '+(d.area||'\u2014')+'</div>';
+    html+='<div style="font-size:10px;color:#888;margin-top:1px">'+d.id+' &bull; '+(d.mobile||'\u2014')+'</div>';
     html+=(lastDon.length?'<div style="font-size:10px;color:#185FA5;margin-top:1px">&#128197; Last: '+lastDon[0].date+'</div>':'<div style="font-size:10px;color:#E24B4A;margin-top:1px">&#128197; No donation yet</div>');
     html+='</div>';
     html+='<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">';
@@ -7396,7 +7440,7 @@ T.wreminder=function(){
   });
   html+='</div></div>';
   return html;
-};
+};;
 
 function wrUnhide(donorId){
   var hiddenRaw={};
@@ -7409,7 +7453,6 @@ function wrUnhide(donorId){
 function _wrFilter(){
   window._wrQ=document.getElementById('wrSearch')?document.getElementById('wrSearch').value:'';
   var pos=document.getElementById('wrSearch')?document.getElementById('wrSearch').selectionStart:0;
-  // Update only the list, not full re-render to keep keyboard open
   var listEl=document.getElementById('wrList');
   if(!listEl){renderTab('wreminder');return;}
   var thisMonth=today().substring(0,7);
@@ -7421,25 +7464,24 @@ function _wrFilter(){
     var hasDon=DB.donations.some(function(x){return x.donorId===d.id&&(x.date||'').substring(0,7)===thisMonth;});
     if(!hasDon&&!hiddenRaw[d.id])unpaid.push(d);
   });
-  unpaid.sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
-  var list=(wrArea==='All')?unpaid:unpaid.filter(function(d){return (d.area||'')===wrArea;});
+  var list=(wrArea==='All')?unpaid:unpaid.filter(function(d){return (d.area||'Unknown')===wrArea;});
   if(wrQ){var ql=wrQ.toLowerCase();list=list.filter(function(d){return (d.name||'').toLowerCase().includes(ql)||(d.mobile||'').includes(ql)||(d.area||'').toLowerCase().includes(ql)||(d.id||'').toLowerCase().includes(ql);});}
+  list.sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
   var org=ORG_CONFIG.name||'Falah e Qabristan Committee';
   var bankList=[];if(ORG_CONFIG.bankAccounts)ORG_CONFIG.bankAccounts.forEach(function(b){bankList.push(b.bank+': '+b.number);});
   var bankStr=bankList.join(' | ');
-  var html='<div style="font-size:11px;color:#888;margin-bottom:8px">'+list.length+' donors showing</div>';
+  var html='<div style="font-size:11px;color:#888;margin-bottom:8px">'+list.length+' donors</div>';
   list.forEach(function(d){
     var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
     var av=d.photo?'<img src="'+d.photo+'" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1.5px solid #E1F5EE;flex-shrink:0">':'<div style="width:42px;height:42px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
     var mob=(d.mobile||'').replace(/[^0-9]/g,'');
-    var msg='\uD83C\uDF3F \u0628\u0633\u0645 \u0627\u0644\u0644\u06c1 \u0627\u0644\u0631\u062d\u0645\u0646 \u0627\u0644\u0631\u062d\u06cc\u0645 \uD83C\uDF3F\n\n\u0645\u062d\u062a\u0631\u0645 *'+d.name+'* \u0635\u0627\u062d\u0628!\n\u0622\u067e \u06a9\u0627 \u0627\u0633 \u0645\u0627\u06c1 \u06a9\u0627 \u0641\u0646\u0688 \u0645\u0648\u0635\u0648\u0644 \u0646\u06c1\u06cc\u06ba \u06c1\u0648 \u0633\u06a9\u0627\u06d4 \u062c\u0644\u062f \u0627\u062f\u0627 \u0641\u0631\u0645\u0627\u0626\u06cc\u06ba\u06d4'+(bankStr?'\n\n\uD83C\uDFE6 *Account:* '+bankStr:'')+'\n\n\u062c\u0632\u0627\u06a9\u0645 \u0627\u0644\u0644\u06c1';
+    var msg='\uD83C\uDF3F \u0628\u0633\u0645 \u0627\u0644\u0644\u06c1\n\n\u0645\u062d\u062a\u0631\u0645 *'+d.name+'* \u0635\u0627\u062d\u0628!\n\u0641\u0646\u0688 \u0645\u0648\u0635\u0648\u0644 \u0646\u06c1\u06cc\u06ba \u06c1\u0648 \u0633\u06a9\u0627\u06d4 \u062c\u0644\u062f \u0627\u062f\u0627 \u0641\u0631\u0645\u0627\u0626\u06cc\u06ba\u06d4'+(bankStr?'\n\n\uD83C\uDFE6 '+bankStr:'')+'\n\n\u062c\u0632\u0627\u06a9\u0645 \u0627\u0644\u0644\u06c1';
     var waUrl=mob?'whatsapp://send?phone=92'+mob.replace(/^0/,'')+'&text='+encodeURIComponent(msg):'';
     var waFallback=mob?'https://api.whatsapp.com/send?phone=92'+mob.replace(/^0/,'')+'&text='+encodeURIComponent(msg):'';
     var appUser=DB.users.find(function(u){return u.mobile&&d.mobile&&u.mobile.replace(/[^0-9]/g,'')===mob;});
     var lastDon=DB.donations.filter(function(x){return x.donorId===d.id;}).sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
     html+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #e8e8e8">'+av;
-    html+='<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">'+d.name+'</div>';
-    html+='<div style="font-size:10px;color:#888;margin-top:1px">'+d.id+' &bull; '+(d.mobile||'\u2014')+' &bull; '+(d.area||'\u2014')+'</div>';
+    html+='<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">'+d.name+'</div><div style="font-size:10px;color:#888;margin-top:1px">'+d.id+' &bull; '+(d.mobile||'\u2014')+'</div>';
     html+=(lastDon.length?'<div style="font-size:10px;color:#185FA5;margin-top:1px">&#128197; Last: '+lastDon[0].date+'</div>':'<div style="font-size:10px;color:#E24B4A;margin-top:1px">&#128197; No donation yet</div>');
     html+='</div><div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">';
     if(waUrl)html+='<a href="'+waUrl+'" onclick="var t=this;event.preventDefault();window.location.href=t.href;setTimeout(function(){window.location.href=\''+waFallback+'\';},800)" style="background:#25D366;color:#fff;padding:5px 9px;border-radius:7px;font-size:11px;font-weight:700;text-decoration:none;text-align:center;display:block">&#128232; WA</a>';

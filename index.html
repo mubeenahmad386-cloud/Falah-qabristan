@@ -760,7 +760,9 @@ var ORG_CONFIG={
   historyPhotos:[],
   socialLinks:{facebook:'',instagram:'',twitter:'',youtube:'',whatsapp:''},
   bankAccounts:[],
-  contactNumbers:[]
+  contactNumbers:[],
+  committeeMembers:[],
+  supportingStaff:[]
 };
 function orgName(){return ORG_CONFIG.name||'Falah e Qabristan';}
 function orgNameUrdu(){return ORG_CONFIG.nameUrdu||'فلاح قبرستان';}
@@ -4536,380 +4538,9 @@ function adminApproveDeceased(id){
 
 // ---- ORG SETTINGS (developer only) ----
 T.orgsettings=function(){
-  const sl=ORG_CONFIG.socialLinks;
-  const banks=ORG_CONFIG.bankAccounts;
-  return `<div class="card">
-    <h3>🏢 Organization Name</h3>
-    <p style="font-size:12px;color:#888;margin-bottom:8px">This name will appear on login page, dashboard, and all certificates</p>
-    <label>Organization Name (English) *</label>
-    <input type="text" id="orgNameEn" value="${ORG_CONFIG.name||'Falah e Qabristan'}" placeholder="Organization name in English">
-    <label>Organization Name (Urdu — optional)</label>
-    <input type="text" id="orgNameUr" value="${ORG_CONFIG.nameUrdu||'فلاح قبرستان'}" placeholder="اردو میں نام">
-    <button class="btn btn-primary" style="margin-top:8px" onclick="saveOrgName()">Save Name</button>
-  </div>
-
-  <div class="card">
-    <h3>🏷️ Organization Logo</h3>
-    <p style="font-size:12px;color:#888;margin-bottom:10px">Logo main page, history, aur tamam certificates pe show hoga</p>
-    <div style="display:flex;align-items:center;gap:14px">
-      <div style="width:90px;height:70px;border:2px dashed #ccc;border-radius:10px;overflow:hidden;cursor:pointer;background:#f9f9f9;display:flex;align-items:center;justify-content:center" onclick="document.getElementById('orgLogoInput').click()">
-        <img id="orgLogoPreview" src="${ORG_CONFIG.logo||''}" style="display:${ORG_CONFIG.logo?'block':'none'};max-width:100%;max-height:100%;object-fit:contain">
-        <span id="orgLogoPlus" style="${ORG_CONFIG.logo?'display:none':''}font-size:11px;color:#aaa;text-align:center">🖼️ Upload<br>Logo</span>
-      </div>
-      <div>
-        <div style="font-size:13px;font-weight:500">${ORG_CONFIG.logo?'Logo uploaded ✅':'No logo uploaded'}</div>
-        <div style="font-size:11px;color:#888;margin-top:3px">PNG or JPG — transparent background recommended</div>
-        ${ORG_CONFIG.logo?`<button class="btn btn-sm btn-danger" style="margin-top:6px" onclick="removeLogo()">Remove Logo</button>`:''}
-      </div>
-    </div>
-    <input type="file" accept="image/*" id="orgLogoInput" style="display:none" onchange="uploadOrgLogo()">
-  </div>
-
-  <div class="card">
-    <h3><span class="bi-title"><span class="bi-en">Organization Address</span><span class="bi-ur">پتہ</span></span></h3>
-    <p style="font-size:12px;color:#888;margin-bottom:8px">This address will appear on all certificates and reports</p>
-    <textarea id="orgAddress" rows="2" style="resize:none">${ORG_CONFIG.address||''}</textarea>
-    <button class="btn btn-primary" style="margin-top:8px" onclick="saveOrgAddress()">Save Address</button>
-    <label style="margin-top:10px;display:block">Full Address <span style="font-size:10px;color:#1D9E75">مکمل پتہ (for posters/slips)</span></label>
-    <textarea id="orgFullAddress" rows="3" style="resize:none;font-size:13px">${ORG_CONFIG.fullAddress||''}</textarea>
-    <button class="btn btn-primary" style="margin-top:6px" onclick="saveOrgFullAddress()">Save Full Address</button>
-  </div>
-
-  <div class="card">
-    <h3>📖 Organization History / Story</h3>
-    <p style="font-size:12px;color:#888;margin-bottom:8px">This text will appear when users click "View Our History" on the main page</p>
-    <textarea id="orgHistory" rows="6" style="resize:vertical">${ORG_CONFIG.history||''}</textarea>
-    <button class="btn btn-primary" style="margin-top:8px" onclick="saveOrgHistory()">Save History</button>
-    <div style="margin-top:14px;padding-top:12px;border-top:1px solid #eee">
-      <div style="font-size:13px;font-weight:600;margin-bottom:6px">📸 History Photos</div>
-      <p style="font-size:12px;color:#888;margin-bottom:8px">Naam ke sath photos upload karein — View History mein gallery show hogi</p>
-      ${ORG_CONFIG.historyPhotos&&ORG_CONFIG.historyPhotos.length>0?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-        ${ORG_CONFIG.historyPhotos.map((p,i)=>`<div style="border:1px solid #eee;border-radius:8px;overflow:hidden">
-          <img src="${p.img}" style="width:100%;height:80px;object-fit:cover;cursor:pointer" onclick="editHistoryPhoto(${i})">
-          <div style="padding:5px 7px">
-            <div style="font-size:11px;font-weight:500;color:#333">${p.name||'(no name)'}</div>
-            <div style="display:flex;gap:4px;margin-top:4px">
-              <button class="btn-xs" style="background:#185FA5;color:#fff;border:none;cursor:pointer;flex:1" onclick="editHistoryPhoto(${i})">Edit</button>
-              <button class="btn-xs" style="background:#E24B4A;color:#fff;border:none;cursor:pointer;flex:1" onclick="removeHistoryPhoto(${i})">Del</button>
-            </div>
-          </div>
-        </div>`).join('')}
-      </div>`:''}
-      <div style="display:flex;gap:8px;align-items:flex-end">
-        <div style="flex:1"><label>Photo Name / Caption</label><input type="text" id="histPhotoName" placeholder="e.g. Founding Members 2020"></div>
-        <div>
-          <div style="width:50px;height:50px;border:2px dashed #ccc;border-radius:8px;overflow:hidden;cursor:pointer;background:#f5f5f5;display:flex;align-items:center;justify-content:center" onclick="document.getElementById('histPhotoInput').click()">
-            <img id="histPhotoPreview" src="" style="display:none;width:100%;height:100%;object-fit:cover">
-            <span id="histPhotoPlus" style="font-size:14px;color:#aaa">📷</span>
-          </div>
-          <input type="file" accept="image/*" id="histPhotoInput" style="display:none" onchange="previewHistPhoto()">
-        </div>
-      </div>
-      <button class="btn btn-info" style="margin-top:8px" onclick="addHistoryPhoto()">Add Photo</button>
-    </div>
-  </div>
-
-  <div class="card">
-    <h3>📞 Contact Numbers <span style="font-size:10px;color:#1D9E75">رابطہ نمبر</span></h3>
-    <p style="font-size:12px;color:#888;margin-bottom:10px">Shown on Contact Us page | رابطہ صفحے پر</p>
-    ${(ORG_CONFIG.contactNumbers||[]).length===0?'<p style="font-size:13px;color:#888;margin-bottom:8px">No numbers added. | کوئی نمبر نہیں</p>':(ORG_CONFIG.contactNumbers||[]).map((n,i)=>`
-      <div style="background:#f0fff8;border-radius:10px;border:1px solid #1D9E75;margin-bottom:6px;padding:10px">
-        <div style="display:flex;align-items:center;gap:10px">
-          ${n.photo?`<img src="${n.photo}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #1D9E75;flex-shrink:0">`:``}
-          <div style="flex:1">
-            <div style="font-size:12px;font-weight:700;color:#0F6E56">${n.label}${n.area?' — '+n.area:''}</div>
-            <div style="font-size:13px;font-weight:600;color:#185FA5">${n.number}</div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:4px">
-            <button class="btn-xs" style="background:#1D9E75;color:#fff;border:none;cursor:pointer" onclick="editContactNumber(${i})">✏️</button>
-            <button class="btn-xs" style="background:#E24B4A;color:#fff;border:none;cursor:pointer" onclick="removeContactNumber(${i})">🗑️</button>
-          </div>
-        </div>
-      </div>`).join('')}
-    <!-- User ID lookup -->
-    <div style="background:#F5F9FF;border-radius:10px;padding:10px;border:1px solid #B5D4F4;margin-top:10px;margin-bottom:4px">
-      <div style="font-size:11px;font-weight:700;color:#0C447C;margin-bottom:6px">&#128100; From User Account (optional)</div>
-      <div style="display:flex;gap:6px;margin-bottom:6px">
-        <div class="inp-wrap" style="flex:1;margin:0"><span class="inp-icon">&#128100;</span><input type="text" id="cnUserId" placeholder="User Personal ID..." autocomplete="new-password" style="font-size:12px"></div>
-        <button onclick="_cnVerifyUser()" style="background:#185FA5;color:#fff;border:none;padding:9px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">Fetch</button>
-      </div>
-      <div id="cnUserInfo"></div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-      <div class="inp-wrap"><span class="inp-icon">🏷️</span><input type="text" id="cnLabel" placeholder="Label (e.g. Office)"></div>
-      <div class="inp-wrap"><span class="inp-icon">📞</span><input type="text" id="cnNumber" placeholder="0300-1234567" maxlength="12" oninput="autoFormatMobile(this,null)"></div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-      <div class="inp-wrap"><span class="inp-icon">📍</span><select id="cnArea"><option value="">-- Area (optional) --</option>${AREAS.map(a=>`<option value="${a}">${a}</option>`).join('')}</select></div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <div style="width:44px;height:44px;border-radius:50%;overflow:hidden;border:2px dashed #1D9E75;cursor:pointer;background:#f0fff8;display:flex;align-items:center;justify-content:center;flex-shrink:0" onclick="document.getElementById('cnPhotoInp').click()">
-          <img id="cnPhotoPreview" src="" style="display:none;width:100%;height:100%;object-fit:cover">
-          <span id="cnPhotoPlus" style="font-size:18px">📸</span>
-        </div>
-        <div style="font-size:11px;color:#888">Photo (optional)</div>
-        <input type="file" id="cnPhotoInp" accept="image/*" style="display:none" onchange="previewImg('cnPhotoInp','cnPhotoPreview','cnPhotoPlus')">
-      </div>
-    </div>
-    <button class="btn btn-primary" style="margin-top:8px" onclick="addContactNumber()">+ Add Number | نمبر شامل کریں</button>
-  </div>
-  <div class="card">
-    <h3>🌐 Social Media Links</h3>
-    <p style="font-size:12px;color:#888;margin-bottom:8px">Social icons will appear on the main page. Leave blank to hide.</p>
-    <label>📘 Facebook URL</label><input type="url" id="slFacebook" value="${sl.facebook||''}" placeholder="https://facebook.com/...">
-    <label>📸 Instagram URL</label><input type="url" id="slInstagram" value="${sl.instagram||''}" placeholder="https://instagram.com/...">
-    <label>🐦 Twitter / X URL</label><input type="url" id="slTwitter" value="${sl.twitter||''}" placeholder="https://twitter.com/...">
-    <label>▶️ YouTube URL</label><input type="url" id="slYoutube" value="${sl.youtube||''}" placeholder="https://youtube.com/...">
-    <label>💬 WhatsApp Link</label><input type="url" id="slWhatsapp" value="${sl.whatsapp||''}" placeholder="https://wa.me/923...">
-    <button class="btn btn-primary" style="margin-top:8px" onclick="saveSocialLinks()">Save Links</button>
-  </div>
-
-  <div class="card">
-    <h3>🏦 Bank Accounts</h3>
-    <p style="font-size:12px;color:#888;margin-bottom:10px">Add bank account details for fund transfers</p>
-    ${banks.length===0?'<p style="font-size:13px;color:#888;margin-bottom:10px">No accounts added yet. | ابھی تک کوئی اکاؤنٹ نہیں۔</p>':banks.map((acc,i)=>`
-      <div style="background:#f9f9f9;border-radius:10px;padding:12px;margin-bottom:8px;border:1px solid #eee">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
-          <div style="flex:1">
-            <div style="font-size:14px;font-weight:700">${acc.title}</div>
-            <div style="font-size:12px;color:#185FA5;font-weight:600;margin-top:3px">${acc.bank}</div>
-            <div style="font-size:13px;font-weight:700;letter-spacing:1px;margin-top:5px;background:#E6F1FB;color:#185FA5;padding:5px 10px;border-radius:6px;display:inline-block">${acc.number}</div>
-            ${acc.area?`<div style="font-size:11px;color:#888;margin-top:5px">📍 ${acc.area}</div>`:''}
-            <div style="display:flex;gap:6px;margin-top:8px">
-              <button class="btn-xs" style="background:#1D9E75;color:#fff;border:none;cursor:pointer" onclick="openEditBank(${i})">✏️ Edit</button>
-              <button class="btn-xs" style="background:#E24B4A;color:#fff;border:none;cursor:pointer" onclick="removeBankAccount(${i})">🗑️ Remove</button>
-            </div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-            ${acc.photo?`<img src="${acc.photo}" style="width:64px;height:64px;border-radius:50%;border:2px solid #1D9E75;object-fit:cover">`:''}
-          </div>
-        </div>
-      </div>`).join('')}
-    <div id="bankEditSection" style="display:none;background:#E1F5EE;border:1px solid #1D9E75;border-radius:10px;padding:14px;margin-bottom:10px">
-      <div style="font-size:13px;font-weight:600;color:#0F6E56;margin-bottom:10px">✏️ Edit Account | اکاؤنٹ ترمیم کریں</div>
-      <label>Account Title *</label>
-      <div class="inp-wrap"><span class="inp-icon">🏦</span><input type="text" id="baEditTitle" placeholder="Account title"></div>
-      <label>Bank Name *</label>
-      <div class="inp-wrap"><span class="inp-icon">🏛️</span><input type="text" id="baEditBank" placeholder="Bank name"></div>
-      <label>Account Number *</label>
-      <div class="inp-wrap"><span class="inp-icon">🔢</span><input type="text" id="baEditNumber" placeholder="Account number"></div>
-      <label>Area <span style="font-size:10px;color:#1D9E75">علاقہ</span></label>
-      <div class="inp-wrap"><span class="inp-icon">📍</span><select id="baEditArea"><option value="">-- Select Area --</option>${AREAS.map(a=>`<option value="${a}">${a}</option>`).join('')}</select></div>
-      <label>Account Holder Photo <span style="font-size:10px;color:#888">(leave empty to keep existing)</span></label>
-      <div style="display:flex;align-items:center;gap:12px;margin-top:6px;margin-bottom:10px">
-        <div style="width:64px;height:64px;border:2px dashed #1D9E75;border-radius:50%;overflow:hidden;cursor:pointer;background:#f0fff8;display:flex;align-items:center;justify-content:center" onclick="document.getElementById('baEditPhotoInput').click()">
-          <img id="baEditPhotoPreview" src="" style="display:none;width:100%;height:100%;object-fit:cover">
-          <span id="baEditPhotoPlus" style="font-size:20px">📸</span>
-        </div>
-        <div style="font-size:11px;color:#888">Upload new photo<br>or leave to keep current</div>
-      </div>
-      <input type="file" accept="image/*" id="baEditPhotoInput" style="display:none" onchange="previewBaEditPhoto()">
-      <input type="hidden" id="baEditIndex">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-        <button class="btn" onclick="cancelEditBank()">Cancel</button>
-        <button class="btn btn-primary" onclick="saveEditBank()">Save Changes | محفوظ کریں</button>
-      </div>
-    </div>
-
-    <div style="border-top:1px solid #eee;margin-top:10px;padding-top:10px">
-      <div style="font-size:13px;font-weight:600;margin-bottom:8px">Add New Account</div>
-      <label>Account Title *</label>
-      <div class="inp-wrap"><span class="inp-icon">🏦</span><input type="text" id="baTitle" placeholder="e.g. Falah e Qabristan Fund"></div>
-      <label>Bank Name *</label>
-      <div class="inp-wrap"><span class="inp-icon">🏛️</span><input type="text" id="baBank" placeholder="e.g. HBL, MCB, Meezan Bank"></div>
-      <label>Account Number *</label>
-      <div class="inp-wrap"><span class="inp-icon">🔢</span><input type="text" id="baNumber" placeholder="Account number"></div>
-      <label>Area <span style="font-size:10px;color:#1D9E75">علاقہ</span></label>
-      <div class="inp-wrap"><span class="inp-icon">📍</span><select id="baArea"><option value="">-- Select Area --</option>${AREAS.map(a=>`<option value="${a}">${a}</option>`).join('')}</select></div>
-      <label>Account Holder Photo (optional) <span style="font-size:10px;color:#1D9E75">اکاؤنٹ ہولڈر تصویر</span></label>
-      <div style="display:flex;align-items:center;gap:12px;margin-top:6px;margin-bottom:10px">
-        <div style="width:72px;height:72px;border:2px dashed #ccc;border-radius:10px;overflow:hidden;cursor:pointer;background:#f5f5f5;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px" onclick="document.getElementById('baPhotoInput').click()">
-          <img id="baPhotoPreview" src="" style="display:none;width:100%;height:100%;object-fit:cover">
-          <span id="baPhotoPlus" style="font-size:22px">📸</span>
-          <span id="baPhotoPlusText" style="font-size:9px;color:#aaa">Photo</span>
-        </div>
-        <div style="flex:1;font-size:11px;color:#888">Account holder photo<br>or ID card photo</div>
-      </div>
-      <input type="file" accept="image/*" id="baPhotoInput" style="display:none" onchange="previewBaPhoto()">
-      <button class="btn btn-primary" style="margin-top:12px" onclick="addBankAccount()">Add Account | اکاؤنٹ شامل کریں</button>
-    </div>
-  </div>`;
+  var baseHtml=_orgSettingsExtra();
+  return baseHtml+renderCommitteeSettings('committee')+renderCommitteeSettings('supportingstaff');
 };
-
-async function saveOrgName(){
-  const en=document.getElementById('orgNameEn').value.trim();
-  const ur=document.getElementById('orgNameUr').value.trim();
-  if(!en){showPopup('⚠️','Required','English name is required.');return;}
-  ORG_CONFIG.name=en;if(ur)ORG_CONFIG.nameUrdu=ur;
-  await FS.saveConfig();saveLocalCache();renderLoginExtras();
-  showPopup('✅','Saved','Organization name saved — updated everywhere! | ادارے کا نام محفوظ ہو گیا');
-}
-async function saveOrgFullAddress(){
-  ORG_CONFIG.fullAddress=document.getElementById('orgFullAddress').value.trim();
-  await FS.saveConfig();saveLocalCache();
-  showPopup('✅','Saved','Full address saved.');
-}
-async function saveOrgAddress(){
-  ORG_CONFIG.address=document.getElementById('orgAddress').value.trim();
-  await FS.saveConfig();saveLocalCache();renderLoginExtras();
-  showPopup('✅','Saved','Address saved. | پتہ محفوظ ہو گیا');
-}
-async function saveOrgHistory(){
-  ORG_CONFIG.history=document.getElementById('orgHistory').value.trim();
-  await FS.saveConfig();saveLocalCache();renderLoginExtras();
-  showPopup('✅','Saved','History saved. | تاریخ محفوظ ہو گئی');
-}
-function uploadOrgLogo(){
-  const f=document.getElementById('orgLogoInput').files[0];if(!f)return;
-  const r=new FileReader();r.onload=e=>{
-    ORG_CONFIG.logo=e.target.result;
-    FS.saveConfig();renderLoginExtras();
-    showPopup('✅','Logo Saved','Logo uploaded — visible everywhere. | ہر جگہ نظر آئے گا');
-    renderTab('orgsettings');
-  };r.readAsDataURL(f);
-}
-function removeLogo(){
-  ORG_CONFIG.logo=null;
-  FS.saveConfig();renderLoginExtras();
-  renderTab('orgsettings');
-  showPopup('🗑️','Removed','Logo removed.');
-}
-function previewHistPhoto(){
-  const f=document.getElementById('histPhotoInput').files[0];if(!f)return;
-  const r=new FileReader();r.onload=e=>{
-    const im=document.getElementById('histPhotoPreview');im.src=e.target.result;im.style.display='block';
-    document.getElementById('histPhotoPlus').style.display='none';
-  };r.readAsDataURL(f);
-}
-function addHistoryPhoto(){
-  const name=document.getElementById('histPhotoName').value.trim();
-  const fi=document.getElementById('histPhotoInput');
-  if(!fi.files[0]){showPopup('⚠️','No Photo','Please select a photo first.');return;}
-  const r=new FileReader();r.onload=e=>{
-    if(!ORG_CONFIG.historyPhotos)ORG_CONFIG.historyPhotos=[];
-    ORG_CONFIG.historyPhotos.push({img:e.target.result,name:name||''});
-    renderLoginExtras();
-    showPopup('✅','Photo Added','History photo added.');
-    renderTab('orgsettings');
-  };r.readAsDataURL(fi.files[0]);
-}
-function removeHistoryPhoto(i){
-  ORG_CONFIG.historyPhotos.splice(i,1);
-  renderLoginExtras();
-  renderTab('orgsettings');
-}
-function editHistoryPhoto(i){
-  const p=ORG_CONFIG.historyPhotos[i];if(!p)return;
-  editingContext={type:'histphoto',index:i};
-  document.getElementById('editModalTitle').textContent='Edit Photo | تصویر تبدیل کریں';
-  document.getElementById('editModalBody').innerHTML=`
-    <div style="margin-bottom:10px"><img src="${p.img}" style="width:100%;max-height:150px;object-fit:cover;border-radius:8px"></div>
-    <label>Caption / Name</label><input type="text" id="editAmount" value="${p.name||''}">
-    <label>Replace Photo (optional)</label>
-    <input type="file" accept="image/*" id="editDesc" style="padding:5px">`;
-  document.getElementById('editModal').style.display='flex';
-  document.querySelector('#editModal .btn-primary').onclick=function(){
-    const newName=document.getElementById('editAmount').value.trim();
-    const fi=document.getElementById('editDesc');
-    ORG_CONFIG.historyPhotos[i].name=newName;
-    if(fi.files&&fi.files[0]){
-      const r=new FileReader();r.onload=e=>{ORG_CONFIG.historyPhotos[i].img=e.target.result;renderLoginExtras();renderTab('orgsettings');};r.readAsDataURL(fi.files[0]);
-    } else {renderLoginExtras();renderTab('orgsettings');}
-    closeModal();
-    showPopup('✅','Updated','Photo updated.');
-  };
-}
-function _cnVerifyUser(){
-  var uid=(document.getElementById('cnUserId')||{value:''}).value.trim();
-  var el=document.getElementById('cnUserInfo');if(!el)return;
-  if(!uid){el.innerHTML='<div style="font-size:11px;color:#E24B4A">User ID darein.</div>';return;}
-  var user=DB.users.find(function(u){return u.id===uid;});
-  if(!user){el.innerHTML='<div style="font-size:11px;color:#E24B4A">❌ ID "'+uid+'" ka user nahi mila.</div>';return;}
-  // Auto-fill label, number, area
-  var lbl=document.getElementById('cnLabel');
-  var num=document.getElementById('cnNumber');
-  var area=document.getElementById('cnArea');
-  if(lbl)lbl.value=user.name;
-  if(num&&user.mobile)num.value=user.mobile;
-  if(area&&user.area)area.value=user.area;
-  // Auto-fill photo from user
-  if(user.photo){
-    window._cnUserPhoto=user.photo;
-    var prev=document.getElementById('cnPhotoPreview');
-    var plus=document.getElementById('cnPhotoPlus');
-    if(prev){prev.src=user.photo;prev.style.display='block';}
-    if(plus)plus.style.display='none';
-  }
-  var init=(user.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-  var av=user.photo?'<img src="'+user.photo+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover">':'<div style="width:28px;height:28px;border-radius:50%;background:#0F6E56;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">'+init+'</div>';
-  el.innerHTML='<div style="background:#E1F5EE;border-radius:7px;padding:7px 9px;display:flex;align-items:center;gap:8px">'+av+'<div><div style="font-size:12px;font-weight:700;color:#0F6E56">✔ '+user.name+'</div><div style="font-size:10px;color:#085041">'+user.id+' &bull; '+(user.mobile||'—')+'</div></div></div>';
-}
-function addContactNumber(){
-  const label=(document.getElementById('cnLabel')||{value:''}).value.trim();
-  const number=(document.getElementById('cnNumber')||{value:''}).value.trim();
-  const area=(document.getElementById('cnArea')||{value:''}).value.trim();
-  const fi=document.getElementById('cnPhotoInp');
-  if(!label||!number){showPopup('⚠️','Required','Label and number are required. | لیبل اور نمبر ضروری ہے');return;}
-  if(!ORG_CONFIG.contactNumbers)ORG_CONFIG.contactNumbers=[];
-  async function finish(photo){
-    ORG_CONFIG.contactNumbers.push({label,number,area,photo:photo||null});
-    try{
-      await FS.saveConfig();
-      saveLocalCache();
-      renderLoginExtras();
-      const lbl=document.getElementById('cnLabel');if(lbl)lbl.value='';
-      const num=document.getElementById('cnNumber');if(num)num.value='';
-      const prev=document.getElementById('cnPhotoPreview');if(prev){prev.src='';prev.style.display='none';}
-      const plus=document.getElementById('cnPhotoPlus');if(plus)plus.style.display='block';
-      showPopup('✅','Added','Contact number saved! | نمبر شامل ہو گیا');
-      renderTab('orgsettings');
-    }catch(e){showPopup('❌','Error','Save failed: '+e.message);}
-  }
-  if(fi&&fi.files[0]){const r=new FileReader();r.onload=e=>finish(e.target.result);r.readAsDataURL(fi.files[0]);}
-  else if(window._cnUserPhoto){finish(window._cnUserPhoto);window._cnUserPhoto=null;}
-  else finish(null);
-}
-function _ecPhotoPreview(inp){
-  var f=inp.files[0];if(!f)return;
-  var r=new FileReader();
-  r.onload=function(ev){
-    var el=document.getElementById('ecPhotoPreview');
-    if(!el)return;
-    el.src=ev.target.result;
-    el.style.cssText='width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid #1D9E75;display:block';
-  };
-  r.readAsDataURL(f);
-}
-function _ecPhotoClick(){var el=document.getElementById('ecPhotoInp');if(el)el.click();}
-function editContactNumber(ci){
-  const n=ORG_CONFIG.contactNumbers[ci];if(!n)return;
-  const areaOpts=AREAS.map(a=>'<option value="'+a+'"'+(a===n.area?' selected':'')+'>'+a+'</option>').join('');
-  const initials=(n.label||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-  const photoHtml=n.photo?'<img id="ecPhotoPreview" src="'+n.photo+'" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid #1D9E75;display:block">':'<div id="ecPhotoPreview" style="width:60px;height:60px;border-radius:50%;background:#E1F5EE;border:2px dashed #1D9E75;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#0F6E56">'+initials+'</div>';
-  const html='<div style="background:#fff;border-radius:14px;overflow:hidden;max-width:340px;width:90vw">'+
-    '<div style="background:#0F6E56;padding:13px 16px;display:flex;justify-content:space-between;align-items:center">'+
-      '<div style="font-size:14px;font-weight:700;color:#fff">&#9998; Edit Contact</div>'+
-      '<button onclick="closeCustomPopup()" style="background:rgba(255,255,255,0.2);border:none;border-radius:50%;width:28px;height:28px;color:#fff;font-size:16px;cursor:pointer">&times;</button>'+
-    '</div>'+
-    '<div style="padding:16px">'+
-      '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">'+
-        '<div onclick="_ecPhotoClick()" style="cursor:pointer;flex-shrink:0">'+photoHtml+'</div>'+
-        '<div style="font-size:11px;color:#888">Tap to change photo</div>'+
-                '<input type="file" id="ecPhotoInp" accept="image/*" style="display:none" onchange="_ecPhotoPreview(this)">'+
-      '</div>'+
-      '<label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Label *</label>'+
-      '<input type="text" id="ecLabel" value="'+n.label.replace(/"/g,'&quot;')+'" autocomplete="new-password" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:10px">'+
-      '<label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Number *</label>'+
-      '<input type="text" id="ecNumber" value="'+n.number.replace(/"/g,'&quot;')+'" autocomplete="new-password" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:10px">'+
-      '<label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Area</label>'+
-      '<select id="ecArea" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:14px"><option value="">-- Select --</option>'+areaOpts+'</select>'+
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
-        '<button onclick="closeCustomPopup()" style="background:#f5f5f5;color:#333;border:1px solid #ddd;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">Cancel</button>'+
-        '<button data-ci="'+ci+'" onclick="saveContactEdit(this.dataset.ci)" style="background:#0F6E56;color:#fff;border:none;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">Save &#10003;</button>'+
-      '</div>'+
-    '</div></div>';
-  showCustomPopup('<div style="display:flex;justify-content:center;padding:16px 10px">'+html+'</div>');
-}
-
 function saveContactEdit(idx){
   var n=ORG_CONFIG.contactNumbers[parseInt(idx)];if(!n)return;
   var labelEl=document.getElementById('ecLabel');
@@ -6640,7 +6271,7 @@ T.renameaddedby=function(){
 function _rabBrowseFilter(){
   var el=document.getElementById('rabBrowseSearch');
   window._rabBrowseQ=el?el.value:'';
-  renderTab('renameaddedby','deleteddonations','deletedexpenses','modifieddonations','modifiedexpenses','donormanager','auditdept','overalldetail','verifiedentries');
+  renderTab('renameaddedby','deleteddonations','deletedexpenses','modifieddonations','modifiedexpenses','donormanager','auditdept','overalldetail','verifiedentries','committeemembers','supportingstaff');
   setTimeout(function(){
     var inp=document.getElementById('rabBrowseSearch');
     if(inp){inp.focus();try{inp.setSelectionRange(inp.value.length,inp.value.length);}catch(e){}}
@@ -7305,6 +6936,123 @@ T.verifiedentries=function(){
     html+='</div></div>';
   });
   html+='</div>';return html;
+};
+function renderCommitteeSettings(type){
+  var key=type==='committee'?'committeeMembers':'supportingStaff';
+  var title=type==='committee'?'Committee Members':'Supporting Staff';
+  var list=ORG_CONFIG[key]||[];
+  var html='<div class="card" style="margin-bottom:14px">';
+  html+='<h3 style="margin-bottom:4px">'+(type==='committee'?'&#127919;':'\uD83D\uDC64')+' '+title+'</h3>';
+  html+='<p style="font-size:11px;color:#888;margin-bottom:10px">'+list.length+' members</p>';
+  // Existing list
+  list.forEach(function(m,i){
+    var init=(m.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+    var av=m.photo?'<img src="'+m.photo+'" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1.5px solid #e8e8e8;flex-shrink:0">':'<div style="width:42px;height:42px;border-radius:50%;background:#E6F1FB;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#185FA5;flex-shrink:0">'+init+'</div>';
+    html+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #e8e8e8">'+av;
+    html+='<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">'+m.name+'</div>';
+    html+='<div style="font-size:11px;color:#185FA5;font-weight:600;margin-top:1px">'+(m.designation||'')+'</div>';
+    html+='<div style="font-size:10px;color:#888;margin-top:1px"><span class="id-badge" style="font-size:9px">'+m.userId+'</span>'+(m.mobile?' &bull; '+m.mobile:'')+'</div></div>';
+    html+='<button data-mtype="'+type+'" data-midx="'+i+'" onclick="_removeMember(this.dataset.mtype,parseInt(this.dataset.midx))" style="background:#E24B4A;color:#fff;border:none;padding:5px 8px;border-radius:7px;font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0">&#128465;</button>';
+    html+='</div>';
+  });
+  // Add new form
+  html+='<div style="background:#F5F9FF;border-radius:10px;padding:10px;border:1px solid #B5D4F4;margin-top:10px">';
+  html+='<div style="font-size:11px;font-weight:700;color:#0C447C;margin-bottom:6px">&#43; Add Member</div>';
+  html+='<div style="display:flex;gap:6px;margin-bottom:6px">';
+  html+='<div class="inp-wrap" style="flex:1;margin:0"><span class="inp-icon">&#128100;</span><input type="text" id="'+type+'UserId" placeholder="User ID..." autocomplete="new-password" style="font-size:12px"></div>';
+  html+='<button data-mtype="'+type+'" onclick="_fetchMember(this.dataset.mtype)" style="background:#185FA5;color:#fff;border:none;padding:9px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">Fetch</button>';
+  html+='</div>';
+  html+='<div id="'+type+'FetchInfo" style="margin-bottom:6px"></div>';
+  html+='<div class="inp-wrap" style="margin-bottom:8px"><span class="inp-icon">&#127919;</span><input type="text" id="'+type+'Designation" placeholder="Designation (e.g. President, Secretary)" autocomplete="off" style="font-size:12px"></div>';
+  html+='<button data-mtype="'+type+'" onclick="_addMember(this.dataset.mtype)" style="width:100%;background:#0F6E56;color:#fff;border:none;padding:10px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">Save Member</button>';
+  html+='</div></div>';
+  return html;
+}
+
+function _fetchMember(type){
+  var uid=(document.getElementById(type+'UserId')||{value:''}).value.trim();
+  var el=document.getElementById(type+'FetchInfo');if(!el)return;
+  if(!uid){el.innerHTML='<div style="font-size:11px;color:#E24B4A">User ID darein.</div>';return;}
+  var user=DB.users.find(function(u){return u.id===uid;});
+  if(!user){el.innerHTML='<div style="font-size:11px;color:#E24B4A">\u274c ID "'+uid+'" ka user nahi mila.</div>';return;}
+  window['_fetchedMember_'+type]=user;
+  var init=(user.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+  var av=user.photo?'<img src="'+user.photo+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover">':'<div style="width:28px;height:28px;border-radius:50%;background:#185FA5;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">'+init+'</div>';
+  el.innerHTML='<div style="background:#E1F5EE;border-radius:7px;padding:6px 9px;display:flex;align-items:center;gap:7px">'+av+'<div><div style="font-size:12px;font-weight:700;color:#0F6E56">'+user.name+'</div><div style="font-size:10px;color:#085041">'+user.id+(user.mobile?' &bull; '+user.mobile:'')+'</div></div></div>';
+}
+
+async function _addMember(type){
+  var key=type==='committee'?'committeeMembers':'supportingStaff';
+  var user=window['_fetchedMember_'+type];
+  if(!user){showPopup('\u26a0\ufe0f','Required','Pehle User ID enter karke Fetch karein.');return;}
+  var desig=(document.getElementById(type+'Designation')||{value:''}).value.trim();
+  if(!desig){showPopup('\u26a0\ufe0f','Required','Designation darein.');return;}
+  if(!ORG_CONFIG[key])ORG_CONFIG[key]=[];
+  // Check duplicate
+  if(ORG_CONFIG[key].some(function(m){return m.userId===user.id;})){showPopup('\u26a0\ufe0f','Duplicate','Yeh user pehle se list mein hai.');return;}
+  ORG_CONFIG[key].push({userId:user.id,name:user.name,mobile:user.mobile||'',area:user.area||'',photo:user.photo||null,designation:desig});
+  try{
+    await FS.saveConfig();saveLocalCache();
+    window['_fetchedMember_'+type]=null;
+    var inp=document.getElementById(type+'UserId');if(inp)inp.value='';
+    var di=document.getElementById(type+'Designation');if(di)di.value='';
+    var fi=document.getElementById(type+'FetchInfo');if(fi)fi.innerHTML='';
+    showPopup('\u2705','Added',user.name+' added!');
+    renderTab('orgsettings');
+  }catch(e){showPopup('\u274c','Error','Save failed: '+e.message);}
+}
+
+async function _removeMember(type,idx){
+  var key=type==='committee'?'committeeMembers':'supportingStaff';
+  if(!ORG_CONFIG[key]||!ORG_CONFIG[key][idx])return;
+  var name=ORG_CONFIG[key][idx].name;
+  if(!confirm('Remove '+name+' from list?'))return;
+  ORG_CONFIG[key].splice(idx,1);
+  try{await FS.saveConfig();saveLocalCache();showPopup('\u2705','Removed',name+' removed!');renderTab('orgsettings');}
+  catch(e){showPopup('\u274c','Error',e.message);}
+}
+T.committeemembers=function(){
+  var list=ORG_CONFIG.committeeMembers||[];
+  var html='<div class="card">';
+  html+='<h3 style="margin-bottom:12px">&#127919; Committee Members</h3>';
+  if(!list.length){html+='<div style="text-align:center;padding:24px;color:#888">Koi member add nahi kiya gaya.</div></div>';return html;}
+  list.forEach(function(m){
+    var init=(m.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+    var av=m.photo?'<img src="'+m.photo+'" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid #185FA5;flex-shrink:0">':'<div style="width:52px;height:52px;border-radius:50%;background:#E6F1FB;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#185FA5;flex-shrink:0">'+init+'</div>';
+    html+='<div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #e8e8e8">'+av;
+    html+='<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:800;color:#1a1a1a">'+m.name+'</div>';
+    html+='<div style="font-size:12px;color:#185FA5;font-weight:700;margin-top:2px">'+m.designation+'</div>';
+    html+='<div style="font-size:10px;color:#888;margin-top:2px">'+(m.area||'')+(m.mobile?' &bull; '+m.mobile:'')+'</div></div>';
+    if(m.mobile){
+      var mob=m.mobile.replace(/[^0-9]/g,'');
+      html+='<a href="tel:'+mob+'" style="background:#E6F1FB;color:#185FA5;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;text-decoration:none;flex-shrink:0">&#128222;</a>';
+    }
+    html+='</div>';
+  });
+  html+='</div>';
+  return html;
+};
+
+T.supportingstaff=function(){
+  var list=ORG_CONFIG.supportingStaff||[];
+  var html='<div class="card">';
+  html+='<h3 style="margin-bottom:12px">&#128100; Supporting Staff</h3>';
+  if(!list.length){html+='<div style="text-align:center;padding:24px;color:#888">Koi member add nahi kiya gaya.</div></div>';return html;}
+  list.forEach(function(m){
+    var init=(m.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+    var av=m.photo?'<img src="'+m.photo+'" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid #1D9E75;flex-shrink:0">':'<div style="width:52px;height:52px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
+    html+='<div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #e8e8e8">'+av;
+    html+='<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:800;color:#1a1a1a">'+m.name+'</div>';
+    html+='<div style="font-size:12px;color:#0F6E56;font-weight:700;margin-top:2px">'+m.designation+'</div>';
+    html+='<div style="font-size:10px;color:#888;margin-top:2px">'+(m.area||'')+(m.mobile?' &bull; '+m.mobile:'')+'</div></div>';
+    if(m.mobile){
+      var mob=m.mobile.replace(/[^0-9]/g,'');
+      html+='<a href="tel:'+mob+'" style="background:#E1F5EE;color:#0F6E56;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;text-decoration:none;flex-shrink:0">&#128222;</a>';
+    }
+    html+='</div>';
+  });
+  html+='</div>';
+  return html;
 };
 T.wreminder=function(){
   if(!['admin','manager','developer'].includes(currentRole)){
@@ -9350,6 +9098,8 @@ function getMenuConfig(){
       {icon:'✏️', label:'Rename AddedBy', tab:'renameaddedby'},
       {icon:'📋', label:'Login Report', tab:'loginreport'},
       {icon:'📢', label:'Audit Department', tab:'auditdept'},
+      {icon:'🎯', label:'Committee Members', tab:'committeemembers'},
+      {icon:'👤', label:'Supporting Staff', tab:'supportingstaff'},
       // moved to Audit Department
       // moved to Audit Department
       // moved to Audit Department
@@ -9601,7 +9351,7 @@ const TAB_LABELS={
   donorlist:'Donor List',slip:'Donor Slip',top:'Top Donors',transfer:'Transfer',
   decconfirm:'Confirm Deceased',approvals:'Approvals',lockuser:'Login Management',
   userslist:'Users List',professions:'Professions',audit:'Audit Log',areas:'Areas',
-  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',entrymanager:'Entry Manager',lastdonation:'Last Donation',excelexport:'Excel Export',alldonations:'All Donations',deathposter:'Death Poster',wreminder:'WhatsApp Reminder',loginreport:'Login Report',auditdept:'Audit Department',deleteddonations:'Deleted Income',deletedexpenses:'Deleted Expenses',modifieddonations:'Modified Income',modifiedexpenses:'Modified Expenses',donormanager:'Donor Manager',overalldetail:'Overall Detail',verifiedentries:'Verified Entries',renameaddedby:'Rename AddedBy',deathposter:'Death Poster',dailyupdate:'Daily Update',entrymanager:'Entry Manager',fundraisingstar:'Fundraising Stars',donorsummary:'Donor Summary',myentries:'My Entries',unknowndonors:'Update Unknown',missinginfo:'Missing Information',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
+  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',entrymanager:'Entry Manager',lastdonation:'Last Donation',excelexport:'Excel Export',alldonations:'All Donations',deathposter:'Death Poster',wreminder:'WhatsApp Reminder',loginreport:'Login Report',auditdept:'Audit Department',committeemembers:'Committee Members',supportingstaff:'Supporting Staff',deleteddonations:'Deleted Income',deletedexpenses:'Deleted Expenses',modifieddonations:'Modified Income',modifiedexpenses:'Modified Expenses',donormanager:'Donor Manager',overalldetail:'Overall Detail',verifiedentries:'Verified Entries',renameaddedby:'Rename AddedBy',deathposter:'Death Poster',dailyupdate:'Daily Update',entrymanager:'Entry Manager',fundraisingstar:'Fundraising Stars',donorsummary:'Donor Summary',myentries:'My Entries',unknowndonors:'Update Unknown',missinginfo:'Missing Information',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
 };
 
 // ============================================================

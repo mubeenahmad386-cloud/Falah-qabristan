@@ -4639,7 +4639,98 @@ function removeContactNumber(i){
   renderTab('orgsettings');
   showPopup('🗑️','Removed','Contact number removed.');
 }
+async function saveOrgName(){
+  var en=(document.getElementById('orgNameEn')||{value:''}).value.trim();
+  var ur=(document.getElementById('orgNameUr')||{value:''}).value.trim();
+  if(!en){showPopup('\u26a0\ufe0f','Required','English name is required.');return;}
+  if(!confirm('Org name save karein?'))return;
+  ORG_CONFIG.name=en;if(ur)ORG_CONFIG.nameUrdu=ur;
+  await FS.saveConfig();saveLocalCache();renderLoginExtras();
+  showPopup('\u2705','Saved','Organization name saved!');
+  renderTab('orgsettings');
+}
+async function saveOrgAddress(){
+  if(!confirm('Address save karein?'))return;
+  ORG_CONFIG.address=(document.getElementById('orgAddress')||{value:''}).value.trim();
+  await FS.saveConfig();saveLocalCache();renderLoginExtras();
+  showPopup('\u2705','Saved','Address saved!');
+  renderTab('orgsettings');
+}
+async function saveOrgFullAddress(){
+  if(!confirm('Full address save karein?'))return;
+  ORG_CONFIG.fullAddress=(document.getElementById('orgFullAddress')||{value:''}).value.trim();
+  await FS.saveConfig();saveLocalCache();
+  showPopup('\u2705','Saved','Full address saved!');
+}
+async function saveOrgHistory(){
+  if(!confirm('History save karein?'))return;
+  ORG_CONFIG.history=(document.getElementById('orgHistory')||{value:''}).value.trim();
+  await FS.saveConfig();saveLocalCache();renderLoginExtras();
+  showPopup('\u2705','Saved','History saved!');
+}
+function uploadOrgLogo(){
+  var f=document.getElementById('orgLogoInput');if(!f||!f.files[0])return;
+  var r=new FileReader();r.onload=function(e){
+    compressImg(e.target.result,400,400,0.8,function(compressed){
+      ORG_CONFIG.logo=compressed;
+      FS.saveConfig();saveLocalCache();renderLoginExtras();
+      showPopup('\u2705','Logo Saved','Logo saved!');
+      renderTab('orgsettings');
+    });
+  };r.readAsDataURL(f.files[0]);
+}
+function removeLogo(){
+  if(!confirm('Logo remove karein?'))return;
+  ORG_CONFIG.logo=null;FS.saveConfig();saveLocalCache();renderLoginExtras();
+  showPopup('\u2705','Removed','Logo removed.');renderTab('orgsettings');
+}
+function previewHistPhoto(){
+  var f=document.getElementById('histPhotoInput');if(!f||!f.files[0])return;
+  var r=new FileReader();r.onload=function(e){
+    var im=document.getElementById('histPhotoPreview');
+    if(im){im.src=e.target.result;im.style.display='block';}
+    var plus=document.getElementById('histPhotoPlus');if(plus)plus.style.display='none';
+  };r.readAsDataURL(f.files[0]);
+}
+function addHistoryPhoto(){
+  var name=(document.getElementById('histPhotoName')||{value:''}).value.trim();
+  var fi=document.getElementById('histPhotoInput');
+  if(!fi||!fi.files[0]){showPopup('\u26a0\ufe0f','No Photo','Please select a photo first.');return;}
+  if(!confirm('History photo add karein?'))return;
+  var r=new FileReader();r.onload=function(e){
+    if(!ORG_CONFIG.historyPhotos)ORG_CONFIG.historyPhotos=[];
+    ORG_CONFIG.historyPhotos.push({img:e.target.result,name:name||''});
+    FS.saveConfig();saveLocalCache();renderLoginExtras();
+    showPopup('\u2705','Added','Photo added!');renderTab('orgsettings');
+  };r.readAsDataURL(fi.files[0]);
+}
+function addContactNumber(){
+  var label=(document.getElementById('cnLabel')||{value:''}).value.trim();
+  var number=(document.getElementById('cnNumber')||{value:''}).value.trim();
+  var area=(document.getElementById('cnArea')||{value:''}).value.trim();
+  var fi=document.getElementById('cnPhotoInp');
+  if(!label||!number){showPopup('\u26a0\ufe0f','Required','Label and number are required.');return;}
+  if(!confirm('Contact number add karein: '+label+'?'))return;
+  if(!ORG_CONFIG.contactNumbers)ORG_CONFIG.contactNumbers=[];
+  async function finish(photo){
+    ORG_CONFIG.contactNumbers.push({label:label,number:number,area:area,photo:photo||null});
+    try{await FS.saveConfig();saveLocalCache();renderLoginExtras();
+      var lbl=document.getElementById('cnLabel');if(lbl)lbl.value='';
+      var num=document.getElementById('cnNumber');if(num)num.value='';
+      var prev=document.getElementById('cnPhotoPreview');if(prev){prev.src='';prev.style.display='none';}
+      var plus=document.getElementById('cnPhotoPlus');if(plus)plus.style.display='block';
+      var uid=document.getElementById('cnUserId');if(uid)uid.value='';
+      var uinfo=document.getElementById('cnUserInfo');if(uinfo)uinfo.innerHTML='';
+      window._cnUserPhoto=null;
+      showPopup('\u2705','Added','Contact number saved!');renderTab('orgsettings');
+    }catch(e){showPopup('\u274c','Error','Save failed: '+e.message);}
+  }
+  if(fi&&fi.files[0]){var r=new FileReader();r.onload=function(e){finish(e.target.result);};r.readAsDataURL(fi.files[0]);}
+  else if(window._cnUserPhoto){finish(window._cnUserPhoto);window._cnUserPhoto=null;}
+  else finish(null);
+}
 async function saveSocialLinks(){
+  if(!confirm('Social links save karein?'))return;
   ORG_CONFIG.socialLinks={
     facebook:document.getElementById('slFacebook').value.trim(),
     instagram:document.getElementById('slInstagram').value.trim(),
@@ -4677,7 +4768,8 @@ function addBankAccount(){
   const bank=document.getElementById('baBank').value.trim();
   const number=document.getElementById('baNumber').value.trim();
   const area=(document.getElementById('baArea')||{value:''}).value.trim();
-  if(!title||!bank||!number){showPopup('⚠️','Incomplete','Title, bank and account number are required.');return;}
+  if(!title||!bank||!number){showPopup('⚠️','Incomplete','Title, bank and account number are required.');return;}  if(!confirm('Bank account add karein: '+title+' - '+bank+'?'))return;
+  
   const fiPhoto=document.getElementById('baPhotoInput');
   function finish(photo){
     ORG_CONFIG.bankAccounts.push({title,bank,number,area,photo:photo||null});
@@ -7135,9 +7227,9 @@ T.wreminder=function(){
   var org=ORG_CONFIG.name||'Falah e Qabristan Committee';
   var bankList=[];
   if(ORG_CONFIG.bankAccounts&&ORG_CONFIG.bankAccounts.length>0){
-    ORG_CONFIG.bankAccounts.forEach(function(b){bankList.push(b.bank+': '+b.number);});
+    ORG_CONFIG.bankAccounts.forEach(function(b){var entry=b.title||(b.area?b.area+' - ':'')+b.bank;bankList.push(entry+'\n'+b.bank+'\n'+b.number);});
   }
-  var bankStr=bankList.join(' | ');
+  var bankStr=bankList.join('\n\n');
 
   // Hidden list
   var hiddenRaw={};
@@ -7289,7 +7381,7 @@ function _wrFilter(){
   if(wrQ){var ql=wrQ.toLowerCase();list=list.filter(function(d){return (d.name||'').toLowerCase().includes(ql)||(d.mobile||'').includes(ql)||(d.area||'').toLowerCase().includes(ql)||(d.id||'').toLowerCase().includes(ql);});}
   list.sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
   var org=ORG_CONFIG.name||'Falah e Qabristan Committee';
-  var bankList=[];if(ORG_CONFIG.bankAccounts)ORG_CONFIG.bankAccounts.forEach(function(b){bankList.push(b.bank+': '+b.number);});
+  var bankList=[];if(ORG_CONFIG.bankAccounts)ORG_CONFIG.bankAccounts.forEach(function(b){bankList.push((b.title||(b.area?b.area+' - ':'')+b.bank)+'\n'+b.bank+'\n'+b.number);});
   var bankStr=bankList.join(' | ');
   var html='<div style="font-size:11px;color:#888;margin-bottom:8px">'+list.length+' donors</div>';
   list.forEach(function(d){

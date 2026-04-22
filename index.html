@@ -4545,16 +4545,16 @@ T.orgsettings=function(){
   var banks=ORG_CONFIG.bankAccounts||[];
   var html='';
   // Org Name
-  html+='<div class="card"><h3>\U0001f3e2 Organization Name</h3>';
+  html+='<div class="card"><h3>🏢 Organization Name</h3>';
   html+='<label>Name (English) *</label><input type="text" id="orgNameEn" value="'+(ORG_CONFIG.name||'Falah e Qabristan').replace(/"/g,'&quot;')+'" placeholder="Organization name">';
-  html+='<label>Name (Urdu)</label><input type="text" id="orgNameUr" value="'+(ORG_CONFIG.nameUrdu||'\u0641\u0644\u0627\u062d \u0642\u0628\u0631\u0633\u062a\u0627\u0646').replace(/"/g,'&quot;')+'" placeholder="\u0627\u0631\u062f\u0648 \u0645\u06cc\u06ba \u0646\u0627\u0645">';
+  html+='<label>Name (Urdu)</label><input type="text" id="orgNameUr" value="'+(ORG_CONFIG.nameUrdu||'فلاح قبرستان').replace(/"/g,'&quot;')+'" placeholder="اردو میں نام">';
   html+='<button class="btn btn-primary" style="margin-top:8px" onclick="saveOrgName()">Save Name</button></div>';
   // Logo
-  html+='<div class="card"><h3>\U0001f3f7\ufe0f Organization Logo</h3>';
+  html+='<div class="card"><h3>🏷️ Organization Logo</h3>';
   html+='<div style="display:flex;align-items:center;gap:14px"><div style="width:80px;height:60px;border:2px dashed #ccc;border-radius:10px;overflow:hidden;cursor:pointer;background:#f9f9f9;display:flex;align-items:center;justify-content:center" onclick="document.getElementById(\'orgLogoInput\').click()">';
   html+='<img id="orgLogoPreview" src="'+(ORG_CONFIG.logo||'')+'" style="display:'+(ORG_CONFIG.logo?'block':'none')+';max-width:100%;max-height:100%;object-fit:contain">';
-  html+='<span id="orgLogoPlus" style="'+(ORG_CONFIG.logo?'display:none;':'')+' font-size:11px;color:#aaa;text-align:center">\U0001f5bc\ufe0f Upload</span></div>';
-  html+='<div><div style="font-size:13px;font-weight:500">'+(ORG_CONFIG.logo?'Logo uploaded \u2705':'No logo uploaded')+'</div>';
+  html+='<span id="orgLogoPlus" style="'+(ORG_CONFIG.logo?'display:none;':'')+' font-size:11px;color:#aaa;text-align:center">🖼️ Upload</span></div>';
+  html+='<div><div style="font-size:13px;font-weight:500">'+(ORG_CONFIG.logo?'Logo uploaded ✅':'No logo uploaded')+'</div>';
   html+=(ORG_CONFIG.logo?'<button class="btn btn-sm btn-danger" style="margin-top:6px" onclick="removeLogo()">Remove</button>':'')+
   '</div></div><input type="file" accept="image/*" id="orgLogoInput" style="display:none" onchange="uploadOrgLogo()"></div>';
   // Address
@@ -4565,14 +4565,14 @@ T.orgsettings=function(){
   html+='<textarea id="orgFullAddress" rows="2" style="resize:none;font-size:13px">'+(ORG_CONFIG.fullAddress||'')+'</textarea>';
   html+='<button class="btn btn-primary" style="margin-top:6px" onclick="saveOrgFullAddress()">Save Full Address</button></div>';
   // Contact Numbers
-  html+='<div class="card"><h3>\U0001f4de Contact Numbers</h3><p style="font-size:12px;color:#888;margin-bottom:10px">Shown on Contact page</p>';
+  html+='<div class="card"><h3>📞 Contact Numbers</h3><p style="font-size:12px;color:#888;margin-bottom:10px">Shown on Contact page</p>';
   (ORG_CONFIG.contactNumbers||[]).forEach(function(n,i){
     html+='<div style="background:#f0fff8;border-radius:10px;border:1px solid #1D9E75;margin-bottom:6px;padding:10px;display:flex;align-items:center;gap:10px">';
     html+=(n.photo?'<img src="'+n.photo+'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid #1D9E75;flex-shrink:0">':'');
-    html+='<div style="flex:1"><div style="font-size:12px;font-weight:700;color:#0F6E56">'+n.label+(n.area?' \u2014 '+n.area:'')+'</div>';
+    html+='<div style="flex:1"><div style="font-size:12px;font-weight:700;color:#0F6E56">'+n.label+(n.area?' — '+n.area:'')+'</div>';
     html+='<div style="font-size:13px;font-weight:600;color:#185FA5">'+n.number+'</div></div>';
     html+='<div style="display:flex;flex-direction:column;gap:4px"><button class="btn-xs" style="background:#1D9E75;color:#fff;border:none;cursor:pointer" onclick="editContactNumber('+i+')">&#9998;</button>';
-    html+='<button class="btn-xs" style="background:#E24B4A;color:#fff;border:none;cursor:pointer" onclick="removeContactNumber('+i+')">\U0001f5d1\ufe0f</button></div></div>';
+    html+='<button class="btn-xs" style="background:#E24B4A;color:#fff;border:none;cursor:pointer" onclick="removeContactNumber('+i+')">🗑️</button></div></div>';
   });
   html+='<div style="background:#F5F9FF;border-radius:10px;padding:10px;border:1px solid #B5D4F4;margin-top:8px">';
   html+='<div style="font-size:11px;font-weight:700;color:#0C447C;margin-bottom:6px">&#128100; From User Account</div>';
@@ -4580,41 +4580,41 @@ T.orgsettings=function(){
   html+='<button onclick="_cnVerifyUser()" style="background:#185FA5;color:#fff;border:none;padding:9px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">Fetch</button></div>';
   html+='<div id="cnUserInfo" style="margin-bottom:6px"></div></div>';
   html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">';
-  html+='<div class="inp-wrap"><span class="inp-icon">\U0001f3f7\ufe0f</span><input type="text" id="cnLabel" placeholder="Label (e.g. Office)"></div>';
-  html+='<div class="inp-wrap"><span class="inp-icon">\U0001f4de</span><input type="text" id="cnNumber" placeholder="0300-1234567" maxlength="12" oninput="autoFormatMobile(this,null)"></div></div>';
+  html+='<div class="inp-wrap"><span class="inp-icon">🏷️</span><input type="text" id="cnLabel" placeholder="Label (e.g. Office)"></div>';
+  html+='<div class="inp-wrap"><span class="inp-icon">📞</span><input type="text" id="cnNumber" placeholder="0300-1234567" maxlength="12" oninput="autoFormatMobile(this,null)"></div></div>';
   html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">';
-  html+='<div class="inp-wrap"><span class="inp-icon">\U0001f4cd</span><select id="cnArea"><option value="">-- Area --</option>'+AREAS.map(function(a){return '<option value="'+a+'">'+a+'</option>';}).join('')+'</select></div>';
+  html+='<div class="inp-wrap"><span class="inp-icon">📍</span><select id="cnArea"><option value="">-- Area --</option>'+AREAS.map(function(a){return '<option value="'+a+'">'+a+'</option>';}).join('')+'</select></div>';
   html+='<div style="display:flex;align-items:center;gap:8px"><div style="width:44px;height:44px;border-radius:50%;overflow:hidden;border:2px dashed #1D9E75;cursor:pointer;background:#f0fff8;display:flex;align-items:center;justify-content:center;flex-shrink:0" onclick="document.getElementById(\'cnPhotoInp\').click()">';
-  html+='<img id="cnPhotoPreview" src="" style="display:none;width:100%;height:100%;object-fit:cover"><span id="cnPhotoPlus" style="font-size:18px">\U0001f4f8</span></div>';
+  html+='<img id="cnPhotoPreview" src="" style="display:none;width:100%;height:100%;object-fit:cover"><span id="cnPhotoPlus" style="font-size:18px">📸</span></div>';
   html+='<input type="file" id="cnPhotoInp" accept="image/*" style="display:none" onchange="previewImg(\'cnPhotoInp\',\'cnPhotoPreview\',\'cnPhotoPlus\')"></div></div>';
   html+='<button class="btn btn-primary" style="margin-top:8px" onclick="addContactNumber()">+ Add Number</button></div>';
   // Social Links
-  html+='<div class="card"><h3>\U0001f310 Social Media Links</h3>';
-  html+='<label>\U0001f4d8 Facebook</label><input type="url" id="slFacebook" value="'+(sl.facebook||'')+'" placeholder="https://facebook.com/...">';
-  html+='<label>\U0001f4f8 Instagram</label><input type="url" id="slInstagram" value="'+(sl.instagram||'')+'" placeholder="https://instagram.com/...">';
-  html+='<label>\u25b6\ufe0f YouTube</label><input type="url" id="slYoutube" value="'+(sl.youtube||'')+'" placeholder="https://youtube.com/...">';
+  html+='<div class="card"><h3>🌐 Social Media Links</h3>';
+  html+='<label>📘 Facebook</label><input type="url" id="slFacebook" value="'+(sl.facebook||'')+'" placeholder="https://facebook.com/...">';
+  html+='<label>📸 Instagram</label><input type="url" id="slInstagram" value="'+(sl.instagram||'')+'" placeholder="https://instagram.com/...">';
+  html+='<label>▶️ YouTube</label><input type="url" id="slYoutube" value="'+(sl.youtube||'')+'" placeholder="https://youtube.com/...">';
   html+='<button class="btn btn-primary" style="margin-top:8px" onclick="saveSocialLinks()">Save Links</button></div>';
   // Bank Accounts
-  html+='<div class="card"><h3>\U0001f3e6 Bank Accounts</h3>';
+  html+='<div class="card"><h3>🏦 Bank Accounts</h3>';
   banks.forEach(function(acc,i){
     html+='<div style="background:#f9f9f9;border-radius:10px;padding:12px;margin-bottom:8px;border:1px solid #eee;display:flex;justify-content:space-between;align-items:flex-start;gap:8px">';
     html+='<div style="flex:1"><div style="font-size:14px;font-weight:700">'+acc.title+'</div>';
     html+='<div style="font-size:12px;color:#185FA5;font-weight:600">'+acc.bank+'</div>';
     html+='<div style="font-size:13px;font-weight:700;letter-spacing:1px;margin-top:4px;background:#E6F1FB;color:#185FA5;padding:4px 8px;border-radius:6px;display:inline-block">'+acc.number+'</div>';
-    html+=(acc.area?'<div style="font-size:11px;color:#888;margin-top:4px">\U0001f4cd '+acc.area+'</div>':'');
+    html+=(acc.area?'<div style="font-size:11px;color:#888;margin-top:4px">📍 '+acc.area+'</div>':'');
     html+='<div style="display:flex;gap:6px;margin-top:6px"><button class="btn-xs" style="background:#1D9E75;color:#fff;border:none;cursor:pointer" onclick="openEditBank('+i+')">&#9998; Edit</button>';
-    html+='<button class="btn-xs" style="background:#E24B4A;color:#fff;border:none;cursor:pointer" onclick="removeBankAccount('+i+')">\U0001f5d1\ufe0f Remove</button></div></div>';
+    html+='<button class="btn-xs" style="background:#E24B4A;color:#fff;border:none;cursor:pointer" onclick="removeBankAccount('+i+')">🗑️ Remove</button></div></div>';
     html+=(acc.photo?'<img src="'+acc.photo+'" style="width:56px;height:56px;border-radius:50%;border:2px solid #1D9E75;object-fit:cover;flex-shrink:0">':'');
     html+='</div>';
   });
   html+='<div id="bankEditSection" style="display:none"></div>';
   html+='<div style="border-top:1px solid #eee;margin-top:10px;padding-top:10px"><div style="font-size:13px;font-weight:600;margin-bottom:8px">Add New Account</div>';
-  html+='<label>Account Title *</label><div class="inp-wrap"><span class="inp-icon">\U0001f3e6</span><input type="text" id="baTitle" placeholder="e.g. Falah e Qabristan Fund"></div>';
-  html+='<label>Bank Name *</label><div class="inp-wrap"><span class="inp-icon">\U0001f3db\ufe0f</span><input type="text" id="baBank" placeholder="e.g. HBL, MCB"></div>';
-  html+='<label>Account Number *</label><div class="inp-wrap"><span class="inp-icon">\U0001f522</span><input type="text" id="baNumber" placeholder="Account number"></div>';
-  html+='<label>Area</label><div class="inp-wrap"><span class="inp-icon">\U0001f4cd</span><select id="baArea"><option value="">-- Select Area --</option>'+AREAS.map(function(a){return '<option value="'+a+'">'+a+'</option>';}).join('')+'</select></div>';
+  html+='<label>Account Title *</label><div class="inp-wrap"><span class="inp-icon">🏦</span><input type="text" id="baTitle" placeholder="e.g. Falah e Qabristan Fund"></div>';
+  html+='<label>Bank Name *</label><div class="inp-wrap"><span class="inp-icon">🏛️</span><input type="text" id="baBank" placeholder="e.g. HBL, MCB"></div>';
+  html+='<label>Account Number *</label><div class="inp-wrap"><span class="inp-icon">🔢</span><input type="text" id="baNumber" placeholder="Account number"></div>';
+  html+='<label>Area</label><div class="inp-wrap"><span class="inp-icon">📍</span><select id="baArea"><option value="">-- Select Area --</option>'+AREAS.map(function(a){return '<option value="'+a+'">'+a+'</option>';}).join('')+'</select></div>';
   html+='<div style="width:64px;height:64px;border:2px dashed #ccc;border-radius:50%;overflow:hidden;cursor:pointer;background:#f5f5f5;display:flex;align-items:center;justify-content:center;margin:8px 0" onclick="document.getElementById(\'baPhotoInput\').click()">';
-  html+='<img id="baPhotoPreview" src="" style="display:none;width:100%;height:100%;object-fit:cover"><span id="baPhotoPlus">\U0001f4f8</span></div>';
+  html+='<img id="baPhotoPreview" src="" style="display:none;width:100%;height:100%;object-fit:cover"><span id="baPhotoPlus">📸</span></div>';
   html+='<input type="file" accept="image/*" id="baPhotoInput" style="display:none" onchange="previewBaPhoto()">';
   html+='<button class="btn btn-primary" style="margin-top:10px" onclick="addBankAccount()">Add Account</button></div></div>';
   // Committee + Staff
@@ -6352,7 +6352,7 @@ T.renameaddedby=function(){
 function _rabBrowseFilter(){
   var el=document.getElementById('rabBrowseSearch');
   window._rabBrowseQ=el?el.value:'';
-  renderTab('renameaddedby','deleteddonations','deletedexpenses','modifieddonations','modifiedexpenses','donormanager','auditdept','overalldetail','verifiedentries','committeemembers','supportingstaff');
+  renderTab('renameaddedby','deleteddonations','deletedexpenses','modifieddonations','modifiedexpenses','donormanager','auditdept','overalldetail','verifiedentries','committeemembers','supportingstaff','history','account','contactus');
   setTimeout(function(){
     var inp=document.getElementById('rabBrowseSearch');
     if(inp){inp.focus();try{inp.setSelectionRange(inp.value.length,inp.value.length);}catch(e){}}
@@ -7135,6 +7135,9 @@ T.supportingstaff=function(){
   html+='</div>';
   return html;
 };
+T.history=function(){window._infoCardFrom='dash';showScreen('historyScreen');return '';}
+T.account=function(){window._infoCardFrom='dash';showScreen('bankScreen');return '';}
+T.contactus=function(){window._infoCardFrom='dash';showScreen('contactScreen');return '';}
 T.wreminder=function(){
   if(!['admin','manager','developer'].includes(currentRole)){
     return '<div class="card"><div style="text-align:center;padding:24px;color:#888">\u26d4 Access denied.</div></div>';
@@ -7262,7 +7265,7 @@ T.wreminder=function(){
     html+=(lastDon.length?'<div style="font-size:10px;color:#185FA5;margin-top:1px">&#128197; Last: '+lastDon[0].date+'</div>':'<div style="font-size:10px;color:#E24B4A;margin-top:1px">&#128197; No donation yet</div>');
     html+='</div>';
     html+='<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">';
-    if(waUrl)html+='<a href="'+waUrl+'" onclick="var t=this;event.preventDefault();window.location.href=t.href;setTimeout(function(){window.location.href=\''+waFallback+'\';},800)" style="background:#25D366;color:#fff;padding:5px 9px;border-radius:7px;font-size:11px;font-weight:700;text-decoration:none;text-align:center;display:block">&#128232; WA</a>';
+    if(waUrl)html+='<a href="'+waUrl+'" onclick="event.preventDefault();var u=this.href;window.open(u);return false;" style="background:#25D366;color:#fff;padding:5px 9px;border-radius:7px;font-size:11px;font-weight:700;text-decoration:none;text-align:center;display:block">&#128232; WA</a>';
     if(appUser)html+='<button data-uid="'+appUser.id+'" data-dname="'+d.name.replace(/"/g,'&quot;')+'" onclick="wrRemindInApp(this.dataset.uid,this.dataset.dname)" style="background:#185FA5;color:#fff;border:none;padding:5px 8px;border-radius:7px;font-size:10px;font-weight:700;cursor:pointer">&#128276; App</button>';
     html+='<button data-hid="'+d.id+'" onclick="wrHide(this.dataset.hid)" style="background:#f5f5f5;color:#888;border:0.5px solid #ddd;padding:4px 7px;border-radius:7px;font-size:10px;cursor:pointer">Hide</button>';
     html+='</div></div>';
@@ -7313,7 +7316,7 @@ function _wrFilter(){
     html+='<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">'+d.name+'</div><div style="font-size:10px;color:#888;margin-top:1px">'+d.id+' &bull; '+(d.mobile||'\u2014')+'</div>';
     html+=(lastDon.length?'<div style="font-size:10px;color:#185FA5;margin-top:1px">&#128197; Last: '+lastDon[0].date+'</div>':'<div style="font-size:10px;color:#E24B4A;margin-top:1px">&#128197; No donation yet</div>');
     html+='</div><div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">';
-    if(waUrl)html+='<a href="'+waUrl+'" onclick="var t=this;event.preventDefault();window.location.href=t.href;setTimeout(function(){window.location.href=\''+waFallback+'\';},800)" style="background:#25D366;color:#fff;padding:5px 9px;border-radius:7px;font-size:11px;font-weight:700;text-decoration:none;text-align:center;display:block">&#128232; WA</a>';
+    if(waUrl)html+='<a href="'+waUrl+'" onclick="event.preventDefault();var u=this.href;window.open(u);return false;" style="background:#25D366;color:#fff;padding:5px 9px;border-radius:7px;font-size:11px;font-weight:700;text-decoration:none;text-align:center;display:block">&#128232; WA</a>';
     if(appUser)html+='<button data-uid="'+appUser.id+'" data-dname="'+d.name.replace(/"/g,'&quot;')+'" onclick="wrRemindInApp(this.dataset.uid,this.dataset.dname)" style="background:#185FA5;color:#fff;border:none;padding:5px 8px;border-radius:7px;font-size:10px;font-weight:700;cursor:pointer">&#128276; App</button>';
     html+='<button data-hid="'+d.id+'" onclick="wrHide(this.dataset.hid)" style="background:#f5f5f5;color:#888;border:0.5px solid #ddd;padding:4px 7px;border-radius:7px;font-size:10px;cursor:pointer">Hide</button>';
     html+='</div></div>';
@@ -9085,18 +9088,25 @@ let currentTab = 'dash';
 let currentSubmenu = null;
 
 function getMenuConfig(){
-  const homeItems = [
-      {icon:'🏠', label:'Dashboard / ڈیش بورڈ', tab:'dash'},
-      {icon:'💵', label:'Last Donation', tab:'lastdonation'},
-      {icon:'📒', label:'Contacts / رابطے', tab:'contacts'},
-      {icon:'🎯', label:'Committee Members', tab:'committeemembers'},
-      {icon:'👤', label:'Supporting Staff', tab:'supportingstaff'},
-
-      {icon:'🔔', label:'Notifications / اطلاعات', tab:'notifications'},
-      {icon:'👤', label:'Add Donor / ڈونر شامل', tab:'adddonor'},
-      {icon:'📱', label:'SMS Reminders / یاد دہانی', tab:'smsreminders'},
-      {icon:'🩸', label:'Blood Bank / بلڈ بینک', tab:'bloodbank'},
-    ];
+   const homeItems = [
+       // Row 1: Donation, Expense, Add Donor, Super Entry
+       {icon:'💵', label:'Donation', tab:'donation'},
+       {icon:'📋', label:'Expense', tab:'expense'},
+       {icon:'👤', label:'Add Donor', tab:'adddonor'},
+       {icon:'⚡', label:'Super Entry', tab:'superentry'},
+       // Row 2: Contact, Blood Bank, WA Reminder, Ideas, Notification
+       {icon:'📒', label:'Contacts', tab:'contacts'},
+       {icon:'🩸', label:'Blood Bank', tab:'bloodbank'},
+       {icon:'📣', label:'WA Reminder', tab:'wreminder'},
+       {icon:'💡', label:'Ideas', tab:'suggestion'},
+       {icon:'🔔', label:'Notifications', tab:'notifications'},
+       // Row 3: Committee, Supporting Staff, History, Account, Contact Us
+       {icon:'🎯', label:'Committee', tab:'committeemembers'},
+       {icon:'🧑', label:'Staff', tab:'supportingstaff'},
+       {icon:'📖', label:'History', tab:'history'},
+       {icon:'🏦', label:'Account', tab:'account'},
+       {icon:'📞', label:'Contact Us', tab:'contactus'},
+     ];
   if(['admin','manager','developer'].includes(currentRole)){
     var _uc=DB.donors.filter(function(d){return !d.area||!d.area.trim();}).length;
     homeItems.push({icon:'⚠️',label:'Update Unknown'+(_uc>0?' ('+_uc+')':''),tab:'unknowndonors'});
@@ -9434,7 +9444,7 @@ const TAB_LABELS={
   donorlist:'Donor List',slip:'Donor Slip',top:'Top Donors',transfer:'Transfer',
   decconfirm:'Confirm Deceased',approvals:'Approvals',lockuser:'Login Management',
   userslist:'Users List',professions:'Professions',audit:'Audit Log',areas:'Areas',
-  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',entrymanager:'Entry Manager',lastdonation:'Last Donation',excelexport:'Excel Export',alldonations:'All Donations',deathposter:'Death Poster',wreminder:'WhatsApp Reminder',loginreport:'Login Report',auditdept:'Audit Department',committeemembers:'Committee Members',supportingstaff:'Supporting Staff',deleteddonations:'Deleted Income',deletedexpenses:'Deleted Expenses',modifieddonations:'Modified Income',modifiedexpenses:'Modified Expenses',donormanager:'Donor Manager',overalldetail:'Overall Detail',verifiedentries:'Verified Entries',renameaddedby:'Rename AddedBy',deathposter:'Death Poster',dailyupdate:'Daily Update',entrymanager:'Entry Manager',fundraisingstar:'Fundraising Stars',donorsummary:'Donor Summary',myentries:'My Entries',unknowndonors:'Update Unknown',missinginfo:'Missing Information',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
+  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',entrymanager:'Entry Manager',lastdonation:'Last Donation',excelexport:'Excel Export',alldonations:'All Donations',deathposter:'Death Poster',wreminder:'WhatsApp Reminder',loginreport:'Login Report',auditdept:'Audit Department',committeemembers:'Committee Members',supportingstaff:'Supporting Staff',history:'History',account:'Account',contactus:'Contact Us',deleteddonations:'Deleted Income',deletedexpenses:'Deleted Expenses',modifieddonations:'Modified Income',modifiedexpenses:'Modified Expenses',donormanager:'Donor Manager',overalldetail:'Overall Detail',verifiedentries:'Verified Entries',renameaddedby:'Rename AddedBy',deathposter:'Death Poster',dailyupdate:'Daily Update',entrymanager:'Entry Manager',fundraisingstar:'Fundraising Stars',donorsummary:'Donor Summary',myentries:'My Entries',unknowndonors:'Update Unknown',missinginfo:'Missing Information',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
 };
 
 // ============================================================

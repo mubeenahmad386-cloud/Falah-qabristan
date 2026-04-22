@@ -1461,48 +1461,21 @@ T.dash=function(){
         <span style="font-size:7px;color:#A07000;direction:rtl">سپر اندراج</span>
       </button>
     </div>
-    <!-- Row 2: Search & Social -->
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:6px">
-      <button onclick="selectTab('contacts')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #ddd;background:#f5f5f5;cursor:pointer">
-        <span style="font-size:18px">🔍</span>
-        <span style="font-size:9px;font-weight:700;color:#444">Contact List</span>
-        <span style="font-size:7px;color:#666;direction:rtl">رابطہ فہرست</span>
-      </button>
-      <button onclick="selectTab('bloodbank')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #FCBFBF;background:#FEF0F0;cursor:pointer">
-        <span style="font-size:18px">🩸</span>
-        <span style="font-size:9px;font-weight:700;color:#A32D2D">Blood</span>
-        <span style="font-size:7px;color:#A32D2D;direction:rtl">بلڈ بینک</span>
-      </button>
-      <button onclick="selectTab('suggestions')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #F0D9B5;background:#FFF8E7;cursor:pointer;position:relative">
-        <span style="font-size:18px">💡</span>
-        <span style="font-size:9px;font-weight:700;color:#633806">Ideas</span>
-        <span style="font-size:7px;color:#854F0B;direction:rtl">تجاویز</span>
-        ${(()=>{const cnt=DB.suggestions.filter(s=>s.type!=='complaint'&&!s.read).length;return cnt>0?`<span style="position:absolute;top:4px;right:6px;background:#E24B4A;color:#fff;border-radius:50%;width:14px;height:14px;font-size:8px;display:flex;align-items:center;justify-content:center;font-weight:700">${cnt}</span>`:'';})()}
-      </button>
-      <button onclick="selectTab('complaints')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #FCBFBF;background:#FFF0F0;cursor:pointer;position:relative">
-        <span style="font-size:18px">⚠️</span>
-        <span style="font-size:9px;font-weight:700;color:#A32D2D">Issues</span>
-        <span style="font-size:7px;color:#A32D2D;direction:rtl">شکایات</span>
-        ${(()=>{const cnt=DB.suggestions.filter(s=>s.type==='complaint'&&!s.read).length;return cnt>0?`<span style="position:absolute;top:4px;right:6px;background:#E24B4A;color:#fff;border-radius:50%;width:14px;height:14px;font-size:8px;display:flex;align-items:center;justify-content:center;font-weight:700">${cnt}</span>`:'';})()}
-      </button>
+    <!-- Row 2: Contact, Blood Bank, WA Reminder, Ideas, Notifications -->
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:6px">
+      <button onclick="selectTab('contacts')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #ddd;background:#f5f5f5;cursor:pointer"><span style="font-size:18px">📒</span><span style="font-size:9px;font-weight:700;color:#444">Contacts</span></button>
+      <button onclick="selectTab('bloodbank')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #FCBFBF;background:#FEF0F0;cursor:pointer"><span style="font-size:18px">🩸</span><span style="font-size:9px;font-weight:700;color:#A32D2D">Blood Bank</span></button>
+      <button onclick="selectTab('wreminder')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #C8EED8;background:#E1F5EE;cursor:pointer"><span style="font-size:18px">📣</span><span style="font-size:9px;font-weight:700;color:#085041">WA Remind</span></button>
+      <button onclick="selectTab('suggestion')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #F0D9B5;background:#FFFDE7;cursor:pointer"><span style="font-size:18px">💡</span><span style="font-size:9px;font-weight:700;color:#856404">Ideas</span></button>
+      <button onclick="selectTab('notifications')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #B5D4F4;background:#E6F1FB;cursor:pointer"><span style="font-size:18px">🔔</span><span style="font-size:9px;font-weight:700;color:#0C447C">Notifs</span></button>
     </div>
-    <!-- Row 3: Info Links -->
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
-      <button onclick="window._infoCardFrom='dash';showScreen('historyScreen')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #C8EED8;background:#E1F5EE;cursor:pointer">
-        <span style="font-size:18px">📖</span>
-        <span style="font-size:9px;font-weight:700;color:#085041">History</span>
-        <span style="font-size:7px;color:#0F6E56;direction:rtl">ہماری تاریخ</span>
-      </button>
-      <button onclick="window._infoCardFrom='dash';showScreen('bankScreen')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #B5D4F4;background:#E6F1FB;cursor:pointer">
-        <span style="font-size:18px">🏛️</span>
-        <span style="font-size:9px;font-weight:700;color:#0C447C">Account</span>
-        <span style="font-size:7px;color:#185FA5;direction:rtl">بینک اکاؤنٹ</span>
-      </button>
-      <button onclick="window._infoCardFrom='dash';showScreen('contactScreen')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #c7d2fe;background:#f0f4ff;cursor:pointer">
-        <span style="font-size:18px">📞</span>
-        <span style="font-size:9px;font-weight:700;color:#3730a3">Contact Us</span>
-        <span style="font-size:7px;color:#4f46e5;direction:rtl">ہم سے ملیں</span>
-      </button>
+    <!-- Row 3: Committee, Staff, History, Account, Contact Us -->
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px">
+      <button onclick="selectTab('committeemembers')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #ddd;background:#f5f5f5;cursor:pointer"><span style="font-size:18px">🎯</span><span style="font-size:9px;font-weight:700;color:#444">Committee</span></button>
+      <button onclick="selectTab('supportingstaff')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #ddd;background:#f5f5f5;cursor:pointer"><span style="font-size:18px">🧑</span><span style="font-size:9px;font-weight:700;color:#444">Staff</span></button>
+      <button onclick="window._infoCardFrom='dash';showScreen('historyScreen')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #ddd;background:#f5f5f5;cursor:pointer"><span style="font-size:18px">📖</span><span style="font-size:9px;font-weight:700;color:#085041">History</span></button>
+      <button onclick="window._infoCardFrom='dash';showScreen('bankScreen')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #B5D4F4;background:#E6F1FB;cursor:pointer"><span style="font-size:18px">🏦</span><span style="font-size:9px;font-weight:700;color:#0C447C">Account</span></button>
+      <button onclick="window._infoCardFrom='dash';showScreen('contactScreen')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #C8EED8;background:#E1F5EE;cursor:pointer"><span style="font-size:18px">📞</span><span style="font-size:9px;font-weight:700;color:#085041">Contact Us</span></button>
     </div>
   </div>
   `:`
@@ -4621,7 +4594,23 @@ T.orgsettings=function(){
   html+=renderCommitteeSettings('committee');
   html+=renderCommitteeSettings('supportingstaff');
   return html;
-};
+}
+function _cnVerifyUser(){
+  var uid=(document.getElementById('cnUserId')||{value:''}).value.trim();
+  var el=document.getElementById('cnUserInfo');if(!el)return;
+  if(!uid){el.innerHTML='<div style="font-size:11px;color:#E24B4A">User ID darein.</div>';return;}
+  var user=DB.users.find(function(u){return u.id===uid;});
+  if(!user){el.innerHTML='<div style="font-size:11px;color:#E24B4A">&#10060; ID "'+uid+'" ka user nahi mila.</div>';return;}
+  var lbl=document.getElementById('cnLabel');var num=document.getElementById('cnNumber');var area=document.getElementById('cnArea');
+  if(lbl)lbl.value=user.name;
+  if(num&&user.mobile)num.value=user.mobile;
+  if(area&&user.area)area.value=user.area;
+  if(user.photo){window._cnUserPhoto=user.photo;var prev=document.getElementById('cnPhotoPreview');var plus=document.getElementById('cnPhotoPlus');if(prev){prev.src=user.photo;prev.style.display='block';}if(plus)plus.style.display='none';}
+  var init=(user.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+  var av=user.photo?'<img src="'+user.photo+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover">':'<div style="width:28px;height:28px;border-radius:50%;background:#0F6E56;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">'+init+'</div>';
+  el.innerHTML='<div style="background:#E1F5EE;border-radius:7px;padding:7px 9px;display:flex;align-items:center;gap:8px">'+av+'<div><div style="font-size:12px;font-weight:700;color:#0F6E56">&#10004; '+user.name+'</div><div style="font-size:10px;color:#085041">'+user.id+' &bull; '+(user.mobile||'&mdash;')+'</div></div></div>';
+}
+;
 function saveContactEdit(idx){
   var n=ORG_CONFIG.contactNumbers[parseInt(idx)];if(!n)return;
   var labelEl=document.getElementById('ecLabel');

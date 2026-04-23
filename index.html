@@ -3862,13 +3862,14 @@ function myEntriesHtml(){
   });
   let html=`<div class="card"><h3><span class="bi-title"><span class="bi-en">My Donation Entries</span><span class="bi-ur">میرے چندے</span></span></h3>`;
   if(myDonations.length===0)html+=`<p style="font-size:13px;color:#888">No entries found.</p>`;
-  else myDonations.slice().reverse().forEach(d=>{
+  else [...myDonations].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).forEach(d=>{
     const dn=findDonorById(d.donorId)||{name:'?',area:''};
     const donAssignee=d.assignedTo?DB.users.find(u=>u.id===d.assignedTo):null;
     const donAssigner=d.assignedBy?DB.users.find(u=>u.id===d.assignedBy):null;
     html+=`<div class="entry-row">
       <div style="flex:1">
         <div class="entry-name">${dn.name}</div>
+        <div style="font-size:10px;color:#888;margin-top:1px">${dn.id}</div>
         <div class="entry-sub">${d.date} • ${d.desc}</div>
         ${donAssignee?`<div style="font-size:10px;color:#185FA5;margin-top:2px">📤 Assigned to: ${donAssignee.name}${donAssigner?' (by '+donAssigner.name+')':''}</div>`:''}
       </div>
@@ -3882,7 +3883,7 @@ function myEntriesHtml(){
   });
   html+=`</div><div class="card"><h3><span class="bi-title"><span class="bi-en">My Expense Entries</span><span class="bi-ur">میرے اخراجات</span></span></h3>`;
   if(myExpenses.length===0)html+=`<p style="font-size:13px;color:#888">No expenses yet.</p>`;
-  else myExpenses.slice().reverse().forEach(e=>{
+  else [...myExpenses].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).forEach(e=>{
     const expAssignee=e.assignedTo?DB.users.find(u=>u.id===e.assignedTo):null;
     html+=`<div class="entry-row">
       <div style="flex:1">
@@ -3952,7 +3953,7 @@ function editDonation(id){
   const d=DB.donations.find(x=>x.id===id);if(!d)return;
   const dn=DB.donors.find(x=>x.id===d.donorId)||{name:'?'};
   editingContext={type:'donation',id};
-  document.getElementById('editModalTitle').textContent='Edit Donation — '+dn.name;
+  document.getElementById('editModalTitle').textContent='Edit Donation — '+dn.name+' ('+dn.id+')';
   document.getElementById('editModalBody').innerHTML=`
     <label>Amount (Rs)</label><input type="number" id="editAmount" value="${d.amount}">
     <label>Date</label><input type="date" id="editDate" value="${d.date}">

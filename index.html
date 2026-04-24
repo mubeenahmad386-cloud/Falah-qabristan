@@ -9921,6 +9921,7 @@ function getMenuConfig(){
     var _mi=DB.donors.filter(function(d){return !d.area||!d.bloodGroup||!d.profession;}).length;
     homeItems.push({icon:'📋',label:'Missing Info'+(_mi>0?' ('+_mi+')':''),tab:'missinginfo'});
     homeItems.push({icon:'📣', label:'WA Reminder', tab:'wreminder'});
+    homeItems.push({icon:'👥', label:'Focal Person', tab:'focalperson'});
   }
   if(currentRole!=='user'){
     homeItems.push(
@@ -9985,7 +9986,8 @@ function getMenuConfig(){
     settings.items.push(
       {icon:'🏢', label:'Organization / ادارہ', tab:'orgsettings'},
       {icon:'🏘️', label:'Areas / علاقے', tab:'areas'},
-      {icon:'📂', label:'Exp Categories', tab:'expcategories'}
+      {icon:'📂', label:'Exp Categories', tab:'expcategories'},
+      {icon:'👥', label:'Focal Person', tab:'focalperson'}
     );
   }
   if(currentRole==='developer'){

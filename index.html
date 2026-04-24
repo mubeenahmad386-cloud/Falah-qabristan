@@ -1487,7 +1487,17 @@ T.dash=function(){
       </button>
     </div>
     <!-- Row 3: Info Links -->
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px">
+      <button onclick="selectTab('committeemembers')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #ddd;background:#f5f5f5;cursor:pointer">
+        <span style="font-size:18px">🎯</span>
+        <span style="font-size:9px;font-weight:700;color:#444">Committee</span>
+        <span style="font-size:7px;color:#666;direction:rtl">کمیٹی</span>
+      </button>
+      <button onclick="selectTab('supportingstaff')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #ddd;background:#f5f5f5;cursor:pointer">
+        <span style="font-size:18px">🧑</span>
+        <span style="font-size:9px;font-weight:700;color:#444">Staff</span>
+        <span style="font-size:7px;color:#666;direction:rtl">عملہ</span>
+      </button>
       <button onclick="window._infoCardFrom='dash';showScreen('historyScreen')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #C8EED8;background:#E1F5EE;cursor:pointer">
         <span style="font-size:18px">📖</span>
         <span style="font-size:9px;font-weight:700;color:#085041">History</span>
@@ -1515,6 +1525,13 @@ T.dash=function(){
       <button onclick="selectTab('suggestion')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #F0D9B5;background:#FFF8E7;cursor:pointer"><span style="font-size:18px">💡</span><span style="font-size:9px;font-weight:700;color:#633806">Suggestion</span></button>
       <button onclick="selectTab('complaint')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #FCBFBF;background:#FFF0F0;cursor:pointer"><span style="font-size:18px">⚠️</span><span style="font-size:9px;font-weight:700;color:#A32D2D">Complaint</span></button>
       <button onclick="selectTab('balreport')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #B5D4F4;background:#E6F1FB;cursor:pointer"><span style="font-size:18px">💼</span><span style="font-size:9px;font-weight:700;color:#185FA5">Balance</span></button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px">
+      <button onclick="selectTab('committeemembers')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #ddd;background:#f5f5f5;cursor:pointer"><span style="font-size:18px">🎯</span><span style="font-size:9px;font-weight:700;color:#444">Committee</span></button>
+      <button onclick="selectTab('supportingstaff')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #ddd;background:#f5f5f5;cursor:pointer"><span style="font-size:18px">🧑</span><span style="font-size:9px;font-weight:700;color:#444">Staff</span></button>
+      <button onclick="window._infoCardFrom='dash';showScreen('historyScreen')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #C8EED8;background:#E1F5EE;cursor:pointer"><span style="font-size:18px">📖</span><span style="font-size:9px;font-weight:700;color:#085041">History</span></button>
+      <button onclick="window._infoCardFrom='dash';showScreen('bankScreen')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #B5D4F4;background:#E6F1FB;cursor:pointer"><span style="font-size:18px">🏛️</span><span style="font-size:9px;font-weight:700;color:#0C447C">Account</span></button>
+      <button onclick="window._infoCardFrom='dash';showScreen('contactScreen')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #c7d2fe;background:#f0f4ff;cursor:pointer"><span style="font-size:18px">📞</span><span style="font-size:9px;font-weight:700;color:#3730a3">Contact Us</span></button>
     </div>
   </div>
   `}
@@ -4737,8 +4754,8 @@ function _cnVerifyUser(){
   var uid=(document.getElementById('cnUserId')||{value:''}).value.trim();
   var el=document.getElementById('cnUserInfo');if(!el)return;
   if(!uid){el.innerHTML='<div style="font-size:11px;color:#E24B4A">User ID darein.</div>';return;}
-  var user=DB.users.find(function(u){return u.id===uid;});
-  if(!user){el.innerHTML='<div style="font-size:11px;color:#E24B4A">❌ ID "'+uid+'" nahi mila.</div>';return;}
+  var user=DB.users.find(function(u){return u.id===uid;})||DB.donors.find(function(d){return d.id===uid;});
+  if(!user){el.innerHTML='<div style="font-size:11px;color:#E24B4A">❌ ID "'+uid+'" kisi bhi user/donor mein nahi mila.</div>';return;}
   var lbl=document.getElementById('cnLabel');var num=document.getElementById('cnNumber');var area=document.getElementById('cnArea');
   if(lbl)lbl.value=user.name;if(num&&user.mobile)num.value=user.mobile;if(area&&user.area)area.value=user.area;
   if(user.photo){window._cnUserPhoto=user.photo;var prev=document.getElementById('cnPhotoPreview');var plus=document.getElementById('cnPhotoPlus');if(prev){prev.src=user.photo;prev.style.display='block';}if(plus)plus.style.display='none';}
@@ -6534,8 +6551,8 @@ function _rabAreaVerify(){
   var el=document.getElementById('rabAreaInfo');if(!el)return;
   if(!area){el.innerHTML='<div style="font-size:11px;color:#E24B4A">Area select karein.</div>';return;}
   if(!uid){el.innerHTML='<div style="font-size:11px;color:#E24B4A">User ID darein.</div>';return;}
-  var user=DB.users.find(function(u){return u.id===uid;});
-  if(!user){el.innerHTML='<div style="font-size:11px;color:#E24B4A">\u274c ID "'+uid+'" ka user nahi mila.</div>';return;}
+  var user=DB.users.find(function(u){return u.id===uid;})||DB.donors.find(function(d){return d.id===uid;});
+  if(!user){el.innerHTML='<div style="font-size:11px;color:#E24B4A">\u274c ID "'+uid+'" nahi mila (users aur donors dono mein check kiya).</div>';return;}
   var missing=DB.donors.filter(function(d){return (d.area||'')===area&&(!d.addedBy||!d.addedBy.trim());});
   var already=DB.donors.filter(function(d){return (d.area||'')===area&&d.addedBy&&d.addedBy.trim();});
   el.innerHTML='<div style="background:#E1F5EE;border-radius:8px;padding:8px 10px"><div style="font-size:12px;font-weight:700;color:#0F6E56">\u2714 '+user.name+'</div><div style="font-size:10px;color:#085041;margin-top:2px">'+missing.length+' missing donors will be updated &bull; '+already.length+' already set (skipped)</div></div>';
@@ -6947,6 +6964,7 @@ T.auditdept=function(){
   var sub=window._auditSub||'';
   if(!sub){
     var items=[
+      {label:'Search by System ID',desc:'Donation/Expense ID se entry search karein',tab:'searchbyid'},
       {label:'Audit Log',desc:'All activity logs',tab:'audit'},
       {label:'Deleted Income',desc:'Deleted donations with donor detail',tab:'deleteddonations'},
       {label:'Deleted Expenses',desc:'Deleted expenses with user detail',tab:'deletedexpenses'},
@@ -7366,6 +7384,202 @@ async function _ebuDelete(eid,etype){
     showPopup('✅','Deleted','Entry deleted!');renderTab('entrybyuser');
   }catch(e){showPopup('❌','Error','Delete failed: '+e.message);}
 }
+T.searchbyid=function(){
+  var q=(window._sbidQ||'').trim();
+  var html='<div class="card">';
+  html+='<h3 style="margin-bottom:8px">&#128269; Search by System ID</h3>';
+  html+='<p style="font-size:11px;color:#888;margin-bottom:10px">Donation (IN-0001) ya Expense (EXP-...) ID enter karein</p>';
+  html+='<div style="display:flex;gap:8px;margin-bottom:12px">';
+  html+='<div class="inp-wrap" style="flex:1;margin:0"><span class="inp-icon">&#128269;</span><input type="text" id="sbidInput" value="'+q.replace(/"/g,'&quot;')+'" placeholder="e.g. IN-0042 or EXP-0015..." autocomplete="off" style="font-size:14px;font-weight:600;letter-spacing:0.5px" onkeydown="if(event.key===\'Enter\')_sbidSearch()"></div>';
+  html+='<button onclick="_sbidSearch()" style="background:#185FA5;color:#fff;border:none;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">Search</button>';
+  html+='</div>';
+  if(!q){html+='<div style="text-align:center;padding:20px;color:#888;font-size:12px">ID enter kar ke Search dabain</div></div>';return html;}
+  // Search donations
+  var don=DB.donations.find(function(d){return d.id.toLowerCase()===q.toLowerCase();});
+  // Search expenses
+  var exp=DB.expenses.find(function(e){return e.id.toLowerCase()===q.toLowerCase();});
+  if(!don&&!exp){
+    html+='<div style="background:#FEF0F0;border-radius:10px;padding:16px;text-align:center">';
+    html+='<div style="font-size:20px">&#10060;</div>';
+    html+='<div style="font-size:13px;font-weight:700;color:#E24B4A;margin-top:6px">Not Found</div>';
+    html+='<div style="font-size:11px;color:#888;margin-top:4px">ID "'+q+'" kisi entry mein nahi mila</div>';
+    html+='</div></div>';return html;
+  }
+  if(don){
+    var donor=DB.donors.find(function(d){return d.id===don.donorId;})||{name:don.donorId||'?',area:'',mobile:''};
+    var addedBy=DB.users.find(function(u){return u.id===don.by;})||{name:don.by||'?'};
+    var init=(donor.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+    var av=donor.photo?'<img src="'+donor.photo+'" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2.5px solid #0F6E56;flex-shrink:0">':'<div style="width:52px;height:52px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
+    html+='<div style="background:#f0fff8;border-radius:12px;padding:14px;border:1.5px solid #1D9E75">';
+    html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">';
+    html+='<span style="background:#0F6E56;color:#fff;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px">&#128176; DONATION</span>';
+    html+='<span class="id-badge" style="font-size:11px;font-weight:800">'+don.id+'</span>';
+    html+='</div>';
+    html+='<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">'+av;
+    html+='<div><div style="font-size:15px;font-weight:800;color:#0F6E56">'+donor.name+'</div>';
+    html+='<div style="font-size:11px;color:#888;margin-top:2px">'+donor.id+(donor.area?' &bull; '+donor.area:'')+'</div>';
+    html+=(donor.mobile?'<div style="font-size:11px;color:#185FA5;margin-top:2px">&#128222; '+donor.mobile+'</div>':'');
+    html+='</div></div>';
+    html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+    html+='<div style="background:#fff;border-radius:8px;padding:8px 10px"><div style="font-size:10px;color:#888">Amount</div><div style="font-size:18px;font-weight:900;color:#0F6E56">Rs '+fmt(don.amount)+'</div></div>';
+    html+='<div style="background:#fff;border-radius:8px;padding:8px 10px"><div style="font-size:10px;color:#888">Date</div><div style="font-size:14px;font-weight:700;color:#1a1a1a">'+don.date+'</div></div>';
+    html+='</div>';
+    if(don.desc)html+='<div style="background:#fff;border-radius:8px;padding:8px 10px;margin-top:8px"><div style="font-size:10px;color:#888">Description</div><div style="font-size:12px;margin-top:2px">'+don.desc+'</div></div>';
+    html+='<div style="background:#fff;border-radius:8px;padding:8px 10px;margin-top:8px"><div style="font-size:10px;color:#888">Added By</div><div style="font-size:12px;font-weight:600;margin-top:2px">'+addedBy.name+' <span class="id-badge" style="font-size:9px">'+addedBy.id+'</span></div></div>';
+    if(don.bankAccount)html+='<div style="background:#fff;border-radius:8px;padding:8px 10px;margin-top:8px"><div style="font-size:10px;color:#888">Bank Account</div><div style="font-size:12px;margin-top:2px">'+don.bankAccount+'</div></div>';
+    html+='</div>';
+  }
+  if(exp){
+    var addedByExp=DB.users.find(function(u){return u.id===exp.by;})||{name:exp.by||'?'};
+    html+='<div style="background:#FEF0F0;border-radius:12px;padding:14px;border:1.5px solid #E24B4A;'+(don?'margin-top:12px':'')+'">';
+    html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">';
+    html+='<span style="background:#E24B4A;color:#fff;font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px">&#128203; EXPENSE</span>';
+    html+='<span class="id-badge" style="font-size:11px;font-weight:800">'+exp.id+'</span>';
+    html+='</div>';
+    html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+    html+='<div style="background:#fff;border-radius:8px;padding:8px 10px"><div style="font-size:10px;color:#888">Amount</div><div style="font-size:18px;font-weight:900;color:#E24B4A">Rs '+fmt(exp.amount)+'</div></div>';
+    html+='<div style="background:#fff;border-radius:8px;padding:8px 10px"><div style="font-size:10px;color:#888">Date</div><div style="font-size:14px;font-weight:700;color:#1a1a1a">'+exp.date+'</div></div>';
+    html+='</div>';
+    html+='<div style="background:#fff;border-radius:8px;padding:8px 10px;margin-top:8px"><div style="font-size:10px;color:#888">Description</div><div style="font-size:12px;font-weight:600;margin-top:2px">'+(exp.desc||exp.category||'&mdash;')+'</div></div>';
+    if(exp.area)html+='<div style="background:#fff;border-radius:8px;padding:8px 10px;margin-top:8px"><div style="font-size:10px;color:#888">Area</div><div style="font-size:12px;margin-top:2px">'+exp.area+'</div></div>';
+    html+='<div style="background:#fff;border-radius:8px;padding:8px 10px;margin-top:8px"><div style="font-size:10px;color:#888">Added By</div><div style="font-size:12px;font-weight:600;margin-top:2px">'+addedByExp.name+' <span class="id-badge" style="font-size:9px">'+addedByExp.id+'</span></div></div>';
+    if(exp.billImg)html+='<div style="margin-top:8px"><img src="'+exp.billImg+'" style="width:100%;border-radius:8px;border:1px solid #FCBFBF"></div>';
+    html+='</div>';
+  }
+  html+='</div>';
+  return html;
+};
+function _sbidSearch(){
+  var inp=document.getElementById('sbidInput');
+  if(!inp)return;
+  window._sbidQ=inp.value.trim();
+  renderTab('searchbyid');
+  setTimeout(function(){var i=document.getElementById('sbidInput');if(i){i.focus();var v=i.value.length;try{i.setSelectionRange(v,v);}catch(e){}}},50);
+}
+T.liveboard=function(){
+  // ── Compute all-time stats ──
+  var totInc=DB.donations.reduce(function(s,d){return s+d.amount;},0);
+  var totExp=DB.expenses.reduce(function(s,e){return s+e.amount;},0);
+  var totTransferSent=DB.transfers.filter(function(t){return t.from===currentUser.id;}).reduce(function(s,t){return s+t.amount;},0);
+  var totTransferRecv=DB.transfers.filter(function(t){return t.to===currentUser.id&&t.received;}).reduce(function(s,t){return s+t.amount;},0);
+  var cashInHand=totInc-totExp;
+  var totDonors=DB.donors.length;
+  var totDonations=DB.donations.length;
+  var thisMonth=today().substring(0,7);
+  var thisMonthInc=DB.donations.filter(function(d){return (d.date||'').substring(0,7)===thisMonth;}).reduce(function(s,d){return s+d.amount;},0);
+  var thisMonthExp=DB.expenses.filter(function(e){return (e.date||'').substring(0,7)===thisMonth;}).reduce(function(s,e){return s+e.amount;},0);
+  // ── Area stats ──
+  var areaMap={};
+  DB.donations.forEach(function(d){
+    var donor=DB.donors.find(function(x){return x.id===d.donorId;})||{area:'Unknown'};
+    var area=donor.area||'Unknown';
+    if(!areaMap[area])areaMap[area]={area:area,income:0,donors:new Set(),donationCount:0,topAmount:0,topDonor:''};
+    areaMap[area].income+=d.amount;
+    areaMap[area].donors.add(d.donorId);
+    areaMap[area].donationCount++;
+    if(d.amount>areaMap[area].topAmount){areaMap[area].topAmount=d.amount;areaMap[area].topDonor=donor.name||d.donorId;}
+  });
+  // Donor count per area (from donors table)
+  var areadonors={};
+  DB.donors.forEach(function(d){var a=d.area||'Unknown';areadonors[a]=(areadonors[a]||0)+1;});
+  var areas=Object.values(areaMap).sort(function(a,b){return b.income-a.income;});
+  // ── Top donors all-time ──
+  var donorTotals={};
+  DB.donations.forEach(function(d){donorTotals[d.donorId]=(donorTotals[d.donorId]||0)+d.amount;});
+  var topDonors=Object.keys(donorTotals).map(function(id){
+    var donor=DB.donors.find(function(d){return d.id===id;})||{name:id,area:'',photo:null};
+    return {id:id,name:donor.name||id,area:donor.area||'',photo:donor.photo||null,total:donorTotals[id]};
+  }).sort(function(a,b){return b.total-a.total;}).slice(0,5);
+  // ── HTML ──
+  var html='';
+  // Header
+  html+='<div style="background:linear-gradient(135deg,#0F6E56,#185FA5);border-radius:16px;padding:18px 16px;margin-bottom:14px;color:#fff">';
+  html+='<div style="font-size:11px;opacity:0.8;margin-bottom:4px">&#127881; Live Dashboard</div>';
+  html+='<div style="font-size:18px;font-weight:900;margin-bottom:2px">'+(ORG_CONFIG.name||'Falah e Qabristan')+'</div>';
+  html+='<div style="font-size:11px;opacity:0.7">All-time financial overview</div>';
+  html+='</div>';
+  // Big 3 stats
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">';
+  html+='<div style="background:#E1F5EE;border-radius:12px;padding:12px 8px;text-align:center;border:1.5px solid #1D9E75">';
+  html+='<div style="font-size:9px;font-weight:700;color:#085041;text-transform:uppercase;letter-spacing:0.5px">Total Income</div>';
+  html+='<div style="font-size:17px;font-weight:900;color:#0F6E56;margin-top:4px">Rs '+fmt(totInc)+'</div>';
+  html+='<div style="font-size:9px;color:#0F6E56;margin-top:2px">'+totDonations+' entries</div>';
+  html+='</div>';
+  html+='<div style="background:#FEF0F0;border-radius:12px;padding:12px 8px;text-align:center;border:1.5px solid #E24B4A">';
+  html+='<div style="font-size:9px;font-weight:700;color:#A32D2D;text-transform:uppercase;letter-spacing:0.5px">Total Expense</div>';
+  html+='<div style="font-size:17px;font-weight:900;color:#E24B4A;margin-top:4px">Rs '+fmt(totExp)+'</div>';
+  html+='<div style="font-size:9px;color:#E24B4A;margin-top:2px">'+DB.expenses.length+' entries</div>';
+  html+='</div>';
+  html+='<div style="background:'+(cashInHand>=0?'#E6F1FB':'#FEF0F0')+';border-radius:12px;padding:12px 8px;text-align:center;border:1.5px solid '+(cashInHand>=0?'#185FA5':'#E24B4A')+'">';
+  html+='<div style="font-size:9px;font-weight:700;color:'+(cashInHand>=0?'#0C447C':'#A32D2D')+';text-transform:uppercase;letter-spacing:0.5px">Cash in Hand</div>';
+  html+='<div style="font-size:17px;font-weight:900;color:'+(cashInHand>=0?'#185FA5':'#E24B4A')+';margin-top:4px">Rs '+fmt(Math.abs(cashInHand))+'</div>';
+  html+='<div style="font-size:9px;color:#888;margin-top:2px">'+(cashInHand<0?'Deficit':'Balance')+'</div>';
+  html+='</div></div>';
+  // This month
+  html+='<div style="background:#fff;border-radius:12px;border:1px solid #e8e8e8;padding:12px 14px;margin-bottom:12px">';
+  html+='<div style="font-size:11px;font-weight:800;color:#1a1a1a;margin-bottom:8px">&#128197; '+thisMonth+' (This Month)</div>';
+  html+='<div style="display:flex;gap:10px">';
+  html+='<div style="flex:1;background:#E1F5EE;border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:#085041">Income</div><div style="font-size:15px;font-weight:800;color:#0F6E56">Rs '+fmt(thisMonthInc)+'</div></div>';
+  html+='<div style="flex:1;background:#FEF0F0;border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:#A32D2D">Expense</div><div style="font-size:15px;font-weight:800;color:#E24B4A">Rs '+fmt(thisMonthExp)+'</div></div>';
+  html+='<div style="flex:1;background:#E6F1FB;border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:#0C447C">Net</div><div style="font-size:15px;font-weight:800;color:#185FA5">Rs '+fmt(thisMonthInc-thisMonthExp)+'</div></div>';
+  html+='</div></div>';
+  // Donors summary
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">';
+  html+='<div style="background:#fff;border-radius:12px;border:1px solid #e8e8e8;padding:12px;text-align:center">';
+  html+='<div style="font-size:24px;font-weight:900;color:#0F6E56">'+totDonors+'</div>';
+  html+='<div style="font-size:11px;color:#888;margin-top:2px">Total Donors</div>';
+  html+='</div>';
+  html+='<div style="background:#fff;border-radius:12px;border:1px solid #e8e8e8;padding:12px;text-align:center">';
+  html+='<div style="font-size:24px;font-weight:900;color:#185FA5">'+areas.length+'</div>';
+  html+='<div style="font-size:11px;color:#888;margin-top:2px">Active Areas</div>';
+  html+='</div></div>';
+  // Area wise breakdown
+  if(areas.length){
+    html+='<div style="background:#fff;border-radius:12px;border:1px solid #e8e8e8;padding:12px 14px;margin-bottom:12px">';
+    html+='<div style="font-size:12px;font-weight:800;color:#1a1a1a;margin-bottom:10px">&#127979; Area-wise Breakdown</div>';
+    var maxInc=areas[0].income||1;
+    areas.forEach(function(a){
+      var pct=Math.round((a.income/maxInc)*100);
+      var regCount=areadonors[a.area]||0;
+      html+='<div style="margin-bottom:10px">';
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">';
+      html+='<div style="font-size:12px;font-weight:700;color:#1a1a1a">'+a.area+'</div>';
+      html+='<div style="font-size:12px;font-weight:800;color:#0F6E56">Rs '+fmt(a.income)+'</div>';
+      html+='</div>';
+      // Progress bar
+      html+='<div style="height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden;margin-bottom:4px">';
+      html+='<div style="height:100%;background:linear-gradient(90deg,#0F6E56,#1D9E75);border-radius:4px;width:'+pct+'%;transition:width 0.5s"></div>';
+      html+='</div>';
+      html+='<div style="display:flex;gap:12px;font-size:10px;color:#888">';
+      html+='<span>&#128100; '+regCount+' donors</span>';
+      html+='<span>&#128176; '+a.donationCount+' entries</span>';
+      html+=(a.topDonor?'<span>&#11088; '+a.topDonor+' (Rs '+fmt(a.topAmount)+')</span>':'');
+      html+='</div></div>';
+    });
+    html+='</div>';
+  }
+  // Top 5 donors
+  if(topDonors.length){
+    html+='<div style="background:#fff;border-radius:12px;border:1px solid #e8e8e8;padding:12px 14px;margin-bottom:12px">';
+    html+='<div style="font-size:12px;font-weight:800;color:#1a1a1a;margin-bottom:10px">&#128081; Top Donors (All-time)</div>';
+    topDonors.forEach(function(d,i){
+      var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+      var av=d.photo?'<img src="'+d.photo+'" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0">':'<div style="width:38px;height:38px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
+      var medals=['&#129351;','&#129352;','&#129353;','4','5'];
+      html+='<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #f5f5f5">';
+      html+='<span style="font-size:16px;width:20px;text-align:center">'+medals[i]+'</span>';
+      html+=av;
+      html+='<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700">'+d.name+'</div>';
+      html+='<div style="font-size:10px;color:#888">'+d.id+(d.area?' &bull; '+d.area:'')+'</div></div>';
+      html+='<div style="font-size:13px;font-weight:800;color:#0F6E56;flex-shrink:0">Rs '+fmt(d.total)+'</div>';
+      html+='</div>';
+    });
+    html+='</div>';
+  }
+  // Footer timestamp
+  html+='<div style="text-align:center;font-size:10px;color:#aaa;padding:4px 0">Last updated: '+new Date().toLocaleString('en-PK',{dateStyle:'medium',timeStyle:'short'})+'</div>';
+  return html;
+};
 T.wreminder=function(){
   if(!['admin','manager','developer'].includes(currentRole)){
     return '<div class="card"><div style="text-align:center;padding:24px;color:#888">\u26d4 Access denied.</div></div>';
@@ -9319,12 +9533,14 @@ let currentSubmenu = null;
 function getMenuConfig(){
    const homeItems = [
        // Row 1: Donation, Expense, Add Donor, Super Entry
+       {icon:'📊', label:'Live Board', tab:'liveboard'},
        {icon:'💵', label:'Donation', tab:'donation'},
        {icon:'📋', label:'Expense', tab:'expense'},
        {icon:'👤', label:'Add Donor', tab:'adddonor'},
        {icon:'⚡', label:'Super Entry', tab:'superentry'},
        // Row 2: Contact, Blood Bank, WA Reminder, Ideas, Notification
        {icon:'📒', label:'Contacts', tab:'contacts'},
+       {icon:'🔍', label:'Search ID', tab:'searchbyid'},
        {icon:'🩸', label:'Blood Bank', tab:'bloodbank'},
        {icon:'📣', label:'WA Reminder', tab:'wreminder'},
        {icon:'💡', label:'Ideas', tab:'suggestion'},
@@ -9419,6 +9635,7 @@ function getMenuConfig(){
       {icon:'🗄️', label:'Data Manager', tab:'datamanager'},
       {icon:'✏️', label:'Rename AddedBy', tab:'renameaddedby'},
       {icon:'📋', label:'Login Report', tab:'loginreport'},
+      {icon:'📊', label:'Live Dashboard', tab:'liveboard'},
       {icon:'📢', label:'Audit Department', tab:'auditdept'},
       {icon:'🎯', label:'Committee Members', tab:'committeemembers'},
       {icon:'👤', label:'Supporting Staff', tab:'supportingstaff'},
@@ -9673,7 +9890,7 @@ const TAB_LABELS={
   donorlist:'Donor List',slip:'Donor Slip',top:'Top Donors',transfer:'Transfer',
   decconfirm:'Confirm Deceased',approvals:'Approvals',lockuser:'Login Management',
   userslist:'Users List',professions:'Professions',audit:'Audit Log',areas:'Areas',
-  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',entrymanager:'Entry Manager',entrybyuser:'Entry by User',lastdonation:'Last Donation',excelexport:'Excel Export',alldonations:'All Donations',deathposter:'Death Poster',wreminder:'WhatsApp Reminder',loginreport:'Login Report',auditdept:'Audit Department',committeemembers:'Committee Members',supportingstaff:'Supporting Staff',history:'History',account:'Account',contactus:'Contact Us',deleteddonations:'Deleted Income',deletedexpenses:'Deleted Expenses',modifieddonations:'Modified Income',modifiedexpenses:'Modified Expenses',donormanager:'Donor Manager',overalldetail:'Overall Detail',verifiedentries:'Verified Entries',renameaddedby:'Rename AddedBy',deathposter:'Death Poster',dailyupdate:'Daily Update',entrymanager:'Entry Manager',fundraisingstar:'Fundraising Stars',donorsummary:'Donor Summary',myentries:'My Entries',unknowndonors:'Update Unknown',missinginfo:'Missing Information',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
+  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',entrymanager:'Entry Manager',entrybyuser:'Entry by User',searchbyid:'Search by System ID',liveboard:'Live Dashboard',lastdonation:'Last Donation',excelexport:'Excel Export',alldonations:'All Donations',deathposter:'Death Poster',wreminder:'WhatsApp Reminder',loginreport:'Login Report',auditdept:'Audit Department',committeemembers:'Committee Members',supportingstaff:'Supporting Staff',history:'History',account:'Account',contactus:'Contact Us',deleteddonations:'Deleted Income',deletedexpenses:'Deleted Expenses',modifieddonations:'Modified Income',modifiedexpenses:'Modified Expenses',donormanager:'Donor Manager',overalldetail:'Overall Detail',verifiedentries:'Verified Entries',renameaddedby:'Rename AddedBy',deathposter:'Death Poster',dailyupdate:'Daily Update',entrymanager:'Entry Manager',fundraisingstar:'Fundraising Stars',donorsummary:'Donor Summary',myentries:'My Entries',unknowndonors:'Update Unknown',missinginfo:'Missing Information',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
 };
 
 // ============================================================

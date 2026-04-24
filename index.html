@@ -1475,82 +1475,75 @@ T.dash=function(){
   ${!isUser?`
   <div class="card" style="padding:10px;margin-bottom:10px">
     <div class="section-header"><span class="en">Quick Actions</span><span class="ur">فوری عمل</span></div>
-    <!-- Row 1: Forms -->
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:6px">
-      <button onclick="selectTab('donation')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #C8EED8;background:#E1F5EE;cursor:pointer">
-        <span style="font-size:18px">💰</span>
-        <span style="font-size:9px;font-weight:700;color:#085041">Donation</span>
-        <span style="font-size:7px;color:#0F6E56;direction:rtl">چندہ</span>
-      </button>
-      <button onclick="selectTab('expense')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #F0D9B5;background:#FAEEDA;cursor:pointer">
-        <span style="font-size:18px">📑</span>
-        <span style="font-size:9px;font-weight:700;color:#633806">Expense</span>
-        <span style="font-size:7px;color:#854F0B;direction:rtl">اخراجات</span>
-      </button>
-      <button onclick="selectTab('adddonor')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #B5D4F4;background:#E6F1FB;cursor:pointer">
-        <span style="font-size:18px">👤</span>
-        <span style="font-size:9px;font-weight:700;color:#0C447C">Add Donor</span>
-        <span style="font-size:7px;color:#185FA5;direction:rtl">ڈونر شامل</span>
-      </button>
-      <button onclick="selectTab('superentry')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #FFD700;background:#FFFDE7;cursor:pointer">
-        <span style="font-size:18px">⭐</span>
-        <span style="font-size:9px;font-weight:700;color:#856404">Super</span>
-        <span style="font-size:7px;color:#A07000;direction:rtl">سپر اندراج</span>
-      </button>
-    </div>
-    <!-- Row 2: Search & Social -->
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:6px">
-      <button onclick="selectTab('contacts')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #ddd;background:#f5f5f5;cursor:pointer">
-        <span style="font-size:18px">🔍</span>
-        <span style="font-size:9px;font-weight:700;color:#444">Contact List</span>
-        <span style="font-size:7px;color:#666;direction:rtl">رابطہ فہرست</span>
-      </button>
-      <button onclick="selectTab('bloodbank')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #FCBFBF;background:#FEF0F0;cursor:pointer">
-        <span style="font-size:18px">🩸</span>
-        <span style="font-size:9px;font-weight:700;color:#A32D2D">Blood</span>
-        <span style="font-size:7px;color:#A32D2D;direction:rtl">بلڈ بینک</span>
-      </button>
-      <button onclick="selectTab('suggestions')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #F0D9B5;background:#FFF8E7;cursor:pointer;position:relative">
-        <span style="font-size:18px">💡</span>
-        <span style="font-size:9px;font-weight:700;color:#633806">Ideas</span>
-        <span style="font-size:7px;color:#854F0B;direction:rtl">تجاویز</span>
-        ${(()=>{const cnt=DB.suggestions.filter(s=>s.type!=='complaint'&&!s.read).length;return cnt>0?`<span style="position:absolute;top:4px;right:6px;background:#E24B4A;color:#fff;border-radius:50%;width:14px;height:14px;font-size:8px;display:flex;align-items:center;justify-content:center;font-weight:700">${cnt}</span>`:'';})()}
-      </button>
-      <button onclick="selectTab('complaints')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #FCBFBF;background:#FFF0F0;cursor:pointer;position:relative">
-        <span style="font-size:18px">⚠️</span>
-        <span style="font-size:9px;font-weight:700;color:#A32D2D">Issues</span>
-        <span style="font-size:7px;color:#A32D2D;direction:rtl">شکایات</span>
-        ${(()=>{const cnt=DB.suggestions.filter(s=>s.type==='complaint'&&!s.read).length;return cnt>0?`<span style="position:absolute;top:4px;right:6px;background:#E24B4A;color:#fff;border-radius:50%;width:14px;height:14px;font-size:8px;display:flex;align-items:center;justify-content:center;font-weight:700">${cnt}</span>`:'';})()}
-      </button>
-    </div>
-    <!-- Row 3: Info Links -->
-    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px">
-      <button onclick="selectTab('committeemembers')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #ddd;background:#f5f5f5;cursor:pointer">
-        <span style="font-size:18px">🎯</span>
-        <span style="font-size:9px;font-weight:700;color:#444">Committee</span>
-        <span style="font-size:7px;color:#666;direction:rtl">کمیٹی</span>
-      </button>
-      <button onclick="selectTab('supportingstaff')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #ddd;background:#f5f5f5;cursor:pointer">
-        <span style="font-size:18px">🧑</span>
-        <span style="font-size:9px;font-weight:700;color:#444">Staff</span>
-        <span style="font-size:7px;color:#666;direction:rtl">عملہ</span>
-      </button>
-      <button onclick="window._infoCardFrom='dash';showScreen('historyScreen')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #C8EED8;background:#E1F5EE;cursor:pointer">
-        <span style="font-size:18px">📖</span>
-        <span style="font-size:9px;font-weight:700;color:#085041">History</span>
-        <span style="font-size:7px;color:#0F6E56;direction:rtl">ہماری تاریخ</span>
-      </button>
-      <button onclick="window._infoCardFrom='dash';showScreen('bankScreen')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #B5D4F4;background:#E6F1FB;cursor:pointer">
-        <span style="font-size:18px">🏛️</span>
-        <span style="font-size:9px;font-weight:700;color:#0C447C">Account</span>
-        <span style="font-size:7px;color:#185FA5;direction:rtl">بینک اکاؤنٹ</span>
-      </button>
-      <button onclick="window._infoCardFrom='dash';showScreen('contactScreen')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 2px 8px;border-radius:10px;border:0.5px solid #c7d2fe;background:#f0f4ff;cursor:pointer">
-        <span style="font-size:18px">📞</span>
-        <span style="font-size:9px;font-weight:700;color:#3730a3">Contact Us</span>
-        <span style="font-size:7px;color:#4f46e5;direction:rtl">ہم سے ملیں</span>
-      </button>
-    </div>
+     <!-- Row 1: Forms -->
+     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:5px">
+       <button onclick="selectTab('donation')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px 6px;border-radius:9px;border:0.5px solid #C8EED8;background:#E1F5EE;cursor:pointer">
+         <span style="font-size:15px">💰</span>
+         <span style="font-size:8px;font-weight:700;color:#085041">Donation</span>
+       </button>
+       <button onclick="selectTab('expense')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px 6px;border-radius:9px;border:0.5px solid #F0D9B5;background:#FEF9EE;cursor:pointer">
+         <span style="font-size:15px">📑</span>
+         <span style="font-size:8px;font-weight:700;color:#633806">Expense</span>
+       </button>
+       <button onclick="selectTab('adddonor')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px 6px;border-radius:9px;border:0.5px solid #B5D4F4;background:#E6F1FB;cursor:pointer">
+         <span style="font-size:15px">👤</span>
+         <span style="font-size:8px;font-weight:700;color:#0C447C">Add Donor</span>
+       </button>
+       <button onclick="selectTab('superentry')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px 6px;border-radius:9px;border:0.5px solid #F0D9B5;background:#FFFDE7;cursor:pointer">
+         <span style="font-size:15px">⚡</span>
+         <span style="font-size:8px;font-weight:700;color:#856404">Super Entry</span>
+       </button>
+     </div>
+     <!-- Row 2: Quick Links -->
+     <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:5px">
+       <button onclick="selectTab('contacts')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px 6px;border-radius:9px;border:0.5px solid #ddd;background:#f8f8f8;cursor:pointer">
+         <span style="font-size:15px">📒</span>
+         <span style="font-size:8px;font-weight:700;color:#444">Contacts</span>
+       </button>
+       <button onclick="selectTab('bloodbank')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px 6px;border-radius:9px;border:0.5px solid #FCBFBF;background:#FEF0F0;cursor:pointer">
+         <span style="font-size:15px">🩸</span>
+         <span style="font-size:8px;font-weight:700;color:#A32D2D">Blood Bank</span>
+       </button>
+       <button onclick="selectTab('wreminder')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px 6px;border-radius:9px;border:0.5px solid #C8EED8;background:#E1F5EE;cursor:pointer">
+         <span style="font-size:15px">📣</span>
+         <span style="font-size:8px;font-weight:700;color:#085041">WA Remind</span>
+       </button>
+       <button onclick="selectTab('suggestion')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px 6px;border-radius:9px;border:0.5px solid #F0D9B5;background:#FFFDE7;cursor:pointer">
+         <span style="font-size:15px">💡</span>
+         <span style="font-size:8px;font-weight:700;color:#856404">Ideas</span>
+       </button>
+       <button onclick="selectTab('notifications')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px 6px;border-radius:9px;border:0.5px solid #B5D4F4;background:#E6F1FB;cursor:pointer">
+         <span style="font-size:15px">🔔</span>
+         <span style="font-size:8px;font-weight:700;color:#0C447C">Notifs</span>
+       </button>
+     </div>
+     <!-- Row 3: Info Links -->
+     <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:5px">
+       <button onclick="selectTab('committeemembers')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px 6px;border-radius:9px;border:0.5px solid #ddd;background:#f8f8f8;cursor:pointer">
+         <span style="font-size:14px">🎯</span>
+         <span style="font-size:7px;font-weight:700;color:#444">Committee</span>
+       </button>
+       <button onclick="selectTab('supportingstaff')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px 6px;border-radius:9px;border:0.5px solid #ddd;background:#f8f8f8;cursor:pointer">
+         <span style="font-size:14px">🧑</span>
+         <span style="font-size:7px;font-weight:700;color:#444">Staff</span>
+       </button>
+       <button onclick="window._infoCardFrom='dash';showScreen('historyScreen')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px 6px;border-radius:9px;border:0.5px solid #C8EED8;background:#E1F5EE;cursor:pointer">
+         <span style="font-size:14px">📖</span>
+         <span style="font-size:7px;font-weight:700;color:#085041">History</span>
+       </button>
+       <button onclick="window._infoCardFrom='dash';showScreen('bankScreen')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px 6px;border-radius:9px;border:0.5px solid #B5D4F4;background:#E6F1FB;cursor:pointer">
+         <span style="font-size:14px">🏦</span>
+         <span style="font-size:7px;font-weight:700;color:#0C447C">Account</span>
+       </button>
+       <button onclick="window._infoCardFrom='dash';showScreen('contactScreen')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px 6px;border-radius:9px;border:0.5px solid #C8EED8;background:#E1F5EE;cursor:pointer">
+         <span style="font-size:14px">📞</span>
+         <span style="font-size:7px;font-weight:700;color:#085041">Contact</span>
+       </button>
+       <button onclick="selectTab('liveboard')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px 6px;border-radius:9px;border:0.5px solid #B5D4F4;background:#E6F1FB;cursor:pointer">
+         <span style="font-size:14px">📊</span>
+         <span style="font-size:7px;font-weight:700;color:#0C447C">Live Board</span>
+       </button>
+     </div>
   </div>
   `:`
   <div class="card" style="padding:10px;margin-bottom:10px">
@@ -7756,7 +7749,10 @@ T.fpassign=function(){
   html+='<div class="inp-wrap" style="margin-bottom:10px"><span class="inp-icon">&#128269;</span>';
   html+='<input type="text" id="fpSearch" placeholder="Search donor name, ID..." oninput="_fpFilterDonors()" style="font-size:13px"></div>';
   // Donors list with checkboxes
-  html+='<div style="font-size:11px;color:#888;margin-bottom:6px">Donors select karein:</div>';
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+  html+='<div style="font-size:11px;color:#888">Donors select karein (checkbox):</div>';
+  html+='<div id="fpSelectedCount" style="font-size:11px;font-weight:700;color:#0F6E56;background:#E1F5EE;padding:3px 10px;border-radius:20px">0 selected</div>';
+  html+='</div>';
   html+='<div id="fpDonorList" style="max-height:50vh;overflow-y:auto">';
   html+=_fpDonorListHTML('','');
   html+='</div>';
@@ -7846,8 +7842,24 @@ T.fpdetail=function(){
       var init=(donor.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
       var av2=donor.photo?'<img src="'+donor.photo+'" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0">':'<div style="width:38px;height:38px;border-radius:50%;background:#FAEEDA;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#854F0B;flex-shrink:0">'+init+'</div>';
       html+='<div style="display:flex;align-items:center;gap:8px;padding:8px;background:#FAEEDA;border-radius:8px;margin-bottom:6px">';
-      html+=av2+'<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700">'+donor.name+'</div><div style="font-size:10px;color:#888">'+donor.id+(donor.area?' &bull; '+donor.area:'')+'</div>'+(donor.mobile?'<div style="font-size:10px;color:#185FA5">'+donor.mobile+'</div>':'')+'</div>';
-      html+='<button data-aid="'+a.id+'" onclick="_fpToggleCollected(this.dataset.aid)" style="background:#0F6E56;color:#fff;border:none;padding:5px 10px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer">Mark Collected</button>';
+      // Last donation
+      var lastDons=DB.donations.filter(function(x){return x.donorId===donor.id;}).sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
+      var lastDonDate=lastDons.length?lastDons[0].date:'';
+      var mob=(donor.mobile||'').replace(/[^0-9]/g,'');
+      var org=ORG_CONFIG.name||'Falah e Qabristan';
+      var bankStr='';if(ORG_CONFIG.bankAccounts&&ORG_CONFIG.bankAccounts.length){var bls=[];ORG_CONFIG.bankAccounts.forEach(function(b){bls.push((b.title||b.bank)+'\n'+b.bank+'\n'+b.number);});bankStr='\n\n'+bls.join('\n\n');}
+      var waMsg='🌿 بسم اللہ\n\nمحترم *'+donor.name+'* صاحب!\nآپ کا فنڈ *'+org+'* کو اب تک موصول نہیں ہو سکا۔ براہ کرم جلد ادا فرمائیں۔'+bankStr+'\n\nجزاکم اللہ 🤲';
+      var waUrl=mob?'whatsapp://send?phone=92'+mob.replace(/^0/,'')+'&text='+encodeURIComponent(waMsg):'';
+      var waFallback=mob?'https://api.whatsapp.com/send?phone=92'+mob.replace(/^0/,'')+'&text='+encodeURIComponent(waMsg):'';
+      html+=av2+'<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700">'+donor.name+'</div>';
+      html+='<div style="font-size:10px;color:#888">'+donor.id+(donor.area?' &bull; '+donor.area:'')+'</div>';
+      html+=(lastDonDate?'<div style="font-size:10px;color:#185FA5;margin-top:2px">&#128197; Last: '+lastDonDate+'</div>':'<div style="font-size:10px;color:#E24B4A;margin-top:2px">&#128197; No donation yet</div>');
+      html+=(donor.mobile?'<div style="font-size:10px;color:#185FA5;">'+donor.mobile+'</div>':'');
+      html+='</div>';
+      html+='<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">';
+      if(waUrl)html+='<a href="'+waUrl+'" onclick="var u=this.href;event.preventDefault();window.open(u);return false;" style="background:#25D366;color:#fff;padding:5px 8px;border-radius:7px;font-size:10px;font-weight:700;text-decoration:none;text-align:center;display:block">&#128232; Remind</a>';
+      html+='<button data-aid="'+a.id+'" onclick="_fpToggleCollected(this.dataset.aid)" style="background:#0F6E56;color:#fff;border:none;padding:5px 8px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer">&#10003; Collect</button>';
+      html+='</div>';
       html+='</div>';
     });
   }
@@ -7856,7 +7868,10 @@ T.fpdetail=function(){
     colList.forEach(function(a){
       var donor=DB.donors.find(function(d){return d.id===a.donorId;})||{name:a.donorId,area:''};
       html+='<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;background:#E1F5EE;border-radius:8px;margin-bottom:5px">';
-      html+='<span style="font-size:16px">&#10003;</span><div style="flex:1"><div style="font-size:12px;font-weight:700;color:#0F6E56">'+donor.name+'</div><div style="font-size:10px;color:#085041">'+donor.id+'</div></div>';
+      var colDons=DB.donations.filter(function(x){return x.donorId===donor.id;}).sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
+      var colLastDate=colDons.length?colDons[0].date:'';
+      html+='<span style="font-size:16px">&#10003;</span><div style="flex:1"><div style="font-size:12px;font-weight:700;color:#0F6E56">'+donor.name+'</div>';
+      html+='<div style="font-size:10px;color:#085041">'+donor.id+(colLastDate?' &bull; Last: '+colLastDate:'')+'</div></div>';
       html+='<button data-aid="'+a.id+'" onclick="_fpToggleCollected(this.dataset.aid)" style="background:#f5f5f5;color:#888;border:1px solid #ddd;padding:4px 8px;border-radius:6px;font-size:10px;cursor:pointer">Undo</button>';
       html+='</div>';
     });
@@ -7877,7 +7892,7 @@ function _fpDonorListHTML(area,search){
     var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
     var av=d.photo?'<img src="'+d.photo+'" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0">':'<div style="width:34px;height:34px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
     html+='<label style="display:flex;align-items:center;gap:9px;padding:8px;border-radius:8px;margin-bottom:4px;background:'+(already?'#FEF0F0':'#f9f9f9')+';border:1px solid '+(already?'#FCBFBF':'#e8e8e8')+';cursor:pointer">';
-    html+='<input type="checkbox" data-did="'+d.id+'" style="width:18px;height:18px;cursor:pointer" '+(already?'':'')+'>';
+    html+='<input type="checkbox" data-did="'+d.id+'" style="width:18px;height:18px;cursor:pointer" onchange="_fpUpdateCount()" '+(already?'':'')+'>';
     html+=av;
     html+='<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700">'+d.name+'</div>';
     html+='<div style="font-size:10px;color:#888">'+d.id+(d.area?' &bull; '+d.area:'')+'</div></div>';
@@ -7887,6 +7902,11 @@ function _fpDonorListHTML(area,search){
   return html||'<p style="text-align:center;color:#888;padding:16px;font-size:12px">No donors found.</p>';
 }
 
+function _fpUpdateCount(){
+  var checked=document.querySelectorAll('#fpDonorList input[type=checkbox]:checked');
+  var badge=document.getElementById('fpSelectedCount');
+  if(badge)badge.textContent=checked.length+' selected';
+}
 function _fpFilterDonors(){
   var area=document.getElementById('fpAreaFilter');var a=area?area.value:'';
   var search=document.getElementById('fpSearch');var s=search?search.value:'';
@@ -7894,6 +7914,7 @@ function _fpFilterDonors(){
   if(list)list.innerHTML=_fpDonorListHTML(a,s);
   // Restore focus
   if(search)setTimeout(function(){search.focus();},30);
+  _fpUpdateCount();
 }
 
 async function _fpSaveAssignment(){

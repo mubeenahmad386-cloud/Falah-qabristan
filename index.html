@@ -7194,8 +7194,8 @@ function _fetchMember(type){
   var uid=(document.getElementById(type+'UserId')||{value:''}).value.trim();
   var el=document.getElementById(type+'FetchInfo');if(!el)return;
   if(!uid){el.innerHTML='<div style="font-size:11px;color:#E24B4A">User ID darein.</div>';return;}
-  var user=DB.users.find(function(u){return u.id===uid;});
-  if(!user){el.innerHTML='<div style="font-size:11px;color:#E24B4A">\u274c ID "'+uid+'" ka user nahi mila.</div>';return;}
+  var user=DB.users.find(function(u){return u.id===uid;})||DB.donors.find(function(d){return d.id===uid;});
+  if(!user){el.innerHTML='<div style="font-size:11px;color:#E24B4A">&#10060; ID "'+uid+'" kisi bhi user/donor mein nahi mila.</div>';return;}
   window['_fetchedMember_'+type]=user;
   var init=(user.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
   var av=user.photo?'<img src="'+user.photo+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover">':'<div style="width:28px;height:28px;border-radius:50%;background:#185FA5;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">'+init+'</div>';

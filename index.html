@@ -433,6 +433,14 @@ input[type=file]{padding:6px}
         </div>
         <span style="color:#aaa;font-size:18px">→</span>
       </button>
+       <button type="button" class="role-select-btn" onclick="openReg('focal')" style="border-color:#7C3AED">
+         <div class="role-dot" style="background:#7C3AED"></div>
+         <div style="flex:1">
+           <div style="font-size:14px;font-weight:700;color:#5B21B6">Focal Person | فوکل پرسن</div>
+           <div style="font-size:11px;color:#888;margin-top:2px">Direct login — no approval needed | فوری لاگ ان</div>
+         </div>
+         <span style="color:#7C3AED;font-size:18px">→</span>
+       </button>
     </div>
     <div class="page-footer"><div class="footer-credit">Designed By: <a href="tel:03009084228">Asif Kanwal — 0300-9084228</a></div>
       <div class="footer-credit">Developed By: <a href="tel:03184516464">Mubeen Ahmad — 0318-4516464</a></div></div>
@@ -1097,7 +1105,7 @@ function openReg(role){
   pendingRegRole=role;
   document.getElementById('regTitle').textContent=role.charAt(0).toUpperCase()+role.slice(1)+' Registration';
   const n=document.getElementById('regNotice');
-  const msgs={user:'✅ Direct login — no approval required.',admin:'⚠️ Admin account requires developer approval.',manager:'⚠️ Manager account requires developer approval.',developer:'⚙️ Developer account is approved via master key.'};
+  const msgs={user:'✅ Direct login — no approval required.',admin:'⚠️ Admin account requires developer approval.',manager:'⚠️ Manager account requires developer approval.',developer:'⚙️ Developer account is approved via master key.',focal:'🌿 Focal Person — direct login, no approval needed.'};
   const cls={user:'success',admin:'warning',manager:'warning',developer:'info'};
   n.className='info-box '+cls[role];n.textContent=msgs[role];n.style.display='block';
   document.getElementById('regSubtitle').textContent=role==='user'?'Direct login — no approval needed | براہ راست لاگ ان':'Login after developer approval | منظوری کے بعد لاگ ان';
@@ -7753,6 +7761,125 @@ function _fpShowList(type){
   html+='</div></div>';
   showCustomPopup('<div style="display:flex;justify-content:center;align-items:center;padding:16px 10px">'+html+'</div>');
 }
+T.focalmanage=function(){
+  if(!['admin','manager','developer'].includes(currentRole))
+    return '<div class="card"><p style="text-align:center;color:#888;padding:20px">⛔ Access Denied.</p></div>';
+  var focalUsers=DB.users.filter(function(u){return u.role==='focal';});
+  var html='<div class="card">';
+  html+='<h3 style="margin-bottom:12px">Focal Person List</h3>';
+  // Existing focal persons
+  if(!focalUsers.length){
+    html+='<p style="font-size:12px;color:#888;text-align:center;padding:12px 0">Koi focal person nahi. Neechay se add karein.</p>';
+  }
+  focalUsers.forEach(function(u){
+    var myAssign=DB.focalAssignments.filter(function(a){return a.focalId===u.id;});
+    var col=myAssign.filter(function(a){return a.collected;}).length;
+    var init=(u.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+    var av=u.photo?'<img src="'+u.photo+'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0">':'<div style="width:40px;height:40px;border-radius:50%;background:#EDE9FE;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#5B21B6;flex-shrink:0">'+init+'</div>';
+    html+='<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#f9f9f9;border-radius:10px;border:1px solid #e8e8e8;margin-bottom:8px">';
+    html+=av;
+    html+='<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">'+u.name+'</div>';
+    html+='<div style="font-size:10px;color:#888;margin-top:1px">'+u.id+' • '+(u.mobile||'—')+'</div>';
+    html+='<div style="font-size:10px;color:#7C3AED;margin-top:1px">✓ Focal Person</div>';
+    html+='<div style="font-size:10px;color:#888">'+myAssign.length+' assigned &bull; '+col+' collected</div></div>';
+    html+='<div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">';
+    html+='<button data-uid="'+u.id+'" onclick="_fmResetPwd(this.dataset.uid)" style="background:#185FA5;color:#fff;border:none;padding:5px 10px;border-radius:7px;font-size:11px;cursor:pointer">🔑 Reset</button>';
+    html+='<button data-uid="'+u.id+'" onclick="_fmRemoveFocal(this.dataset.uid)" style="background:#E24B4A;color:#fff;border:none;padding:5px 10px;border-radius:7px;font-size:11px;cursor:pointer">Remove</button>';
+    html+='</div></div>';
+  });
+  // Add from donor/user
+  html+='<div style="border-top:1px solid #e8e8e8;margin-top:14px;padding-top:14px">';
+  html+='<div style="font-size:13px;font-weight:700;margin-bottom:10px">+ Add Focal Person</div>';
+  html+='<p style="font-size:11px;color:#888;margin-bottom:10px">Kisi bhi registered donor ya user ko focal person mark karein</p>';
+  html+='<div style="display:flex;gap:6px;margin-bottom:8px">';
+  html+='<div class="inp-wrap" style="flex:1;margin:0"><span class="inp-icon">&#128100;</span><input type="text" id="fmPersonId" placeholder="Personal ID ya Mobile..." autocomplete="new-password" style="font-size:13px" onkeydown="if(event.key===\'Enter\')_fmFetchPerson()"></div>';
+  html+='<button onclick="_fmFetchPerson()" style="background:#7C3AED;color:#fff;border:none;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">Fetch</button>';
+  html+='</div>';
+  html+='<div id="fmPersonInfo" style="margin-bottom:8px"></div>';
+  html+='<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">Password set karein *</label>';
+  html+='<div class="inp-wrap" style="margin-bottom:10px"><span class="inp-icon">🔑</span><input type="password" id="fmNewPwd" placeholder="Minimum 4 characters..." style="font-size:13px"></div>';
+  html+='<button onclick="_fmSaveFocal()" style="width:100%;background:#7C3AED;color:#fff;border:none;padding:13px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">+ Mark as Focal Person</button>';
+  html+='</div></div>';
+  return html;
+};
+
+function _fmFetchPerson(){
+  var uid=(document.getElementById('fmPersonId')||{value:''}).value.trim();
+  var el=document.getElementById('fmPersonInfo');if(!el)return;
+  if(!uid){el.innerHTML='<div style="font-size:11px;color:#E24B4A">ID darein.</div>';return;}
+  var person=DB.users.find(function(u){return u.id===uid||normMob(u.mobile)===normMob(uid);})||
+             DB.donors.find(function(d){return d.id===uid||normMob(d.mobile)===normMob(uid);});
+  if(!person){el.innerHTML='<div style="font-size:11px;color:#E24B4A">❌ "'+uid+'" nahi mila.</div>';return;}
+  window._fmSelPerson=person;
+  var init=(person.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+  var av=person.photo?'<img src="'+person.photo+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover">':'<div style="width:28px;height:28px;border-radius:50%;background:#EDE9FE;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#5B21B6">'+init+'</div>';
+  el.innerHTML='<div style="background:#EDE9FE;border-radius:8px;padding:8px 10px;display:flex;align-items:center;gap:8px">'+av+'<div><div style="font-size:12px;font-weight:700;color:#5B21B6">✔ '+person.name+'</div><div style="font-size:10px;color:#7C3AED">'+person.id+' &bull; '+(person.mobile||'—')+'</div></div></div>';
+}
+
+async function _fmSaveFocal(){
+  if(!window._fmSelPerson){showPopup('⚠️','Required','Pehle person fetch karein.');return;}
+  var pwd=(document.getElementById('fmNewPwd')||{value:''}).value.trim();
+  if(!pwd||pwd.length<4){showPopup('⚠️','Required','Password kam az kam 4 characters hona chahiye.');return;}
+  var p=window._fmSelPerson;
+  if(!confirm('Confirm: '+p.name+' ko Focal Person mark karein?'))return;
+  // Check if already a user
+  var existing=DB.users.find(function(u){return u.id===p.id||normMob(u.mobile)===normMob(p.mobile||'');});
+  if(existing){
+    // Update existing user role to focal
+    existing.role='focal';
+    existing.password=pwd;
+    try{
+      await FS.save('users',existing.id,existing);
+      saveLocalCache();
+      window._fmSelPerson=null;
+      document.getElementById('fmPersonId').value='';
+      document.getElementById('fmPersonInfo').innerHTML='';
+      document.getElementById('fmNewPwd').value='';
+      showPopup('✅','Done',existing.name+' ab Focal Person hai!');
+      renderTab('focalmanage');
+    }catch(e){showPopup('❌','Error',e.message);}
+  } else {
+    // Create new user account from donor record
+    var nid=p.id||'FP-'+Date.now();
+    var nu={id:nid,name:p.name,mobile:p.mobile||'',cnic:p.cnic||'',password:pwd,area:p.area||'',
+            profession:p.profession||'',bloodGroup:p.bloodGroup||'',role:'focal',
+            approved:true,locked:false,photo:p.photo||null,signature:null};
+    DB.users.push(nu);
+    try{
+      await FS.save('users',nid,nu);
+      saveLocalCache();
+      window._fmSelPerson=null;
+      document.getElementById('fmPersonId').value='';
+      document.getElementById('fmPersonInfo').innerHTML='';
+      document.getElementById('fmNewPwd').value='';
+      showPopup('✅','Created',nu.name+' ka Focal Person account ban gaya!');
+      renderTab('focalmanage');
+    }catch(e){showPopup('❌','Error',e.message);}
+  }
+}
+
+function _fmResetPwd(uid){
+  var user=DB.users.find(function(u){return u.id===uid;});
+  if(!user)return;
+  var pwd=prompt(user.name+' ka naya password darein:');
+  if(!pwd||!pwd.trim()){return;}
+  if(pwd.trim().length<4){showPopup('⚠️','Too Short','Min 4 characters.');return;}
+  user.password=pwd.trim();
+  FS.save('users',uid,user);saveLocalCache();
+  showPopup('✅','Done','Password reset ho gaya!');
+}
+
+async function _fmRemoveFocal(uid){
+  var user=DB.users.find(function(u){return u.id===uid;});
+  if(!user)return;
+  if(!confirm('Remove '+user.name+' as Focal Person? Role "user" ho jayega.'))return;
+  user.role='user';
+  try{
+    await FS.save('users',uid,user);saveLocalCache();
+    showPopup('✅','Done',user.name+' ka role user ho gaya.');
+    renderTab('focalmanage');
+  }catch(e){showPopup('❌','Error',e.message);}
+}
 T.focalperson=function(){
   if(!['admin','manager','developer'].includes(currentRole)){
     if(currentRole==='focal'){window._fpViewId=currentUser.id;return T.fpdetail();}
@@ -13461,7 +13588,8 @@ function getMenuConfig(){
     var _uc=DB.donors.filter(function(d){return !d.area||!d.area.trim();}).length;
     var _mi=DB.donors.filter(function(d){return !d.area||!d.bloodGroup||!d.profession;}).length;
     homeItems.push({icon:'📣', label:'WA Reminder', tab:'wreminder'});
-    homeItems.push({icon:'👥', label:'Focal Person', tab:'focalperson'});
+    homeItems.push({icon:'👥', label:'Focal Person', tab:'focalperson'},
+      {icon:'📋', label:'Focal Person List', tab:'focalmanage'});
   }
   if(currentRole==='focal'){
     homeItems.push({icon:'👥', label:'My Donors', tab:'fpdetail'});
@@ -13809,7 +13937,7 @@ const TAB_LABELS={
   donorlist:'Donor List',slip:'Donor Slip',top:'Top Donors',transfer:'Transfer',
   decconfirm:'Confirm Deceased',approvals:'Approvals',lockuser:'Login Management',
   userslist:'Users List',professions:'Professions',audit:'Audit Log',areas:'Areas',
-  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',entrymanager:'Entry Manager',entrybyuser:'Entry by User',searchbyid:'Search by System ID',liveboard:'Live Dashboard',auditdept:'Audit Department',loginreport:'Login Report',deleteddonations:'Deleted Income',deletedexpenses:'Deleted Expenses',modifieddonations:'Modified Income',modifiedexpenses:'Modified Expenses',donormanager:'Donor Manager',overalldetail:'Overall Detail',verifiedentries:'Verified Entries',committeemembers:'Committee Members',supportingstaff:'Supporting Staff',history:'History',account:'Account',contactus:'Contact Us',decconfirm:'Deceased Confirm',orgprofile:'Org Profile',orgcontacts:'Contact Numbers',orgbanks:'Bank Accounts',orgcommittee:'Committee Members',orgstaff:'Supporting Staff',orgfocalpersons:'Focal Persons',focalperson:'Focal Person',fpassign:'Assign Donors',fpreport:'Focal Person Report',fpdetail:'Focal Person Detail',updatecategory:'Update Categories',aboutus:'About Us',lastdonation:'Last Donation',excelexport:'Excel Export',alldonations:'All Donations',deathposter:'Death Poster',wreminder:'WhatsApp Reminder',loginreport:'Login Report',auditdept:'Audit Department',committeemembers:'Committee Members',supportingstaff:'Supporting Staff',history:'History',account:'Account',contactus:'Contact Us',deleteddonations:'Deleted Income',deletedexpenses:'Deleted Expenses',modifieddonations:'Modified Income',modifiedexpenses:'Modified Expenses',donormanager:'Donor Manager',overalldetail:'Overall Detail',verifiedentries:'Verified Entries',renameaddedby:'Rename AddedBy',deathposter:'Death Poster',dailyupdate:'Daily Update',entrymanager:'Entry Manager',fundraisingstar:'Fundraising Stars',donorsummary:'Donor Summary',myentries:'My Entries',unknowndonors:'Update Unknown',missinginfo:'Missing Information',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
+  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',entrymanager:'Entry Manager',entrybyuser:'Entry by User',searchbyid:'Search by System ID',liveboard:'Live Dashboard',auditdept:'Audit Department',loginreport:'Login Report',deleteddonations:'Deleted Income',deletedexpenses:'Deleted Expenses',modifieddonations:'Modified Income',modifiedexpenses:'Modified Expenses',donormanager:'Donor Manager',overalldetail:'Overall Detail',verifiedentries:'Verified Entries',committeemembers:'Committee Members',supportingstaff:'Supporting Staff',history:'History',account:'Account',contactus:'Contact Us',decconfirm:'Deceased Confirm',orgprofile:'Org Profile',orgcontacts:'Contact Numbers',orgbanks:'Bank Accounts',orgcommittee:'Committee Members',orgstaff:'Supporting Staff',orgfocalpersons:'Focal Persons',focalperson:'Focal Person',fpassign:'Assign Donors',fpreport:'Focal Person Report',fpdetail:'Focal Person Detail',focalmanage:'Focal Person List',updatecategory:'Update Categories',aboutus:'About Us',lastdonation:'Last Donation',excelexport:'Excel Export',alldonations:'All Donations',deathposter:'Death Poster',wreminder:'WhatsApp Reminder',loginreport:'Login Report',auditdept:'Audit Department',committeemembers:'Committee Members',supportingstaff:'Supporting Staff',history:'History',account:'Account',contactus:'Contact Us',deleteddonations:'Deleted Income',deletedexpenses:'Deleted Expenses',modifieddonations:'Modified Income',modifiedexpenses:'Modified Expenses',donormanager:'Donor Manager',overalldetail:'Overall Detail',verifiedentries:'Verified Entries',renameaddedby:'Rename AddedBy',deathposter:'Death Poster',dailyupdate:'Daily Update',entrymanager:'Entry Manager',fundraisingstar:'Fundraising Stars',donorsummary:'Donor Summary',myentries:'My Entries',unknowndonors:'Update Unknown',missinginfo:'Missing Information',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
 };
 
 // ============================================================

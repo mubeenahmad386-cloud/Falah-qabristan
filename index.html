@@ -282,7 +282,7 @@ input[type=file]{padding:6px}
       </div>
       <div class="inp-wrap" style="margin-bottom:0">
         <span class="inp-icon">📱</span>
-        <input type="tel" id="loginMobile" placeholder="0300-1234567" maxlength="12" oninput="autoFormatMobile(this,null)" style="font-size:15px">
+        <input type="tel" id="loginMobile" placeholder="0300-1234567" maxlength="13" oninput="autoFormatMobile(this,null)" style="font-size:15px">
       </div>
     </div>
     <div style="margin-bottom:4px">
@@ -453,7 +453,7 @@ input[type=file]{padding:6px}
       </div>
       <input type="file" accept="image/*" id="regPhotoInput" style="display:none" onchange="previewImg('regPhotoInput','regAvatarPreview','regAvatarPlus')">
       <label>Mobile No * <span style="font-size:10px;color:#1D9E75;font-weight:500">موبائل نمبر</span></label>
-      <div class="inp-wrap"><span class="inp-icon">📱</span><input type="text" id="regMobile" placeholder="0300-1234567" maxlength="12" oninput="autoFormatMobile(this,'regMobileStatus');checkRegMobileForDonor(this.value)"></div>
+      <div class="inp-wrap"><span class="inp-icon">📱</span><input type="text" id="regMobile" placeholder="0300-1234567" maxlength="13" oninput="autoFormatMobile(this,'regMobileStatus');checkRegMobileForDonor(this.value)"></div>
       <div id="regMobileStatus" style="display:none;margin-top:4px"></div>
 <div id="regNameRow"><label>Full Name * <span style="font-size:10px;color:#1D9E75;font-weight:500">پورا نام</span></label><div class="inp-wrap"><span class="inp-icon">👤</span><input type="text" id="regName" placeholder="Your full name"></div></div>
       <div id="regDonorInfo" style="display:none"></div><label>Password * <span style="font-size:10px;color:#1D9E75;font-weight:500">پاس ورڈ</span></label>
@@ -1959,7 +1959,7 @@ function checkRegMobileForDonor(val){
 }
 function autoFormatMobile(input, statusId){
   const raw=input.value;
-  const digits=raw.replace(/[^0-9]/g,'').slice(0,11);if(digits.length===0){input.value='';if(statusId)checkFieldMobile('',statusId,input.id);return;}
+  const digits=raw.replace(/[^0-9]/g,'').slice(0,11);
   const formatted=formatMobile(digits);
   input.value=formatted;
   // Set cursor at end without triggering focus change
@@ -2162,7 +2162,7 @@ T.deceased=function(){
     <label>Name</label><div class="inp-wrap"><span class="inp-icon">👤</span><input type="text" id="w2name"></div><label>Father</label><div class="inp-wrap"><span class="inp-icon">👨</span><input type="text" id="w2father"></div><label>Mobile No</label><div class="inp-wrap"><span class="inp-icon">📱</span><input type="text" id="w2mobile"></div>
     <div class="section-bi" style="margin-top:12px"><span class="bi-en">Imam / Clergy</span><span class="bi-ur">امام / مولوی</span></div>
     <label>Imam Name <span style="font-size:10px;color:#1D9E75">امام کا نام</span></label><div class="inp-wrap"><span class="inp-icon">🕌</span><input type="text" id="imamName" placeholder="Imam / Maulvi name"></div>
-    <label>Imam Mobile <span style="font-size:10px;color:#1D9E75">موبائل نمبر</span></label><div class="inp-wrap"><span class="inp-icon">📱</span><input type="text" id="imamMobile" placeholder="0300-1234567" maxlength="12" oninput="autoFormatMobile(this,null)"></div>
+    <label>Imam Mobile <span style="font-size:10px;color:#1D9E75">موبائل نمبر</span></label><div class="inp-wrap"><span class="inp-icon">📱</span><input type="text" id="imamMobile" placeholder="0300-1234567" maxlength="13" oninput="autoFormatMobile(this,null)"></div>
     <button class="btn btn-primary" style="margin-top:12px" onclick="submitDeceased()">Submit</button>
   </div>`;
 };
@@ -2849,7 +2849,7 @@ function openEditDonorProfile(donorId){
   html+='<label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Name *</label>';
   html+='<input type="text" id="depName_'+donorId+'" value="'+donor.name.replace(/"/g,'&quot;')+'" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:10px">';
   html+='<label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Mobile *</label>';
-  html+='<input type="text" id="depMobile_'+donorId+'" value="'+(donor.mobile||'')+'" maxlength="12" oninput="autoFormatMobile(this,null)" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:10px">';
+  html+='<input type="text" id="depMobile_'+donorId+'" value="'+(donor.mobile||'')+'" maxlength="13" oninput="autoFormatMobile(this,null)" style="width:100%;padding:10px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:10px">';
   html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">';
   html+='<div><label style="font-size:12px;font-weight:600;color:#555;display:block;margin-bottom:4px">Area</label>';
   html+='<select id="depArea_'+donorId+'" style="width:100%;padding:9px;border:1.5px solid #e8e8e8;border-radius:8px;font-size:12px"><option value="">-- Select --</option>'+areaOpts+'</select></div>';
@@ -5026,7 +5026,7 @@ T.profile=function(){
     <label>Full Name * <span style="font-size:10px;color:#1D9E75">پورا نام</span></label>
     <div class="inp-wrap"><span class="inp-icon">👤</span><input type="text" id="profName" value="${u.name||''}" placeholder="Full name"></div>
     <label>Mobile No * <span style="font-size:10px;color:#1D9E75">موبائل نمبر</span></label>
-    <input type="text" id="profMobile" value="${u.mobile||''}" maxlength="12" oninput="autoFormatMobile(this,'profMobileStatus')" placeholder="0300-1234567">
+    <input type="text" id="profMobile" value="${u.mobile||''}" maxlength="13" oninput="autoFormatMobile(this,'profMobileStatus')" placeholder="0300-1234567">
     <div id="profMobileStatus" style="display:none;margin-top:4px;font-size:12px;padding:6px 10px;border-radius:6px"></div>
     <label>CNIC No <span style="font-size:10px;color:#888">شناختی کارڈ (optional)</span></label>
     <input type="text" id="profCnic" style="display:none" value="${u.cnic||''}" maxlength="15" oninput="autoFormatCnic(this,'profCnicStatus')" placeholder="00000-0000000-0">
@@ -8115,7 +8115,7 @@ T.profile=function(){
     <label>Full Name * <span style="font-size:10px;color:#1D9E75">پورا نام</span></label>
     <div class="inp-wrap"><span class="inp-icon">👤</span><input type="text" id="profName" value="${u.name||''}" placeholder="Full name"></div>
     <label>Mobile No * <span style="font-size:10px;color:#1D9E75">موبائل نمبر</span></label>
-    <input type="text" id="profMobile" value="${u.mobile||''}" maxlength="12" oninput="autoFormatMobile(this,'profMobileStatus')" placeholder="0300-1234567">
+    <input type="text" id="profMobile" value="${u.mobile||''}" maxlength="13" oninput="autoFormatMobile(this,'profMobileStatus')" placeholder="0300-1234567">
     <div id="profMobileStatus" style="display:none;margin-top:4px;font-size:12px;padding:6px 10px;border-radius:6px"></div>
     <label>CNIC No <span style="font-size:10px;color:#888">شناختی کارڈ (optional)</span></label>
     <input type="text" id="profCnic" style="display:none" value="${u.cnic||''}" maxlength="15" oninput="autoFormatCnic(this,'profCnicStatus')" placeholder="00000-0000000-0">
@@ -12718,7 +12718,7 @@ T.adddonor=function(){
     <label>Mobile No * <span style="font-size:10px;color:#1D9E75">موبائل نمبر</span></label>
     <div class="inp-wrap">
       <span class="inp-icon">📱</span>
-      <input type="text" id="adMobile" placeholder="0300-1234567" maxlength="12"
+      <input type="text" id="adMobile" placeholder="0300-1234567" maxlength="13"
         oninput="autoFormatMobile(this,null);adCheckMobile(this.value)">
     </div>
     <div id="adMobileStatus" style="margin-top:6px"></div>

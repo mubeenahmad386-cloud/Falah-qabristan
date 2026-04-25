@@ -924,6 +924,8 @@ async function populateAreas(){
   var subAreas=[...new Set(DB.donors.map(function(d){return d.subArea;}).filter(Boolean))].sort();
   var dl=document.getElementById('subAreaList');
   if(dl){dl.innerHTML=subAreas.map(function(s){return '<option value="'+s+'">';}).join('');}
+  var adl=document.getElementById('adSubAreaList');
+  if(adl){adl.innerHTML=subAreas.map(function(s){return '<option value="'+s+'">';}).join('');}
 }
 function populateProfs(){
   document.querySelectorAll('.prof-sel').forEach(el=>{
@@ -5282,7 +5284,7 @@ function setLockFilter(f){
 function renderLockUserListHtml(users,q){
   const filtered=users;
   if(!filtered.length)return '<p style="font-size:13px;color:#888">No users found.</p>';
-  const roles=['user','admin','manager'];
+  const roles=currentRole==='developer'?['user','admin','manager','developer']:['user','admin','manager'];
   return filtered.map(u=>`
     <div style="background:#f9f9f9;border-radius:8px;padding:10px;margin-bottom:8px;border:1px solid #eee">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
@@ -5291,7 +5293,7 @@ function renderLockUserListHtml(users,q){
           <div style="font-size:11px;color:#888;margin-top:2px">${u.mobile} • ${u.id} • ${u.area||'—'} • <span style="color:#6B21A8;font-weight:600">🔑 ${u.password||'—'}</span></div>
           ${u.locked?'<span style="font-size:10px;color:#E24B4A;font-weight:600">🔒 Locked</span>':'<span style="font-size:10px;color:#1D9E75">🔓 Active</span>'}
           <div style="margin-top:7px;display:flex;gap:4px;flex-wrap:wrap">
-            ${roles.map(r=>`<button onclick="changeUserRole('${u.id}','${r}')" style="font-size:9px;font-weight:600;padding:2px 8px;border-radius:20px;border:1.5px solid ${r==='user'?'#1D9E75':r==='admin'?'#185FA5':'#BA7517'};background:${u.role===r?(r==='user'?'#1D9E75':r==='admin'?'#185FA5':'#BA7517'):'transparent'};color:${u.role===r?'#fff':(r==='user'?'#1D9E75':r==='admin'?'#185FA5':'#BA7517')};cursor:pointer">${r}</button>`).join('')}
+            ${roles.map(r=>`<button onclick="changeUserRole('${u.id}','${r}')" style="font-size:9px;font-weight:600;padding:2px 8px;border-radius:20px;border:1.5px solid ${r==='user'?'#1D9E75':r==='admin'?'#185FA5':r==='manager'?'#BA7517':'#993556'};background:${u.role===r?(r==='user'?'#1D9E75':r==='admin'?'#185FA5':r==='manager'?'#BA7517':'#993556'):'transparent'};color:${u.role===r?'#fff':(r==='user'?'#1D9E75':r==='admin'?'#185FA5':r==='manager'?'#BA7517':'#993556')};cursor:pointer">${r}</button>`).join('')}
           </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;margin-left:8px">
@@ -5306,6 +5308,7 @@ function changeUserRole(id, newRole){
   const u=DB.users.find(x=>x.id===id);
   if(!u)return;
   if(u.role===newRole)return;
+  if(newRole==='developer'&&currentRole!=='developer'){showPopup('⚠️','Not Allowed','Sirf developer kisi ko developer role de sakta hai.');return;}
   const oldRole=u.role;
   u.role=newRole;
   FS.save('users',u.id,u);
@@ -7764,7 +7767,7 @@ function _fpShowList(type){
 T.focalmanage=function(){
   if(!['admin','manager','developer'].includes(currentRole))
     return '<div class="card"><p style="text-align:center;color:#888;padding:20px">⛔ Access Denied.</p></div>';
-  var focalUsers=DB.users.filter(function(u){return u.role==='focal';});
+  var focalUsers=DB.users.filter(function(u){return u.role==='focal'||u.isFocal===true;});
   var html='<div class="card">';
   html+='<h3 style="margin-bottom:12px">Focal Person List</h3>';
   // Existing focal persons
@@ -7826,8 +7829,8 @@ async function _fmSaveFocal(){
   var existing=DB.users.find(function(u){return u.id===p.id||normMob(u.mobile)===normMob(p.mobile||'');});
   if(existing){
     // Update existing user role to focal
-    existing.role='focal';
-    existing.password=pwd;
+    existing.isFocal=true;
+    existing.focalPassword=pwd;
     try{
       await FS.save('users',existing.id,existing);
       saveLocalCache();
@@ -7872,8 +7875,8 @@ function _fmResetPwd(uid){
 async function _fmRemoveFocal(uid){
   var user=DB.users.find(function(u){return u.id===uid;});
   if(!user)return;
-  if(!confirm('Remove '+user.name+' as Focal Person? Role "user" ho jayega.'))return;
-  user.role='user';
+  if(!confirm('Remove '+user.name+' as Focal Person? Primary role nahi badlega, sirf focal access hata dega.'))return;
+  user.isFocal=false;user.focalPassword=null;
   try{
     await FS.save('users',uid,user);saveLocalCache();
     showPopup('✅','Done',user.name+' ka role user ho gaya.');
@@ -11109,7 +11112,7 @@ T.fpassign=function(){
 T.fpreport=function(){
   if(!['admin','manager','developer','focal'].includes(currentRole))
     return '<div class="card"><p style="text-align:center;color:#888;padding:20px">⛔ Access Denied.</p></div>';
-  var fpFilter=currentRole==='focal'?currentUser.id:(window._fpReportFilter||'');
+  var fpFilter=(currentRole==='focal'||currentUser.isFocal)?currentUser.id:(window._fpReportFilter||'');
   var fps=DB.users.filter(function(u){return ['admin','manager','developer'].includes(u.role);});
   var html='<div class="card"><h3 style="margin-bottom:10px">Focal Person Report</h3>';
   html+='<div class="inp-wrap" style="margin-bottom:12px"><span class="inp-icon">&#128100;</span>';
@@ -13064,6 +13067,10 @@ T.adddonor=function(){
       <label>Area <span style="font-size:10px;color:#1D9E75">علاقہ</span></label>
       <select id="adArea" class="area-sel"></select>
 
+      <label>Sub Area / Zone <span style="font-size:10px;color:#185FA5">ذیلی علاقہ</span></label>
+      <div class="inp-wrap"><span class="inp-icon">&#128205;</span><input type="text" id="adSubArea" placeholder="e.g. Gali 3, Block B..." autocomplete="off" list="adSubAreaList" style="font-size:13px">
+      <datalist id="adSubAreaList"></datalist></div>
+
       <label>Blood Group <span style="font-size:10px;color:#E24B4A">بلڈ گروپ</span></label>
       <select id="adBloodGroup">
         <option value="">-- Select (optional) --</option>
@@ -13167,7 +13174,8 @@ function submitAddDonor(){
   const nid=nextAllId();
   const fi=document.getElementById('adPhotoInp');
   function finish(photo){
-    const donor={id:nid,name,mobile,cnic:'',area,bloodGroup,profession,totalDonation:0,photo:photo||null,entries:[],addedBy:currentUser.id,addedByName:currentUser.name,addedDate:today()};
+    const subArea=(document.getElementById('adSubArea')||{value:''}).value.trim()||null;
+    const donor={id:nid,name,mobile,cnic:'',area,subArea,bloodGroup,profession,totalDonation:0,photo:photo||null,entries:[],addedBy:currentUser.id,addedByName:currentUser.name,addedDate:today()};
     DB.donors.push(donor);
     FS.save('donors',nid,donor);
     const al={by:currentUser.id,action:'Donor Added',target:name,detail:'ID: '+nid+' | '+mobile,date:today()};
@@ -13591,10 +13599,10 @@ function getMenuConfig(){
     homeItems.push({icon:'👥', label:'Focal Person', tab:'focalperson'},
       {icon:'📋', label:'Focal Person List', tab:'focalmanage'});
   }
-  if(currentRole==='focal'){
+  if(currentRole==='focal'||currentUser.isFocal){
     homeItems.push({icon:'👥', label:'My Donors', tab:'fpdetail'});
     homeItems.push({icon:'📊', label:'My Report', tab:'fpreport'});
-    homeItems.push({icon:'📣', label:'WA Remind', tab:'wreminder'});
+    if(currentRole==='focal')homeItems.push({icon:'📣', label:'WA Remind', tab:'wreminder'});
   }
   if(currentRole!=='user'){
     homeItems.push(

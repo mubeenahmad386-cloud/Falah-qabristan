@@ -13764,13 +13764,8 @@ function selectTab(tab){
   // Hide nav on form/entry tabs — helps keyboard usage
   const nav=document.getElementById('bottomNav');
   if(nav){
-    if(FORM_TABS_SET.has(tab)){
-      nav.style.transform='translateY(100%)';
-      nav.style.transition='transform 0.25s ease';
-    } else {
-      nav.style.transform='translateY(0)';
-      nav.style.transition='transform 0.25s ease';
-    }
+    nav.style.transform='translateY(0)';
+    nav.style.transition='transform 0.25s ease';
   }
 }
 

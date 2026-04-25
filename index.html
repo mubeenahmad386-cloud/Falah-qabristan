@@ -911,6 +911,10 @@ async function populateAreas(){
     }catch(e){}
   }
   populateSel('area-sel',AREAS);
+  // Populate sub-area datalist
+  var subAreas=[...new Set(DB.donors.map(function(d){return d.subArea;}).filter(Boolean))].sort();
+  var dl=document.getElementById('subAreaList');
+  if(dl){dl.innerHTML=subAreas.map(function(s){return '<option value="'+s+'">';}).join('');}
 }
 function populateProfs(){
   document.querySelectorAll('.prof-sel').forEach(el=>{
@@ -1292,6 +1296,34 @@ function renderLoginExtras(){
         <div style="font-size:12px;color:#1D9E75;font-weight:600">Call ☎️</div>
       </a>`).join('');
   }
+  // Focal Person List (visible to all)
+  const cfl=document.getElementById('contactFocalList');
+  if(cfl){
+    const fpIds=[...new Set(DB.focalAssignments.map(function(a){return a.focalId;}))];
+    if(fpIds.length){
+      let fpHtml='<div style="margin-top:12px"><div style="font-size:13px;font-weight:800;color:#185FA5;margin-bottom:8px">&#128101; Focal Persons</div>';
+      fpIds.forEach(function(fpId){
+        const fp=DB.users.find(function(u){return u.id===fpId;})||{name:fpId,id:fpId,photo:null};
+        const assigned=DB.focalAssignments.filter(function(a){return a.focalId===fpId;});
+        const collected=assigned.filter(function(a){return a.collected;}).length;
+        const init=(fp.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+        const subAreas=[...new Set(assigned.map(function(a){return a.subArea;}).filter(Boolean))];
+        fpHtml+=`<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#f0f7ff;border-radius:10px;border:1px solid #B5D4F4;margin-bottom:8px">`;
+        fpHtml+=fp.photo?`<img src="${fp.photo}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #185FA5;flex-shrink:0">`:`<div style="width:44px;height:44px;border-radius:50%;background:#185FA5;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0">${init}</div>`;
+        fpHtml+=`<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#0C447C">${fp.name}</div>`;
+        fpHtml+=`<div style="font-size:10px;color:#888;margin-top:1px">${fp.id}${fp.mobile?' &bull; '+fp.mobile:''}</div>`;
+        if(subAreas.length)fpHtml+=`<div style="font-size:10px;color:#185FA5;margin-top:2px">&#128205; ${subAreas.join(', ')}</div>`;
+        fpHtml+=`<div style="font-size:10px;margin-top:2px"><span style="color:#0F6E56;font-weight:700">${collected}</span><span style="color:#888"> collected / </span><span style="color:#854F0B;font-weight:700">${assigned.length-collected}</span><span style="color:#888"> pending</span></div>`;
+        fpHtml+=`</div>`;
+        if(fp.mobile){const mob=fp.mobile.replace(/[^0-9]/g,'');fpHtml+=`<a href="tel:${mob}" style="background:#185FA5;color:#fff;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;text-decoration:none;flex-shrink:0">&#128222;</a>`;}
+        fpHtml+='</div>';
+      });
+      fpHtml+='</div>';
+      cfl.innerHTML=fpHtml;
+    } else {
+      cfl.innerHTML='';
+    }
+  }
   if(csl){
     const icons={facebook:{emoji:'📘',label:'Facebook'},instagram:{emoji:'📸',label:'Instagram'},twitter:{emoji:'🐦',label:'Twitter'},youtube:{emoji:'▶️',label:'YouTube'},whatsapp:{emoji:'💬',label:'WhatsApp'}};
     const links=Object.entries(ORG_CONFIG.socialLinks||{}).filter(([,v])=>v);
@@ -1517,33 +1549,7 @@ T.dash=function(){
          <span style="font-size:8px;font-weight:700;color:#0C447C">Notifs</span>
        </button>
      </div>
-     <!-- Row 3: Info Links -->
-     <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:5px">
-       <button onclick="selectTab('committeemembers')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px 6px;border-radius:9px;border:0.5px solid #ddd;background:#f8f8f8;cursor:pointer">
-         <span style="font-size:14px">🎯</span>
-         <span style="font-size:7px;font-weight:700;color:#444">Committee</span>
-       </button>
-       <button onclick="selectTab('supportingstaff')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px 6px;border-radius:9px;border:0.5px solid #ddd;background:#f8f8f8;cursor:pointer">
-         <span style="font-size:14px">🧑</span>
-         <span style="font-size:7px;font-weight:700;color:#444">Staff</span>
-       </button>
-       <button onclick="window._infoCardFrom='dash';showScreen('historyScreen')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px 6px;border-radius:9px;border:0.5px solid #C8EED8;background:#E1F5EE;cursor:pointer">
-         <span style="font-size:14px">📖</span>
-         <span style="font-size:7px;font-weight:700;color:#085041">History</span>
-       </button>
-       <button onclick="window._infoCardFrom='dash';showScreen('bankScreen')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px 6px;border-radius:9px;border:0.5px solid #B5D4F4;background:#E6F1FB;cursor:pointer">
-         <span style="font-size:14px">🏦</span>
-         <span style="font-size:7px;font-weight:700;color:#0C447C">Account</span>
-       </button>
-       <button onclick="window._infoCardFrom='dash';showScreen('contactScreen')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px 6px;border-radius:9px;border:0.5px solid #C8EED8;background:#E1F5EE;cursor:pointer">
-         <span style="font-size:14px">📞</span>
-         <span style="font-size:7px;font-weight:700;color:#085041">Contact</span>
-       </button>
-       <button onclick="selectTab('liveboard')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px 6px;border-radius:9px;border:0.5px solid #B5D4F4;background:#E6F1FB;cursor:pointer">
-         <span style="font-size:14px">📊</span>
-         <span style="font-size:7px;font-weight:700;color:#0C447C">Live Board</span>
-       </button>
-     </div>
+
   </div>
   `:`
   <div class="card" style="padding:10px;margin-bottom:10px">
@@ -1696,6 +1702,9 @@ T.donation=function(){
       <div id="donorMobileStatus" style="display:none;margin-top:4px;font-size:12px;padding:6px 10px;border-radius:6px"></div>
       <label>Area <span style="font-size:10px;color:#1D9E75;font-weight:500">علاقہ</span></label>
       <select id="donorArea" class="area-sel"></select>
+      <label>Sub Area / Zone <span style="font-size:10px;color:#185FA5;font-weight:500">ذیلی علاقہ</span></label>
+      <div class="inp-wrap"><span class="inp-icon">&#128205;</span><input type="text" id="donorSubArea" placeholder="e.g. Gali 3, Block B, Near Masjid..." autocomplete="off" list="subAreaList" style="font-size:13px">
+      <datalist id="subAreaList"></datalist></div>
       <label>Blood Group <span style="font-size:10px;color:#E24B4A;font-weight:500">بلڈ گروپ</span></label>
       <select id="donorBloodGroup">
         <option value="">-- Select Blood Group (optional) --</option>
@@ -1808,7 +1817,7 @@ function autoFetchDonorUnified(val){
     if(statusEl)statusEl.style.display='none';
     if(res)res.innerHTML='';
     // Clear all form fields
-    ['donorName','donorMobile','donorCnic','donorAmount','donorDesc'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    ['donorName','donorMobile','donorCnic','donorAmount','donorDesc','donorSubArea'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
     // Unlock mobile field
     const mobUnlock=document.getElementById('donorMobile');
     if(mobUnlock){mobUnlock.readOnly=false;mobUnlock.style.background='';mobUnlock.style.color='';mobUnlock.style.fontWeight='';};
@@ -2096,7 +2105,7 @@ async function finishDonation(name,amount,mobile,cnic,photo){
     const nid=existingUser?existingUser.id:nextAllId();
 
     const bg=(document.getElementById('donorBloodGroup')||{value:''}).value;
-donor={id:nid,name,mobile,cnic,area:document.getElementById('donorArea').value,bloodGroup:bg||'',profession:(document.getElementById('donorProfession')||{value:''}).value,totalDonation:0,photo:photo||null,entries:[],addedBy:currentUser.id,addedByName:currentUser.name,addedDate:today()};
+donor={id:nid,name,mobile,cnic,area:document.getElementById('donorArea').value,subArea:(document.getElementById('donorSubArea')||{value:''}).value.trim()||null,bloodGroup:bg||'',profession:(document.getElementById('donorProfession')||{value:''}).value,totalDonation:0,photo:photo||null,entries:[],addedBy:currentUser.id,addedByName:currentUser.name,addedDate:today()};
     DB.donors.push(donor);saveLocalCache();await FS.save('donors',donor.id,donor);
   }
   if(photo)donor.photo=photo;
@@ -2186,7 +2195,8 @@ function submitDeceased(){
   DB.deceased.push(decO);FS.save('deceased',nid,decO);
     DB.auditLog.push({by:currentUser.id,action:'Deceased Entry',target:name,detail:'ID: '+nid,date:today()});
     addNotification('deceased','Deceased Entry','ID: '+nid+' — '+name+' | Pending approval');
-    showPopup('📤','Submitted','ID: '+nid+' | Pending developer approval.',null,()=>renderTab('deceased'));
+    renderTab('deceased');
+  showPopup('📤','Submitted','ID: '+nid+' | Pending developer approval.');
   const _decNotifTs=Date.now();
   DB.users.filter(u=>u.approved&&!u.locked&&u.id!==currentUser.id).forEach(function(u){
     FS.save('notifications','NOTIF_DEC_'+_decNotifTs+'_'+u.id,{
@@ -7674,58 +7684,148 @@ T.liveboard=function(){
 // ═══════════════════════════════════════════════════
 
 // Main hub
+function _fpShowList(type){
+  var org=ORG_CONFIG.name||'Falah e Qabristan Committee';
+  var bankStr='';
+  if(ORG_CONFIG.bankAccounts&&ORG_CONFIG.bankAccounts.length){
+    var bls=[];
+    ORG_CONFIG.bankAccounts.forEach(function(b){bls.push((b.title||b.bank)+'\n'+b.bank+'\n'+b.number);});
+    bankStr='\n\n'+bls.join('\n\n');
+  }
+  var defaultMsg='السلام علیکم پیارے بھائی 🌿\n\nامید ہے آپ خیریت سے ہوں گے۔\n\nمحترم *{name}* صاحب! اس ماہ آپ کی طرف سے فنڈ ابھی تک موصول نہیں ہو سکا۔ آپ سے مؤدبانہ گزارش ہے کہ براہِ کرم جلد ارسال فرما دیں۔\n\nاللہ تعالیٰ آپ کو بہترین اجر عطا فرمائے۔ آمین 🤲';
+  var tmpl=ORG_CONFIG.waMessage&&ORG_CONFIG.waMessage.trim()?ORG_CONFIG.waMessage:defaultMsg;
+  var title,donors=[],isPending=false;
+  if(type==='collected'){
+    title='✅ Collected Donors';
+    var colIds=DB.focalAssignments.filter(function(a){return a.collected;}).map(function(a){return a.donorId;});
+    donors=DB.donors.filter(function(d){return colIds.includes(d.id);});
+  } else if(type==='pending'){
+    title='⏳ Pending Donors';
+    isPending=true;
+    var pendIds=DB.focalAssignments.filter(function(a){return !a.collected;}).map(function(a){return a.donorId;});
+    donors=DB.donors.filter(function(d){return pendIds.includes(d.id);});
+  } else {
+    title='⚠️ Unassigned Donors';
+    var assignedIds=new Set(DB.focalAssignments.map(function(a){return a.donorId;}));
+    donors=DB.donors.filter(function(d){return !assignedIds.has(d.id);});
+  }
+  donors=[...donors].sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
+  var html='<div style="background:#fff;border-radius:14px;overflow:hidden;max-width:380px;width:92vw;max-height:80vh;display:flex;flex-direction:column">';
+  html+='<div style="background:linear-gradient(135deg,#0F6E56,#185FA5);padding:13px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">';
+  html+='<div style="font-size:14px;font-weight:700;color:#fff">'+title+' ('+donors.length+')</div>';
+  html+='<button onclick="closeCustomPopup()" style="background:rgba(255,255,255,0.2);border:none;border-radius:50%;width:28px;height:28px;color:#fff;font-size:16px;cursor:pointer">&times;</button>';
+  html+='</div>';
+  html+='<div style="overflow-y:auto;padding:10px">';
+  if(!donors.length){
+    html+='<p style="text-align:center;padding:20px;color:#888;font-size:13px">Koi donor nahi.</p>';
+  }
+  donors.forEach(function(d){
+    var lastDons=DB.donations.filter(function(x){return x.donorId===d.id;}).sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
+    var lastDate=lastDons.length?lastDons[0].date:'';
+    var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+    var av=d.photo?'<img src="'+d.photo+'" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0">':'<div style="width:38px;height:38px;border-radius:50%;background:'+(isPending?'#FAEEDA':'#E1F5EE')+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:'+(isPending?'#854F0B':'#0F6E56')+';flex-shrink:0">'+init+'</div>';
+    var mob=(d.mobile||'').replace(/[^0-9]/g,'');
+    var waMsg=tmpl.replace(/\{name\}/g,d.name).replace(/\{org\}/g,org)+bankStr;
+    var waUrl=mob?'whatsapp://send?phone=92'+mob.replace(/^0/,'')+'&text='+encodeURIComponent(waMsg):'';
+    html+='<div style="display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid #f0f0f0">';
+    html+=av;
+    html+='<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700">'+d.name+'</div>';
+    html+='<div style="font-size:10px;color:#888;margin-top:1px">'+d.id+(d.area?' • '+d.area:'')+'</div>';
+    html+=(lastDate?'<div style="font-size:10px;color:#185FA5">📅 Last: '+lastDate+'</div>':'<div style="font-size:10px;color:#E24B4A">No donation yet</div>');
+    html+='</div>';
+    html+='<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">';
+    if(isPending&&waUrl){
+      html+='<a href="'+waUrl+'" onclick="var u=this.href;event.preventDefault();window.open(u);return false;" style="background:#25D366;color:#fff;padding:5px 8px;border-radius:7px;font-size:10px;font-weight:700;text-decoration:none;text-align:center;display:block">📲 Remind</a>';
+    }
+    if(mob){
+      html+='<a href="tel:'+mob+'" style="background:#E6F1FB;color:#185FA5;padding:5px 8px;border-radius:7px;font-size:10px;font-weight:700;text-decoration:none;text-align:center;display:block">📞 Call</a>';
+    }
+    html+='</div></div>';
+  });
+  html+='</div></div>';
+  showCustomPopup('<div style="display:flex;justify-content:center;align-items:center;padding:16px 10px">'+html+'</div>');
+}
 T.focalperson=function(){
-  if(!['admin','manager','developer'].includes(currentRole))
+  if(!['admin','manager','developer'].includes(currentRole)){
+    if(currentRole==='focal'){window._fpViewId=currentUser.id;return T.fpdetail();}
     return '<div class="card"><p style="text-align:center;color:#888;padding:20px">⛔ Access Denied.</p></div>';
-  var fps=DB.users.filter(function(u){return u.role!=='user'||(u.focalPerson);});
-  // Count stats
+  }
+  // Compute stats
   var totalAssigned=DB.focalAssignments.length;
-  var totalDonors=new Set(DB.focalAssignments.map(function(a){return a.donorId;})).size;
-  var collected=DB.focalAssignments.filter(function(a){return a.collected;}).length;
-  var pending=totalAssigned-collected;
+  var assignedDonorIds=new Set(DB.focalAssignments.map(function(a){return a.donorId;}));
+  var collectedCount=DB.focalAssignments.filter(function(a){return a.collected;}).length;
+  var pendingCount=totalAssigned-collectedCount;
+  var totalDonors=DB.donors.length;
+  var unassigned=totalDonors-assignedDonorIds.size;
+  var thisMonth=today().substring(0,7);
+  var collectedPct=totalAssigned>0?Math.round(collectedCount/totalAssigned*100):0;
+  // Group by focal person
+  var fpMap={};
+  DB.focalAssignments.forEach(function(a){
+    if(!fpMap[a.focalId])fpMap[a.focalId]={focalId:a.focalId,assigned:0,collected:0,pending:0,subAreas:new Set()};
+    fpMap[a.focalId].assigned++;
+    if(a.collected)fpMap[a.focalId].collected++;else fpMap[a.focalId].pending++;
+    if(a.subArea)fpMap[a.focalId].subAreas.add(a.subArea);
+  });
+  var fpList=Object.values(fpMap).sort(function(a,b){return b.assigned-a.assigned;});
   var html='';
-  // Stats row
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">';
-  html+='<div style="background:#E1F5EE;border-radius:12px;padding:10px;text-align:center;border:1.5px solid #1D9E75"><div style="font-size:22px;font-weight:900;color:#0F6E56">'+totalDonors+'</div><div style="font-size:10px;color:#085041;font-weight:700">Donors Assigned</div></div>';
-  html+='<div style="background:#E6F1FB;border-radius:12px;padding:10px;text-align:center;border:1.5px solid #185FA5"><div style="font-size:22px;font-weight:900;color:#185FA5">'+collected+'</div><div style="font-size:10px;color:#0C447C;font-weight:700">Collected</div></div>';
-  html+='<div style="background:#FAEEDA;border-radius:12px;padding:10px;text-align:center;border:1.5px solid #B47B11"><div style="font-size:22px;font-weight:900;color:#854F0B">'+pending+'</div><div style="font-size:10px;color:#654000;font-weight:700">Pending</div></div>';
+  // ── Header card ──────────────────────────────────────────────────────
+  html+='<div style="background:linear-gradient(135deg,#0F6E56,#185FA5);border-radius:16px;padding:16px;margin-bottom:12px;color:#fff">';
+  html+='<div style="font-size:11px;opacity:0.75;margin-bottom:2px">Focal Person Management</div>';
+  html+='<div style="font-size:18px;font-weight:900;margin-bottom:10px">Fund Collection Dashboard</div>';
+  // Overall progress bar
+  html+='<div style="background:rgba(255,255,255,0.2);border-radius:20px;height:10px;margin-bottom:6px;overflow:hidden">';
+  html+='<div style="height:100%;background:#fff;border-radius:20px;width:'+collectedPct+'%;transition:width 0.5s"></div></div>';
+  html+='<div style="display:flex;justify-content:space-between;font-size:10px;opacity:0.85">';
+  html+='<span>'+collectedPct+'% collected</span><span>'+collectedCount+' of '+totalAssigned+' donors</span></div></div>';
+  // ── 3 big stats ───────────────────────────────────────────────────────
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">';
+  html+='<button onclick="_fpShowList(\'collected\')" style="background:#E1F5EE;border-radius:12px;padding:12px 8px;text-align:center;border:1.5px solid #1D9E75;cursor:pointer;width:100%">';
+  html+='<div style="font-size:26px;font-weight:900;color:#0F6E56">'+collectedCount+'</div>';
+  html+='<div style="font-size:9px;font-weight:700;color:#085041;text-transform:uppercase">Collected ▾</div></button>';
+  html+='<button onclick="_fpShowList(\'pending\')" style="background:#FAEEDA;border-radius:12px;padding:12px 8px;text-align:center;border:1.5px solid #B47B11;cursor:pointer;width:100%">';
+  html+='<div style="font-size:26px;font-weight:900;color:#854F0B">'+pendingCount+'</div>';
+  html+='<div style="font-size:9px;font-weight:700;color:#633806;text-transform:uppercase">Pending ▾</div></button>';
+  html+='<button onclick="_fpShowList(\'unassigned\')" style="background:#E6F1FB;border-radius:12px;padding:12px 8px;text-align:center;border:1.5px solid #185FA5;cursor:pointer;width:100%">';
+  html+='<div style="font-size:26px;font-weight:900;color:#185FA5">'+unassigned+'</div>';
+  html+='<div style="font-size:9px;font-weight:700;color:#0C447C;text-transform:uppercase">Unassigned ▾</div></button>';
   html+='</div>';
-  // Action buttons
+  // ── Action buttons ─────────────────────────────────────────────────
   html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">';
-  html+='<button onclick="selectTab(\'fpassign\')" style="background:#0F6E56;color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:700;cursor:pointer">&#128100; Assign Donors</button>';
-  html+='<button onclick="selectTab(\'fpreport\')" style="background:#185FA5;color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:700;cursor:pointer">&#128202; View Report</button>';
+  html+='<button onclick="selectTab(\'fpassign\')" style="background:#0F6E56;color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:700;cursor:pointer">+ Assign Donors</button>';
+  html+='<button onclick="selectTab(\'fpreport\')" style="background:#185FA5;color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:700;cursor:pointer">Report</button>';
   html+='</div>';
-  // Focal persons list
-  var fpSet=new Set(DB.focalAssignments.map(function(a){return a.focalId;}));
-  if(!fpSet.size){
-    html+='<div class="card" style="text-align:center;padding:20px;color:#888">Koi assignment nahi abhi tak. "Assign Donors" se shuru karein.</div>';
+  // ── Focal persons list ─────────────────────────────────────────────
+  if(!fpList.length){
+    html+='<div class="card" style="text-align:center;padding:24px;color:#888">Koi assignment nahi. "Assign Donors" se shuru karein.</div>';
     return html;
   }
-  html+='<div style="font-size:12px;font-weight:800;color:#1a1a1a;margin-bottom:10px">Focal Persons</div>';
-  fpSet.forEach(function(fpId){
-    var fp=DB.users.find(function(u){return u.id===fpId;})||{name:fpId,id:fpId,photo:null};
-    var myAssignments=DB.focalAssignments.filter(function(a){return a.focalId===fpId;});
-    var myCollected=myAssignments.filter(function(a){return a.collected;}).length;
-    var myPending=myAssignments.length-myCollected;
-    var pct=myAssignments.length?Math.round(myCollected/myAssignments.length*100):0;
-    var init=(fp.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-    var av=fp.photo?'<img src="'+fp.photo+'" style="width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid #1D9E75;flex-shrink:0">':'<div style="width:46px;height:46px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
-    html+='<div style="background:#fff;border-radius:12px;border:1px solid #e8e8e8;padding:12px;margin-bottom:10px;cursor:pointer" onclick="window._fpViewId=\''+fpId+'\';selectTab(\'fpdetail\')">';
+  html+='<div style="font-size:11px;font-weight:800;color:#1a1a1a;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">Focal Persons ('+fpList.length+')</div>';
+  fpList.forEach(function(fp){
+    var user=DB.users.find(function(u){return u.id===fp.focalId;})||{name:fp.focalId,id:fp.focalId,photo:null};
+    var pct=fp.assigned>0?Math.round(fp.collected/fp.assigned*100):0;
+    var init=(user.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+    var av=user.photo?'<img src="'+user.photo+'" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid '+(pct===100?'#1D9E75':pct>50?'#185FA5':'#B47B11')+';flex-shrink:0">':'<div style="width:44px;height:44px;border-radius:50%;background:'+(pct===100?'#E1F5EE':pct>50?'#E6F1FB':'#FAEEDA')+';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:'+(pct===100?'#0F6E56':pct>50?'#185FA5':'#854F0B')+';flex-shrink:0">'+init+'</div>';
+    var subAreaStr=[...fp.subAreas].join(', ');
+    html+='<div style="background:#fff;border-radius:12px;border:1px solid #e8e8e8;padding:12px;margin-bottom:8px;cursor:pointer" onclick="window._fpViewId=\''+fp.focalId+'\';selectTab(\'fpdetail\')">';
     html+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'+av;
-    html+='<div style="flex:1"><div style="font-size:14px;font-weight:800">'+fp.name+'</div>';
-    html+='<div style="font-size:10px;color:#888">'+fp.id+(fp.area?' &bull; '+fp.area:'')+'</div></div>';
-    html+='<div style="text-align:right"><div style="font-size:18px;font-weight:900;color:#0F6E56">'+pct+'%</div><div style="font-size:9px;color:#888">collected</div></div>';
+    html+='<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:800;color:#1a1a1a">'+user.name+'</div>';
+    html+='<div style="font-size:10px;color:#888;margin-top:1px">'+user.id+(user.mobile?' • '+user.mobile:'')+'</div>';
+    html+=(subAreaStr?'<div style="font-size:10px;color:#185FA5;margin-top:2px">📍 '+subAreaStr+'</div>':'');
     html+='</div>';
+    html+='<div style="text-align:center;flex-shrink:0"><div style="font-size:20px;font-weight:900;color:'+(pct===100?'#0F6E56':pct>50?'#185FA5':'#854F0B')+'">'+pct+'%</div><div style="font-size:9px;color:#888">done</div></div></div>';
     // Progress bar
-    html+='<div style="height:7px;background:#f0f0f0;border-radius:4px;overflow:hidden;margin-bottom:6px"><div style="height:100%;background:linear-gradient(90deg,#0F6E56,#1D9E75);width:'+pct+'%;border-radius:4px"></div></div>';
-    html+='<div style="display:flex;gap:12px;font-size:11px">';
-    html+='<span style="color:#1a1a1a;font-weight:700">'+myAssignments.length+' donors</span>';
-    html+='<span style="color:#0F6E56">&#10003; '+myCollected+' collected</span>';
-    html+='<span style="color:#E24B4A">&#9711; '+myPending+' pending</span>';
+    html+='<div style="height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden;margin-bottom:6px">';
+    html+='<div style="height:100%;background:'+(pct===100?'linear-gradient(90deg,#0F6E56,#1D9E75)':pct>50?'linear-gradient(90deg,#185FA5,#378ADD)':'linear-gradient(90deg,#E24B4A,#F07B2A)')+';border-radius:4px;width:'+pct+'%"></div></div>';
+    // Counts row
+    html+='<div style="display:flex;gap:16px;font-size:11px">';
+    html+='<span style="color:#1a1a1a;font-weight:700">'+fp.assigned+' total</span>';
+    html+='<span style="color:#0F6E56">✓ '+fp.collected+' collected</span>';
+    html+='<span style="color:#E24B4A">⦿ '+fp.pending+' pending</span>';
     html+='</div></div>';
   });
   return html;
-};
+};;
 
 // Assign donors tab
 T.fpassign=function(){
@@ -7769,8 +7869,22 @@ T.fpassign=function(){
     html+='<h3 style="margin-bottom:4px">Step 2: Sub-Area / Zone</h3>';
     html+='<p style="font-size:11px;color:#888;margin-bottom:8px"><b>'+fp2.name+'</b> ko kaunsa sub-area deal karna hai?</p>';
     html+='<div style="font-size:12px;font-weight:700;margin-bottom:6px">Naya sub-area type karein:</div>';
+    // Collect all sub-areas from donors + existing assignments
+    var allSubAreas=[...new Set([
+      ...DB.donors.map(function(d){return d.subArea;}).filter(Boolean),
+      ...DB.focalAssignments.map(function(a){return a.subArea;}).filter(Boolean)
+    ])].sort();
     html+='<div class="inp-wrap" style="margin-bottom:10px"><span class="inp-icon">&#128205;</span>';
-    html+='<input type="text" id="fpSubAreaInput" value="'+fpSubArea.replace(/"/g,'&quot;')+'" placeholder="e.g. Shop Keepers, Street 1, Block B, Gali 3..." style="font-size:13px"></div>';
+    if(allSubAreas.length){
+      html+='<select id="fpSubAreaInput" style="font-size:13px">';
+      html+='<option value="">-- Sub-Area select karein --</option>';
+      allSubAreas.forEach(function(sa){html+='<option value="'+sa.replace(/"/g,'&quot;')+'"'+(fpSubArea===sa?' selected':'')+'>'+sa+'</option>';});
+      html+='</select>';
+    } else {
+      html+='<input type="text" id="fpSubAreaInput" value="'+fpSubArea.replace(/"/g,'&quot;')+'" placeholder="e.g. Gali 3, Block B..." style="font-size:13px">';
+    }
+    html+='</div>';
+
     // Show existing sub-areas as quick select
     var existingSubAreas=[...new Set(DB.focalAssignments.map(function(a){return a.subArea;}).filter(Boolean))];
     if(existingSubAreas.length){
@@ -10852,9 +10966,9 @@ T.fpassign=function(){
 
 // Report tab
 T.fpreport=function(){
-  if(!['admin','manager','developer'].includes(currentRole))
+  if(!['admin','manager','developer','focal'].includes(currentRole))
     return '<div class="card"><p style="text-align:center;color:#888;padding:20px">⛔ Access Denied.</p></div>';
-  var fpFilter=window._fpReportFilter||'';
+  var fpFilter=currentRole==='focal'?currentUser.id:(window._fpReportFilter||'');
   var fps=DB.users.filter(function(u){return ['admin','manager','developer'].includes(u.role);});
   var html='<div class="card"><h3 style="margin-bottom:10px">Focal Person Report</h3>';
   html+='<div class="inp-wrap" style="margin-bottom:12px"><span class="inp-icon">&#128100;</span>';
@@ -10902,9 +11016,11 @@ T.fpreport=function(){
 
 // Focal person detail view
 T.fpdetail=function(){
-  if(!['admin','manager','developer'].includes(currentRole))
+  if(!['admin','manager','developer','focal'].includes(currentRole))
     return '<div class="card"><p style="text-align:center;color:#888;padding:20px">⛔ Access Denied.</p></div>';
-  var fpId=window._fpViewId||'';
+  // Focal person sees their own assignments automatically
+  if(currentRole==='focal'&&!window._fpViewId)window._fpViewId=currentUser.id;
+  var fpId=window._fpViewId||currentUser.id||'';
   if(!fpId) return '<div class="card"><p style="text-align:center;padding:20px;color:#888">No focal person selected.</p></div>';
   var fp=DB.users.find(function(u){return u.id===fpId;})||{name:fpId,id:fpId,photo:null};
   var list=DB.focalAssignments.filter(function(a){return a.focalId===fpId;});
@@ -11104,6 +11220,8 @@ T.updatecategory=function(){
     {icon:'💼', label:'Professions / پیشے', desc:'Donor professions manage karein', tab:'professions', roles:['developer']},
     {icon:'📂', label:'Expense Categories', desc:'Expense categories add/edit karein', tab:'expcategories', roles:['admin','manager','developer']},
     {icon:'⚙️', label:'Entry Manager', desc:'Entries date-wise manage karein', tab:'entrymanager', roles:['developer']},
+    {icon:'✏️', label:'Rename AddedBy', desc:'Donor entries ka AddedBy rename karein', tab:'renameaddedby', roles:['developer']},
+    {icon:'⚠️', label:'Update Unknown', desc:'Donors bina area wale update karein', tab:'unknowndonors', roles:['admin','manager','developer']},
   ];
   var html='<div class="card"><h3>Update Categories</h3>';
   html+='<p style="font-size:12px;color:#888;margin-bottom:14px">Section select karein</p>';
@@ -11217,9 +11335,9 @@ T.wreminder=function(){
   var org=ORG_CONFIG.name||'Falah e Qabristan Committee';
   var bankList=[];
   if(ORG_CONFIG.bankAccounts&&ORG_CONFIG.bankAccounts.length>0){
-    ORG_CONFIG.bankAccounts.forEach(function(b){bankList.push(b.bank+': '+b.number);});
+    ORG_CONFIG.bankAccounts.forEach(function(b){bankList.push((b.title||b.bank)+'\n'+b.bank+'\n'+b.number);});
   }
-  var bankStr=bankList.join(' | ');
+  var bankStr=bankList.join('\n\n');
 
   // Hidden list
   var hiddenRaw={};
@@ -11324,7 +11442,10 @@ T.wreminder=function(){
     var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
     var av=d.photo?'<img src="'+d.photo+'" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1.5px solid #E1F5EE;flex-shrink:0">':'<div style="width:42px;height:42px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
     var mob=(d.mobile||'').replace(/[^0-9]/g,'');
-    var msg='\uD83C\uDF3F \u0628\u0633\u0645 \u0627\u0644\u0644\u06c1 \u0627\u0644\u0631\u062d\u0645\u0646 \u0627\u0644\u0631\u062d\u06cc\u0645 \uD83C\uDF3F\n\n\u0622\u0626\u06cc\u06ba \u06c1\u0645 \u0633\u0628 \u0645\u0644 \u06a9\u0631 \u0642\u0628\u0631\u0633\u062a\u0627\u0646 \u06a9\u0648 \u0628\u06c1\u062a\u0631 \u0628\u0646\u0627\u0626\u06cc\u06ba\u06d4\n\n\u0645\u062d\u062a\u0631\u0645 *'+d.name+'* \u0635\u0627\u062d\u0628!\n\u0622\u067e \u06a9\u0627 \u0627\u0633 \u0645\u0627\u06c1 \u06a9\u0627 \u0641\u0646\u0688 \u062a\u0627\u062d\u0627\u0644 *'+org+'* \u06a9\u0648 \u0645\u0648\u0635\u0648\u0644 \u0646\u06c1\u06cc\u06ba \u06c1\u0648 \u0633\u06a9\u0627\u06d4 \u0628\u0631\u0627\u06c1 \u06a9\u0631\u0645 \u062c\u0644\u062f \u0627\u0632 \u062c\u0644\u062f \u0627\u062f\u0627 \u0641\u0631\u0645\u0627\u0626\u06cc\u06ba\u06d4\n\u0635\u062f\u0642\u06c1 \u062c\u0627\u0631\u06cc\u06c1 \u06a9\u0627 \u06cc\u06c1 \u0633\u0641\u0631 \u062c\u0627\u0631\u06cc \u0631\u06a9\u06be\u06cc\u06ba\u06d4'+(bankStr?'\n\n\uD83C\uDFE6 *Account:* '+bankStr:'')+'\n\n\u062c\u0632\u0627\u06a9\u0645 \u0627\u0644\u0644\u06c1 \u062e\u06cc\u0631\u0627\u064b \u06a9\u062b\u06cc\u0631\u0627\u064b \uD83E\uDD32';
+    var _org=ORG_CONFIG.name||'Falah e Qabristan Committee';
+    var _tmpl=ORG_CONFIG.waMessage&&ORG_CONFIG.waMessage.trim()?ORG_CONFIG.waMessage:'السلام علیکم پیارے بھائی 🌿\n\nامید ہے آپ خیریت سے ہوں گے۔\n\nآپ کا ہمیشہ قبرستان کے معاملات میں بھرپور تعاون — چاہے مالی ہو یا ذاتی محنت — قابل۔ قدر اور ہمارے لیے باعث۔ حوصلہ رہا ہے۔ اللہ تعالیٰ آپ کو اس کا بہترین اجر عطا فرمائے۔\n\nمحترم *{name}* صاحب! اس ماہ آپ کی طرف سے فنڈ ابھی تک موصول نہیں ہو سکا۔ آپ سے مؤدبانہ گزارش ہے کہ براہ۔ کرم اس ماہ کا فنڈ جلد از جلد *{org}* کو ارسال فرما دیں، تاکہ جاری کام بغیر کسی رکاوٹ کے بہتر طریقے سے مکمل کیے جا سکیں۔\n\nآپ کا چھوٹا سا تعاون بھی ایک بڑی نیکی اور صدقہ جاریہ ہے، جو نہ صرف اس دنیا بلکہ آخرت میں بھی آپ کے لیے باعث۔ اجر بنے گا۔\n\nاللہ تعالیٰ ہم سب کو نیک کاموں میں بڑھ چڑھ کر حصہ لینے کی توفیق عطا فرمائے۔ آمین 🤲';
+    var msg=_tmpl.replace(/\{name\}/g,d.name).replace(/\{org\}/g,_org)+(bankStr?'\n\n'+bankStr:'');
+
     var waUrl=mob?'whatsapp://send?phone=92'+mob.replace(/^0/,'')+'&text='+encodeURIComponent(msg):'';
     var waFallback=mob?'https://api.whatsapp.com/send?phone=92'+mob.replace(/^0/,'')+'&text='+encodeURIComponent(msg):'';
     var appUser=DB.users.find(function(u){return u.mobile&&d.mobile&&u.mobile.replace(/[^0-9]/g,'')===mob;});
@@ -13249,7 +13370,7 @@ function getMenuConfig(){
        {icon:'💡', label:'Ideas', tab:'suggestion'},
        {icon:'🔔', label:'Notifications', tab:'notifications'},
        // Row 3: Committee, Supporting Staff, History, Account, Contact Us
-       {icon:'🎯', label:'Committee', tab:'committeemembers'},
+       
        {icon:'🧑', label:'Staff', tab:'supportingstaff'},
        {icon:'📖', label:'History', tab:'history'},
        {icon:'🏦', label:'Account', tab:'account'},
@@ -13257,11 +13378,14 @@ function getMenuConfig(){
      ];
   if(['admin','manager','developer'].includes(currentRole)){
     var _uc=DB.donors.filter(function(d){return !d.area||!d.area.trim();}).length;
-    homeItems.push({icon:'⚠️',label:'Update Unknown'+(_uc>0?' ('+_uc+')':''),tab:'unknowndonors'});
     var _mi=DB.donors.filter(function(d){return !d.area||!d.bloodGroup||!d.profession;}).length;
-    homeItems.push({icon:'📋',label:'Missing Info'+(_mi>0?' ('+_mi+')':''),tab:'missinginfo'});
     homeItems.push({icon:'📣', label:'WA Reminder', tab:'wreminder'});
     homeItems.push({icon:'👥', label:'Focal Person', tab:'focalperson'});
+  }
+  if(currentRole==='focal'){
+    homeItems.push({icon:'👥', label:'My Donors', tab:'fpdetail'});
+    homeItems.push({icon:'📊', label:'My Report', tab:'fpreport'});
+    homeItems.push({icon:'📣', label:'WA Remind', tab:'wreminder'});
   }
   if(currentRole!=='user'){
     homeItems.push(
@@ -13324,37 +13448,42 @@ function getMenuConfig(){
   settings.items.push({icon:'👤', label:'My Profile / پروفائل', tab:'profile'});
   if(['admin','manager','developer'].includes(currentRole)){
     settings.items.push(
-      {icon:'🏢', label:'Organization / ادارہ', tab:'orgsettings'},
+      
       {icon:'🏛️', label:'About Us', tab:'aboutus'},
       {icon:'🔧', label:'Update Categories', tab:'updatecategory'},
-      {icon:'🏘️', label:'Areas / علاقے', tab:'areas'},
-      {icon:'📂', label:'Exp Categories', tab:'expcategories'},
       {icon:'👥', label:'Focal Person', tab:'focalperson'}
     );
   }
   if(currentRole==='developer'){
     settings.items.push(
-      {icon:'💼', label:'Professions / پیشہ', tab:'professions'},
+      
       {icon:'✅', label:'Approvals / منظوری', tab:'approvals', badge: DB.pendingApprovals.length},
       {icon:'🔒', label:'Login Mgmt / لاگ ان', tab:'lockuser'},
       // Users List hidden
       // moved to Audit Department
       {icon:'🗄️', label:'Data Manager', tab:'datamanager'},
-      {icon:'✏️', label:'Rename AddedBy', tab:'renameaddedby'},
+      
       {icon:'📋', label:'Login Report', tab:'loginreport'},
       {icon:'📊', label:'Live Dashboard', tab:'liveboard'},
       {icon:'📢', label:'Audit Department', tab:'auditdept'},
-      {icon:'🎯', label:'Committee Members', tab:'committeemembers'},
-      {icon:'👤', label:'Supporting Staff', tab:'supportingstaff'},
+      
+      
       // moved to Audit Department
       // moved to Audit Department
       // moved to Audit Department
       // moved to Audit Department
       // moved to Audit Department
-      ...(currentRole==='developer'?[{icon:'⚙️', label:'Entry Manager', tab:'entrymanager'}]:[]),
+      
     );
   }
 
+  // Focal Person: add their assignments tabs
+  if(currentRole==='focal'){
+    settings.items.push(
+      {icon:'👥', label:'Focal Assignments', tab:'fpdetail'},
+      {icon:'📊', label:'My Report', tab:'fpreport'}
+    );
+  }
   // Ensure all users have profile in settings
   if(!settings.items.find(x=>x.tab==='profile')){
     settings.items.push({icon:'👤', label:'My Profile / پروفائل', tab:'profile'});

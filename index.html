@@ -866,7 +866,8 @@ function showConfirm(opts){
   var titleUr=opts.titleUr||'تصدیق کریں';
   var rows=opts.rows||[];
   var confirmText=opts.confirmText||'✅ Confirm';
-  var onConfirm=opts.onConfirm||function(){};
+  // Store callback globally so onclick string can access it reliably
+  window._showConfirmCb=opts.onConfirm||function(){};
   var rowsHtml=rows.map(function(r){
     if(!r.value&&r.value!==0) return '';
     return '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px solid #e0f5e9">'
@@ -881,14 +882,9 @@ function showConfirm(opts){
     +(rowsHtml?'<div style="background:#f0fff8;border:1px solid #c8f0e0;border-radius:12px;padding:10px 14px;text-align:left;margin-bottom:14px">'+rowsHtml+'</div>':'')
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
     +'<button onclick="closeCustomPopup()" style="padding:12px;background:#f5f5f5;border:1px solid #ddd;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;color:#555">✕ Cancel</button>'
-    +'<button id="_confirmBtn" style="padding:12px;background:linear-gradient(135deg,#0F6E56,#1D9E75);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">'+confirmText+'</button>'
+    +'<button onclick="closeCustomPopup();if(window._showConfirmCb){var cb=window._showConfirmCb;window._showConfirmCb=null;cb();}" style="padding:12px;background:linear-gradient(135deg,#0F6E56,#1D9E75);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">'+confirmText+'</button>'
     +'</div></div>';
   showCustomPopup(html);
-  // Attach confirm action after DOM renders
-  setTimeout(function(){
-    var btn=document.getElementById('_confirmBtn');
-    if(btn) btn.onclick=function(){closeCustomPopup();onConfirm();};
-  },50);
 }
 // ─────────────────────────────────────────────────────────────────────
 var editingContext={};
@@ -11183,11 +11179,17 @@ function _fdDashboard(){
     var myPending=myDonorIds.length-myCollected;
     var pct=myDonorIds.length?Math.round(myCollected/myDonorIds.length*100):0;
     var init=(fr.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+    var frPerson=DB.users.find(function(u){return u.id===fr.personId;})||DB.donors.find(function(d){return d.id===fr.personId;});
+    var frPhoto=frPerson&&frPerson.photo?frPerson.photo:null;
     html+='<div onclick="window._fdTab=\'list\';window._fdViewId=\''+fr.id+'\';renderTab(\'fundraisingdept\')" style="background:#f9f9f9;border:1px solid #e8e8e8;border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer">';
     html+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">';
-    html+='<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#0F6E56,#185FA5);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0">'+init+'</div>';
+    if(frPhoto){
+      html+='<img src="'+frPhoto+'" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #1D9E75;flex-shrink:0">';
+    } else {
+      html+='<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#0F6E56,#185FA5);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0">'+init+'</div>';
+    }
     html+='<div style="flex:1"><div style="font-size:13px;font-weight:700">'+fr.name+'</div>';
-    html+='<div style="font-size:10px;color:#888;margin-top:1px">'+fr.personType+' &bull; '+(fr.area||'—')+(fr.subArea?' / '+fr.subArea:'')+'</div></div>';
+    html+='<div style="font-size:10px;color:#888;margin-top:1px">'+fr.personType+' &bull; '+(fr.area||'\u2014')+(fr.subArea?' / '+fr.subArea:'')+'</div></div>';
     html+='<div style="text-align:right"><div style="font-size:14px;font-weight:800;color:#0F6E56">'+pct+'%</div><div style="font-size:10px;color:#888">collected</div></div>';
     html+='</div>';
     html+='<div style="background:#e8e8e8;border-radius:20px;height:6px;overflow:hidden"><div style="background:linear-gradient(90deg,#0F6E56,#1D9E75);height:100%;width:'+pct+'%;border-radius:20px;transition:width 0.5s"></div></div>';
@@ -11232,15 +11234,21 @@ function _fdAssign(){
   html+='</div>';
 
   // Existing fundraisers quick list
+  // Existing fundraisers list with photo + replace (developer)
   if(DB.fundraisers.length){
     html+='<div style="font-size:12px;font-weight:800;color:#1a1a1a;margin-bottom:8px;margin-top:4px">Current Fundraisers ('+DB.fundraisers.length+')</div>';
     DB.fundraisers.forEach(function(fr){
       var links=DB.fundraisingLinks.filter(function(l){return l.fundraiserId===fr.id;}).length;
-      html+='<div style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:#f9f9f9;border-radius:10px;border:1px solid #e8e8e8;margin-bottom:6px">';
+      var frPerson=DB.users.find(function(u){return u.id===fr.personId;})||DB.donors.find(function(d){return d.id===fr.personId;});
+      var frPhoto=frPerson&&frPerson.photo?frPerson.photo:null;
       var init=(fr.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-      html+='<div style="width:34px;height:34px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
+      html+='<div style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:#f9f9f9;border-radius:10px;border:1px solid #e8e8e8;margin-bottom:6px">';
+      html+=(frPhoto?'<img src="'+frPhoto+'" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid #1D9E75;flex-shrink:0">':'<div style="width:38px;height:38px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>');
       html+='<div style="flex:1"><div style="font-size:12px;font-weight:700">'+fr.name+'</div>';
-      html+='<div style="font-size:10px;color:#888">'+(fr.area||'—')+' / '+(fr.subArea||'—')+' &bull; '+links+' donors</div></div>';
+      html+='<div style="font-size:10px;color:#888">'+(fr.area||'\u2014')+' / '+(fr.subArea||'\u2014')+' &bull; '+links+' donors</div></div>';
+      if(currentRole==='developer'){
+        html+='<button onclick="_fdReplaceRaiserPrompt(\''+fr.id+'\')" style="background:#E6F1FB;border:1px solid #B5D4F4;color:#185FA5;border-radius:8px;padding:4px 8px;font-size:10px;font-weight:700;cursor:pointer;margin-right:4px">&#128260; Replace</button>';
+      }
       html+='<button onclick="_fdRemoveRaiser(\''+fr.id+'\')" style="background:#FFF0F0;border:1px solid #FCBFBF;color:#E24B4A;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer">Remove</button>';
       html+='</div>';
     });
@@ -11340,6 +11348,56 @@ async function _fdSaveRaiser(){
   });
   saveLocalCache();
   showPopup('✅','Fundraiser Added',fr.name+' added! Auto-linked '+autoLinked+' donors by sub-area.');
+  renderTab('fundraisingdept');
+}
+
+// --- REPLACE FUNDRAISER (developer only) ---
+function _fdReplaceRaiserPrompt(frId){
+  var fr=DB.fundraisers.find(function(f){return f.id===frId;});
+  if(!fr)return;
+  var links=DB.fundraisingLinks.filter(function(l){return l.fundraiserId===frId;}).length;
+  // Build people list excluding existing fundraisers
+  var allPeople=[];
+  DB.users.filter(function(u){return u.approved&&u.role!=='developer';}).forEach(function(u){
+    if(!DB.fundraisers.find(function(f){return f.personId===u.id&&f.id!==frId;}))
+      allPeople.push({id:u.id,name:u.name,type:'user'});
+  });
+  DB.donors.forEach(function(d){
+    if(!allPeople.find(function(p){return p.id===d.id;})&&!DB.fundraisers.find(function(f){return f.personId===d.id&&f.id!==frId;}))
+      allPeople.push({id:d.id,name:d.name,type:'donor'});
+  });
+  var opts=allPeople.map(function(p){return '<option value="'+p.id+'|'+p.type+'|'+p.name.replace(/"/g,'')+'">'+p.name+' ('+p.type+')</option>';}).join('');
+  var html='<div style="background:#fff;border-radius:16px;padding:20px;max-width:320px;width:90vw">'
+    +'<div style="font-size:28px;text-align:center;margin-bottom:8px">🔄</div>'
+    +'<div style="font-size:15px;font-weight:800;color:#185FA5;text-align:center;margin-bottom:4px">Replace Fundraiser</div>'
+    +'<div style="font-size:11px;color:#888;text-align:center;margin-bottom:14px">'+fr.name+' ke '+links+' donor links wese rahen ge</div>'
+    +'<div style="background:#E6F1FB;border-radius:8px;padding:10px;margin-bottom:12px;font-size:12px;color:#185FA5">ℹ️ Sirf fundraiser ka naam/person replace hoga — tamam donor links unchanged rahein ge.</div>'
+    +'<label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:6px">New Fundraiser Select karein:</label>'
+    +'<select id="fdReplaceSelect" style="width:100%;padding:10px;border:1.5px solid #185FA5;border-radius:8px;font-size:12px;margin-bottom:14px"><option value="">-- Select --</option>'+opts+'</select>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+    +'<button onclick="closeCustomPopup()" style="padding:11px;background:#f5f5f5;border:1px solid #ddd;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">Cancel</button>'
+    +'<button onclick="closeCustomPopup();_fdDoReplace(\''+frId+'\')" style="padding:11px;background:#185FA5;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">🔄 Replace</button>'
+    +'</div></div>';
+  showCustomPopup(html);
+}
+async function _fdDoReplace(frId){
+  var sel=(document.getElementById('fdReplaceSelect')||{value:''}).value;
+  if(!sel){showPopup('⚠️','Required','Nayi person select karein.');return;}
+  var parts=sel.split('|');
+  var newPersonId=parts[0],newPersonType=parts[1],newPersonName=parts[2];
+  var newPerson=DB.users.find(function(u){return u.id===newPersonId;})||DB.donors.find(function(d){return d.id===newPersonId;});
+  if(!newPerson){showPopup('⚠️','Error','Person nahi mila.');return;}
+  var fr=DB.fundraisers.find(function(f){return f.id===frId;});
+  if(!fr)return;
+  var oldName=fr.name;
+  // Replace person details only — keep id, links, area, subArea
+  fr.personId=newPersonId;
+  fr.personType=newPersonType;
+  fr.name=newPerson.name;
+  fr.mobile=newPerson.mobile||'';
+  await FS.save('fundraisers',fr.id,fr);
+  saveLocalCache();
+  showPopup('✅','Replaced',oldName+' ko '+newPerson.name+' se replace kar diya. '+DB.fundraisingLinks.filter(function(l){return l.fundraiserId===frId;}).length+' donor links unchanged hain.');
   renderTab('fundraisingdept');
 }
 
@@ -11458,8 +11516,11 @@ function _fdBuildSubList(q,areaFilter,linked){
     html+='<div style="font-size:10px;color:#888">'+e.id+' &bull; '+(e.area||'—')+'</div>';
     if(myFr)html+='<div style="font-size:10px;color:#0F6E56;font-weight:600">🔗 '+myFr.name+'</div>';
     html+='</div>';
-    html+='<input type="text" data-eid="'+e.id+'" data-etype="'+e.type+'" id="fdsa_'+e.id+'" value="'+(e.subArea||'')+'" placeholder="Sub Area" onblur="_fdSaveSubArea(this)" style="width:90px;padding:5px 7px;border:1.5px solid '+(isLinked?'#1D9E75':'#ddd')+';border-radius:7px;font-size:11px;flex-shrink:0">';
-    if(isLinked)html+='<button onclick="_fdUnlink(\''+e.id+'\')" title="Unlink" style="background:#FFF0F0;border:1px solid #FCBFBF;color:#E24B4A;border-radius:7px;padding:4px 6px;font-size:10px;cursor:pointer;flex-shrink:0">✕</button>';
+    html+='<div style="display:flex;gap:4px;align-items:center;flex-shrink:0">';
+    html+='<input type="text" data-eid="'+e.id+'" data-etype="'+e.type+'" id="fdsa_'+e.id+'" value="'+(e.subArea||'')+'" placeholder="Sub Area" autocomplete="off" style="width:80px;padding:5px 7px;border:1.5px solid '+(isLinked?'#1D9E75':'#ddd')+';border-radius:7px;font-size:11px">';
+    html+='<button onclick="_fdSaveSubArea(document.getElementById(\'fdsa_'+e.id+'\'))" style="background:#0F6E56;color:#fff;border:none;border-radius:7px;padding:5px 7px;font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0">&#10003;</button>';
+    if(isLinked)html+='<button onclick="_fdUnlink(\''+e.id+'\')" title="Unlink" style="background:#FFF0F0;border:1px solid #FCBFBF;color:#E24B4A;border-radius:7px;padding:5px 6px;font-size:10px;cursor:pointer;flex-shrink:0">&#10005;</button>';
+    html+='</div>';
     html+='</div>';
   });
   if(allEntries.length>50) html+='<div style="font-size:11px;color:#aaa;text-align:center;padding:8px">Showing first 50 — refine with filters</div>';
@@ -12181,7 +12242,11 @@ function showSuperSlip(donorId){
   var currentAmt=last5.length>0?last5[0].amount:0;
   var receiveDate=last5.length>0?last5[0].date:today();
   var initials=(donor.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-  var orgLogo=ORG_CONFIG&&ORG_CONFIG.logo?'<img src="'+ORG_CONFIG.logo+'" style="width:46px;height:46px;object-fit:contain;margin-bottom:5px">':'<div style="font-size:26px;margin-bottom:4px">🪴</div>';
+  var _sLogo=ORG_CONFIG&&ORG_CONFIG.logo?ORG_CONFIG.logo:null;
+  if(_sLogo==='__local__') _sLogo=localStorage.getItem('fq_org_logo')||null;
+  var orgLogo=_sLogo
+    ?'<div style="width:64px;height:64px;border-radius:50%;background:#fff;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;overflow:hidden;border:3px solid rgba(255,255,255,0.4);box-shadow:0 2px 8px rgba(0,0,0,0.2)"><img src="'+_sLogo+'" style="width:100%;height:100%;object-fit:contain;padding:4px"></div>'
+    :'<div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,0.15);margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:28px">🕌</div>';
   var orgName2=(ORG_CONFIG&&ORG_CONFIG.name)||'Falah e Qabristan';
 
   var html='<div style="position:relative;width:90vw;max-width:400px">';

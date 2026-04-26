@@ -244,6 +244,9 @@ input[type=file]{padding:6px}
 <!-- Firebase CDN -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<!-- Google Drive API -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://apis.google.com/js/api.js" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <!-- PDF & Image Export — inline -->
@@ -433,14 +436,7 @@ input[type=file]{padding:6px}
         </div>
         <span style="color:#aaa;font-size:18px">→</span>
       </button>
-       <button type="button" class="role-select-btn" onclick="openReg('focal')" style="border-color:#7C3AED">
-         <div class="role-dot" style="background:#7C3AED"></div>
-         <div style="flex:1">
-           <div style="font-size:14px;font-weight:700;color:#5B21B6">Focal Person | فوکل پرسن</div>
-           <div style="font-size:11px;color:#888;margin-top:2px">Direct login — no approval needed | فوری لاگ ان</div>
-         </div>
-         <span style="color:#7C3AED;font-size:18px">→</span>
-       </button>
+
     </div>
     <div class="page-footer"><div class="footer-credit">Designed By: <a href="tel:03009084228">Asif Kanwal — 0300-9084228</a></div>
       <div class="footer-credit">Developed By: <a href="tel:03184516464">Mubeen Ahmad — 0318-4516464</a></div></div>
@@ -680,11 +676,12 @@ async function loadAllData(){
   // Load from local cache first (instant offline display)
   loadLocalCache();
   try{
-    const [u,pa,don,dec,donations,exp,trf,log,profs,sugg,fsNotifs,focalData]=await Promise.all([
+    const [u,pa,don,dec,donations,exp,trf,log,profs,sugg,fsNotifs,fsRaisers,fsLinks]=await Promise.all([
       FS.loadAll('users'),FS.loadAll('pendingApprovals'),FS.loadAll('donors'),
       FS.loadAll('deceased'),FS.loadAll('donations'),FS.loadAll('expenses'),
       FS.loadAll('transfers'),FS.loadAll('auditLog'),FS.loadAll('professions'),
-      FS.loadAll('suggestions'),FS.loadAll('notifications'),FS.loadAll('focalAssignments')
+      FS.loadAll('suggestions'),FS.loadAll('notifications'),
+      FS.loadAll('fundraisers'),FS.loadAll('fundraisingLinks')
     ]);
     if(u!==null&&u.length>0)DB.users=u;
     // Permanent developer: ID 10009
@@ -709,7 +706,8 @@ async function loadAllData(){
     else if(trf!==null&&DB.transfers.length===0)DB.transfers=trf;
     if(log!==null)DB.auditLog=log||[];
     if(sugg!==null)DB.suggestions=sugg||[];
-    if(focalData!==null)DB.focalAssignments=focalData||[];
+    if(fsRaisers!==null)DB.fundraisers=fsRaisers||[];
+    if(fsLinks!==null)DB.fundraisingLinks=fsLinks||[];
     // Store raw Firestore notifications — will be filtered after session restore
     window._rawFsNotifs=fsNotifs||[];
     // Load saved areas
@@ -770,7 +768,9 @@ const DB={
   expenses:[],
   transfers:[],
   auditLog:[],
-  suggestions:[]
+  suggestions:[],
+  fundraisers:[],
+  fundraisingLinks:[]
 };
 
 var currentUser=null,currentRole=null,pendingRegRole=null,txnCounter=1,expBillCounter=0,donCounter=0;
@@ -779,7 +779,7 @@ var currentUser=null,currentRole=null,pendingRegRole=null,txnCounter=1,expBillCo
 const CACHE_KEY='falah_db_cache';
 function saveLocalCache(){
   try{
-    var data=JSON.stringify({users:DB.users,donors:DB.donors,deceased:DB.deceased,donations:DB.donations,expenses:DB.expenses,transfers:DB.transfers,auditLog:DB.auditLog,suggestions:DB.suggestions,focalAssignments:DB.focalAssignments,orgConfig:ORG_CONFIG,ts:Date.now()});
+    var data=JSON.stringify({users:DB.users,donors:DB.donors,deceased:DB.deceased,donations:DB.donations,expenses:DB.expenses,transfers:DB.transfers,auditLog:DB.auditLog,suggestions:DB.suggestions,fundraisers:DB.fundraisers,fundraisingLinks:DB.fundraisingLinks,orgConfig:ORG_CONFIG,ts:Date.now()});
     localStorage.setItem(CACHE_KEY,data);
   }catch(e){
     // QuotaExceededError - save minimal cache (donors+users only, no full history)
@@ -797,7 +797,7 @@ function loadLocalCache(){try{const d=JSON.parse(localStorage.getItem(CACHE_KEY)
   // Empty means quota exceeded truncation occurred - wait for Firebase
   if(d.donations&&d.donations.length>0)DB.donations=d.donations;
   if(d.expenses&&d.expenses.length>0)DB.expenses=d.expenses;
-  DB.transfers=d.transfers||[];DB.auditLog=d.auditLog||[];DB.suggestions=d.suggestions||[];DB.focalAssignments=d.focalAssignments||[];if(d.orgConfig)Object.assign(ORG_CONFIG,d.orgConfig);
+  DB.transfers=d.transfers||[];DB.auditLog=d.auditLog||[];DB.suggestions=d.suggestions||[];DB.fundraisers=d.fundraisers||[];DB.fundraisingLinks=d.fundraisingLinks||[];if(d.orgConfig)Object.assign(ORG_CONFIG,d.orgConfig);
   var _u10009=DB.users.find(function(x){return x.id==='10009';});if(_u10009)_u10009.role='developer';return true;}return false;}catch(e){return false;}}
 
 
@@ -813,8 +813,7 @@ var ORG_CONFIG={
   bankAccounts:[],
   contactNumbers:[],
   committeeMembers:[],
-  supportingStaff:[],
-  focalPersons:[]
+  supportingStaff:[]
 };
 function orgName(){return ORG_CONFIG.name||'Falah e Qabristan';}
 function orgNameUrdu(){return ORG_CONFIG.nameUrdu||'فلاح قبرستان';}
@@ -1110,7 +1109,7 @@ function openReg(role){
   pendingRegRole=role;
   document.getElementById('regTitle').textContent=role.charAt(0).toUpperCase()+role.slice(1)+' Registration';
   const n=document.getElementById('regNotice');
-  const msgs={user:'✅ Direct login — no approval required.',admin:'⚠️ Admin account requires developer approval.',manager:'⚠️ Manager account requires developer approval.',developer:'⚙️ Developer account is approved via master key.',focal:'🌿 Focal Person — direct login, no approval needed.'};
+  const msgs={user:'✅ Direct login — no approval required.',admin:'⚠️ Admin account requires developer approval.',manager:'⚠️ Manager account requires developer approval.',developer:'⚙️ Developer account is approved via master key.'};
   const cls={user:'success',admin:'warning',manager:'warning',developer:'info'};
   n.className='info-box '+cls[role];n.textContent=msgs[role];n.style.display='block';
   document.getElementById('regSubtitle').textContent=role==='user'?'Direct login — no approval needed | براہ راست لاگ ان':'Login after developer approval | منظوری کے بعد لاگ ان';
@@ -1202,19 +1201,12 @@ function submitReg(){
 function finishReg(name,mobile,cnic,password,photo,signature){
   const area=document.getElementById('regArea').value;
   const profession=document.getElementById('regProfession').value;
-  if(pendingRegRole==='user'||pendingRegRole==='focal'){
+  if(pendingRegRole==='user'){
     // If donor with same mobile exists, use donor's ID
     const existingDonor=DB.donors.find(d=>normMob(d.mobile)===normMob(mobile));
     const nid=existingDonor?existingDonor.id:nextAllId();
     const regBg=(document.getElementById('regBloodGroup')||{value:''}).value;
-    const nu={id:nid,name,cnic,mobile,password,area,profession,bloodGroup:regBg,role:pendingRegRole==='focal'?'focal':'user',approved:pendingRegRole==='user',locked:false,photo,signature:null};
-    if(pendingRegRole==='focal'){
-      // Focal needs approval
-      const pa2={id:'PA'+Date.now(),name,cnic,mobile,password,area,profession,bloodGroup:regBg,role:'focal',photo,signature:null};
-      DB.pendingApprovals.push(pa2);FS.save('pendingApprovals',pa2.id,pa2);
-      showPopup('📤','Request Submitted','Focal Person account bana di. Admin/Manager/Developer se approval len. Approval ke baad login karein.','OK',()=>showScreen('loginScreen'));
-      return;
-    }
+    const nu={id:nid,name,cnic,mobile,password,area,profession,bloodGroup:regBg,role:'user',approved:pendingRegRole==='user',locked:false,photo,signature:null};
     DB.users.push(nu);
     FS.save('users',nid,nu);
     try{saveLocalCache();}catch(e){}
@@ -1316,34 +1308,6 @@ function renderLoginExtras(){
         </div>
         <div style="font-size:12px;color:#1D9E75;font-weight:600">Call ☎️</div>
       </a>`).join('');
-  }
-  // Focal Person List (visible to all)
-  const cfl=document.getElementById('contactFocalList');
-  if(cfl){
-    const fpIds=[...new Set(DB.focalAssignments.map(function(a){return a.focalId;}))];
-    if(fpIds.length){
-      let fpHtml='<div style="margin-top:12px"><div style="font-size:13px;font-weight:800;color:#185FA5;margin-bottom:8px">&#128101; Focal Persons</div>';
-      fpIds.forEach(function(fpId){
-        const fp=DB.users.find(function(u){return u.id===fpId;})||{name:fpId,id:fpId,photo:null};
-        const assigned=DB.focalAssignments.filter(function(a){return a.focalId===fpId;});
-        const collected=assigned.filter(function(a){return a.collected;}).length;
-        const init=(fp.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-        const subAreas=[...new Set(assigned.map(function(a){return a.subArea;}).filter(Boolean))];
-        fpHtml+=`<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#f0f7ff;border-radius:10px;border:1px solid #B5D4F4;margin-bottom:8px">`;
-        fpHtml+=fp.photo?`<img src="${fp.photo}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid #185FA5;flex-shrink:0">`:`<div style="width:44px;height:44px;border-radius:50%;background:#185FA5;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0">${init}</div>`;
-        fpHtml+=`<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#0C447C">${fp.name}</div>`;
-        fpHtml+=`<div style="font-size:10px;color:#888;margin-top:1px">${fp.id}${fp.mobile?' &bull; '+fp.mobile:''}</div>`;
-        if(subAreas.length)fpHtml+=`<div style="font-size:10px;color:#185FA5;margin-top:2px">&#128205; ${subAreas.join(', ')}</div>`;
-        fpHtml+=`<div style="font-size:10px;margin-top:2px"><span style="color:#0F6E56;font-weight:700">${collected}</span><span style="color:#888"> collected / </span><span style="color:#854F0B;font-weight:700">${assigned.length-collected}</span><span style="color:#888"> pending</span></div>`;
-        fpHtml+=`</div>`;
-        if(fp.mobile){const mob=fp.mobile.replace(/[^0-9]/g,'');fpHtml+=`<a href="tel:${mob}" style="background:#185FA5;color:#fff;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;text-decoration:none;flex-shrink:0">&#128222;</a>`;}
-        fpHtml+='</div>';
-      });
-      fpHtml+='</div>';
-      cfl.innerHTML=fpHtml;
-    } else {
-      cfl.innerHTML='';
-    }
   }
   if(csl){
     const icons={facebook:{emoji:'📘',label:'Facebook'},instagram:{emoji:'📸',label:'Instagram'},twitter:{emoji:'🐦',label:'Twitter'},youtube:{emoji:'▶️',label:'YouTube'},whatsapp:{emoji:'💬',label:'WhatsApp'}};
@@ -7724,18 +7688,19 @@ function _fpShowList(type){
   var tmpl=ORG_CONFIG.waMessage&&ORG_CONFIG.waMessage.trim()?ORG_CONFIG.waMessage:defaultMsg;
   var title,donors=[],isPending=false;
   if(type==='collected'){
-    title='✅ Collected Donors';
-    var colIds=DB.focalAssignments.filter(function(a){return a.collected;}).map(function(a){return a.donorId;});
-    donors=DB.donors.filter(function(d){return colIds.includes(d.id);});
+    title='✅ Donors with Donations This Month';
+    var thisMonth=new Date().toISOString().substring(0,7);
+    var colIds=new Set(DB.donations.filter(function(a){return (a.date||'').startsWith(thisMonth);}).map(function(a){return a.donorId;}));
+    donors=DB.donors.filter(function(d){return colIds.has(d.id);});
   } else if(type==='pending'){
-    title='⏳ Pending Donors';
+    title='⏳ Donors without Donation This Month';
     isPending=true;
-    var pendIds=DB.focalAssignments.filter(function(a){return !a.collected;}).map(function(a){return a.donorId;});
-    donors=DB.donors.filter(function(d){return pendIds.includes(d.id);});
+    var thisMonth2=new Date().toISOString().substring(0,7);
+    var paidIds=new Set(DB.donations.filter(function(a){return (a.date||'').startsWith(thisMonth2);}).map(function(a){return a.donorId;}));
+    donors=DB.donors.filter(function(d){return !paidIds.has(d.id);});
   } else {
-    title='⚠️ Unassigned Donors';
-    var assignedIds=new Set(DB.focalAssignments.map(function(a){return a.donorId;}));
-    donors=DB.donors.filter(function(d){return !assignedIds.has(d.id);});
+    title='👥 All Donors';
+    donors=DB.donors.slice();
   }
   donors=[...donors].sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
   var html='<div style="background:#fff;border-radius:14px;overflow:hidden;max-width:380px;width:92vw;max-height:80vh;display:flex;flex-direction:column">';
@@ -7773,582 +7738,6 @@ function _fpShowList(type){
   html+='</div></div>';
   showCustomPopup('<div style="display:flex;justify-content:center;align-items:center;padding:16px 10px">'+html+'</div>');
 }
-T.focalmanage=function(){
-  if(!['admin','manager','developer'].includes(currentRole))
-    return '<div class="card"><p style="text-align:center;color:#888;padding:20px">⛔ Access Denied.</p></div>';
-  var focalUsers=DB.users.filter(function(u){return u.role==='focal'||u.isFocal===true;});
-  var html='<div class="card">';
-  html+='<h3 style="margin-bottom:12px">Focal Person List</h3>';
-  // Existing focal persons
-  if(!focalUsers.length){
-    html+='<p style="font-size:12px;color:#888;text-align:center;padding:12px 0">Koi focal person nahi. Neechay se add karein.</p>';
-  }
-  focalUsers.forEach(function(u){
-    var myAssign=DB.focalAssignments.filter(function(a){return a.focalId===u.id;});
-    var col=myAssign.filter(function(a){return a.collected;}).length;
-    var init=(u.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-    var av=u.photo?'<img src="'+u.photo+'" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0">':'<div style="width:40px;height:40px;border-radius:50%;background:#EDE9FE;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#5B21B6;flex-shrink:0">'+init+'</div>';
-    html+='<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#f9f9f9;border-radius:10px;border:1px solid #e8e8e8;margin-bottom:8px">';
-    html+=av;
-    html+='<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700">'+u.name+'</div>';
-    html+='<div style="font-size:10px;color:#888;margin-top:1px">'+u.id+' • '+(u.mobile||'—')+'</div>';
-    html+='<div style="font-size:10px;color:#7C3AED;margin-top:1px">✓ Focal Person</div>';
-    html+='<div style="font-size:10px;color:#888">'+myAssign.length+' assigned &bull; '+col+' collected</div></div>';
-    html+='<div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">';
-    html+='<button data-uid="'+u.id+'" onclick="_fmResetPwd(this.dataset.uid)" style="background:#185FA5;color:#fff;border:none;padding:5px 10px;border-radius:7px;font-size:11px;cursor:pointer">🔑 Reset</button>';
-    html+='<button data-uid="'+u.id+'" onclick="_fmRemoveFocal(this.dataset.uid)" style="background:#E24B4A;color:#fff;border:none;padding:5px 10px;border-radius:7px;font-size:11px;cursor:pointer">Remove</button>';
-    html+='</div></div>';
-  });
-  // Add from donor/user
-  html+='<div style="border-top:1px solid #e8e8e8;margin-top:14px;padding-top:14px">';
-  html+='<div style="font-size:13px;font-weight:700;margin-bottom:10px">+ Add Focal Person</div>';
-  html+='<p style="font-size:11px;color:#888;margin-bottom:10px">Kisi bhi registered donor ya user ko focal person mark karein</p>';
-  html+='<div style="display:flex;gap:6px;margin-bottom:8px">';
-  html+='<div class="inp-wrap" style="flex:1;margin:0"><span class="inp-icon">&#128100;</span><input type="text" id="fmPersonId" placeholder="Personal ID ya Mobile..." autocomplete="new-password" style="font-size:13px" onkeydown="if(event.key===\'Enter\')_fmFetchPerson()"></div>';
-  html+='<button onclick="_fmFetchPerson()" style="background:#7C3AED;color:#fff;border:none;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">Fetch</button>';
-  html+='</div>';
-  html+='<div id="fmPersonInfo" style="margin-bottom:8px"></div>';
-  html+='<label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px">Password set karein *</label>';
-  html+='<div class="inp-wrap" style="margin-bottom:10px"><span class="inp-icon">🔑</span><input type="password" id="fmNewPwd" placeholder="Minimum 4 characters..." style="font-size:13px"></div>';
-  html+='<button onclick="_fmSaveFocal()" style="width:100%;background:#7C3AED;color:#fff;border:none;padding:13px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">+ Mark as Focal Person</button>';
-  html+='</div></div>';
-  return html;
-};
-
-function _fmFetchPerson(){
-  var uid=(document.getElementById('fmPersonId')||{value:''}).value.trim();
-  var el=document.getElementById('fmPersonInfo');if(!el)return;
-  if(!uid){el.innerHTML='<div style="font-size:11px;color:#E24B4A">ID darein.</div>';return;}
-  var person=DB.users.find(function(u){return u.id===uid||normMob(u.mobile)===normMob(uid);})||
-             DB.donors.find(function(d){return d.id===uid||normMob(d.mobile)===normMob(uid);});
-  if(!person){el.innerHTML='<div style="font-size:11px;color:#E24B4A">❌ "'+uid+'" nahi mila.</div>';return;}
-  window._fmSelPerson=person;
-  var init=(person.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-  var av=person.photo?'<img src="'+person.photo+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover">':'<div style="width:28px;height:28px;border-radius:50%;background:#EDE9FE;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#5B21B6">'+init+'</div>';
-  el.innerHTML='<div style="background:#EDE9FE;border-radius:8px;padding:8px 10px;display:flex;align-items:center;gap:8px">'+av+'<div><div style="font-size:12px;font-weight:700;color:#5B21B6">✔ '+person.name+'</div><div style="font-size:10px;color:#7C3AED">'+person.id+' &bull; '+(person.mobile||'—')+'</div></div></div>';
-}
-
-async function _fmSaveFocal(){
-  if(!window._fmSelPerson){showPopup('⚠️','Required','Pehle person fetch karein.');return;}
-  var pwd=(document.getElementById('fmNewPwd')||{value:''}).value.trim();
-  if(!pwd||pwd.length<4){showPopup('⚠️','Required','Password kam az kam 4 characters hona chahiye.');return;}
-  var p=window._fmSelPerson;
-  if(!confirm('Confirm: '+p.name+' ko Focal Person mark karein?'))return;
-  // Check if already a user
-  var existing=DB.users.find(function(u){return u.id===p.id||normMob(u.mobile)===normMob(p.mobile||'');});
-  if(existing){
-    // Update existing user role to focal
-    existing.isFocal=true;
-    existing.focalPassword=pwd;
-    try{
-      await FS.save('users',existing.id,existing);
-      saveLocalCache();
-      window._fmSelPerson=null;
-      document.getElementById('fmPersonId').value='';
-      document.getElementById('fmPersonInfo').innerHTML='';
-      document.getElementById('fmNewPwd').value='';
-      showPopup('✅','Done',existing.name+' ab Focal Person hai!');
-      renderTab('focalmanage');
-    }catch(e){showPopup('❌','Error',e.message);}
-  } else {
-    // Create new user account from donor record
-    var nid=p.id||'FP-'+Date.now();
-    var nu={id:nid,name:p.name,mobile:p.mobile||'',cnic:p.cnic||'',password:pwd,area:p.area||'',
-            profession:p.profession||'',bloodGroup:p.bloodGroup||'',role:'focal',
-            approved:true,locked:false,photo:p.photo||null,signature:null};
-    DB.users.push(nu);
-    try{
-      await FS.save('users',nid,nu);
-      saveLocalCache();
-      window._fmSelPerson=null;
-      document.getElementById('fmPersonId').value='';
-      document.getElementById('fmPersonInfo').innerHTML='';
-      document.getElementById('fmNewPwd').value='';
-      showPopup('✅','Created',nu.name+' ka Focal Person account ban gaya!');
-      renderTab('focalmanage');
-    }catch(e){showPopup('❌','Error',e.message);}
-  }
-}
-
-function _fmResetPwd(uid){
-  var user=DB.users.find(function(u){return u.id===uid;});
-  if(!user)return;
-  var pwd=prompt(user.name+' ka naya password darein:');
-  if(!pwd||!pwd.trim()){return;}
-  if(pwd.trim().length<4){showPopup('⚠️','Too Short','Min 4 characters.');return;}
-  user.password=pwd.trim();
-  FS.save('users',uid,user);saveLocalCache();
-  showPopup('✅','Done','Password reset ho gaya!');
-}
-
-async function _fmRemoveFocal(uid){
-  var user=DB.users.find(function(u){return u.id===uid;});
-  if(!user)return;
-  if(!confirm('Remove '+user.name+' as Focal Person? Primary role nahi badlega, sirf focal access hata dega.'))return;
-  user.isFocal=false;user.focalPassword=null;
-  try{
-    await FS.save('users',uid,user);saveLocalCache();
-    showPopup('✅','Done',user.name+' ka role user ho gaya.');
-    renderTab('focalmanage');
-  }catch(e){showPopup('❌','Error',e.message);}
-}
-T.focalperson=function(){
-  if(!['admin','manager','developer'].includes(currentRole)){
-    if(currentRole==='focal'){window._fpViewId=currentUser.id;return T.fpdetail();}
-    return '<div class="card"><p style="text-align:center;color:#888;padding:20px">⛔ Access Denied.</p></div>';
-  }
-  // Compute stats
-  var totalAssigned=DB.focalAssignments.length;
-  var assignedDonorIds=new Set(DB.focalAssignments.map(function(a){return a.donorId;}));
-  var collectedCount=DB.focalAssignments.filter(function(a){return a.collected;}).length;
-  var pendingCount=totalAssigned-collectedCount;
-  var totalDonors=DB.donors.length;
-  var unassigned=totalDonors-assignedDonorIds.size;
-  var thisMonth=today().substring(0,7);
-  var collectedPct=totalAssigned>0?Math.round(collectedCount/totalAssigned*100):0;
-  // Group by focal person
-  var fpMap={};
-  DB.focalAssignments.forEach(function(a){
-    if(!fpMap[a.focalId])fpMap[a.focalId]={focalId:a.focalId,assigned:0,collected:0,pending:0,subAreas:new Set()};
-    fpMap[a.focalId].assigned++;
-    if(a.collected)fpMap[a.focalId].collected++;else fpMap[a.focalId].pending++;
-    if(a.subArea)fpMap[a.focalId].subAreas.add(a.subArea);
-  });
-  var fpList=Object.values(fpMap).sort(function(a,b){return b.assigned-a.assigned;});
-  var html='';
-  // ── Header card ──────────────────────────────────────────────────────
-  html+='<div style="background:linear-gradient(135deg,#0F6E56,#185FA5);border-radius:16px;padding:16px;margin-bottom:12px;color:#fff">';
-  html+='<div style="font-size:11px;opacity:0.75;margin-bottom:2px">Focal Person Management</div>';
-  html+='<div style="font-size:18px;font-weight:900;margin-bottom:10px">Fund Collection Dashboard</div>';
-  // Overall progress bar
-  html+='<div style="background:rgba(255,255,255,0.2);border-radius:20px;height:10px;margin-bottom:6px;overflow:hidden">';
-  html+='<div style="height:100%;background:#fff;border-radius:20px;width:'+collectedPct+'%;transition:width 0.5s"></div></div>';
-  html+='<div style="display:flex;justify-content:space-between;font-size:10px;opacity:0.85">';
-  html+='<span>'+collectedPct+'% collected</span><span>'+collectedCount+' of '+totalAssigned+' donors</span></div></div>';
-  // ── 3 big stats ───────────────────────────────────────────────────────
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">';
-  html+='<button onclick="_fpShowList(\'collected\')" style="background:#E1F5EE;border-radius:12px;padding:12px 8px;text-align:center;border:1.5px solid #1D9E75;cursor:pointer;width:100%">';
-  html+='<div style="font-size:26px;font-weight:900;color:#0F6E56">'+collectedCount+'</div>';
-  html+='<div style="font-size:9px;font-weight:700;color:#085041;text-transform:uppercase">Collected ▾</div></button>';
-  html+='<button onclick="_fpShowList(\'pending\')" style="background:#FAEEDA;border-radius:12px;padding:12px 8px;text-align:center;border:1.5px solid #B47B11;cursor:pointer;width:100%">';
-  html+='<div style="font-size:26px;font-weight:900;color:#854F0B">'+pendingCount+'</div>';
-  html+='<div style="font-size:9px;font-weight:700;color:#633806;text-transform:uppercase">Pending ▾</div></button>';
-  html+='<button onclick="_fpShowList(\'unassigned\')" style="background:#E6F1FB;border-radius:12px;padding:12px 8px;text-align:center;border:1.5px solid #185FA5;cursor:pointer;width:100%">';
-  html+='<div style="font-size:26px;font-weight:900;color:#185FA5">'+unassigned+'</div>';
-  html+='<div style="font-size:9px;font-weight:700;color:#0C447C;text-transform:uppercase">Unassigned ▾</div></button>';
-  html+='</div>';
-  // ── Action buttons ─────────────────────────────────────────────────
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">';
-  html+='<button onclick="selectTab(\'fpassign\')" style="background:#0F6E56;color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:700;cursor:pointer">+ Assign Donors</button>';
-  html+='<button onclick="selectTab(\'fpreport\')" style="background:#185FA5;color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:700;cursor:pointer">Report</button>';
-  html+='</div>';
-  // ── Focal persons list ─────────────────────────────────────────────
-  if(!fpList.length){
-    html+='<div class="card" style="text-align:center;padding:24px;color:#888">Koi assignment nahi. "Assign Donors" se shuru karein.</div>';
-    return html;
-  }
-  html+='<div style="font-size:11px;font-weight:800;color:#1a1a1a;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">Focal Persons ('+fpList.length+')</div>';
-  fpList.forEach(function(fp){
-    var user=DB.users.find(function(u){return u.id===fp.focalId;})||{name:fp.focalId,id:fp.focalId,photo:null};
-    var pct=fp.assigned>0?Math.round(fp.collected/fp.assigned*100):0;
-    var init=(user.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-    var av=user.photo?'<img src="'+user.photo+'" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid '+(pct===100?'#1D9E75':pct>50?'#185FA5':'#B47B11')+';flex-shrink:0">':'<div style="width:44px;height:44px;border-radius:50%;background:'+(pct===100?'#E1F5EE':pct>50?'#E6F1FB':'#FAEEDA')+';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:'+(pct===100?'#0F6E56':pct>50?'#185FA5':'#854F0B')+';flex-shrink:0">'+init+'</div>';
-    var subAreaStr=[...fp.subAreas].join(', ');
-    html+='<div style="background:#fff;border-radius:12px;border:1px solid #e8e8e8;padding:12px;margin-bottom:8px;cursor:pointer" onclick="window._fpViewId=\''+fp.focalId+'\';selectTab(\'fpdetail\')">';
-    html+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'+av;
-    html+='<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:800;color:#1a1a1a">'+user.name+'</div>';
-    html+='<div style="font-size:10px;color:#888;margin-top:1px">'+user.id+(user.mobile?' • '+user.mobile:'')+'</div>';
-    html+=(subAreaStr?'<div style="font-size:10px;color:#185FA5;margin-top:2px">📍 '+subAreaStr+'</div>':'');
-    html+='</div>';
-    html+='<div style="text-align:center;flex-shrink:0"><div style="font-size:20px;font-weight:900;color:'+(pct===100?'#0F6E56':pct>50?'#185FA5':'#854F0B')+'">'+pct+'%</div><div style="font-size:9px;color:#888">done</div></div></div>';
-    // Progress bar
-    html+='<div style="height:8px;background:#f0f0f0;border-radius:4px;overflow:hidden;margin-bottom:6px">';
-    html+='<div style="height:100%;background:'+(pct===100?'linear-gradient(90deg,#0F6E56,#1D9E75)':pct>50?'linear-gradient(90deg,#185FA5,#378ADD)':'linear-gradient(90deg,#E24B4A,#F07B2A)')+';border-radius:4px;width:'+pct+'%"></div></div>';
-    // Counts row
-    html+='<div style="display:flex;gap:16px;font-size:11px">';
-    html+='<span style="color:#1a1a1a;font-weight:700">'+fp.assigned+' total</span>';
-    html+='<span style="color:#0F6E56">✓ '+fp.collected+' collected</span>';
-    html+='<span style="color:#E24B4A">⦿ '+fp.pending+' pending</span>';
-    html+='</div></div>';
-  });
-  return html;
-};;
-
-// Assign donors tab
-T.fpassign=function(){
-  if(!['admin','manager','developer'].includes(currentRole))
-    return '<div class="card"><p style="text-align:center;color:#888;padding:20px">\u26d4 Access Denied.</p></div>';
-  var fpStep=window._fpStep||1;
-  var fpSelId=window._fpSelId||'';
-  var fpSubArea=window._fpSubArea||'';
-  var html='<div class="card">';
-  // Step indicator
-  html+='<div style="display:flex;gap:0;margin-bottom:16px;border-radius:8px;overflow:hidden;border:1px solid #e8e8e8">';
-  ['1. Select Person','2. Sub-Area','3. Assign Donors'].forEach(function(s,i){
-    var act=fpStep===i+1;
-    html+='<div style="flex:1;padding:8px 4px;text-align:center;font-size:10px;font-weight:700;background:'+(act?'#0F6E56':'#f9f9f9')+';color:'+(act?'#fff':'#888')+';border-right:'+(i<2?'1px solid #e8e8e8':'none')+'">'+s+'</div>';
-  });
-  html+='</div>';
-
-  // ── STEP 1: Select Focal Person ──────────────────────────────────────
-  if(fpStep===1){
-    html+='<h3 style="margin-bottom:4px">Step 1: Focal Person Select Karein</h3>';
-    html+='<p style="font-size:11px;color:#888;margin-bottom:12px">User ID ya Donor ID enter karein</p>';
-    html+='<div style="display:flex;gap:6px;margin-bottom:8px">';
-    html+='<div class="inp-wrap" style="flex:1;margin:0"><span class="inp-icon">&#128100;</span><input type="text" id="fpPersonId" placeholder="User ID / Donor ID..." autocomplete="new-password" style="font-size:13px" onkeydown="if(event.key===\'Enter\')_fpFetchPerson()"></div>';
-    html+='<button onclick="_fpFetchPerson()" style="background:#185FA5;color:#fff;border:none;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">Fetch</button>';
-    html+='</div>';
-    html+='<div id="fpPersonInfo" style="margin-bottom:12px">';
-    // Show fetched person if already selected
-    if(fpSelId){
-      var fp=DB.users.find(function(u){return u.id===fpSelId;})||DB.donors.find(function(d){return d.id===fpSelId;})||{name:fpSelId,id:fpSelId};
-      var init=(fp.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-      var av=fp.photo?'<img src="'+fp.photo+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover">':'<div style="width:32px;height:32px;border-radius:50%;background:#0F6E56;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">'+init+'</div>';
-      html+='<div style="background:#E1F5EE;border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px">'+av+'<div><div style="font-size:13px;font-weight:700;color:#0F6E56">\u2714 '+fp.name+'</div><div style="font-size:10px;color:#085041">'+fp.id+(fp.area?' &bull; '+fp.area:'')+'</div></div></div>';
-    }
-    html+='</div>';
-    html+='<button onclick="if(!window._fpSelId){showPopup(\'\u26a0\ufe0f\',\'Required\',\'Pehle person select karein\');}else{window._fpStep=2;renderTab(\'fpassign\')}" style="width:100%;background:#0F6E56;color:#fff;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">Next: Sub-Area Select \u2192</button>';
-  }
-
-  // ── STEP 2: Select Sub-Area ──────────────────────────────────────────
-  else if(fpStep===2){
-    var fp2=DB.users.find(function(u){return u.id===fpSelId;})||DB.donors.find(function(d){return d.id===fpSelId;})||{name:fpSelId,area:''};
-    html+='<h3 style="margin-bottom:4px">Step 2: Sub-Area / Zone</h3>';
-    html+='<p style="font-size:11px;color:#888;margin-bottom:8px"><b>'+fp2.name+'</b> ko kaunsa sub-area deal karna hai?</p>';
-    html+='<div style="font-size:12px;font-weight:700;margin-bottom:6px">Naya sub-area type karein:</div>';
-    // Collect all sub-areas from donors + existing assignments
-    var allSubAreas=[...new Set([
-      ...DB.donors.map(function(d){return d.subArea;}).filter(Boolean),
-      ...DB.focalAssignments.map(function(a){return a.subArea;}).filter(Boolean)
-    ])].sort();
-    html+='<div class="inp-wrap" style="margin-bottom:10px"><span class="inp-icon">&#128205;</span>';
-    if(allSubAreas.length){
-      html+='<select id="fpSubAreaInput" style="font-size:13px">';
-      html+='<option value="">-- Sub-Area select karein --</option>';
-      allSubAreas.forEach(function(sa){html+='<option value="'+sa.replace(/"/g,'&quot;')+'"'+(fpSubArea===sa?' selected':'')+'>'+sa+'</option>';});
-      html+='</select>';
-    } else {
-      html+='<input type="text" id="fpSubAreaInput" value="'+fpSubArea.replace(/"/g,'&quot;')+'" placeholder="e.g. Gali 3, Block B..." style="font-size:13px">';
-    }
-    html+='</div>';
-
-    // Show existing sub-areas as quick select
-    var existingSubAreas=[...new Set(DB.focalAssignments.map(function(a){return a.subArea;}).filter(Boolean))];
-    if(existingSubAreas.length){
-      html+='<div style="font-size:11px;color:#888;margin-bottom:6px">Ya existing select karein:</div>';
-      html+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">';
-      existingSubAreas.forEach(function(sa){
-        html+='<button onclick="document.getElementById(\'fpSubAreaInput\').value=\''+sa.replace(/'/g,"\\'")+'\';" style="background:#f0f0f0;border:1px solid #ddd;padding:5px 10px;border-radius:20px;font-size:11px;cursor:pointer">'+sa+'</button>';
-      });
-      html+='</div>';
-    }
-    // Donor sub-areas from donor records
-    var donorSubAreas=[...new Set(DB.donors.map(function(d){return d.subArea;}).filter(Boolean))];
-    if(donorSubAreas.length){
-      html+='<div style="font-size:11px;color:#888;margin-bottom:6px">Donors mein existing sub-areas:</div>';
-      html+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">';
-      donorSubAreas.forEach(function(sa){
-        html+='<button onclick="document.getElementById(\'fpSubAreaInput\').value=\''+sa.replace(/'/g,"\\'")+'\';" style="background:#E1F5EE;border:1px solid #1D9E75;padding:5px 10px;border-radius:20px;font-size:11px;cursor:pointer;color:#0F6E56">'+sa+'</button>';
-      });
-      html+='</div>';
-    }
-    html+='<div style="display:flex;gap:8px">';
-    html+='<button onclick="window._fpStep=1;renderTab(\'fpassign\')" style="flex:1;background:#f5f5f5;border:1px solid #ddd;padding:12px;border-radius:8px;font-size:13px;cursor:pointer">\u2190 Back</button>';
-    html+='<button onclick="_fpStepSubArea()" style="flex:2;background:#0F6E56;color:#fff;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">Next: Donors Select \u2192</button>';
-    html+='</div>';
-  }
-
-  // ── STEP 3: Select Donors ────────────────────────────────────────────
-  else{
-    var fp3=DB.users.find(function(u){return u.id===fpSelId;})||DB.donors.find(function(d){return d.id===fpSelId;})||{name:fpSelId};
-    html+='<div style="background:#E1F5EE;border-radius:8px;padding:8px 12px;margin-bottom:10px">';
-    html+='<div style="font-size:12px;font-weight:700;color:#0F6E56">'+fp3.name+'</div>';
-    html+='<div style="font-size:11px;color:#085041">Sub-Area: <b>'+fpSubArea+'</b></div></div>';
-    // Auto-matched donors
-    var autoMatched=DB.donors.filter(function(d){return d.subArea&&d.subArea.toLowerCase()===fpSubArea.toLowerCase();});
-    var alreadyIds=new Set(DB.focalAssignments.filter(function(a){return a.focalId===fpSelId;}).map(function(a){return a.donorId;}));
-    var newAuto=autoMatched.filter(function(d){return !alreadyIds.has(d.id);});
-    if(newAuto.length){
-      html+='<div style="background:#FAEEDA;border-radius:8px;padding:8px 12px;margin-bottom:10px;border:1px solid #B47B11">';
-      html+='<div style="font-size:11px;font-weight:700;color:#854F0B;margin-bottom:4px">\u26a1 '+newAuto.length+' donors auto-matched (sub-area: '+fpSubArea+')</div>';
-      newAuto.forEach(function(d){
-        html+='<div style="font-size:11px;color:#633806">&#10003; '+d.name+' ('+d.id+')</div>';
-      });
-      html+='<button onclick="_fpAutoAssign()" style="margin-top:8px;background:#854F0B;color:#fff;border:none;padding:7px 14px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">\u26a1 Auto-Assign Matched Donors</button>';
-      html+='</div>';
-    }
-    // Manual select
-    html+='<div style="font-size:12px;font-weight:700;margin-bottom:6px">Ya manually select karein:</div>';
-    html+='<div style="display:flex;gap:6px;margin-bottom:8px">';
-    html+='<div class="inp-wrap" style="flex:1;margin:0"><span class="inp-icon">&#128269;</span>';
-    html+='<input type="text" id="fpSearch" placeholder="Search donor..." oninput="_fpFilterDonors()" style="font-size:13px"></div>';
-    html+='<div class="inp-wrap" style="width:120px;margin:0"><span class="inp-icon">&#128205;</span>';
-    html+='<select id="fpAreaFilter" onchange="_fpFilterDonors()" style="font-size:12px"><option value="">All Areas</option>';
-    AREAS.forEach(function(a){html+='<option value="'+a+'">'+a+'</option>';});
-    html+='</select></div></div>';
-    html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
-    html+='<div style="font-size:11px;color:#888">Donors select karein:</div>';
-    html+='<div id="fpSelectedCount" style="font-size:11px;font-weight:700;color:#0F6E56;background:#E1F5EE;padding:3px 10px;border-radius:20px">0 selected</div></div>';
-    html+='<div id="fpDonorList" style="max-height:45vh;overflow-y:auto">'+_fpDonorListHTML('','')+'</div>';
-    html+='<div style="display:flex;gap:8px;margin-top:12px">';
-    html+='<button onclick="window._fpStep=2;renderTab(\'fpassign\')" style="flex:1;background:#f5f5f5;border:1px solid #ddd;padding:12px;border-radius:8px;font-size:13px;cursor:pointer">\u2190 Back</button>';
-    html+='<button onclick="_fpSaveAssignment()" style="flex:2;background:#0F6E56;color:#fff;border:none;padding:12px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">\U0001f4be Save Assignment</button>';
-    html+='</div>';
-  }
-  html+='</div>';
-  return html;
-};
-;
-;
-function saveContactEdit(idx){
-  var n=ORG_CONFIG.contactNumbers[parseInt(idx)];if(!n)return;
-  var labelEl=document.getElementById('ecLabel');
-  var numEl=document.getElementById('ecNumber');
-  var areaEl=document.getElementById('ecArea');
-  var photoInp=document.getElementById('ecPhotoInp');
-  var label=labelEl?labelEl.value.trim():'';
-  var num=numEl?numEl.value.trim():'';
-  if(!label||!num){showPopup('⚠️','Required','Label and number are required.');return;}
-  function doSave(photo){
-    n.label=label;n.number=num;n.area=areaEl?areaEl.value:'';
-    if(photo!==undefined)n.photo=photo;
-    FS.saveConfig();saveLocalCache();renderLoginExtras();
-    closeCustomPopup();
-    renderTab('orgsettings');
-    showPopup('✅','Updated','Contact updated.');
-  }
-  if(photoInp&&photoInp.files[0]){
-    var r=new FileReader();r.onload=function(ev){compressImg(ev.target.result,400,400,0.75,doSave);};r.readAsDataURL(photoInp.files[0]);
-  } else {doSave(undefined);}
-}
-function removeContactNumber(i){
-  if(!ORG_CONFIG.contactNumbers)return;
-  ORG_CONFIG.contactNumbers.splice(i,1);
-  FS.saveConfig();renderLoginExtras();
-  renderTab('orgsettings');
-  showPopup('🗑️','Removed','Contact number removed.');
-}
-async function saveOrgName(){
-  var en=(document.getElementById('orgNameEn')||{value:''}).value.trim();
-  var ur=(document.getElementById('orgNameUr')||{value:''}).value.trim();
-  if(!en){showPopup('⚠️','Required','English name required.');return;}
-  if(!confirm('Org name save karein?'))return;
-  ORG_CONFIG.name=en;if(ur)ORG_CONFIG.nameUrdu=ur;
-  await FS.saveConfig();saveLocalCache();renderLoginExtras();
-  showPopup('✅','Saved','Organization name saved!');renderTab('orgsettings');
-}
-async function saveOrgAddress(){
-  if(!confirm('Address save karein?'))return;
-  ORG_CONFIG.address=(document.getElementById('orgAddress')||{value:''}).value.trim();
-  await FS.saveConfig();saveLocalCache();renderLoginExtras();
-  showPopup('✅','Saved','Address saved!');
-}
-async function saveOrgFullAddress(){
-  if(!confirm('Full address save karein?'))return;
-  ORG_CONFIG.fullAddress=(document.getElementById('orgFullAddress')||{value:''}).value.trim();
-  await FS.saveConfig();saveLocalCache();
-  showPopup('✅','Saved','Full address saved!');
-}
-async function saveOrgHistory(){
-  if(!confirm('History save karein?'))return;
-  ORG_CONFIG.history=(document.getElementById('orgHistory')||{value:''}).value.trim();
-  await FS.saveConfig();saveLocalCache();renderLoginExtras();
-  showPopup('✅','Saved','History saved!');
-}
-function uploadOrgLogo(){
-  var f=document.getElementById('orgLogoInput');if(!f||!f.files[0])return;
-  var r=new FileReader();r.onload=function(e){
-    compressImg(e.target.result,400,400,0.8,function(compressed){
-      ORG_CONFIG.logo=compressed;FS.saveConfig();saveLocalCache();renderLoginExtras();
-      showPopup('✅','Logo Saved','Logo saved!');renderTab('orgsettings');
-    });
-  };r.readAsDataURL(f.files[0]);
-}
-function removeLogo(){
-  if(!confirm('Logo remove karein?'))return;
-  ORG_CONFIG.logo=null;FS.saveConfig();saveLocalCache();renderLoginExtras();
-  showPopup('✅','Removed','Logo removed.');renderTab('orgsettings');
-}
-function previewHistPhoto(){
-  var f=document.getElementById('histPhotoInput');if(!f||!f.files[0])return;
-  var r=new FileReader();r.onload=function(e){
-    var im=document.getElementById('histPhotoPreview');if(im){im.src=e.target.result;im.style.display='block';}
-    var plus=document.getElementById('histPhotoPlus');if(plus)plus.style.display='none';
-  };r.readAsDataURL(f.files[0]);
-}
-function addHistoryPhoto(){
-  var name=(document.getElementById('histPhotoName')||{value:''}).value.trim();
-  var fi=document.getElementById('histPhotoInput');
-  if(!fi||!fi.files[0]){showPopup('⚠️','No Photo','Select photo first.');return;}
-  if(!confirm('History photo add karein?'))return;
-  var r=new FileReader();r.onload=function(e){
-    if(!ORG_CONFIG.historyPhotos)ORG_CONFIG.historyPhotos=[];
-    ORG_CONFIG.historyPhotos.push({img:e.target.result,name:name||''});
-    FS.saveConfig();saveLocalCache();renderLoginExtras();
-    showPopup('✅','Added','Photo added!');renderTab('orgsettings');
-  };r.readAsDataURL(fi.files[0]);
-}
-function _cnVerifyUser(){
-  var uid=(document.getElementById('cnUserId')||{value:''}).value.trim();
-  var el=document.getElementById('cnUserInfo');if(!el)return;
-  if(!uid){el.innerHTML='<div style="font-size:11px;color:#E24B4A">User ID darein.</div>';return;}
-  var user=DB.users.find(function(u){return u.id===uid;})||DB.donors.find(function(d){return d.id===uid;});
-  if(!user){el.innerHTML='<div style="font-size:11px;color:#E24B4A">❌ ID "'+uid+'" kisi bhi user/donor mein nahi mila.</div>';return;}
-  var lbl=document.getElementById('cnLabel');var num=document.getElementById('cnNumber');var area=document.getElementById('cnArea');
-  if(lbl)lbl.value=user.name;if(num&&user.mobile)num.value=user.mobile;if(area&&user.area)area.value=user.area;
-  if(user.photo){window._cnUserPhoto=user.photo;var prev=document.getElementById('cnPhotoPreview');var plus=document.getElementById('cnPhotoPlus');if(prev){prev.src=user.photo;prev.style.display='block';}if(plus)plus.style.display='none';}
-  var init=(user.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-  var av=user.photo?'<img src="'+user.photo+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover">':'<div style="width:28px;height:28px;border-radius:50%;background:#0F6E56;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">'+init+'</div>';
-  el.innerHTML='<div style="background:#E1F5EE;border-radius:7px;padding:7px 9px;display:flex;align-items:center;gap:8px">'+av+'<div><div style="font-size:12px;font-weight:700;color:#0F6E56">✔ '+user.name+'</div><div style="font-size:10px;color:#085041">'+user.id+' &bull; '+(user.mobile||'&mdash;')+'</div></div></div>';
-}
-function addContactNumber(){
-  var label=(document.getElementById('cnLabel')||{value:''}).value.trim();
-  var number=(document.getElementById('cnNumber')||{value:''}).value.trim();
-  var area=(document.getElementById('cnArea')||{value:''}).value.trim();
-  var fi=document.getElementById('cnPhotoInp');
-  if(!label||!number){showPopup('⚠️','Required','Label and number required.');return;}
-  if(!confirm('Contact add karein: '+label+'?'))return;
-  if(!ORG_CONFIG.contactNumbers)ORG_CONFIG.contactNumbers=[];
-  async function finish(photo){
-    ORG_CONFIG.contactNumbers.push({label:label,number:number,area:area,photo:photo||null});
-    try{await FS.saveConfig();saveLocalCache();renderLoginExtras();
-      ['cnLabel','cnNumber'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
-      var prev=document.getElementById('cnPhotoPreview');if(prev){prev.src='';prev.style.display='none';}
-      var plus=document.getElementById('cnPhotoPlus');if(plus)plus.style.display='block';
-      var uid=document.getElementById('cnUserId');if(uid)uid.value='';
-      var ui=document.getElementById('cnUserInfo');if(ui)ui.innerHTML='';
-      window._cnUserPhoto=null;
-      showPopup('✅','Added','Contact saved!');renderTab('orgcontacts');
-    }catch(e){showPopup('❌','Error','Save failed: '+e.message);}
-  }
-  if(fi&&fi.files[0]){var r=new FileReader();r.onload=function(e){finish(e.target.result);};r.readAsDataURL(fi.files[0]);}
-  else if(window._cnUserPhoto){finish(window._cnUserPhoto);window._cnUserPhoto=null;}
-  else finish(null);
-}
-async function saveSocialLinks(){
-  if(!confirm('Social links save karein?'))return;
-  ORG_CONFIG.socialLinks={
-    facebook:document.getElementById('slFacebook').value.trim(),
-    instagram:document.getElementById('slInstagram').value.trim(),
-    twitter:document.getElementById('slTwitter').value.trim(),
-    youtube:document.getElementById('slYoutube').value.trim(),
-    whatsapp:document.getElementById('slWhatsapp').value.trim()
-  };
-  await FS.saveConfig();saveLocalCache();renderLoginExtras();
-  showPopup('✅','Saved','Social links saved. | سوشل لنکس محفوظ ہو گئے');
-}
-// previewBaQr removed
-function compressImg(dataUrl,maxW,maxH,quality,cb){
-  var img=new Image();
-  img.onload=function(){
-    var w=img.width,h=img.height;
-    if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}
-    if(h>maxH){w=Math.round(w*maxH/h);h=maxH;}
-    var cv=document.createElement('canvas');cv.width=w;cv.height=h;
-    cv.getContext('2d').drawImage(img,0,0,w,h);
-    cb(cv.toDataURL('image/jpeg',quality||0.7));
-  };
-  img.src=dataUrl;
-}
-function previewBaPhoto(){
-  const f=document.getElementById('baPhotoInput').files[0];if(!f)return;
-  const r=new FileReader();r.onload=e=>{
-    const im=document.getElementById('baPhotoPreview');
-    im.src=e.target.result;im.style.display='block';
-    document.getElementById('baPhotoPlus').style.display='none';
-    document.getElementById('baPhotoPlusText').style.display='none';
-  };r.readAsDataURL(f);
-}
-function addBankAccount(){
-  const title=document.getElementById('baTitle').value.trim();
-  const bank=document.getElementById('baBank').value.trim();
-  const number=document.getElementById('baNumber').value.trim();
-  const area=(document.getElementById('baArea')||{value:''}).value.trim();
-  if(!title||!bank||!number){showPopup('⚠️','Incomplete','Title, bank and account number are required.');return;}
-  const fiPhoto=document.getElementById('baPhotoInput');
-  function finish(photo){
-    ORG_CONFIG.bankAccounts.push({title,bank,number,area,photo:photo||null});
-    FS.saveConfig();saveLocalCache();renderLoginExtras();
-    showPopup('✅','Account Added','Bank account added.');
-    renderTab('orgsettings');
-    renderLoginExtras();
-  }
-  if(fiPhoto&&fiPhoto.files[0]){
-    const r=new FileReader();r.onload=function(ev){compressImg(ev.target.result,400,400,0.75,finish);};r.readAsDataURL(fiPhoto.files[0]);
-  } else {finish(null);}
-}
-function removeBankAccount(i){
-  if(!confirm('Remove this bank account?'))return;
-  ORG_CONFIG.bankAccounts.splice(i,1);
-  FS.saveConfig();saveLocalCache();renderLoginExtras();
-  renderTab('orgsettings');
-  showPopup('🗑️','Removed','Account removed.');
-}
-
-function openEditBank(i){
-  const acc=ORG_CONFIG.bankAccounts[i];
-  if(!acc)return;
-  // Fill edit form
-  document.getElementById('baEditTitle').value=acc.title||'';
-  document.getElementById('baEditBank').value=acc.bank||'';
-  document.getElementById('baEditNumber').value=acc.number||'';
-  document.getElementById('baEditIndex').value=i;
-  // Set area dropdown
-  const asel=document.getElementById('baEditArea');
-  if(asel){
-    Array.from(asel.options).forEach(o=>{o.selected=o.value===acc.area;});
-  }
-  // Show existing photo
-  const prev=document.getElementById('baEditPhotoPreview');
-  const plus=document.getElementById('baEditPhotoPlus');
-  if(acc.photo&&prev){prev.src=acc.photo;prev.style.display='block';if(plus)plus.style.display='none';}
-  else{if(prev)prev.style.display='none';if(plus)plus.style.display='block';}
-  // Reset file input
-  document.getElementById('baEditPhotoInput').value='';
-  // Show edit section, scroll to it
-  const es=document.getElementById('bankEditSection');
-  if(es){es.style.display='block';es.scrollIntoView({behavior:'smooth',block:'start'});}
-}
-
-function previewBaEditPhoto(){
-  const f=document.getElementById('baEditPhotoInput').files[0];if(!f)return;
-  const r=new FileReader();r.onload=e=>{
-    const im=document.getElementById('baEditPhotoPreview');
-    im.src=e.target.result;im.style.display='block';
-    const pl=document.getElementById('baEditPhotoPlus');if(pl)pl.style.display='none';
-  };r.readAsDataURL(f);
-}
-
-function cancelEditBank(){
-  const es=document.getElementById('bankEditSection');
-  if(es)es.style.display='none';
-}
-
-function saveEditBank(){
-  const i=parseInt(document.getElementById('baEditIndex').value);
-  const acc=ORG_CONFIG.bankAccounts[i];
-  if(!acc)return;
-  const title=document.getElementById('baEditTitle').value.trim();
-  const bank=document.getElementById('baEditBank').value.trim();
-  const number=document.getElementById('baEditNumber').value.trim();
-  const area=document.getElementById('baEditArea').value;
-  if(!title||!bank||!number){showPopup('⚠️','Incomplete','Title, bank and number required.');return;}
-  const fi=document.getElementById('baEditPhotoInput');
-  function finish(photo){
-    acc.title=title;acc.bank=bank;acc.number=number;acc.area=area;
-    if(photo!==undefined)acc.photo=photo;
-    FS.saveConfig();saveLocalCache();renderLoginExtras();
-    cancelEditBank();
-    showPopup('✅','Updated','Bank account updated.');
-    renderTab('orgsettings');
-  }
-  if(fi&&fi.files[0]){
-    const r=new FileReader();r.onload=function(ev){compressImg(ev.target.result,400,400,0.75,finish);};r.readAsDataURL(fi.files[0]);
-  } else {
-    finish(undefined);
-  }
-}
-
 // ---- PROFILE UPDATE ----
 T.profile=function(){
   const u=currentUser;
@@ -11024,347 +10413,6 @@ T.liveboard=function(){
 // ═══════════════════════════════════════════════════
 
 // Main hub
-T.focalperson=function(){
-  if(!['admin','manager','developer'].includes(currentRole))
-    return '<div class="card"><p style="text-align:center;color:#888;padding:20px">⛔ Access Denied.</p></div>';
-  var fps=DB.users.filter(function(u){return u.role!=='user'||(u.focalPerson);});
-  // Count stats
-  var totalAssigned=DB.focalAssignments.length;
-  var totalDonors=new Set(DB.focalAssignments.map(function(a){return a.donorId;})).size;
-  var collected=DB.focalAssignments.filter(function(a){return a.collected;}).length;
-  var pending=totalAssigned-collected;
-  var html='';
-  // Stats row
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">';
-  html+='<div style="background:#E1F5EE;border-radius:12px;padding:10px;text-align:center;border:1.5px solid #1D9E75"><div style="font-size:22px;font-weight:900;color:#0F6E56">'+totalDonors+'</div><div style="font-size:10px;color:#085041;font-weight:700">Donors Assigned</div></div>';
-  html+='<div style="background:#E6F1FB;border-radius:12px;padding:10px;text-align:center;border:1.5px solid #185FA5"><div style="font-size:22px;font-weight:900;color:#185FA5">'+collected+'</div><div style="font-size:10px;color:#0C447C;font-weight:700">Collected</div></div>';
-  html+='<div style="background:#FAEEDA;border-radius:12px;padding:10px;text-align:center;border:1.5px solid #B47B11"><div style="font-size:22px;font-weight:900;color:#854F0B">'+pending+'</div><div style="font-size:10px;color:#654000;font-weight:700">Pending</div></div>';
-  html+='</div>';
-  // Action buttons
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">';
-  html+='<button onclick="selectTab(\'fpassign\')" style="background:#0F6E56;color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:700;cursor:pointer">&#128100; Assign Donors</button>';
-  html+='<button onclick="selectTab(\'fpreport\')" style="background:#185FA5;color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:700;cursor:pointer">&#128202; View Report</button>';
-  html+='</div>';
-  // Focal persons list
-  var fpSet=new Set(DB.focalAssignments.map(function(a){return a.focalId;}));
-  if(!fpSet.size){
-    html+='<div class="card" style="text-align:center;padding:20px;color:#888">Koi assignment nahi abhi tak. "Assign Donors" se shuru karein.</div>';
-    return html;
-  }
-  html+='<div style="font-size:12px;font-weight:800;color:#1a1a1a;margin-bottom:10px">Focal Persons</div>';
-  fpSet.forEach(function(fpId){
-    var fp=DB.users.find(function(u){return u.id===fpId;})||{name:fpId,id:fpId,photo:null};
-    var myAssignments=DB.focalAssignments.filter(function(a){return a.focalId===fpId;});
-    var myCollected=myAssignments.filter(function(a){return a.collected;}).length;
-    var myPending=myAssignments.length-myCollected;
-    var pct=myAssignments.length?Math.round(myCollected/myAssignments.length*100):0;
-    var init=(fp.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-    var av=fp.photo?'<img src="'+fp.photo+'" style="width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid #1D9E75;flex-shrink:0">':'<div style="width:46px;height:46px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
-    html+='<div style="background:#fff;border-radius:12px;border:1px solid #e8e8e8;padding:12px;margin-bottom:10px;cursor:pointer" onclick="window._fpViewId=\''+fpId+'\';selectTab(\'fpdetail\')">';
-    html+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'+av;
-    html+='<div style="flex:1"><div style="font-size:14px;font-weight:800">'+fp.name+'</div>';
-    html+='<div style="font-size:10px;color:#888">'+fp.id+(fp.area?' &bull; '+fp.area:'')+'</div></div>';
-    html+='<div style="text-align:right"><div style="font-size:18px;font-weight:900;color:#0F6E56">'+pct+'%</div><div style="font-size:9px;color:#888">collected</div></div>';
-    html+='</div>';
-    // Progress bar
-    html+='<div style="height:7px;background:#f0f0f0;border-radius:4px;overflow:hidden;margin-bottom:6px"><div style="height:100%;background:linear-gradient(90deg,#0F6E56,#1D9E75);width:'+pct+'%;border-radius:4px"></div></div>';
-    html+='<div style="display:flex;gap:12px;font-size:11px">';
-    html+='<span style="color:#1a1a1a;font-weight:700">'+myAssignments.length+' donors</span>';
-    html+='<span style="color:#0F6E56">&#10003; '+myCollected+' collected</span>';
-    html+='<span style="color:#E24B4A">&#9711; '+myPending+' pending</span>';
-    html+='</div></div>';
-  });
-  return html;
-};
-
-// Assign donors tab
-T.fpassign=function(){
-  if(!['admin','manager','developer'].includes(currentRole))
-    return '<div class="card"><p style="text-align:center;color:#888;padding:20px">⛔ Access Denied.</p></div>';
-  // Build focal persons list: from ORG_CONFIG.focalPersons first, then DB.users with admin/manager/developer role
-  var _orgFPs=(ORG_CONFIG.focalPersons||[]);
-  var _dbFPs=DB.users.filter(function(u){return ['admin','manager','developer','focal'].includes(u.role);});
-  // Merge: org focal persons take priority
-  var fps=[];var seenIds=new Set();
-  _orgFPs.forEach(function(fp){if(!seenIds.has(fp.userId)){fps.push({id:fp.userId,name:fp.name,role:fp.designation||'focal',mobile:fp.mobile,area:fp.area,photo:fp.photo});seenIds.add(fp.userId);}});
-  _dbFPs.forEach(function(u){if(!seenIds.has(u.id)){fps.push(u);seenIds.add(u.id);}});
-  var html='<div class="card"><h3 style="margin-bottom:12px">Assign Donors to Focal Person</h3>';
-  // Focal person selector
-  html+='<label style="font-size:12px;font-weight:700;margin-bottom:4px;display:block">Select Focal Person *</label>';
-  html+='<div class="inp-wrap" style="margin-bottom:12px"><span class="inp-icon">&#128100;</span>';
-  html+='<select id="fpSelect" style="font-size:13px"><option value="">-- Select Focal Person --</option>';
-  fps.forEach(function(u){html+='<option value="'+u.id+'">'+u.name+' ('+u.role+') - '+u.id+'</option>';});
-  html+='</select></div>';
-  // Area filter
-  html+='<label style="font-size:12px;font-weight:700;margin-bottom:4px;display:block">Filter by Area</label>';
-  html+='<div class="inp-wrap" style="margin-bottom:12px"><span class="inp-icon">&#128205;</span>';
-  html+='<select id="fpAreaFilter" onchange="_fpFilterDonors()" style="font-size:13px"><option value="">All Areas</option>';
-  AREAS.forEach(function(a){html+='<option value="'+a+'">'+a+'</option>';});
-  html+='</select></div>';
-  // Search
-  html+='<div class="inp-wrap" style="margin-bottom:10px"><span class="inp-icon">&#128269;</span>';
-  html+='<input type="text" id="fpSearch" placeholder="Search donor name, ID..." oninput="_fpFilterDonors()" style="font-size:13px"></div>';
-  // Donors list with checkboxes
-  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
-  html+='<div style="font-size:11px;color:#888">Donors select karein (checkbox):</div>';
-  html+='<div id="fpSelectedCount" style="font-size:11px;font-weight:700;color:#0F6E56;background:#E1F5EE;padding:3px 10px;border-radius:20px">0 selected</div>';
-  html+='</div>';
-  html+='<div id="fpDonorList" style="max-height:50vh;overflow-y:auto">';
-  html+=_fpDonorListHTML('','');
-  html+='</div>';
-  html+='<button onclick="_fpSaveAssignment()" style="width:100%;background:#0F6E56;color:#fff;border:none;padding:13px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-top:12px">&#128190; Save Assignment</button>';
-  html+='</div>';
-  return html;
-};
-
-// Report tab
-T.fpreport=function(){
-  if(!['admin','manager','developer','focal'].includes(currentRole))
-    return '<div class="card"><p style="text-align:center;color:#888;padding:20px">⛔ Access Denied.</p></div>';
-  var fpFilter=(currentRole==='focal'||currentUser.isFocal)?currentUser.id:(window._fpReportFilter||'');
-  var fps=DB.users.filter(function(u){return ['admin','manager','developer'].includes(u.role);});
-  var html='<div class="card"><h3 style="margin-bottom:10px">Focal Person Report</h3>';
-  html+='<div class="inp-wrap" style="margin-bottom:12px"><span class="inp-icon">&#128100;</span>';
-  html+='<select id="fpReportFilter" onchange="window._fpReportFilter=this.value;renderTab(\'fpreport\')" style="font-size:13px">';
-  html+='<option value="">-- All Focal Persons --</option>';
-  fps.forEach(function(u){html+='<option value="'+u.id+'"'+(fpFilter===u.id?' selected':'')+'>'+u.name+' ('+u.id+')</option>';});
-  html+='</select></div>';
-  var assignments=fpFilter?DB.focalAssignments.filter(function(a){return a.focalId===fpFilter;}):DB.focalAssignments;
-  if(!assignments.length){html+='<p style="text-align:center;padding:20px;color:#888">No assignments found.</p></div>';return html;}
-  // Group by focal person
-  var grouped={};
-  assignments.forEach(function(a){
-    if(!grouped[a.focalId])grouped[a.focalId]=[];
-    grouped[a.focalId].push(a);
-  });
-  Object.keys(grouped).forEach(function(fpId){
-    var fp=DB.users.find(function(u){return u.id===fpId;})||{name:fpId,id:fpId};
-    var list=grouped[fpId];
-    var col=list.filter(function(a){return a.collected;}).length;
-    var pend=list.length-col;
-    html+='<div style="background:#F5F9FF;border-radius:10px;border:1px solid #B5D4F4;padding:12px;margin-bottom:12px">';
-    html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
-    html+='<div><div style="font-size:14px;font-weight:800;color:#0C447C">'+fp.name+'</div><div style="font-size:10px;color:#185FA5">'+fp.id+'</div></div>';
-    html+='<div style="text-align:right"><div style="font-size:16px;font-weight:900;color:#0F6E56">'+Math.round(col/list.length*100)+'%</div><div style="font-size:9px;color:#888">'+col+'/'+list.length+'</div></div>';
-    html+='</div>';
-    list.forEach(function(a){
-      var donor=DB.donors.find(function(d){return d.id===a.donorId;})||{name:a.donorId,area:'',mobile:''};
-      var init=(donor.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-      var av=donor.photo?'<img src="'+donor.photo+'" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0">':'<div style="width:34px;height:34px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
-      html+='<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid rgba(21,95,165,0.1)">';
-      html+=av;
-      html+='<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700">'+donor.name+'</div>';
-      html+='<div style="font-size:10px;color:#888">'+donor.id+(donor.area?' &bull; '+donor.area:'')+(donor.mobile?' &bull; '+donor.mobile:'')+'</div></div>';
-      html+='<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">';
-      html+=(a.collected?'<span style="background:#E1F5EE;color:#0F6E56;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px">&#10003; Collected</span>':'<span style="background:#FAEEDA;color:#854F0B;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px">Pending</span>');
-      html+='<button data-aid="'+a.id+'" onclick="_fpToggleCollected(this.dataset.aid)" style="background:'+(a.collected?'#f5f5f5':'#0F6E56')+';color:'+(a.collected?'#888':'#fff')+';border:'+(a.collected?'1px solid #ddd':'none')+';width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px;flex-shrink:0">'+(a.collected?'↺':'✓')+'</button>';
-      html+='<button data-aid="'+a.id+'" onclick="_fpRemoveAssignment(this.dataset.aid)" style="background:#E24B4A;color:#fff;border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px;flex-shrink:0">&times;</button>';
-      html+='</div></div>';
-    });
-    html+='</div>';
-  });
-  html+='</div>';
-  return html;
-};
-
-// Focal person detail view
-T.fpdetail=function(){
-  if(!['admin','manager','developer','focal'].includes(currentRole))
-    return '<div class="card"><p style="text-align:center;color:#888;padding:20px">⛔ Access Denied.</p></div>';
-  // Focal person sees their own assignments automatically
-  if(currentRole==='focal'&&!window._fpViewId)window._fpViewId=currentUser.id;
-  var fpId=window._fpViewId||currentUser.id||'';
-  if(!fpId) return '<div class="card"><p style="text-align:center;padding:20px;color:#888">No focal person selected.</p></div>';
-  var fp=DB.users.find(function(u){return u.id===fpId;})||{name:fpId,id:fpId,photo:null};
-  var list=DB.focalAssignments.filter(function(a){return a.focalId===fpId;});
-  var col=list.filter(function(a){return a.collected;}).length;
-  var pend=list.length-col;
-  var init=(fp.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-  var av=fp.photo?'<img src="'+fp.photo+'" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2.5px solid #0F6E56;flex-shrink:0">':'<div style="width:56px;height:56px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
-  var html='<div class="card">';
-  html+='<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">'+av;
-  html+='<div><div style="font-size:16px;font-weight:900">'+fp.name+'</div><div style="font-size:11px;color:#888">'+fp.id+(fp.role?' &bull; '+fp.role:'')+(fp.mobile?' &bull; '+fp.mobile:'')+'</div></div></div>';
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">';
-  html+='<div style="background:#f9f9f9;border-radius:8px;padding:8px;text-align:center"><div style="font-size:20px;font-weight:900;color:#1a1a1a">'+list.length+'</div><div style="font-size:10px;color:#888">Total</div></div>';
-  html+='<div style="background:#E1F5EE;border-radius:8px;padding:8px;text-align:center"><div style="font-size:20px;font-weight:900;color:#0F6E56">'+col+'</div><div style="font-size:10px;color:#085041">Collected</div></div>';
-  html+='<div style="background:#FAEEDA;border-radius:8px;padding:8px;text-align:center"><div style="font-size:20px;font-weight:900;color:#854F0B">'+pend+'</div><div style="font-size:10px;color:#654000">Pending</div></div>';
-  html+='</div>';
-  if(!list.length){html+='<p style="text-align:center;color:#888">Koi donor assign nahi.</p></div>';return html;}
-  // Pending section
-  var pendList=list.filter(function(a){return !a.collected;});
-  var colList=list.filter(function(a){return a.collected;});
-  if(pendList.length){
-    html+='<div style="font-size:11px;font-weight:700;color:#854F0B;margin-bottom:6px">PENDING ('+pendList.length+')</div>';
-    pendList.forEach(function(a){
-      var donor=DB.donors.find(function(d){return d.id===a.donorId;})||{name:a.donorId,area:'',mobile:''};
-      var init=(donor.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-      var av2=donor.photo?'<img src="'+donor.photo+'" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0">':'<div style="width:38px;height:38px;border-radius:50%;background:#FAEEDA;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#854F0B;flex-shrink:0">'+init+'</div>';
-      html+='<div style="display:flex;align-items:center;gap:8px;padding:8px;background:#FAEEDA;border-radius:8px;margin-bottom:6px">';
-      // Last donation
-      var lastDons=DB.donations.filter(function(x){return x.donorId===donor.id;}).sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
-      var lastDonDate=lastDons.length?lastDons[0].date:'';
-      var mob=(donor.mobile||'').replace(/[^0-9]/g,'');
-      var org=ORG_CONFIG.name||'Falah e Qabristan';
-      var bankStr='';if(ORG_CONFIG.bankAccounts&&ORG_CONFIG.bankAccounts.length){var bls=[];ORG_CONFIG.bankAccounts.forEach(function(b){bls.push((b.title||b.bank)+'\n'+b.bank+'\n'+b.number);});bankStr='\n\n'+bls.join('\n\n');}
-      var waMsg='🌿 بسم اللہ\n\nمحترم *'+donor.name+'* صاحب!\nآپ کا فنڈ *'+org+'* کو اب تک موصول نہیں ہو سکا۔ براہ کرم جلد ادا فرمائیں۔'+bankStr+'\n\nجزاکم اللہ 🤲';
-      var waUrl=mob?'whatsapp://send?phone=92'+mob.replace(/^0/,'')+'&text='+encodeURIComponent(waMsg):'';
-      var waFallback=mob?'https://api.whatsapp.com/send?phone=92'+mob.replace(/^0/,'')+'&text='+encodeURIComponent(waMsg):'';
-      html+=av2+'<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700">'+donor.name+'</div>';
-      html+='<div style="font-size:10px;color:#888">'+donor.id+(donor.area?' &bull; '+donor.area:'')+'</div>';
-      html+=(lastDonDate?'<div style="font-size:10px;color:#185FA5;margin-top:2px">&#128197; Last: '+lastDonDate+'</div>':'<div style="font-size:10px;color:#E24B4A;margin-top:2px">&#128197; No donation yet</div>');
-      html+=(donor.mobile?'<div style="font-size:10px;color:#185FA5;">'+donor.mobile+'</div>':'');
-      html+='</div>';
-      html+='<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">';
-      if(waUrl)html+='<a href="'+waUrl+'" onclick="var u=this.href;event.preventDefault();window.open(u);return false;" style="background:#25D366;color:#fff;padding:5px 8px;border-radius:7px;font-size:10px;font-weight:700;text-decoration:none;text-align:center;display:block">&#128232; Remind</a>';
-      html+='<button data-aid="'+a.id+'" onclick="_fpToggleCollected(this.dataset.aid)" style="background:#0F6E56;color:#fff;border:none;padding:5px 8px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer">&#10003; Collect</button>';
-      html+='</div>';
-      html+='</div>';
-    });
-  }
-  if(colList.length){
-    html+='<div style="font-size:11px;font-weight:700;color:#0F6E56;margin-top:10px;margin-bottom:6px">COLLECTED ('+colList.length+')</div>';
-    colList.forEach(function(a){
-      var donor=DB.donors.find(function(d){return d.id===a.donorId;})||{name:a.donorId,area:''};
-      html+='<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;background:#E1F5EE;border-radius:8px;margin-bottom:5px">';
-      var colDons=DB.donations.filter(function(x){return x.donorId===donor.id;}).sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
-      var colLastDate=colDons.length?colDons[0].date:'';
-      html+='<span style="font-size:16px">&#10003;</span><div style="flex:1"><div style="font-size:12px;font-weight:700;color:#0F6E56">'+donor.name+'</div>';
-      html+='<div style="font-size:10px;color:#085041">'+donor.id+(colLastDate?' &bull; Last: '+colLastDate:'')+'</div></div>';
-      html+='<button data-aid="'+a.id+'" onclick="_fpToggleCollected(this.dataset.aid)" style="background:#f5f5f5;color:#888;border:1px solid #ddd;padding:4px 8px;border-radius:6px;font-size:10px;cursor:pointer">Undo</button>';
-      html+='</div>';
-    });
-  }
-  html+='</div>';
-  return html;
-};
-
-// ── Helper functions ──────────────────────────────────────────────
-
-function _fpFetchPerson(){
-  var uid=(document.getElementById('fpPersonId')||{value:''}).value.trim();
-  var el=document.getElementById('fpPersonInfo');if(!el)return;
-  if(!uid){el.innerHTML='<div style="font-size:11px;color:#E24B4A">ID darein.</div>';return;}
-  var person=DB.users.find(function(u){return u.id===uid;})||DB.donors.find(function(d){return d.id===uid;});
-  if(!person){el.innerHTML='<div style="font-size:11px;color:#E24B4A">❌ "'+uid+'" nahi mila.</div>';return;}
-  window._fpSelId=uid;
-  var init=(person.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-  var av=person.photo?'<img src="'+person.photo+'" style="width:32px;height:32px;border-radius:50%;object-fit:cover">':'<div style="width:32px;height:32px;border-radius:50%;background:#0F6E56;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff">'+init+'</div>';
-  el.innerHTML='<div style="background:#E1F5EE;border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px">'+av+'<div><div style="font-size:13px;font-weight:700;color:#0F6E56">✔ '+person.name+'</div><div style="font-size:10px;color:#085041">'+person.id+(person.area?' &bull; '+person.area:'')+'</div></div></div>';
-}
-
-function _fpStepSubArea(){
-  var inp=document.getElementById('fpSubAreaInput');
-  var sa=inp?inp.value.trim():'';
-  if(!sa){showPopup('⚠️','Required','Sub-area darein.');return;}
-  window._fpSubArea=sa;
-  window._fpStep=3;
-  renderTab('fpassign');
-}
-
-async function _fpAutoAssign(){
-  var fpSelId=window._fpSelId||'';
-  var fpSubArea=window._fpSubArea||'';
-  if(!fpSelId||!fpSubArea)return;
-  var fp=DB.users.find(function(u){return u.id===fpSelId;})||DB.donors.find(function(d){return d.id===fpSelId;})||{name:fpSelId};
-  var autoMatched=DB.donors.filter(function(d){return d.subArea&&d.subArea.toLowerCase()===fpSubArea.toLowerCase();});
-  var alreadyIds=new Set(DB.focalAssignments.filter(function(a){return a.focalId===fpSelId;}).map(function(a){return a.donorId;}));
-  var newAuto=autoMatched.filter(function(d){return !alreadyIds.has(d.id);});
-  if(!newAuto.length){showPopup('⚠️','None','Koi naya auto-match nahi mila.');return;}
-  if(!confirm('Auto-assign '+newAuto.length+' matched donors to '+fp.name+'?'))return;
-  for(var i=0;i<newAuto.length;i++){
-    var d=newAuto[i];
-    var newA={id:'FA-'+Date.now()+'-'+Math.random().toString(36).substr(2,4),focalId:fpSelId,subArea:fpSubArea,donorId:d.id,collected:false,date:today(),by:currentUser.id};
-    DB.focalAssignments.push(newA);
-    await FS.save('focalAssignments',newA.id,newA);
-  }
-  saveLocalCache();
-  showPopup('✅','Auto-Assigned',newAuto.length+' donors assigned to '+fp.name+'!');
-  window._fpStep=1;window._fpSelId='';window._fpSubArea='';
-  renderTab('focalperson');
-}
-function _fpDonorListHTML(area,search){
-  var donors=[...DB.donors].sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
-  if(area)donors=donors.filter(function(d){return (d.area||'')===area;});
-  if(search){var sq=search.toLowerCase();donors=donors.filter(function(d){return (d.name||'').toLowerCase().includes(sq)||(d.id||'').toLowerCase().includes(sq);});}
-  var assignedIds=new Set(DB.focalAssignments.map(function(a){return a.donorId;}));
-  var html='';
-  donors.forEach(function(d){
-    var already=assignedIds.has(d.id);
-    var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-    var av=d.photo?'<img src="'+d.photo+'" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0">':'<div style="width:34px;height:34px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
-    html+='<label style="display:flex;align-items:center;gap:9px;padding:8px;border-radius:8px;margin-bottom:4px;background:'+(already?'#FEF0F0':'#f9f9f9')+';border:1px solid '+(already?'#FCBFBF':'#e8e8e8')+';cursor:pointer">';
-    html+='<input type="checkbox" data-did="'+d.id+'" style="width:18px;height:18px;cursor:pointer" onchange="_fpUpdateCount()" '+(already?'':'')+'>';
-    html+=av;
-    html+='<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700">'+d.name+'</div>';
-    html+='<div style="font-size:10px;color:#888">'+d.id+(d.area?' &bull; '+d.area:'')+'</div></div>';
-    html+=(already?'<span style="font-size:10px;color:#E24B4A;flex-shrink:0">Already assigned</span>':'');
-    html+='</label>';
-  });
-  return html||'<p style="text-align:center;color:#888;padding:16px;font-size:12px">No donors found.</p>';
-}
-
-function _fpUpdateCount(){
-  var checked=document.querySelectorAll('#fpDonorList input[type=checkbox]:checked');
-  var badge=document.getElementById('fpSelectedCount');
-  if(badge)badge.textContent=checked.length+' selected';
-}
-function _fpFilterDonors(){
-  var area=document.getElementById('fpAreaFilter');var a=area?area.value:'';
-  var search=document.getElementById('fpSearch');var s=search?search.value:'';
-  var list=document.getElementById('fpDonorList');
-  if(list)list.innerHTML=_fpDonorListHTML(a,s);
-  // Restore focus
-  if(search)setTimeout(function(){search.focus();},30);
-  _fpUpdateCount();
-}
-
-async function _fpSaveAssignment(){
-  var fpSel=document.getElementById('fpSelect');
-  if(!fpSel||!fpSel.value){showPopup('\u26a0\ufe0f','Required','Focal Person select karein.');return;}
-  var fpId=fpSel.value;
-  var checked=document.querySelectorAll('#fpDonorList input[type=checkbox]:checked');
-  if(!checked.length){showPopup('\u26a0\ufe0f','Required','Kam az kam ek donor select karein.');return;}
-  var fp=DB.users.find(function(u){return u.id===fpId;})||DB.donors.find(function(d){return d.id===fpId;})||{name:fpId};
-  var donors=[];
-  checked.forEach(function(cb){donors.push(cb.dataset.did);});
-  if(!confirm('Assign '+donors.length+' donors to '+fp.name+'?'))return;
-  var added=0;
-  for(var i=0;i<donors.length;i++){
-    var did=donors[i];
-    if(DB.focalAssignments.some(function(a){return a.donorId===did;})){continue;}// skip already assigned
-    var newA={id:'FA-'+Date.now()+'-'+Math.random().toString(36).substr(2,4),focalId:fpId,subArea:fpSubArea||'',donorId:did,collected:false,date:today(),by:currentUser.id};
-    DB.focalAssignments.push(newA);
-    await FS.save('focalAssignments',newA.id,newA);
-    added++;
-  }
-  saveLocalCache();
-  showPopup('\u2705','Assigned',added+' donors assigned to '+fp.name+'!');
-  renderTab('focalperson');
-}
-
-async function _fpToggleCollected(aid){
-  var a=DB.focalAssignments.find(function(x){return x.id===aid;});
-  if(!a)return;
-  a.collected=!a.collected;
-  a.collectedDate=a.collected?today():null;
-  a.collectedBy=a.collected?currentUser.id:null;
-  try{
-    await FS.save('focalAssignments',aid,a);
-    saveLocalCache();
-    renderTab(currentTab);
-  }catch(e){showPopup('\u274c','Error',e.message);}
-}
-
-async function _fpRemoveAssignment(aid){
-  var a=DB.focalAssignments.find(function(x){return x.id===aid;});
-  if(!a)return;
-  var donor=DB.donors.find(function(d){return d.id===a.donorId;})||{name:a.donorId};
-  if(!confirm('Remove '+donor.name+' from assignment?'))return;
-  DB.focalAssignments=DB.focalAssignments.filter(function(x){return x.id!==aid;});
-  try{await FS.del('focalAssignments',aid);saveLocalCache();renderTab(currentTab);}
-  catch(e){showPopup('\u274c','Error',e.message);}
-}
-
 T.updatecategory=function(){
   if(!['admin','manager','developer'].includes(currentRole))
     return '<div class="card"><p style="text-align:center;color:#888;padding:20px">⛔ Access Denied.</p></div>';
@@ -11480,76 +10528,6 @@ T.aboutus=function(){
 
   return html;
 };
-T.orgfocalpersons=function(){
-  if(!['admin','manager','developer'].includes(currentRole))
-    return '<div class="card"><p style="text-align:center;color:#888;padding:20px">⛔ Access Denied.</p></div>';
-  var list=ORG_CONFIG.focalPersons||[];
-  var html='<div class="card">';
-  html+='<h3 style="margin-bottom:4px">👥 Focal Persons</h3>';
-  html+='<p style="font-size:11px;color:#888;margin-bottom:10px">'+list.length+' focal persons</p>';
-  list.forEach(function(m,i){
-    var init=(m.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-    var av=m.photo?'<img src="'+m.photo+'" style="width:42px;height:42px;border-radius:50%;object-fit:cover;flex-shrink:0">':'<div style="width:42px;height:42px;border-radius:50%;background:#EDE9FE;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#5B21B6;flex-shrink:0">'+init+'</div>';
-    html+='<div style="display:flex;align-items:center;gap:10px;padding:10px;background:#F5F3FF;border-radius:10px;border:1px solid #DDD6FE;margin-bottom:8px">';
-    html+=av;
-    html+='<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:700;color:#4C1D95">'+m.name+'</div>';
-    html+='<div style="font-size:10px;color:#7C3AED;margin-top:1px">'+m.userId+'</div>';
-    html+=(m.designation?'<div style="font-size:10px;color:#888">'+m.designation+'</div>':'');
-    html+=(m.area?'<div style="font-size:10px;color:#888">📍 '+m.area+'</div>':'');
-    html+=(m.mobile?'<div style="font-size:10px;color:#185FA5">'+m.mobile+'</div>':'');
-    html+='</div>';
-    html+='<button onclick="_removeFocalPerson('+i+')" style="background:#E24B4A;color:#fff;border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;flex-shrink:0">×</button>';
-    html+='</div>';
-  });
-  html+='<div style="border-top:1px solid #eee;margin-top:12px;padding-top:12px">';
-  html+='<div style="font-size:12px;font-weight:700;margin-bottom:10px">Add Focal Person</div>';
-  html+='<div style="display:flex;gap:6px;margin-bottom:8px">';
-  html+='<div class="inp-wrap" style="flex:1;margin:0"><span class="inp-icon">&#128100;</span><input type="text" id="fporgUserId" placeholder="Personal ID (User/Donor)" autocomplete="new-password" style="font-size:13px" onkeydown="if(event.key===\'Enter\')_fetchFpOrgMember()"></div>';
-  html+='<button onclick="_fetchFpOrgMember()" style="background:#7C3AED;color:#fff;border:none;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">Fetch</button>';
-  html+='</div>';
-  html+='<div id="fporgFetchInfo" style="margin-bottom:8px"></div>';
-  html+='<div class="inp-wrap" style="margin-bottom:10px"><span class="inp-icon">💼</span><input type="text" id="fporgDesignation" placeholder="Designation e.g. Area Focal, Zone Leader..."></div>';
-  html+='<button onclick="_addFpOrgMember()" class="btn btn-primary" style="width:100%;background:#7C3AED;border-color:#7C3AED">+ Add Focal Person</button>';
-  html+='</div></div>';
-  return html;
-};
-function _fetchFpOrgMember(){
-  var uid=(document.getElementById('fporgUserId')||{value:''}).value.trim();
-  var el=document.getElementById('fporgFetchInfo');if(!el)return;
-  if(!uid){el.innerHTML='<div style="font-size:11px;color:#E24B4A">ID darein.</div>';return;}
-  var user=DB.users.find(function(u){return u.id===uid;})||DB.donors.find(function(d){return d.id===uid;});
-  if(!user){el.innerHTML='<div style="font-size:11px;color:#E24B4A">❌ "'+uid+'" nahi mila.</div>';return;}
-  window._fetchedFpOrg=user;
-  var init=(user.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-  var av=user.photo?'<img src="'+user.photo+'" style="width:28px;height:28px;border-radius:50%;object-fit:cover">':'<div style="width:28px;height:28px;border-radius:50%;background:#7C3AED;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff">'+init+'</div>';
-  el.innerHTML='<div style="background:#F5F3FF;border-radius:8px;padding:8px 10px;display:flex;align-items:center;gap:8px">'+av+'<div><div style="font-size:12px;font-weight:700;color:#5B21B6">✔ '+user.name+'</div><div style="font-size:10px;color:#7C3AED">'+user.id+'</div></div></div>';
-}
-async function _addFpOrgMember(){
-  var user=window._fetchedFpOrg;
-  if(!user){showPopup('⚠️','Required','Pehle ID fetch karein.');return;}
-  var desig=(document.getElementById('fporgDesignation')||{value:''}).value.trim();
-  if(!desig){showPopup('⚠️','Required','Designation darein.');return;}
-  if(!ORG_CONFIG.focalPersons)ORG_CONFIG.focalPersons=[];
-  if(ORG_CONFIG.focalPersons.some(function(m){return m.userId===user.id;})){showPopup('⚠️','Duplicate','Yeh ID pehle se list mein hai.');return;}
-  if(!confirm('Add '+user.name+' as focal person?'))return;
-  ORG_CONFIG.focalPersons.push({userId:user.id,name:user.name,mobile:user.mobile||'',area:user.area||'',photo:user.photo||null,designation:desig});
-  try{
-    await FS.saveConfig();saveLocalCache();
-    window._fetchedFpOrg=null;
-    var ui=document.getElementById('fporgUserId');if(ui)ui.value='';
-    var di=document.getElementById('fporgDesignation');if(di)di.value='';
-    var fi=document.getElementById('fporgFetchInfo');if(fi)fi.innerHTML='';
-    showPopup('✅','Added',user.name+' added as focal person!');
-    renderTab('orgfocalpersons');
-  }catch(e){showPopup('❌','Error','Save failed: '+e.message);}
-}
-async function _removeFocalPerson(idx){
-  var m=ORG_CONFIG.focalPersons[idx];if(!m)return;
-  if(!confirm('Remove '+m.name+'?'))return;
-  ORG_CONFIG.focalPersons.splice(idx,1);
-  try{await FS.saveConfig();saveLocalCache();renderTab('orgfocalpersons');}
-  catch(e){showPopup('❌','Error',e.message);}
-}
 T.wreminder=function(){
   if(!['admin','manager','developer'].includes(currentRole)){
     return '<div class="card"><div style="text-align:center;padding:24px;color:#888">\u26d4 Access denied.</div></div>';
@@ -11980,6 +10958,447 @@ function devDeleteAll(collection){
   showPopup('🗑️','Deleted','All '+collection+' entries deleted.');
 }
 
+T.drivebackup=function(){
+  const lastBk = GDrive._lastBackup || '—';
+  const connected = !!GDrive._accessToken;
+  const fileId = localStorage.getItem(GDrive.FILE_ID_KEY) || '—';
+  return `<div class="card">
+    <div class="card-header">
+      <div class="bi-title">
+        <span class="bi-en">☁️ Google Drive Backup</span>
+        <span class="bi-ur">گوگل ڈرائیو بیک اپ</span>
+      </div>
+      <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:${connected?'#E1F5EE':'#f5f5f5'};color:${connected?'#0F6E56':'#888'};font-weight:600">${connected?'✅ Connected':'⚪ Not Connected'}</span>
+    </div>
+    <div style="background:#E6F1FB;border:1px solid #378ADD;border-radius:8px;padding:10px;margin-bottom:12px;font-size:12px;color:#185FA5;line-height:1.6">
+      ℹ️ Aapka data Firebase ke saath saath Google Drive pe bhi automatically save hota rahega. Har save ke 5 seconds baad Drive backup update hoga. Har 30 minute pe bhi auto-backup hoga.
+    </div>
+    <div style="display:grid;gap:8px;margin-bottom:12px">
+      <button class="btn btn-primary" onclick="GDrive.authenticate(()=>{GDrive.saveBackup();setTimeout(()=>renderTab('drivebackup'),1500)})">
+        🔐 Connect Google Account & Backup
+      </button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="btn btn-outline" onclick="GDrive.saveBackup().then(()=>setTimeout(()=>renderTab('drivebackup'),1500))">
+          ☁️ Backup Now
+        </button>
+        <button class="btn" style="background:#FFF3E0;color:#E65100;border-color:#FFB74D" onclick="GDrive.restoreBackup()">
+          🔄 Restore from Drive
+        </button>
+      </div>
+    </div>
+    <div style="background:#f9f9f9;border-radius:8px;padding:10px;font-size:12px;color:#555">
+      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee">
+        <span style="color:#888">Status</span>
+        <span style="font-weight:600;color:${connected?'#0F6E56':'#888'}">${connected?'Google Drive Connected':'Not Authenticated'}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee">
+        <span style="color:#888">Last Backup</span>
+        <span style="font-weight:600">${lastBk}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #eee">
+        <span style="color:#888">Auto-Backup</span>
+        <span style="font-weight:600;color:#0F6E56">Every 30 minutes</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:4px 0">
+        <span style="color:#888">Drive File ID</span>
+        <span style="font-size:10px;word-break:break-all">${fileId !== '—' ? fileId.substring(0,20)+'...' : '—'}</span>
+      </div>
+    </div>
+    <div style="background:#FCEBEB;border:1px solid #E24B4A;border-radius:8px;padding:10px;margin-top:10px;font-size:12px;color:#A32D2D">
+      ⚠️ Restore karne se current data replace ho jata hai. Pehle manual backup zaroor lein.
+    </div>
+  </div>`;
+};
+
+
+// ============================================================
+// FUNDRAISING DEPARTMENT
+// ============================================================
+T.fundraisingdept=function(){
+  var subTab=window._fdTab||'dashboard';
+  var tabs=[
+    {key:'dashboard',label:'📊 Dashboard',icon:'📊'},
+    {key:'assign',label:'👤 Assign Fundraiser',icon:'👤'},
+    {key:'linkdonors',label:'🔗 Link Donors',icon:'🔗'},
+    {key:'list',label:'📋 Fundraiser List',icon:'📋'},
+  ];
+  var tabBtns=tabs.map(function(t){
+    var act=t.key===subTab;
+    return '<button onclick="window._fdTab=\''+t.key+'\';renderTab(\'fundraisingdept\')" style="padding:8px 14px;border-radius:20px;border:none;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;background:'+(act?'#0F6E56':'#f5f5f5')+';color:'+(act?'#fff':'#555')+'">'+t.label+'</button>';
+  }).join('');
+  var html='<div class="card" style="padding-bottom:20px">';
+  html+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><div style="width:36px;height:36px;background:linear-gradient(135deg,#0F6E56,#185FA5);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🏆</div><div><div style="font-size:15px;font-weight:800;color:#0F6E56">Fundraising Department</div><div style="font-size:11px;color:#888">فنڈ ریزنگ ڈیپارٹمنٹ</div></div></div>';
+  html+='<div style="display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;margin-bottom:14px;padding-bottom:4px">'+tabBtns+'</div>';
+  if(subTab==='dashboard') html+=_fdDashboard();
+  else if(subTab==='assign') html+=_fdAssign();
+  else if(subTab==='linkdonors') html+=_fdLinkDonors();
+  else if(subTab==='list') html+=_fdList();
+  html+='</div>';
+  return html;
+};
+
+// --- DASHBOARD ---
+function _fdDashboard(){
+  var totalRaisers=DB.fundraisers.length;
+  var totalLinked=new Set(DB.fundraisingLinks.map(function(l){return l.donorId;})).size;
+  var thisMonth=new Date().toISOString().substring(0,7);
+  var collectedIds=new Set(DB.donations.filter(function(d){return (d.date||'').startsWith(thisMonth);}).map(function(d){return d.donorId;}));
+  var linkedDonorIds=new Set(DB.fundraisingLinks.map(function(l){return l.donorId;}));
+  var collected=0; linkedDonorIds.forEach(function(id){if(collectedIds.has(id))collected++;});
+  var pending=linkedDonorIds.size-collected;
+  var unlinked=DB.donors.length-linkedDonorIds.size;
+
+  var html='';
+  // Stat cards
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">';
+  html+=_fdStat('🏆','Fundraisers',totalRaisers,'#0F6E56','#E1F5EE');
+  html+=_fdStat('🔗','Linked Donors',totalLinked,'#185FA5','#E6F1FB');
+  html+=_fdStat('✅','Collected',collected,'#0F6E56','#E1F5EE');
+  html+=_fdStat('⏳','Pending',pending,'#854F0B','#FAEEDA');
+  html+='</div>';
+
+  // Unlinked alert
+  if(unlinked>0){
+    html+='<div style="background:#FFF3E0;border:1px solid #FFB74D;border-radius:10px;padding:10px;margin-bottom:12px;display:flex;align-items:center;gap:10px">';
+    html+='<span style="font-size:20px">⚠️</span><div style="flex:1"><div style="font-size:12px;font-weight:700;color:#E65100">'+unlinked+' Donors Unlinked</div><div style="font-size:11px;color:#888">Koi fundraiser assign nahi hai in donors ko</div></div>';
+    html+='<button onclick="window._fdTab=\'linkdonors\';renderTab(\'fundraisingdept\')" style="background:#E65100;color:#fff;border:none;padding:6px 10px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">Link Now</button>';
+    html+='</div>';
+  }
+
+  // Per fundraiser summary
+  if(!DB.fundraisers.length){
+    html+='<div style="text-align:center;padding:20px;color:#aaa;font-size:13px">Koi fundraiser nahi. "Assign Fundraiser" tab se add karein.</div>';
+    return html;
+  }
+  html+='<div style="font-size:12px;font-weight:800;color:#1a1a1a;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">Fundraiser Performance</div>';
+  DB.fundraisers.forEach(function(fr){
+    var links=DB.fundraisingLinks.filter(function(l){return l.fundraiserId===fr.id;});
+    var myDonorIds=links.map(function(l){return l.donorId;});
+    var myCollected=myDonorIds.filter(function(id){return collectedIds.has(id);}).length;
+    var myPending=myDonorIds.length-myCollected;
+    var pct=myDonorIds.length?Math.round(myCollected/myDonorIds.length*100):0;
+    var init=(fr.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+    html+='<div onclick="window._fdTab=\'list\';window._fdViewId=\''+fr.id+'\';renderTab(\'fundraisingdept\')" style="background:#f9f9f9;border:1px solid #e8e8e8;border-radius:12px;padding:12px;margin-bottom:8px;cursor:pointer">';
+    html+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">';
+    html+='<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#0F6E56,#185FA5);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0">'+init+'</div>';
+    html+='<div style="flex:1"><div style="font-size:13px;font-weight:700">'+fr.name+'</div>';
+    html+='<div style="font-size:10px;color:#888;margin-top:1px">'+fr.personType+' &bull; '+(fr.area||'—')+(fr.subArea?' / '+fr.subArea:'')+'</div></div>';
+    html+='<div style="text-align:right"><div style="font-size:14px;font-weight:800;color:#0F6E56">'+pct+'%</div><div style="font-size:10px;color:#888">collected</div></div>';
+    html+='</div>';
+    html+='<div style="background:#e8e8e8;border-radius:20px;height:6px;overflow:hidden"><div style="background:linear-gradient(90deg,#0F6E56,#1D9E75);height:100%;width:'+pct+'%;border-radius:20px;transition:width 0.5s"></div></div>';
+    html+='<div style="display:flex;gap:12px;margin-top:6px">';
+    html+='<span style="font-size:11px;color:#888">Total: <b style="color:#1a1a1a">'+myDonorIds.length+'</b></span>';
+    html+='<span style="font-size:11px;color:#0F6E56">✅ <b>'+myCollected+'</b></span>';
+    html+='<span style="font-size:11px;color:#854F0B">⏳ <b>'+myPending+'</b></span>';
+    html+='</div></div>';
+  });
+  return html;
+}
+
+function _fdStat(icon,label,val,col,bg){
+  return '<div style="background:'+bg+';border-radius:12px;padding:12px;text-align:center"><div style="font-size:22px">'+icon+'</div><div style="font-size:20px;font-weight:800;color:'+col+'">'+val+'</div><div style="font-size:10px;color:#888;font-weight:600">'+label+'</div></div>';
+}
+
+// --- ASSIGN FUNDRAISER ---
+function _fdAssign(){
+  var q=(window._fdAssignQ||'').toLowerCase();
+  var html='';
+  html+='<div style="font-size:13px;font-weight:700;margin-bottom:10px;color:#0F6E56">➕ Add New Fundraiser</div>';
+  html+='<div style="background:#f5f5f5;border-radius:10px;padding:12px;margin-bottom:14px">';
+  // Search person
+  html+='<label style="font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:4px">Search User or Donor *</label>';
+  html+='<div style="position:relative"><input type="text" id="fdPersonSearch" value="'+(window._fdAssignQ||'')+'" placeholder="Name, ID, or mobile..." oninput="window._fdAssignQ=this.value;window._fdSelPerson=null;renderTab(\'fundraisingdept\')" style="width:100%;padding:10px 12px;border:1.5px solid #1D9E75;border-radius:8px;font-size:13px;box-sizing:border-box"></div>';
+  // Search results
+  if(q.length>=2){
+    var allPeople=[];
+    DB.users.filter(function(u){return u.approved&&u.role!=='developer';}).forEach(function(u){allPeople.push({id:u.id,name:u.name,mobile:u.mobile,area:u.area,type:'user',photo:u.photo});});
+    DB.donors.forEach(function(d){if(!allPeople.find(function(p){return p.id===d.id;}))allPeople.push({id:d.id,name:d.name,mobile:d.mobile,area:d.area,type:'donor',photo:d.photo});});
+    var results=allPeople.filter(function(p){return (p.name||'').toLowerCase().includes(q)||(p.id||'').toLowerCase().includes(q)||(p.mobile||'').includes(q);}).slice(0,8);
+    if(results.length){
+      html+='<div style="background:#fff;border:1px solid #ddd;border-radius:8px;margin-top:4px;overflow:hidden">';
+      results.forEach(function(p){
+        var sel=window._fdSelPerson&&window._fdSelPerson.id===p.id;
+        var init=(p.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+        var alreadyFr=DB.fundraisers.find(function(f){return f.personId===p.id;});
+        html+='<div onclick="'+(alreadyFr?'showPopup(\'⚠️\',\'Already Fundraiser\',\''+p.name+' pehle se fundraiser hai!\')':'window._fdSelPerson='+JSON.stringify(p)+';document.getElementById(\'fdAssignArea\').value=\''+( p.area||'')+'\';renderTab(\'fundraisingdept\')')+'" style="display:flex;align-items:center;gap:8px;padding:9px 12px;cursor:pointer;background:'+(sel?'#E1F5EE':alreadyFr?'#f5f5f5':'#fff')+';border-bottom:1px solid #f0f0f0">';
+        html+='<div style="width:32px;height:32px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
+        html+='<div style="flex:1"><div style="font-size:12px;font-weight:700">'+p.name+(alreadyFr?' <span style="font-size:10px;color:#0F6E56;background:#E1F5EE;padding:1px 6px;border-radius:20px">✓ Fundraiser</span>':'')+'</div>';
+        html+='<div style="font-size:10px;color:#888">'+p.id+' &bull; '+(p.type==='user'?'👤 User':'💰 Donor')+(p.area?' &bull; '+p.area:'')+'</div></div>';
+        if(sel)html+='<span style="color:#0F6E56;font-size:16px">✓</span>';
+        html+='</div>';
+      });
+      html+='</div>';
+    } else {
+      html+='<div style="font-size:12px;color:#aaa;padding:8px 0;text-align:center">No results found</div>';
+    }
+  }
+  // Selected person info
+  if(window._fdSelPerson){
+    var sp=window._fdSelPerson;
+    html+='<div style="background:#E1F5EE;border-radius:8px;padding:8px 12px;margin-top:8px;display:flex;align-items:center;gap:8px">';
+    html+='<span style="font-size:16px">✅</span><div style="flex:1;font-size:12px;font-weight:700;color:#0F6E56">'+sp.name+' ('+sp.type+')</div>';
+    html+='<button onclick="window._fdSelPerson=null;window._fdAssignQ=\'\';renderTab(\'fundraisingdept\')" style="background:none;border:none;font-size:16px;cursor:pointer;color:#aaa">✕</button></div>';
+  }
+  // Area fields
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">';
+  html+='<div><label style="font-size:11px;font-weight:700;color:#555">Area</label>';
+  var areaOpts=AREAS.map(function(a){return '<option value="'+a+'">'+a+'</option>';}).join('');
+  html+='<select id="fdAssignArea" style="width:100%;padding:9px;border:1.5px solid #ddd;border-radius:8px;font-size:12px;margin-top:3px"><option value="">-- Select Area --</option>'+areaOpts+'</select></div>';
+  html+='<div><label style="font-size:11px;font-weight:700;color:#555">Sub Area *</label>';
+  html+='<input type="text" id="fdAssignSubArea" placeholder="e.g. Mohalla X, Block A" style="width:100%;padding:9px;border:1.5px solid #1D9E75;border-radius:8px;font-size:12px;margin-top:3px;box-sizing:border-box"></div>';
+  html+='</div>';
+  html+='<button onclick="_fdSaveRaiser()" style="width:100%;background:linear-gradient(135deg,#0F6E56,#185FA5);color:#fff;border:none;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-top:12px">➕ Add as Fundraiser</button>';
+  html+='</div>';
+
+  // Existing fundraisers quick list
+  if(DB.fundraisers.length){
+    html+='<div style="font-size:12px;font-weight:800;color:#1a1a1a;margin-bottom:8px;margin-top:4px">Current Fundraisers ('+DB.fundraisers.length+')</div>';
+    DB.fundraisers.forEach(function(fr){
+      var links=DB.fundraisingLinks.filter(function(l){return l.fundraiserId===fr.id;}).length;
+      html+='<div style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:#f9f9f9;border-radius:10px;border:1px solid #e8e8e8;margin-bottom:6px">';
+      var init=(fr.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+      html+='<div style="width:34px;height:34px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
+      html+='<div style="flex:1"><div style="font-size:12px;font-weight:700">'+fr.name+'</div>';
+      html+='<div style="font-size:10px;color:#888">'+(fr.area||'—')+' / '+(fr.subArea||'—')+' &bull; '+links+' donors</div></div>';
+      html+='<button onclick="_fdRemoveRaiser(\''+fr.id+'\')" style="background:#FFF0F0;border:1px solid #FCBFBF;color:#E24B4A;border-radius:8px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer">Remove</button>';
+      html+='</div>';
+    });
+  }
+  return html;
+}
+
+async function _fdSaveRaiser(){
+  var sp=window._fdSelPerson;
+  if(!sp){showPopup('⚠️','Required','Pehle koi user ya donor select karein.');return;}
+  if(DB.fundraisers.find(function(f){return f.personId===sp.id;})){showPopup('⚠️','Already','Yeh pehle se fundraiser hai.');return;}
+  var area=(document.getElementById('fdAssignArea')||{value:''}).value;
+  var subArea=(document.getElementById('fdAssignSubArea')||{value:''}).value.trim();
+  if(!subArea){showPopup('⚠️','Required','Sub Area zaroor darein.');return;}
+  var fr={id:'FR-'+Date.now(),personId:sp.id,personType:sp.type,name:sp.name,mobile:sp.mobile||'',area:area,subArea:subArea,addedBy:currentUser.id,date:today()};
+  DB.fundraisers.push(fr);
+  await FS.save('fundraisers',fr.id,fr);
+  saveLocalCache();
+  window._fdSelPerson=null;window._fdAssignQ='';
+  // Auto-link donors with matching subArea
+  var autoLinked=0;
+  DB.donors.forEach(function(d){
+    if((d.subArea||d.area||'').toLowerCase()===subArea.toLowerCase()&&!DB.fundraisingLinks.find(function(l){return l.donorId===d.id;})){
+      var lnk={id:'FL-'+Date.now()+'-'+d.id,fundraiserId:fr.id,donorId:d.id,subArea:subArea,date:today(),addedBy:currentUser.id};
+      DB.fundraisingLinks.push(lnk);
+      FS.save('fundraisingLinks',lnk.id,lnk);
+      autoLinked++;
+    }
+  });
+  saveLocalCache();
+  showPopup('✅','Fundraiser Added',fr.name+' added! Auto-linked '+autoLinked+' donors by sub-area.');
+  renderTab('fundraisingdept');
+}
+
+async function _fdRemoveRaiser(frId){
+  var fr=DB.fundraisers.find(function(f){return f.id===frId;});if(!fr)return;
+  if(!confirm('Remove '+fr.name+' as fundraiser? Their donor links will also be removed.'))return;
+  DB.fundraisers=DB.fundraisers.filter(function(f){return f.id!==frId;});
+  var toDelLinks=DB.fundraisingLinks.filter(function(l){return l.fundraiserId===frId;});
+  DB.fundraisingLinks=DB.fundraisingLinks.filter(function(l){return l.fundraiserId!==frId;});
+  await FS.del('fundraisers',frId);
+  for(var i=0;i<toDelLinks.length;i++) await FS.del('fundraisingLinks',toDelLinks[i].id);
+  saveLocalCache();
+  showPopup('✅','Removed',fr.name+' removed as fundraiser.');
+  renderTab('fundraisingdept');
+}
+
+// --- LINK DONORS ---
+function _fdLinkDonors(){
+  var html='';
+  // All Donors table with subArea editor
+  html+='<div style="font-size:13px;font-weight:700;color:#185FA5;margin-bottom:6px">👥 All Donors & Users — Sub Area Editor</div>';
+  html+='<div style="font-size:11px;color:#888;margin-bottom:10px;line-height:1.5">Har donor/user ka Sub Area set karein. Matching sub area wale donors automatically fundraiser se link ho jayenge.</div>';
+
+  // Fundraiser-donor manual link section
+  html+='<div style="background:#E6F1FB;border:1px solid #378ADD;border-radius:10px;padding:10px;margin-bottom:12px">';
+  html+='<div style="font-size:12px;font-weight:700;color:#185FA5;margin-bottom:8px">🔗 Manual Link — Fundraiser ko Donor se link karein</div>';
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+  // Fundraiser select
+  var frOpts=DB.fundraisers.map(function(f){return '<option value="'+f.id+'">'+f.name+' ('+f.subArea+')</option>';}).join('');
+  html+='<div><label style="font-size:10px;font-weight:700;color:#555">Fundraiser</label><select id="fdLinkFr" style="width:100%;padding:8px;border:1.5px solid #378ADD;border-radius:8px;font-size:11px;margin-top:2px"><option value="">-- Select --</option>'+frOpts+'</select></div>';
+  // Donor search
+  html+='<div><label style="font-size:10px;font-weight:700;color:#555">Donor ID or Name</label><input type="text" id="fdLinkDonorQ" placeholder="Search..." style="width:100%;padding:8px;border:1.5px solid #378ADD;border-radius:8px;font-size:11px;margin-top:2px;box-sizing:border-box"></div>';
+  html+='</div>';
+  html+='<button onclick="_fdManualLink()" style="width:100%;background:#185FA5;color:#fff;border:none;padding:9px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;margin-top:8px">🔗 Link Now</button>';
+  html+='</div>';
+
+  // Donor list with sub area input
+  var linked=new Set(DB.fundraisingLinks.map(function(l){return l.donorId;}));
+  var q2=(window._fdLinkQ||'').toLowerCase();
+  html+='<div style="position:relative;margin-bottom:8px"><input type="text" id="fdLinkSearch" value="'+(window._fdLinkQ||'')+'" placeholder="Search donors..." oninput="window._fdLinkQ=this.value;renderTab(\'fundraisingdept\')" style="width:100%;padding:9px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:12px;box-sizing:border-box"></div>';
+
+  // Combine users and donors
+  var allEntries=[];
+  DB.donors.forEach(function(d){allEntries.push({id:d.id,name:d.name,mobile:d.mobile,area:d.area,subArea:d.subArea||'',type:'donor',photo:d.photo});});
+  DB.users.filter(function(u){return u.approved&&u.role==='user';}).forEach(function(u){
+    if(!allEntries.find(function(e){return e.id===u.id;}))
+      allEntries.push({id:u.id,name:u.name,mobile:u.mobile,area:u.area,subArea:u.subArea||'',type:'user',photo:u.photo});
+  });
+  if(q2) allEntries=allEntries.filter(function(e){return (e.name||'').toLowerCase().includes(q2)||(e.id||'').toLowerCase().includes(q2)||(e.area||'').toLowerCase().includes(q2);});
+
+  html+='<div style="font-size:11px;color:#888;margin-bottom:6px">'+allEntries.length+' entries | click Sub Area field to edit</div>';
+  allEntries.slice(0,50).forEach(function(e){
+    var isLinked=linked.has(e.id);
+    var myLink=DB.fundraisingLinks.find(function(l){return l.donorId===e.id;});
+    var myFr=myLink?DB.fundraisers.find(function(f){return f.id===myLink.fundraiserId;}):null;
+    var init=(e.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+    html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f5f5f5">';
+    html+=(e.photo?'<img src="'+e.photo+'" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0">'
+      :'<div style="width:34px;height:34px;border-radius:50%;background:'+(isLinked?'#E1F5EE':'#f5f5f5')+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:'+(isLinked?'#0F6E56':'#888')+';flex-shrink:0">'+init+'</div>');
+    html+='<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+e.name+'</div>';
+    html+='<div style="font-size:10px;color:#888">'+e.id+' &bull; '+(e.area||'—')+'</div>';
+    if(myFr)html+='<div style="font-size:10px;color:#0F6E56;font-weight:600">🔗 '+myFr.name+'</div>';
+    html+='</div>';
+    // Sub Area inline edit
+    html+='<input type="text" data-eid="'+e.id+'" data-etype="'+e.type+'" id="fdsa_'+e.id+'" value="'+(e.subArea||'')+'" placeholder="Sub Area" onblur="_fdSaveSubArea(this)" style="width:90px;padding:5px 7px;border:1.5px solid '+(isLinked?'#1D9E75':'#ddd')+';border-radius:7px;font-size:11px;flex-shrink:0">';
+    if(isLinked)html+='<button onclick="_fdUnlink(\''+e.id+'\')" title="Unlink" style="background:#FFF0F0;border:1px solid #FCBFBF;color:#E24B4A;border-radius:7px;padding:4px 6px;font-size:10px;cursor:pointer;flex-shrink:0">✕</button>';
+    html+='</div>';
+  });
+  if(allEntries.length>50) html+='<div style="font-size:11px;color:#aaa;text-align:center;padding:8px">Showing first 50 — use search to find more</div>';
+  return html;
+}
+
+async function _fdSaveSubArea(input){
+  var eid=input.dataset.eid;
+  var etype=input.dataset.etype;
+  var val=input.value.trim();
+  if(etype==='donor'){
+    var d=DB.donors.find(function(x){return x.id===eid;});
+    if(d){d.subArea=val;await FS.save('donors',d.id,d);}
+  } else {
+    var u=DB.users.find(function(x){return x.id===eid;});
+    if(u){u.subArea=val;await FS.save('users',u.id,u);}
+  }
+  // Auto-link if matching fundraiser
+  if(val&&!DB.fundraisingLinks.find(function(l){return l.donorId===eid;})){
+    var fr=DB.fundraisers.find(function(f){return (f.subArea||'').toLowerCase()===val.toLowerCase();});
+    if(fr){
+      var lnk={id:'FL-'+Date.now()+'-'+eid,fundraiserId:fr.id,donorId:eid,subArea:val,date:today(),addedBy:currentUser.id};
+      DB.fundraisingLinks.push(lnk);
+      await FS.save('fundraisingLinks',lnk.id,lnk);
+    }
+  }
+  saveLocalCache();
+}
+
+async function _fdManualLink(){
+  var frId=(document.getElementById('fdLinkFr')||{value:''}).value;
+  var dq=(document.getElementById('fdLinkDonorQ')||{value:''}).value.trim().toLowerCase();
+  if(!frId){showPopup('⚠️','Required','Fundraiser select karein.');return;}
+  if(!dq){showPopup('⚠️','Required','Donor name ya ID darein.');return;}
+  var donor=DB.donors.find(function(d){return (d.id||'').toLowerCase()===dq||(d.name||'').toLowerCase().includes(dq);});
+  if(!donor) donor=DB.users.find(function(u){return (u.id||'').toLowerCase()===dq||(u.name||'').toLowerCase().includes(dq);});
+  if(!donor){showPopup('⚠️','Not Found','Koi donor/user nahi mila.');return;}
+  if(DB.fundraisingLinks.find(function(l){return l.donorId===donor.id;})){
+    showPopup('⚠️','Already Linked','Yeh donor pehle se kisi aur fundraiser se linked hai. Pehle unlink karein.');return;
+  }
+  var fr=DB.fundraisers.find(function(f){return f.id===frId;});
+  var lnk={id:'FL-'+Date.now()+'-'+donor.id,fundraiserId:frId,donorId:donor.id,subArea:fr.subArea||'',date:today(),addedBy:currentUser.id};
+  DB.fundraisingLinks.push(lnk);
+  await FS.save('fundraisingLinks',lnk.id,lnk);
+  saveLocalCache();
+  showPopup('✅','Linked',donor.name+' linked to '+fr.name+'!');
+  renderTab('fundraisingdept');
+}
+
+async function _fdUnlink(donorId){
+  var lnk=DB.fundraisingLinks.find(function(l){return l.donorId===donorId;});
+  if(!lnk)return;
+  if(!confirm('Unlink this donor from their fundraiser?'))return;
+  DB.fundraisingLinks=DB.fundraisingLinks.filter(function(l){return l.donorId!==donorId;});
+  await FS.del('fundraisingLinks',lnk.id);
+  saveLocalCache();
+  renderTab('fundraisingdept');
+}
+
+// --- FUNDRAISER LIST (Detail View) ---
+function _fdList(){
+  var selId=window._fdViewId||null;
+  var html='';
+
+  // Fundraiser selector
+  var frOpts=DB.fundraisers.map(function(f){return '<option value="'+f.id+'" '+(selId===f.id?'selected':'')+'>'+f.name+' — '+f.subArea+'</option>';}).join('');
+  html+='<select onchange="window._fdViewId=this.value;renderTab(\'fundraisingdept\')" style="width:100%;padding:10px;border:1.5px solid #1D9E75;border-radius:10px;font-size:13px;margin-bottom:12px">';
+  html+='<option value="">-- Select Fundraiser --</option>'+frOpts+'</select>';
+
+  if(!selId) return html+'<div style="text-align:center;color:#aaa;padding:20px;font-size:13px">Upar se fundraiser select karein</div>';
+  var fr=DB.fundraisers.find(function(f){return f.id===selId;});
+  if(!fr) return html;
+
+  var links=DB.fundraisingLinks.filter(function(l){return l.fundraiserId===selId;});
+  var thisMonth=new Date().toISOString().substring(0,7);
+  var collectedIds=new Set(DB.donations.filter(function(d){return (d.date||'').startsWith(thisMonth);}).map(function(d){return d.donorId;}));
+
+  // Fundraiser header
+  var init=(fr.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+  html+='<div style="background:linear-gradient(135deg,#0F6E56,#185FA5);border-radius:14px;padding:14px;color:#fff;margin-bottom:12px">';
+  html+='<div style="display:flex;align-items:center;gap:12px">';
+  html+='<div style="width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800">'+init+'</div>';
+  html+='<div><div style="font-size:15px;font-weight:800">'+fr.name+'</div>';
+  html+='<div style="font-size:11px;opacity:0.8">'+fr.personType+' &bull; '+(fr.area||'—')+' / '+(fr.subArea||'—')+'</div>';
+  if(fr.mobile){
+    var mob=fr.mobile.replace(/[^0-9]/g,'');
+    html+='<div style="font-size:11px;opacity:0.8">📱 '+fr.mobile+'</div>';
+  }
+  html+='</div></div>';
+  var tot=links.length;
+  var col=links.filter(function(l){return collectedIds.has(l.donorId);}).length;
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px">';
+  html+='<div style="background:rgba(255,255,255,0.15);border-radius:8px;padding:8px;text-align:center"><div style="font-size:18px;font-weight:800">'+tot+'</div><div style="font-size:10px;opacity:0.8">Total</div></div>';
+  html+='<div style="background:rgba(255,255,255,0.15);border-radius:8px;padding:8px;text-align:center"><div style="font-size:18px;font-weight:800;color:#90EE90">'+col+'</div><div style="font-size:10px;opacity:0.8">Collected</div></div>';
+  html+='<div style="background:rgba(255,255,255,0.15);border-radius:8px;padding:8px;text-align:center"><div style="font-size:18px;font-weight:800;color:#FFD700">'+(tot-col)+'</div><div style="font-size:10px;opacity:0.8">Pending</div></div>';
+  html+='</div></div>';
+
+  if(!links.length){
+    return html+'<div style="text-align:center;color:#aaa;padding:20px;font-size:13px">Koi donor linked nahi. Link Donors tab use karein.</div>';
+  }
+
+  // Collected list
+  var collectedLinks=links.filter(function(l){return collectedIds.has(l.donorId);});
+  var pendingLinks=links.filter(function(l){return !collectedIds.has(l.donorId);});
+
+  html+=_fdDonorSection('✅ Collected This Month',collectedLinks,collectedIds,false,fr);
+  html+=_fdDonorSection('⏳ Pending This Month',pendingLinks,collectedIds,true,fr);
+  return html;
+}
+
+function _fdDonorSection(title,links,collectedIds,showWA,fr){
+  if(!links.length) return '';
+  var org=ORG_CONFIG.name||'Falah e Qabristan';
+  var defaultMsg='السلام علیکم پیارے بھائی 🌿\n\nامید ہے آپ خیریت سے ہوں گے۔\n\nمحترم *{name}* صاحب! اس ماہ آپ کی طرف سے فنڈ ابھی تک موصول نہیں ہو سکا۔ براہِ کرم جلد ارسال فرما دیں۔\n\nشکریہ\n'+org;
+  var waMsg=ORG_CONFIG.waMessage&&ORG_CONFIG.waMessage.trim()?ORG_CONFIG.waMessage:defaultMsg;
+  var html='<div style="font-size:12px;font-weight:800;color:#1a1a1a;margin-bottom:8px;margin-top:4px">'+title+' ('+links.length+')</div>';
+  links.forEach(function(lnk){
+    var d=DB.donors.find(function(x){return x.id===lnk.donorId;})||DB.users.find(function(x){return x.id===lnk.donorId;});
+    if(!d)return;
+    var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+    var mob=(d.mobile||'').replace(/[^0-9]/g,'');
+    var waUrl=mob?'whatsapp://send?phone=92'+mob.replace(/^0/,'')+'&text='+encodeURIComponent(waMsg.replace(/\{name\}/g,d.name).replace(/\{org\}/g,org)):'';
+    var lastDon=DB.donations.filter(function(x){return x.donorId===d.id;}).sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
+    var lastDate=lastDon.length?lastDon[0].date:'—';
+    html+='<div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #f5f5f5">';
+    html+=(d.photo?'<img src="'+d.photo+'" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0">'
+      :'<div style="width:36px;height:36px;border-radius:50%;background:'+(showWA?'#FAEEDA':'#E1F5EE')+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:'+(showWA?'#854F0B':'#0F6E56')+';flex-shrink:0">'+init+'</div>');
+    html+='<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+d.name+'</div>';
+    html+='<div style="font-size:10px;color:#888">'+d.id+(d.area?' &bull; '+d.area:'')+'</div>';
+    html+='<div style="font-size:10px;color:#185FA5">📅 Last: '+lastDate+'</div></div>';
+    html+='<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">';
+    if(showWA&&waUrl){
+      html+='<a href="'+waUrl+'" onclick="var u=this.href;event.preventDefault();window.open(u);return false;" style="background:#25D366;color:#fff;padding:5px 9px;border-radius:7px;font-size:10px;font-weight:700;text-decoration:none;display:block;text-align:center;white-space:nowrap">📲 WA Remind</a>';
+    }
+    if(mob){
+      html+='<a href="tel:'+mob+'" style="background:#E6F1FB;color:#185FA5;padding:5px 9px;border-radius:7px;font-size:10px;font-weight:700;text-decoration:none;display:block;text-align:center;white-space:nowrap;border:1px solid #B5D4F4">📞 Call</a>';
+    }
+    html+='</div></div>';
+  });
+  return html;
+}
+
 T.expcategories=function(){
   return `<div class="card">
     <h3><span class="bi-title"><span class="bi-en">Expense Categories</span><span class="bi-ur">اخراجات کے زمرے</span></span></h3>
@@ -12208,14 +11627,11 @@ T.missinginfo=function(){
   var missingBlood=DB.donors.filter(function(d){return !d.bloodGroup||!d.bloodGroup.trim();});
   var missingProf=DB.donors.filter(function(d){return !d.profession||!d.profession.trim();});
   var missingAddedBy=DB.donors.filter(function(d){return !d.addedBy||!d.addedBy.trim();}).length;
-  var assignedDonorIds=new Set(DB.focalAssignments.map(function(a){return a.donorId;}));
-  var missingFocal=DB.donors.filter(function(d){return !assignedDonorIds.has(d.id);});
   var tabs=[
     {key:'area',label:'Area',count:missingArea.length,col:'#E24B4A'},
     {key:'blood',label:'Blood Group',count:missingBlood.length,col:'#185FA5'},
     {key:'prof',label:'Profession',count:missingProf.length,col:'#854F0B'},
     {key:'addedby',label:'Added By',count:missingAddedBy,col:'#0F6E56'},
-    {key:'focal',label:'Focal Person',count:missingFocal.length,col:'#7C3AED'},
   ];
   var q=window._miSearch||'';
   var tabBtns=tabs.map(function(t){
@@ -12354,68 +11770,6 @@ function clearMiSearch(){
   filterMI();
 }
 
-function renderMiFocalTab(list,q){
-  var el=document.getElementById('miBody');if(!el)return;
-  if(!list.length){el.innerHTML='<p style="font-size:13px;color:#888;text-align:center;padding:20px">&#10003; Sab donors ka Focal Person assign ho chuka hai!</p>';return;}
-  var fps=DB.users.filter(function(u){return ['admin','manager','developer'].includes(u.role);});
-  var fpOpts=fps.map(function(u){return '<option value="'+u.id+'">'+u.name+' ('+u.id+')</option>';}).join('');
-  var html='<div style="font-size:11px;color:#888;margin-bottom:8px">'+list.length+' donors without focal person</div>';
-  html+='<div style="background:#F3F0FF;border-radius:10px;padding:10px;margin-bottom:12px;border:1px solid #7C3AED">';
-  html+='<div style="font-size:11px;font-weight:700;color:#7C3AED;margin-bottom:6px">Bulk Assign — Select all filtered donors to one focal person:</div>';
-  html+='<div style="display:flex;gap:8px">';
-  html+='<select id="miFpBulk" style="flex:1;padding:8px;border:1.5px solid #7C3AED;border-radius:8px;font-size:12px"><option value="">-- Select Focal Person --</option>'+fpOpts+'</select>';
-  html+='<button onclick="_miBulkAssign()" style="background:#7C3AED;color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">Assign All '+list.length+'</button>';
-  html+='</div></div>';
-  list.forEach(function(d){
-    var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-    var av=d.photo?'<img src="'+d.photo+'" style="width:42px;height:42px;border-radius:50%;object-fit:cover;flex-shrink:0">':'<div style="width:42px;height:42px;border-radius:50%;background:#EDE9FE;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#7C3AED;flex-shrink:0">'+init+'</div>';
-    var lastDons=DB.donations.filter(function(x){return x.donorId===d.id;}).sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
-    var lastDate=lastDons.length?lastDons[0].date:'No donation';
-    html+='<div style="padding:10px 0;border-bottom:1px solid #e8e8e8">';
-    html+='<div style="display:flex;align-items:center;gap:9px;margin-bottom:8px">'+av;
-    html+='<div style="flex:1"><div style="font-size:13px;font-weight:700">'+d.name+'</div>';
-    html+='<div style="font-size:10px;color:#888;margin-top:2px">'+d.id+(d.area?' &bull; '+d.area:'')+'</div>';
-    html+='<div style="font-size:10px;color:#185FA5;margin-top:1px">&#128197; '+lastDate+'</div></div></div>';
-    html+='<div style="display:flex;gap:8px">';
-    html+='<select id="mifp_'+d.id+'" style="flex:1;padding:8px;border:1.5px solid #7C3AED;border-radius:8px;font-size:12px"><option value="">-- Focal Person --</option>'+fpOpts+'</select>';
-    html+='<button data-did="'+d.id+'" onclick="_miAssignFocal(this.dataset.did)" style="background:#7C3AED;color:#fff;border:none;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">Assign</button>';
-    html+='</div></div>';
-  });
-  el.innerHTML=html;
-}
-
-async function _miAssignFocal(donorId){
-  var sel=document.getElementById('mifp_'+donorId);
-  if(!sel||!sel.value){showPopup('⚠️','Required','Focal Person select karein.');return;}
-  var fpId=sel.value;
-  var fp=DB.users.find(function(u){return u.id===fpId;})||{name:fpId};
-  if(DB.focalAssignments.some(function(a){return a.donorId===donorId;})){showPopup('⚠️','Already','Yeh donor pehle se assign hai.');return;}
-  var newA={id:'FA-'+Date.now()+'-'+Math.random().toString(36).substr(2,4),focalId:fpId,donorId:donorId,collected:false,date:today(),by:currentUser.id};
-  DB.focalAssignments.push(newA);
-  try{await FS.save('focalAssignments',newA.id,newA);saveLocalCache();filterMI();}
-  catch(e){showPopup('❌','Error',e.message);}
-}
-
-async function _miBulkAssign(){
-  var fpSel=document.getElementById('miFpBulk');
-  if(!fpSel||!fpSel.value){showPopup('⚠️','Required','Focal Person select karein.');return;}
-  var fpId=fpSel.value;
-  var fp=DB.users.find(function(u){return u.id===fpId;})||{name:fpId};
-  var assignedIds=new Set(DB.focalAssignments.map(function(a){return a.donorId;}));
-  var q=(window._miSearch||'').toLowerCase().trim();
-  var list=DB.donors.filter(function(d){return !assignedIds.has(d.id)&&(!q||((d.name||'').toLowerCase().includes(q)||(d.id||'').toLowerCase().includes(q)));});
-  if(!list.length){showPopup('⚠️','None','Koi donor available nahi.');return;}
-  if(!confirm('Assign '+list.length+' donors to '+fp.name+'?'))return;
-  var added=0;
-  for(var i=0;i<list.length;i++){
-    var newA={id:'FA-'+Date.now()+i+'-'+Math.random().toString(36).substr(2,4),focalId:fpId,donorId:list[i].id,collected:false,date:today(),by:currentUser.id};
-    DB.focalAssignments.push(newA);
-    try{await FS.save('focalAssignments',newA.id,newA);added++;}catch(e){}
-  }
-  saveLocalCache();
-  showPopup('✅','Done',added+' donors assigned to '+fp.name+'!');
-  filterMI();
-}
 function filterMI(){
   var activeTab=window._miTab||'area';
   var q=(window._miSearch||'').toLowerCase().trim();
@@ -12423,10 +11777,6 @@ function filterMI(){
   if(activeTab==='area') list=DB.donors.filter(function(d){return !d.area||!d.area.trim();});
   else if(activeTab==='blood') list=DB.donors.filter(function(d){return !d.bloodGroup||!d.bloodGroup.trim();});
   else if(activeTab==='addedby') list=DB.donors.filter(function(d){return !d.addedBy||!d.addedBy.trim();});
-  else if(activeTab==='focal'){
-    var _assignedIds=new Set(DB.focalAssignments.map(function(a){return a.donorId;}));
-    list=DB.donors.filter(function(d){return !_assignedIds.has(d.id);});
-  }
   else list=DB.donors.filter(function(d){return !d.profession||!d.profession.trim();});
   if(q) list=list.filter(function(d){return (d.name||'').toLowerCase().includes(q)||(d.mobile||'').includes(q)||(d.id||'').toLowerCase().includes(q);});
   list=[].concat(list).sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
@@ -12436,11 +11786,6 @@ function filterMI(){
   // Special tab: addedby
   if(activeTab==='addedby'){
     renderAddedByTab();
-    return;
-  }
-  // Special tab: focal person
-  if(activeTab==='focal'){
-    renderMiFocalTab(list,q);
     return;
   }
 
@@ -13207,6 +12552,36 @@ function submitAddDonor(){
   else finish(null);
 }
 
+T.feedback=function(){
+  return `<div class="card">
+    <div class="card-header">
+      <div class="bi-title">
+        <span class="bi-en">💬 Feedback</span>
+        <span class="bi-ur">رائے / تجاویز</span>
+      </div>
+    </div>
+    <p style="font-size:12px;color:#888;margin-bottom:14px;line-height:1.6">Share your ideas, suggestions or complaints with the team. | اپنی تجاویز یا شکایات ٹیم تک پہنچائیں۔</p>
+    <div style="display:grid;gap:10px">
+      <button onclick="selectTab('suggestion')" style="display:flex;align-items:center;gap:14px;padding:14px;background:#FFFDE7;border:1.5px solid #F0D9B5;border-radius:12px;cursor:pointer;text-align:left;width:100%">
+        <span style="font-size:28px;flex-shrink:0">💡</span>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#633806">Ideas / Give Suggestion</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">تجویز یا نئی خصوصیت کی درخواست</div>
+        </div>
+        <span style="margin-left:auto;color:#aaa;font-size:18px">→</span>
+      </button>
+      <button onclick="selectTab('complaint')" style="display:flex;align-items:center;gap:14px;padding:14px;background:#FFF0F0;border:1.5px solid #FCBFBF;border-radius:12px;cursor:pointer;text-align:left;width:100%">
+        <span style="font-size:28px;flex-shrink:0">⚠️</span>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#A32D2D">Send Complaint</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">شکایت درج کریں</div>
+        </div>
+        <span style="margin-left:auto;color:#aaa;font-size:18px">→</span>
+      </button>
+    </div>
+  </div>`;
+};
+
 T.suggestion=function(){
   return `<div class="card">
     <h3><span class="bi-title"><span class="bi-en">Send Suggestion</span><span class="bi-ur">تجویز بھیجیں</span></span></h3>
@@ -13584,40 +12959,22 @@ let currentSubmenu = null;
 
 function getMenuConfig(){
    const homeItems = [
-       // Row 1: Donation, Expense, Add Donor, Super Entry
        {icon:'📊', label:'Live Board', tab:'liveboard'},
        {icon:'💵', label:'Donation', tab:'donation'},
        {icon:'📋', label:'Expense', tab:'expense'},
        {icon:'👤', label:'Add Donor', tab:'adddonor'},
        {icon:'⚡', label:'Super Entry', tab:'superentry'},
-       // Row 2: Contact, Blood Bank, WA Reminder, Ideas, Notification
        {icon:'📒', label:'Contacts', tab:'contacts'},
        {icon:'🔍', label:'Search ID', tab:'searchbyid'},
        {icon:'🩸', label:'Blood Bank', tab:'bloodbank'},
        {icon:'📣', label:'WA Reminder', tab:'wreminder'},
-       {icon:'💡', label:'Ideas', tab:'suggestion'},
        {icon:'🔔', label:'Notifications', tab:'notifications'},
-       // Row 3: Committee, Supporting Staff, History, Account, Contact Us
-       
        {icon:'📞', label:'Contact Us', tab:'contactus'},
+       {icon:'💬', label:'Feedback', tab:'feedback'},
      ];
   if(['admin','manager','developer'].includes(currentRole)){
     var _uc=DB.donors.filter(function(d){return !d.area||!d.area.trim();}).length;
     var _mi=DB.donors.filter(function(d){return !d.area||!d.bloodGroup||!d.profession;}).length;
-    homeItems.push({icon:'📣', label:'WA Reminder', tab:'wreminder'});
-    homeItems.push({icon:'👥', label:'Focal Person', tab:'focalperson'},
-      {icon:'📋', label:'Focal Person List', tab:'focalmanage'});
-  }
-  if(currentRole==='focal'||currentUser.isFocal){
-    homeItems.push({icon:'👥', label:'My Donors', tab:'fpdetail'});
-    homeItems.push({icon:'📊', label:'My Report', tab:'fpreport'});
-    if(currentRole==='focal')homeItems.push({icon:'📣', label:'WA Remind', tab:'wreminder'});
-  }
-  if(currentRole!=='user'){
-    homeItems.push(
-      {icon:'💡', label:'Give Suggestion / تجویز دیں', tab:'suggestion'},
-      {icon:'⚠️', label:'Send Complaint / شکایت بھیجیں', tab:'complaint'}
-    );
   }
   // Add notification badges to home menu items
   const notifIdx=homeItems.findIndex(x=>x.tab==='notifications');
@@ -13643,13 +13000,11 @@ function getMenuConfig(){
       ...(currentRole!=='user'?[{icon:'📅', label:'Today Collection', tab:'todaycollection'},
       {icon:'📅', label:'Status Wise Report', tab:'fundreport'}]:[]),
       ...(currentRole!=='user'?[{icon:'📜', label:'Death Cert / وفات نامہ', tab:'deathcert'}]:[]),
-      
       ...(currentRole!=='user'?[{icon:'🏆', label:'Top 10 / سرفہرست', tab:'top'}]:[]),
     ]
   };
   if(['manager','developer'].includes(currentRole)) reports.items.push({icon:'👥', label:'Area Wise Regd User', tab:'usersreport'});
   if(['admin','manager','developer'].includes(currentRole)) reports.items.push({icon:'📊', label:'Excel Export', tab:'excelexport'});
-  if(['admin','manager','developer'].includes(currentRole)) reports.items.push({icon:'⭐', label:'Fundraising Stars', tab:'fundraisingstar'});
   if(['admin','manager','developer'].includes(currentRole)) reports.items.push({icon:'📋', label:'Donor Summary', tab:'donorsummary'});
   if(['admin','manager','developer'].includes(currentRole)) reports.items.push({icon:'📋', label:'Daily Update', tab:'dailyupdate'});
 
@@ -13668,49 +13023,32 @@ function getMenuConfig(){
       {icon:'👤', label:'Users / صارفین', tab:'usersreport'}
     );
   }
+  if(['admin','manager','developer'].includes(currentRole)){
+    donors.items.push({icon:'🏆', label:'Fundraising Dept', tab:'fundraisingdept'});
+  }
 
   const settings = {key:'settings', title:'Settings / ترتیبات', items:[]};
-  // Profile always in settings for all roles
   settings.items.push({icon:'👤', label:'My Profile / پروفائل', tab:'profile'});
-  if(['admin','manager','developer'].includes(currentRole)){
+  if(['admin','manager'].includes(currentRole)){
     settings.items.push(
-      
       {icon:'🏛️', label:'About Us', tab:'aboutus'},
       {icon:'✅', label:'Approvals', tab:'approvals', badge: DB.pendingApprovals.length},
-      {icon:'🔧', label:'Update Categories', tab:'updatecategory'},
-      {icon:'👥', label:'Focal Person', tab:'focalperson'}
+      {icon:'🔧', label:'Update Categories', tab:'updatecategory'}
     );
   }
   if(currentRole==='developer'){
     settings.items.push(
-      
+      {icon:'🏛️', label:'About Us', tab:'aboutus'},
       {icon:'✅', label:'Approvals / منظوری', tab:'approvals', badge: DB.pendingApprovals.length},
       {icon:'🔒', label:'Login Mgmt / لاگ ان', tab:'lockuser'},
-      // Users List hidden
-      // moved to Audit Department
       {icon:'🗄️', label:'Data Manager', tab:'datamanager'},
-      
+      {icon:'☁️', label:'Drive Backup / بیک اپ', tab:'drivebackup'},
       {icon:'📋', label:'Login Report', tab:'loginreport'},
       {icon:'📊', label:'Live Dashboard', tab:'liveboard'},
       {icon:'📢', label:'Audit Department', tab:'auditdept'},
-      
-      
-      // moved to Audit Department
-      // moved to Audit Department
-      // moved to Audit Department
-      // moved to Audit Department
-      // moved to Audit Department
-      
     );
   }
 
-  // Focal Person: add their assignments tabs
-  if(currentRole==='focal'){
-    settings.items.push(
-      {icon:'👥', label:'Focal Assignments', tab:'fpdetail'},
-      {icon:'📊', label:'My Report', tab:'fpreport'}
-    );
-  }
   // Ensure all users have profile in settings
   if(!settings.items.find(x=>x.tab==='profile')){
     settings.items.push({icon:'👤', label:'My Profile / پروفائل', tab:'profile'});
@@ -13754,7 +13092,7 @@ function openSubmenu(key){
   currentSubmenu = key;
 }
 
-const FORM_TABS_SET=new Set(['donation','expense','deceased','adddonor','transfer','profile','suggestion','donorprofileupdate','orgsettings','areas','professions','expcategories','approvals','lockuser','userslist','audit','datamanager','suggestions','bloodbank','smartsearch','smsreminders','complaint','complaints','contacts','superentry','alldonations','dailyupdate','deathposter','wreminder','notifications','excelexport','unknowndonors','missinginfo','myentries','area','balreport','expreport','entrymanager','fundraisingstar','donorsummary','ledger','usersreport','todaycollection','fundreport','top','deathcert','search','slip','donorlist','lastdonation','renameaddedby','entrybyuser','searchbyid','liveboard','auditdept','loginreport','deleteddonations','deletedexpenses','modifieddonations','modifiedexpenses','donormanager','overalldetail','verifiedentries','committeemembers','supportingstaff','history','account','contactus','decconfirm','orgprofile','orgcontacts','orgbanks','orgcommittee','orgstaff','focalperson','fpassign','fpreport','fpdetail','updatecategory','aboutus']);
+const FORM_TABS_SET=new Set(['donation','expense','deceased','adddonor','transfer','profile','suggestion','complaint','feedback','fundraisingdept','donorprofileupdate','orgsettings','areas','professions','expcategories','approvals','lockuser','userslist','audit','datamanager','suggestions','bloodbank','smartsearch','smsreminders','complaints','contacts','superentry','alldonations','dailyupdate','deathposter','wreminder','notifications','excelexport','unknowndonors','missinginfo','myentries','area','balreport','expreport','entrymanager','fundraisingstar','donorsummary','ledger','usersreport','todaycollection','fundreport','top','deathcert','search','slip','donorlist','lastdonation','renameaddedby','entrybyuser','searchbyid','liveboard','auditdept','loginreport','deleteddonations','deletedexpenses','modifieddonations','modifiedexpenses','donormanager','overalldetail','verifiedentries','committeemembers','supportingstaff','history','account','contactus','decconfirm','orgprofile','orgcontacts','orgbanks','orgcommittee','orgstaff','updatecategory','aboutus']);
 
 function selectTab(tab){
   renderTab(tab);
@@ -13949,7 +13287,7 @@ const TAB_LABELS={
   donorlist:'Donor List',slip:'Donor Slip',top:'Top Donors',transfer:'Transfer',
   decconfirm:'Confirm Deceased',approvals:'Approvals',lockuser:'Login Management',
   userslist:'Users List',professions:'Professions',audit:'Audit Log',areas:'Areas',
-  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',entrymanager:'Entry Manager',entrybyuser:'Entry by User',searchbyid:'Search by System ID',liveboard:'Live Dashboard',auditdept:'Audit Department',loginreport:'Login Report',deleteddonations:'Deleted Income',deletedexpenses:'Deleted Expenses',modifieddonations:'Modified Income',modifiedexpenses:'Modified Expenses',donormanager:'Donor Manager',overalldetail:'Overall Detail',verifiedentries:'Verified Entries',committeemembers:'Committee Members',supportingstaff:'Supporting Staff',history:'History',account:'Account',contactus:'Contact Us',decconfirm:'Deceased Confirm',orgprofile:'Org Profile',orgcontacts:'Contact Numbers',orgbanks:'Bank Accounts',orgcommittee:'Committee Members',orgstaff:'Supporting Staff',orgfocalpersons:'Focal Persons',focalperson:'Focal Person',fpassign:'Assign Donors',fpreport:'Focal Person Report',fpdetail:'Focal Person Detail',focalmanage:'Focal Person List',updatecategory:'Update Categories',aboutus:'About Us',lastdonation:'Last Donation',excelexport:'Excel Export',alldonations:'All Donations',deathposter:'Death Poster',wreminder:'WhatsApp Reminder',loginreport:'Login Report',auditdept:'Audit Department',committeemembers:'Committee Members',supportingstaff:'Supporting Staff',history:'History',account:'Account',contactus:'Contact Us',deleteddonations:'Deleted Income',deletedexpenses:'Deleted Expenses',modifieddonations:'Modified Income',modifiedexpenses:'Modified Expenses',donormanager:'Donor Manager',overalldetail:'Overall Detail',verifiedentries:'Verified Entries',renameaddedby:'Rename AddedBy',deathposter:'Death Poster',dailyupdate:'Daily Update',entrymanager:'Entry Manager',fundraisingstar:'Fundraising Stars',donorsummary:'Donor Summary',myentries:'My Entries',unknowndonors:'Update Unknown',missinginfo:'Missing Information',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
+  orgsettings:'Organization Settings',profile:'My Profile',datamanager:'Data Manager',entrymanager:'Entry Manager',entrybyuser:'Entry by User',searchbyid:'Search by System ID',liveboard:'Live Dashboard',auditdept:'Audit Department',loginreport:'Login Report',deleteddonations:'Deleted Income',deletedexpenses:'Deleted Expenses',modifieddonations:'Modified Income',modifiedexpenses:'Modified Expenses',donormanager:'Donor Manager',overalldetail:'Overall Detail',verifiedentries:'Verified Entries',committeemembers:'Committee Members',supportingstaff:'Supporting Staff',history:'History',account:'Account',contactus:'Contact Us',decconfirm:'Deceased Confirm',orgprofile:'Org Profile',orgcontacts:'Contact Numbers',orgbanks:'Bank Accounts',orgcommittee:'Committee Members',orgstaff:'Supporting Staff',updatecategory:'Update Categories',aboutus:'About Us',lastdonation:'Last Donation',excelexport:'Excel Export',alldonations:'All Donations',deathposter:'Death Poster',wreminder:'WhatsApp Reminder',loginreport:'Login Report',auditdept:'Audit Department',committeemembers:'Committee Members',supportingstaff:'Supporting Staff',history:'History',account:'Account',contactus:'Contact Us',deleteddonations:'Deleted Income',deletedexpenses:'Deleted Expenses',modifieddonations:'Modified Income',modifiedexpenses:'Modified Expenses',donormanager:'Donor Manager',overalldetail:'Overall Detail',verifiedentries:'Verified Entries',renameaddedby:'Rename AddedBy',deathposter:'Death Poster',dailyupdate:'Daily Update',entrymanager:'Entry Manager',fundraisingstar:'Fundraising Stars',donorsummary:'Donor Summary',myentries:'My Entries',unknowndonors:'Update Unknown',missinginfo:'Missing Information',contacts:'Contacts',superentry:'Super Entry',notifications:'Notifications',donorprofileupdate:'Donor Profile Update',adddonor:'Add Donor',bloodbank:'Blood Bank',smartsearch:'Smart Search',smsreminders:'SMS Reminders',suggestion:'Give Suggestion',complaint:'File a Complaint',complaints:'Complaints',suggestions:'Give Suggestion'
 };
 
 // ============================================================
@@ -14492,5 +13830,253 @@ async function appInit(){
 }
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',appInit);}
 else{appInit();}
+
+// ============================================================
+// GOOGLE DRIVE INTEGRATION — Falah e Qabristan Backup System
+// ============================================================
+const GDrive = {
+  CLIENT_ID: 'YOUR_GOOGLE_CLIENT_ID_HERE', // <-- Yahan apna Client ID daalein
+  SCOPES: 'https://www.googleapis.com/auth/drive.file',
+  FILE_NAME: 'falah_qabristan_backup.json',
+  FILE_ID_KEY: 'fq_gdrive_file_id',
+  TOKEN_KEY: 'fq_gdrive_token',
+  _tokenClient: null,
+  _accessToken: null,
+  _gapiReady: false,
+  _gsiReady: false,
+
+  // Initialize Google API
+  init(){
+    // Load GAPI
+    const gapiLoad = () => {
+      if(typeof gapi === 'undefined'){ setTimeout(gapiLoad, 500); return; }
+      gapi.load('client', async () => {
+        await gapi.client.init({});
+        await gapi.client.load('https://www.googleapis.com/discovery/v1/apis/drive/v3/rest');
+        GDrive._gapiReady = true;
+        console.log('Google Drive API ready ✅');
+        GDrive._tryRestoreToken();
+      });
+    };
+    gapiLoad();
+
+    // Load GSI
+    const gsiLoad = () => {
+      if(typeof google === 'undefined' || !google.accounts){ setTimeout(gsiLoad, 500); return; }
+      GDrive._tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: GDrive.CLIENT_ID,
+        scope: GDrive.SCOPES,
+        callback: (resp) => {
+          if(resp.error){ console.error('GDrive auth error:', resp); return; }
+          GDrive._accessToken = resp.access_token;
+          gapi.client.setToken({ access_token: resp.access_token });
+          try{ localStorage.setItem(GDrive.TOKEN_KEY, resp.access_token); }catch(e){}
+          console.log('Google Drive authenticated ✅');
+          GDrive._updateStatusUI(true);
+          GDrive._pendingCallback && GDrive._pendingCallback();
+          GDrive._pendingCallback = null;
+        }
+      });
+      GDrive._gsiReady = true;
+    };
+    gsiLoad();
+  },
+
+  _tryRestoreToken(){
+    try{
+      const t = localStorage.getItem(GDrive.TOKEN_KEY);
+      if(t){ GDrive._accessToken = t; gapi.client.setToken({ access_token: t }); GDrive._updateStatusUI(true); }
+    }catch(e){}
+  },
+
+  // Request auth token
+  authenticate(callback){
+    GDrive._pendingCallback = callback || null;
+    if(!GDrive._gsiReady || !GDrive._tokenClient){
+      showPopup('⏳','Google Drive','API load ho rahi hai, thodi der mein dobara try karein...');
+      return;
+    }
+    if(GDrive._accessToken){
+      callback && callback();
+      return;
+    }
+    GDrive._tokenClient.requestAccessToken({ prompt: 'consent' });
+  },
+
+  // Save full DB to Drive
+  async saveBackup(silent=false){
+    if(!GDrive._gapiReady){ if(!silent) showPopup('⚠️','Drive','Google API ready nahi hai.'); return; }
+    if(!GDrive._accessToken){ 
+      GDrive.authenticate(() => GDrive.saveBackup(silent));
+      return;
+    }
+    try{
+      const payload = JSON.stringify({
+        exportedAt: new Date().toISOString(),
+        exportedBy: currentUser ? currentUser.name : 'System',
+        version: 'v8',
+        DB: {
+          users: DB.users.map(u => { const x={...u}; delete x.photo; return x; }),
+          donors: DB.donors,
+          deceased: DB.deceased,
+          donations: DB.donations,
+          expenses: DB.expenses,
+          transfers: DB.transfers,
+          auditLog: DB.auditLog,
+          suggestions: DB.suggestions,
+          pendingApprovals: DB.pendingApprovals
+        }
+      }, null, 2);
+
+      const fileId = localStorage.getItem(GDrive.FILE_ID_KEY);
+
+      if(fileId){
+        // Update existing file
+        const resp = await gapi.client.request({
+          path: `/upload/drive/v3/files/${fileId}`,
+          method: 'PATCH',
+          params: { uploadType: 'media' },
+          headers: { 'Content-Type': 'application/json' },
+          body: payload
+        });
+        if(!silent) showPopup('☁️','Drive Backup','Data Google Drive pe save ho gaya ✅');
+        console.log('Drive backup updated:', resp.result.id);
+      } else {
+        // Create new file
+        const meta = await gapi.client.request({
+          path: '/drive/v3/files',
+          method: 'POST',
+          body: JSON.stringify({ name: GDrive.FILE_NAME, mimeType: 'application/json' })
+        });
+        const newId = meta.result.id;
+        localStorage.setItem(GDrive.FILE_ID_KEY, newId);
+        await gapi.client.request({
+          path: `/upload/drive/v3/files/${newId}`,
+          method: 'PATCH',
+          params: { uploadType: 'media' },
+          headers: { 'Content-Type': 'application/json' },
+          body: payload
+        });
+        if(!silent) showPopup('☁️','Drive Backup','Naya backup file bana diya Google Drive pe ✅');
+        console.log('Drive backup created:', newId);
+      }
+      GDrive._lastBackup = new Date().toLocaleString('en-PK');
+      GDrive._updateStatusUI(true);
+    }catch(e){
+      console.error('Drive save error:', e);
+      if(e.status === 401){
+        GDrive._accessToken = null;
+        localStorage.removeItem(GDrive.TOKEN_KEY);
+        GDrive.authenticate(() => GDrive.saveBackup(silent));
+      } else {
+        if(!silent) showPopup('❌','Drive Error','Backup fail: ' + (e.result?.error?.message || e.message || 'Unknown error'));
+      }
+    }
+  },
+
+  // Restore DB from Drive
+  async restoreBackup(){
+    if(!GDrive._gapiReady){ showPopup('⚠️','Drive','Google API ready nahi hai.'); return; }
+    if(!GDrive._accessToken){ GDrive.authenticate(() => GDrive.restoreBackup()); return; }
+    const fileId = localStorage.getItem(GDrive.FILE_ID_KEY);
+    if(!fileId){ showPopup('ℹ️','Drive','Koi backup file nahi mili. Pehle backup lein.'); return; }
+    try{
+      const resp = await gapi.client.request({
+        path: `/drive/v3/files/${fileId}`,
+        method: 'GET',
+        params: { alt: 'media' }
+      });
+      const data = typeof resp.result === 'string' ? JSON.parse(resp.result) : resp.result;
+      if(!data.DB){ showPopup('❌','Drive','Backup file corrupt lag rahi hai.'); return; }
+      if(confirm(`Drive se backup restore karein?\nExported: ${data.exportedAt}\nBy: ${data.exportedBy}\n\n⚠️ Ye current data replace kar dega!`)){
+        Object.assign(DB, data.DB);
+        saveLocalCache();
+        showPopup('✅','Restore Complete','Drive backup successfully restore ho gaya!');
+        setTimeout(() => location.reload(), 2000);
+      }
+    }catch(e){
+      console.error('Drive restore error:', e);
+      showPopup('❌','Drive Error','Restore fail: ' + (e.result?.error?.message || e.message));
+    }
+  },
+
+  // Auto backup every 30 minutes if authenticated
+  startAutoBackup(){
+    setInterval(() => {
+      if(GDrive._accessToken && currentUser){ GDrive.saveBackup(true); }
+    }, 30 * 60 * 1000);
+  },
+
+  _updateStatusUI(connected){
+    const el = document.getElementById('driveStatusBadge');
+    if(el){
+      el.textContent = connected ? '☁️ Drive Connected' : '☁️ Drive Off';
+      el.style.background = connected ? '#E1F5EE' : '#f5f5f5';
+      el.style.color = connected ? '#0F6E56' : '#888';
+    }
+  }
+};
+
+// Patch FS.save to also trigger Drive backup (debounced)
+(function(){
+  const _origSave = FS.save.bind(FS);
+  let _backupTimer = null;
+  FS.save = async function(col, id, data){
+    await _origSave(col, id, data);
+    // Debounce: wait 5 seconds after last save, then backup
+    clearTimeout(_backupTimer);
+    _backupTimer = setTimeout(() => {
+      if(GDrive._accessToken){ GDrive.saveBackup(true); }
+    }, 5000);
+  };
+})();
+
+// Initialize Drive on load
+window.addEventListener('load', () => {
+  GDrive.init();
+  GDrive.startAutoBackup();
+});
+</script>
+
+<!-- GOOGLE DRIVE BACKUP UI — Settings screen mein inject hoga -->
+<script>
+// Inject Drive panel into Settings screen when it loads
+function renderDrivePanel(){
+  const target = document.getElementById('driveBackupPanel');
+  if(!target) return;
+  target.innerHTML = `
+    <div class="card" style="margin-top:12px">
+      <div class="card-header">
+        <div class="bi-title">
+          <span class="bi-en">☁️ Google Drive Backup</span>
+          <span class="bi-ur">گوگل ڈرائیو بیک اپ</span>
+        </div>
+        <span id="driveStatusBadge" style="font-size:11px;padding:3px 10px;border-radius:20px;background:#f5f5f5;color:#888;font-weight:600">☁️ Drive Off</span>
+      </div>
+      <p style="font-size:12px;color:#888;margin-bottom:12px;line-height:1.5">Aapka data automatically Google Drive pe bhi save hota rahega. Data loss se protection milegi.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="btn btn-primary" onclick="GDrive.authenticate(()=>GDrive.saveBackup())">
+          🔐 Connect & Backup
+        </button>
+        <button class="btn btn-outline" onclick="GDrive.saveBackup()">
+          ☁️ Backup Now
+        </button>
+      </div>
+      <button class="btn" style="margin-top:8px;background:#FFF3E0;color:#E65100;border-color:#FFB74D" onclick="GDrive.restoreBackup()">
+        🔄 Restore from Drive
+      </button>
+      <div style="margin-top:10px;font-size:11px;color:#888;text-align:center">
+        Last backup: <span id="driveLastBackup">—</span>
+        &nbsp;|&nbsp; Auto-backup: Every 30 min
+      </div>
+    </div>
+  `;
+}
+// Call when settings tab opens
+const _origShowSettings = window.showSettings;
+window.showSettings = function(...args){
+  if(_origShowSettings) _origShowSettings(...args);
+  setTimeout(renderDrivePanel, 100);
+};
 </script>
 </html>

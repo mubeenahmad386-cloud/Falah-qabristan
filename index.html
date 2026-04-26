@@ -817,6 +817,80 @@ var ORG_CONFIG={
 };
 function orgName(){return ORG_CONFIG.name||'Falah e Qabristan';}
 function orgNameUrdu(){return ORG_CONFIG.nameUrdu||'فلاح قبرستان';}
+
+// ── Global WA Reminder Message Builder ──────────────────────────────
+// All reminder buttons use this function — edit message here once, applies everywhere
+function buildWAMessage(donorName){
+  var org=ORG_CONFIG.name||'Falah e Qabristan';
+  // Bank account details from database
+  var bankStr='';
+  if(ORG_CONFIG.bankAccounts&&ORG_CONFIG.bankAccounts.length){
+    var bLines=[];
+    ORG_CONFIG.bankAccounts.forEach(function(b){
+      var parts=[];
+      if(b.title)  parts.push('👤 *Account Holder:* '+b.title);
+      if(b.area)   parts.push('📍 *Area:* '+b.area);
+      if(b.bank)   parts.push('🏦 *Bank:* '+b.bank);
+      if(b.number) parts.push('🔢 *Account No:* '+b.number);
+      if(parts.length) bLines.push(parts.join('\n'));
+    });
+    if(bLines.length) bankStr='\n\n━━━━━━━━━━━━━━\n💳 *Bank Details:*\n\n'+bLines.join('\n\n━━━━━━━━━━━━━━\n');
+  }
+  // Use custom message from settings if set, otherwise use default
+  if(ORG_CONFIG.waMessage&&ORG_CONFIG.waMessage.trim()){
+    return ORG_CONFIG.waMessage
+      .replace(/\{name\}/g, donorName)
+      .replace(/\{org\}/g, org)
+      + bankStr;
+  }
+  // Default message (forceful, as requested)
+  return 'السلام علیکم پیارے بھائی 🌿\n'
+    +'امید ہے آپ خیریت سے ہوں گے۔\n\n'
+    +'آپ کا ہمیشہ قبرستان کے معاملات میں بھرپور تعاون — چاہے مالی ہو یا ذاتی محنت — قابلِ قدر اور ہمارے لیے باعثِ حوصلہ رہا ہے۔ اللہ تعالیٰ آپ کو اس کا بہترین اجر عطا فرمائے۔\n\n'
+    +'محترم *'+donorName+'* صاحب! اس ماہ آپ کی طرف سے فنڈ ابھی تک موصول نہیں ہو سکا۔ آپ سے مؤدبانہ گزارش ہے کہ براہِ کرم اس ماہ کا فنڈ جلد از جلد *'+org+'* کو ارسال فرما دیں، تاکہ جاری کام بغیر کسی رکاوٹ کے بہتر طریقے سے مکمل کیے جا سکیں۔\n\n'
+    +'آپ کا چھوٹا سا تعاون بھی ایک بڑی نیکی اور صدقہ جاریہ ہے، جو نہ صرف اس دنیا بلکہ آخرت میں بھی آپ کے لیے باعثِ اجر بنے گا۔\n\n'
+    +'اللہ تعالیٰ ہم سب کو نیک کاموں میں بڑھ چڑھ کر حصہ لینے کی توفیق عطا فرمائے۔ آمین 🤲'
+    + bankStr;
+}
+function buildWAUrl(mobile, donorName){
+  var mob=(mobile||'').replace(/[^0-9]/g,'').replace(/^0/,'');
+  if(!mob) return '';
+  return 'whatsapp://send?phone=92'+mob+'&text='+encodeURIComponent(buildWAMessage(donorName));
+}
+// ─────────────────────────────────────────────────────────────────────
+// ── Reusable Confirmation Popup ────────────────────────────────────
+// Usage: showConfirm({icon, title, titleUr, rows:[{label,value}], confirmText, onConfirm})
+function showConfirm(opts){
+  var icon=opts.icon||'💾';
+  var title=opts.title||'Confirm';
+  var titleUr=opts.titleUr||'تصدیق کریں';
+  var rows=opts.rows||[];
+  var confirmText=opts.confirmText||'✅ Confirm';
+  var onConfirm=opts.onConfirm||function(){};
+  var rowsHtml=rows.map(function(r){
+    if(!r.value&&r.value!==0) return '';
+    return '<div style="display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px solid #e0f5e9">'
+      +'<span style="font-size:11px;color:#888;flex-shrink:0;margin-right:8px">'+r.label+'</span>'
+      +'<span style="font-size:12px;font-weight:700;color:#1a1a1a;text-align:right">'+r.value+'</span>'
+      +'</div>';
+  }).join('');
+  var html='<div style="background:#fff;border-radius:16px;padding:20px;max-width:320px;width:90vw;text-align:center">'
+    +'<div style="font-size:36px;margin-bottom:8px">'+icon+'</div>'
+    +'<div style="font-size:16px;font-weight:800;color:#0F6E56;margin-bottom:2px">'+title+'</div>'
+    +'<div style="font-size:11px;color:#888;margin-bottom:14px">'+titleUr+'</div>'
+    +(rowsHtml?'<div style="background:#f0fff8;border:1px solid #c8f0e0;border-radius:12px;padding:10px 14px;text-align:left;margin-bottom:14px">'+rowsHtml+'</div>':'')
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+    +'<button onclick="closeCustomPopup()" style="padding:12px;background:#f5f5f5;border:1px solid #ddd;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;color:#555">✕ Cancel</button>'
+    +'<button id="_confirmBtn" style="padding:12px;background:linear-gradient(135deg,#0F6E56,#1D9E75);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">'+confirmText+'</button>'
+    +'</div></div>';
+  showCustomPopup(html);
+  // Attach confirm action after DOM renders
+  setTimeout(function(){
+    var btn=document.getElementById('_confirmBtn');
+    if(btn) btn.onclick=function(){closeCustomPopup();onConfirm();};
+  },50);
+}
+// ─────────────────────────────────────────────────────────────────────
 var editingContext={};
 
 // ---- Utility Functions ----
@@ -2071,11 +2145,39 @@ function submitDonation(){
   const amount=parseInt(document.getElementById('donorAmount').value)||0;
   const mobile=document.getElementById('donorMobile').value.trim();
   const cnic=document.getElementById('donorCnic').value.trim();
+  const area=(document.getElementById('donorArea')||{value:''}).value||'';
+  const desc=(document.getElementById('donorDesc')||{value:''}).value||'Donation';
+  const bankIdx=(document.getElementById('donorBankAccount')||{value:''}).value;
+  const bankRef=bankIdx!==''&&ORG_CONFIG.bankAccounts[parseInt(bankIdx)]?ORG_CONFIG.bankAccounts[parseInt(bankIdx)].title:'';
   if(!name||!amount||!mobile){showPopup('⚠️','Incomplete','Name, mobile and amount are required.');return;}
-  if(!confirm('Donation save karein?\nName: '+name+'\nAmount: Rs '+amount))return;
+  // Custom confirmation popup
+  var confHtml='<div style="background:#fff;border-radius:16px;padding:20px;max-width:320px;width:90vw;text-align:center">'
+    +'<div style="font-size:36px;margin-bottom:8px">💰</div>'
+    +'<div style="font-size:16px;font-weight:800;color:#0F6E56;margin-bottom:4px">Donation Confirm</div>'
+    +'<div style="font-size:11px;color:#888;margin-bottom:14px">براہِ کرم تصدیق کریں</div>'
+    +'<div style="background:#f0fff8;border:1px solid #c8f0e0;border-radius:12px;padding:12px;text-align:left;margin-bottom:14px">'
+    +'<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #e0f5e9"><span style="font-size:12px;color:#888">👤 Name</span><span style="font-size:12px;font-weight:700;color:#1a1a1a">'+name+'</span></div>'
+    +'<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #e0f5e9"><span style="font-size:12px;color:#888">📱 Mobile</span><span style="font-size:12px;font-weight:700;color:#1a1a1a">'+mobile+'</span></div>'
+    +(area?'<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #e0f5e9"><span style="font-size:12px;color:#888">📍 Area</span><span style="font-size:12px;font-weight:700;color:#1a1a1a">'+area+'</span></div>':'')
+    +'<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #e0f5e9"><span style="font-size:12px;color:#888">📝 Description</span><span style="font-size:12px;font-weight:700;color:#1a1a1a">'+desc+'</span></div>'
+    +(bankRef?'<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #e0f5e9"><span style="font-size:12px;color:#888">🏦 Bank</span><span style="font-size:12px;font-weight:700;color:#1a1a1a">'+bankRef+'</span></div>':'')
+    +'<div style="display:flex;justify-content:space-between;padding:7px 0;margin-top:2px"><span style="font-size:13px;font-weight:700;color:#0F6E56">💵 Amount</span><span style="font-size:18px;font-weight:800;color:#0F6E56">Rs '+amount.toLocaleString('en-PK')+'</span></div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+    +'<button onclick="closeCustomPopup()" style="padding:12px;background:#f5f5f5;border:1px solid #ddd;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;color:#555">✕ Cancel</button>'
+    +'<button onclick="closeCustomPopup();_doFinishDonation()" style="padding:12px;background:linear-gradient(135deg,#0F6E56,#1D9E75);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">✅ Confirm</button>'
+    +'</div></div>';
+  showCustomPopup(confHtml);
+  // Store pending data for after confirmation
+  window._pendingDonation={name,amount,mobile,cnic};
+}
+function _doFinishDonation(){
+  var p=window._pendingDonation;
+  if(!p)return;
+  window._pendingDonation=null;
   const fi=document.getElementById('donorPhotoInput');
-  if(fi.files[0]){const r=new FileReader();r.onload=e=>finishDonation(name,amount,mobile,cnic,e.target.result);r.readAsDataURL(fi.files[0]);}
-  else finishDonation(name,amount,mobile,cnic,null);
+  if(fi&&fi.files[0]){const r=new FileReader();r.onload=e=>finishDonation(p.name,p.amount,p.mobile,p.cnic,e.target.result);r.readAsDataURL(fi.files[0]);}
+  else finishDonation(p.name,p.amount,p.mobile,p.cnic,null);
 }
 async function finishDonation(name,amount,mobile,cnic,photo){
   const bi=(document.getElementById('fetchById').value||'').trim();
@@ -2171,17 +2273,27 @@ function previewDcPhoto(inputId, previewId, plusId){
 function submitDeceased(){
   const name=document.getElementById('dcName').value.trim();
   if(!name){showPopup('⚠️','Incomplete','Name is required.');return;}
-  const nid=nextDecId();
-  // Read both photos then save
+  const dateOfDeath=document.getElementById('dcDate').value;
+  var _dcArea=(document.getElementById('dcArea')||{value:''}).value||'';
+  var _dcFather=(document.getElementById('dcFather')||{value:''}).value||'';
+  showConfirm({icon:'🪦',title:'Deceased Entry Confirm',titleUr:'وفات اندراج کی تصدیق کریں',
+    rows:[{label:'👤 Naam',value:name},{label:'📅 Date',value:dateOfDeath||'—'},{label:'📍 Area',value:_dcArea},{label:'👨 Father',value:_dcFather}],
+    confirmText:'✅ Save Entry',
+    onConfirm:async function(){
   const pf=document.getElementById('dcPersonPhotoInput');
   const gf=document.getElementById('dcGravePhotoInput');
+  const nid=nextDecId();
   function saveDeceased(personPhoto, gravePhoto){
     const decO={id:nid,name,fatherName:document.getElementById('dcFather').value,cnic:document.getElementById('dcCnic').value,area:document.getElementById('dcArea').value,dateOfDeath:document.getElementById('dcDate').value,approved:false,addedBy:currentUser.id,addedDate:today(),personPhoto:personPhoto||null,gravePhoto:gravePhoto||null,w1name:document.getElementById('w1name').value,w1father:document.getElementById('w1father').value,w1mobile:document.getElementById('w1mobile').value,w2name:document.getElementById('w2name').value,w2father:document.getElementById('w2father').value,w2mobile:document.getElementById('w2mobile').value,imamName:(document.getElementById('imamName')||{value:''}).value,imamMobile:(document.getElementById('imamMobile')||{value:''}).value};
-  DB.deceased.push(decO);FS.save('deceased',nid,decO);
+    DB.deceased.push(decO);FS.save('deceased',nid,decO);
     DB.auditLog.push({by:currentUser.id,action:'Deceased Entry',target:name,detail:'ID: '+nid,date:today()});
     addNotification('deceased','Deceased Entry','ID: '+nid+' — '+name+' | Pending approval');
+    // Auto blank deceased form
+    ['dcName','dcFather','dcCnic','w1name','w1father','w1mobile','w2name','w2father','w2mobile','imamName','imamMobile'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+    var dcDate=document.getElementById('dcDate');if(dcDate)dcDate.value='';
+    var dcArea=document.getElementById('dcArea');if(dcArea)dcArea.value='';
     renderTab('deceased');
-  showPopup('📤','Submitted','ID: '+nid+' | Pending developer approval.');
+    showPopup('📤','Submitted','ID: '+nid+' | Pending developer approval.');
   const _decNotifTs=Date.now();
   DB.users.filter(u=>u.approved&&!u.locked&&u.id!==currentUser.id).forEach(function(u){
     FS.save('notifications','NOTIF_DEC_'+_decNotifTs+'_'+u.id,{
@@ -2201,6 +2313,7 @@ function submitDeceased(){
   } else if(gf.files[0]){
     const r=new FileReader();r.onload=e=>saveDeceased(null,e.target.result);r.readAsDataURL(gf.files[0]);
   } else saveDeceased(null,null);
+  }});
 }
 
 // ---- DEATH CERTIFICATE (new format) ----
@@ -3437,12 +3550,16 @@ function generateSlip(){
   res.innerHTML=`<div class="cert-wrap" id="donorSlipWrap" style="background:#fff;border:1.5px solid #1D9E75;border-radius:14px;overflow:hidden;max-width:440px;margin:0 auto;font-family:'Arial',sans-serif">
 
   <!-- Compact Islamic Header -->
-  <div style="background:linear-gradient(135deg,#0F6E56,#1D9E75);padding:12px 16px;text-align:center;position:relative">
-    <div style="font-size:11px;color:rgba(255,255,255,0.7);letter-spacing:1px;margin-bottom:4px">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</div>
-    ${ORG_CONFIG.logo?`<img src="${ORG_CONFIG.logo}" style="height:32px;max-width:80px;object-fit:contain;margin:0 auto 4px;display:block">`:``}
-    <div style="font-size:15px;font-weight:800;color:#fff;letter-spacing:0.3px">${orgName()}</div>
-
-    <div style="font-size:11px;color:rgba(255,255,255,0.75);margin-top:3px;letter-spacing:1px">— DONOR PAYMENT SLIP —</div>
+  <div style="background:linear-gradient(135deg,#0F6E56,#1D9E75);padding:14px 16px;text-align:center;position:relative">
+    <div style="font-size:11px;color:rgba(255,255,255,0.7);letter-spacing:1px;margin-bottom:6px">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</div>
+    ${(()=>{
+      var logo=ORG_CONFIG.logo;
+      if(logo==='__local__') logo=localStorage.getItem('fq_org_logo');
+      return logo?`<div style="width:64px;height:64px;border-radius:50%;background:#fff;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;overflow:hidden;border:3px solid rgba(255,255,255,0.4);box-shadow:0 2px 8px rgba(0,0,0,0.2)"><img src="${logo}" style="width:100%;height:100%;object-fit:contain;padding:4px"></div>`:'<div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,0.15);margin:0 auto 8px;display:flex;align-items:center;justify-content:center;font-size:24px">🕌</div>';
+    })()}
+    <div style="font-size:16px;font-weight:800;color:#fff;letter-spacing:0.3px">${orgName()}</div>
+    ${ORG_CONFIG.nameUrdu?`<div style="font-size:12px;color:rgba(255,255,255,0.85);margin-top:2px;direction:rtl">${ORG_CONFIG.nameUrdu}</div>`:''}
+    <div style="font-size:10px;color:rgba(255,255,255,0.7);margin-top:5px;letter-spacing:1.5px;text-transform:uppercase">— Donor Payment Slip —</div>
   </div>
 
   <!-- Donor Info -->
@@ -4194,13 +4311,16 @@ function submitExpense(){
   const date=document.getElementById('expDate').value;
   const area=document.getElementById('expArea').value;
   if(!desc||!amount||!date){showPopup('⚠️','Incomplete','Description, amount and date are required.');return;}
-  if(!confirm('Expense save karein?\nDesc: '+desc+'\nAmount: Rs '+amount))return;
-  const fi=document.getElementById('billImgInput');
-  if(fi.files[0]){
-    const r=new FileReader();
-    r.onload=e=>finishExpense(desc,amount,date,area,e.target.result);
-    r.readAsDataURL(fi.files[0]);
-  } else finishExpense(desc,amount,date,area,null);
+  var _expVendor=(document.getElementById('expVendor')||{value:''}).value.trim();
+  var _expCat=(document.getElementById('expCategory')||{value:''}).value||'';
+  showConfirm({icon:'📋',title:'Expense Confirm',titleUr:'اخراجات کی تصدیق کریں',
+    rows:[{label:'📝 Description',value:desc},{label:'🏷️ Category',value:_expCat},{label:'🏪 Vendor',value:_expVendor},{label:'📍 Area',value:area||'—'},{label:'📅 Date',value:date},{label:'💸 Amount',value:'Rs '+amount.toLocaleString('en-PK')}],
+    confirmText:'✅ Save Expense',
+    onConfirm:async function(){
+      const fi=document.getElementById('billImgInput');
+      if(fi&&fi.files[0]){const r=new FileReader();r.onload=e=>finishExpense(desc,amount,date,area,e.target.result);r.readAsDataURL(fi.files[0]);}
+      else finishExpense(desc,amount,date,area,null);
+    }});
 }
 
 function updateExpBalance(val){
@@ -4777,28 +4897,32 @@ async function saveOrgName(){
   var en=(document.getElementById('orgNameEn')||{value:''}).value.trim();
   var ur=(document.getElementById('orgNameUr')||{value:''}).value.trim();
   if(!en){showPopup('⚠️','Required','English name required.');return;}
-  if(!confirm('Org name save karein?'))return;
+  showConfirm({icon:'🏛️',title:'Org Name Save',titleUr:'ادارے کا نام محفوظ کریں',confirmText:'✅ Save',onConfirm:async function(){
   ORG_CONFIG.name=en;if(ur)ORG_CONFIG.nameUrdu=ur;
   await FS.saveConfig();saveLocalCache();renderLoginExtras();
   showPopup('✅','Saved','Organization name saved!');renderTab('orgsettings');
+  }});
 }
 async function saveOrgAddress(){
-  if(!confirm('Address save karein?'))return;
+  showConfirm({icon:'📍',title:'Address Save',titleUr:'پتہ محفوظ کریں',confirmText:'✅ Save',onConfirm:async function(){
   ORG_CONFIG.address=(document.getElementById('orgAddress')||{value:''}).value.trim();
   await FS.saveConfig();saveLocalCache();renderLoginExtras();
   showPopup('✅','Saved','Address saved!');
+  }});
 }
 async function saveOrgFullAddress(){
-  if(!confirm('Full address save karein?'))return;
+  showConfirm({icon:'📍',title:'Full Address Save',titleUr:'مکمل پتہ محفوظ کریں',confirmText:'✅ Save',onConfirm:async function(){
   ORG_CONFIG.fullAddress=(document.getElementById('orgFullAddress')||{value:''}).value.trim();
   await FS.saveConfig();saveLocalCache();
   showPopup('✅','Saved','Full address saved!');
+  }});
 }
 async function saveOrgHistory(){
-  if(!confirm('History save karein?'))return;
+  showConfirm({icon:'📜',title:'History Save',titleUr:'تاریخ محفوظ کریں',confirmText:'✅ Save',onConfirm:async function(){
   ORG_CONFIG.history=(document.getElementById('orgHistory')||{value:''}).value.trim();
   await FS.saveConfig();saveLocalCache();renderLoginExtras();
   showPopup('✅','Saved','History saved!');
+  }});
 }
 function uploadOrgLogo(){
   var f=document.getElementById('orgLogoInput');if(!f||!f.files[0])return;
@@ -4852,7 +4976,7 @@ function addContactNumber(){
   var area=(document.getElementById('cnArea')||{value:''}).value.trim();
   var fi=document.getElementById('cnPhotoInp');
   if(!label||!number){showPopup('⚠️','Required','Label and number required.');return;}
-  if(!confirm('Contact add karein: '+label+'?'))return;
+  showConfirm({icon:'📞',title:'Add Contact',titleUr:'رابطہ شامل کریں',rows:[{label:'📛 Label',value:label},{label:'📱 Number',value:(document.getElementById('cnNumber')||{value:''}).value}],confirmText:'✅ Add',onConfirm:async function(){
   if(!ORG_CONFIG.contactNumbers)ORG_CONFIG.contactNumbers=[];
   async function finish(photo){
     ORG_CONFIG.contactNumbers.push({label:label,number:number,area:area,photo:photo||null});
@@ -4869,9 +4993,10 @@ function addContactNumber(){
   if(fi&&fi.files[0]){var r=new FileReader();r.onload=function(e){finish(e.target.result);};r.readAsDataURL(fi.files[0]);}
   else if(window._cnUserPhoto){finish(window._cnUserPhoto);window._cnUserPhoto=null;}
   else finish(null);
+  }});
 }
 async function saveSocialLinks(){
-  if(!confirm('Social links save karein?'))return;
+  showConfirm({icon:'🔗',title:'Social Links Save',titleUr:'سوشل لنکس محفوظ کریں',confirmText:'✅ Save',onConfirm:async function(){
   ORG_CONFIG.socialLinks={
     facebook:document.getElementById('slFacebook').value.trim(),
     instagram:document.getElementById('slInstagram').value.trim(),
@@ -4881,6 +5006,7 @@ async function saveSocialLinks(){
   };
   await FS.saveConfig();saveLocalCache();renderLoginExtras();
   showPopup('✅','Saved','Social links saved. | سوشل لنکس محفوظ ہو گئے');
+  }});
 }
 // previewBaQr removed
 function compressImg(dataUrl,maxW,maxH,quality,cb){
@@ -7678,14 +7804,6 @@ T.liveboard=function(){
 // Main hub
 function _fpShowList(type){
   var org=ORG_CONFIG.name||'Falah e Qabristan Committee';
-  var bankStr='';
-  if(ORG_CONFIG.bankAccounts&&ORG_CONFIG.bankAccounts.length){
-    var bls=[];
-    ORG_CONFIG.bankAccounts.forEach(function(b){bls.push((b.title||b.bank)+'\n'+b.bank+'\n'+b.number);});
-    bankStr='\n\n'+bls.join('\n\n');
-  }
-  var defaultMsg='السلام علیکم پیارے بھائی 🌿\n\nامید ہے آپ خیریت سے ہوں گے۔\n\nمحترم *{name}* صاحب! اس ماہ آپ کی طرف سے فنڈ ابھی تک موصول نہیں ہو سکا۔ آپ سے مؤدبانہ گزارش ہے کہ براہِ کرم جلد ارسال فرما دیں۔\n\nاللہ تعالیٰ آپ کو بہترین اجر عطا فرمائے۔ آمین 🤲';
-  var tmpl=ORG_CONFIG.waMessage&&ORG_CONFIG.waMessage.trim()?ORG_CONFIG.waMessage:defaultMsg;
   var title,donors=[],isPending=false;
   if(type==='collected'){
     title='✅ Donors with Donations This Month';
@@ -7718,8 +7836,7 @@ function _fpShowList(type){
     var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
     var av=d.photo?'<img src="'+d.photo+'" style="width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0">':'<div style="width:38px;height:38px;border-radius:50%;background:'+(isPending?'#FAEEDA':'#E1F5EE')+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:'+(isPending?'#854F0B':'#0F6E56')+';flex-shrink:0">'+init+'</div>';
     var mob=(d.mobile||'').replace(/[^0-9]/g,'');
-    var waMsg=tmpl.replace(/\{name\}/g,d.name).replace(/\{org\}/g,org)+bankStr;
-    var waUrl=mob?'whatsapp://send?phone=92'+mob.replace(/^0/,'')+'&text='+encodeURIComponent(waMsg):'';
+    var waUrl=buildWAUrl(d.mobile,d.name);
     html+='<div style="display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid #f0f0f0">';
     html+=av;
     html+='<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700">'+d.name+'</div>';
@@ -10534,11 +10651,6 @@ T.wreminder=function(){
   }
   var thisMonth=today().substring(0,7);
   var org=ORG_CONFIG.name||'Falah e Qabristan Committee';
-  var bankList=[];
-  if(ORG_CONFIG.bankAccounts&&ORG_CONFIG.bankAccounts.length>0){
-    ORG_CONFIG.bankAccounts.forEach(function(b){bankList.push((b.title||b.bank)+'\n'+b.bank+'\n'+b.number);});
-  }
-  var bankStr=bankList.join('\n\n');
 
   // Hidden list
   var hiddenRaw={};
@@ -10643,12 +10755,8 @@ T.wreminder=function(){
     var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
     var av=d.photo?'<img src="'+d.photo+'" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1.5px solid #E1F5EE;flex-shrink:0">':'<div style="width:42px;height:42px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
     var mob=(d.mobile||'').replace(/[^0-9]/g,'');
-    var _org=ORG_CONFIG.name||'Falah e Qabristan Committee';
-    var _tmpl=ORG_CONFIG.waMessage&&ORG_CONFIG.waMessage.trim()?ORG_CONFIG.waMessage:'السلام علیکم پیارے بھائی 🌿\n\nامید ہے آپ خیریت سے ہوں گے۔\n\nآپ کا ہمیشہ قبرستان کے معاملات میں بھرپور تعاون — چاہے مالی ہو یا ذاتی محنت — قابل۔ قدر اور ہمارے لیے باعث۔ حوصلہ رہا ہے۔ اللہ تعالیٰ آپ کو اس کا بہترین اجر عطا فرمائے۔\n\nمحترم *{name}* صاحب! اس ماہ آپ کی طرف سے فنڈ ابھی تک موصول نہیں ہو سکا۔ آپ سے مؤدبانہ گزارش ہے کہ براہ۔ کرم اس ماہ کا فنڈ جلد از جلد *{org}* کو ارسال فرما دیں، تاکہ جاری کام بغیر کسی رکاوٹ کے بہتر طریقے سے مکمل کیے جا سکیں۔\n\nآپ کا چھوٹا سا تعاون بھی ایک بڑی نیکی اور صدقہ جاریہ ہے، جو نہ صرف اس دنیا بلکہ آخرت میں بھی آپ کے لیے باعث۔ اجر بنے گا۔\n\nاللہ تعالیٰ ہم سب کو نیک کاموں میں بڑھ چڑھ کر حصہ لینے کی توفیق عطا فرمائے۔ آمین 🤲';
-    var msg=_tmpl.replace(/\{name\}/g,d.name).replace(/\{org\}/g,_org)+(bankStr?'\n\n'+bankStr:'');
-
-    var waUrl=mob?'whatsapp://send?phone=92'+mob.replace(/^0/,'')+'&text='+encodeURIComponent(msg):'';
-    var waFallback=mob?'https://api.whatsapp.com/send?phone=92'+mob.replace(/^0/,'')+'&text='+encodeURIComponent(msg):'';
+    var waUrl=buildWAUrl(d.mobile,d.name);
+    var waFallback=mob?'https://api.whatsapp.com/send?phone=92'+mob.replace(/^0/,'')+'&text='+encodeURIComponent(buildWAMessage(d.name)):'';
     var appUser=DB.users.find(function(u){return u.mobile&&d.mobile&&u.mobile.replace(/[^0-9]/g,'')===mob;});
     var lastDon=DB.donations.filter(function(x){return x.donorId===d.id;}).sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
     html+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #e8e8e8">';
@@ -10693,16 +10801,13 @@ function _wrFilter(){
   if(wrQ){var ql=wrQ.toLowerCase();list=list.filter(function(d){return (d.name||'').toLowerCase().includes(ql)||(d.mobile||'').includes(ql)||(d.area||'').toLowerCase().includes(ql)||(d.id||'').toLowerCase().includes(ql);});}
   list.sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
   var org=ORG_CONFIG.name||'Falah e Qabristan Committee';
-  var bankList=[];if(ORG_CONFIG.bankAccounts)ORG_CONFIG.bankAccounts.forEach(function(b){bankList.push(b.bank+': '+b.number);});
-  var bankStr=bankList.join(' | ');
   var html='<div style="font-size:11px;color:#888;margin-bottom:8px">'+list.length+' donors</div>';
   list.forEach(function(d){
     var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
     var av=d.photo?'<img src="'+d.photo+'" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:1.5px solid #E1F5EE;flex-shrink:0">':'<div style="width:42px;height:42px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
     var mob=(d.mobile||'').replace(/[^0-9]/g,'');
-    var msg='\uD83C\uDF3F \u0628\u0633\u0645 \u0627\u0644\u0644\u06c1\n\n\u0645\u062d\u062a\u0631\u0645 *'+d.name+'* \u0635\u0627\u062d\u0628!\n\u0641\u0646\u0688 \u0645\u0648\u0635\u0648\u0644 \u0646\u06c1\u06cc\u06ba \u06c1\u0648 \u0633\u06a9\u0627\u06d4 \u062c\u0644\u062f \u0627\u062f\u0627 \u0641\u0631\u0645\u0627\u0626\u06cc\u06ba\u06d4'+(bankStr?'\n\n\uD83C\uDFE6 '+bankStr:'')+'\n\n\u062c\u0632\u0627\u06a9\u0645 \u0627\u0644\u0644\u06c1';
-    var waUrl=mob?'whatsapp://send?phone=92'+mob.replace(/^0/,'')+'&text='+encodeURIComponent(msg):'';
-    var waFallback=mob?'https://api.whatsapp.com/send?phone=92'+mob.replace(/^0/,'')+'&text='+encodeURIComponent(msg):'';
+    var waUrl=buildWAUrl(d.mobile,d.name);
+    var waFallback=mob?'https://api.whatsapp.com/send?phone=92'+mob.replace(/^0/,'')+'&text='+encodeURIComponent(buildWAMessage(d.name)):'';
     var appUser=DB.users.find(function(u){return u.mobile&&d.mobile&&u.mobile.replace(/[^0-9]/g,'')===mob;});
     var lastDon=DB.donations.filter(function(x){return x.donorId===d.id;}).sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
     html+='<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #e8e8e8">'+av;
@@ -11262,16 +11367,18 @@ function _fdLinkDonors(){
   var selFrId=window._fdManualFrId||'';
   var selArea=window._fdManualArea||'';
   var selQ=window._fdManualQ||'';
+  var selStatus=window._fdManualStatus||'all'; // all | linked | unlinked
   html+='<div style="background:#E6F1FB;border:1px solid #378ADD;border-radius:10px;padding:10px;margin-bottom:12px">';
   html+='<div style="font-size:12px;font-weight:700;color:#185FA5;margin-bottom:8px">🔗 Manual Link — Fundraiser ko Donor se link karein</div>';
   var frOpts=DB.fundraisers.map(function(f){return '<option value="'+f.id+'"'+(selFrId===f.id?' selected':'')+'>'+f.name+' ('+f.subArea+')</option>';}).join('');
   var areaOpts2=AREAS.map(function(a){return '<option value="'+a+'"'+(selArea===a?' selected':'')+'>'+a+'</option>';}).join('');
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">';
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">';
   html+='<div><label style="font-size:10px;font-weight:700;color:#555">Fundraiser *</label><select id="fdLinkFr" onchange="window._fdManualFrId=this.value;_fdRefreshManual()" style="width:100%;padding:8px;border:1.5px solid #378ADD;border-radius:8px;font-size:11px;margin-top:2px"><option value="">-- Select --</option>'+frOpts+'</select></div>';
-  html+='<div><label style="font-size:10px;font-weight:700;color:#555">Filter by Area</label><select id="fdLinkArea" onchange="window._fdManualArea=this.value;_fdRefreshManual()" style="width:100%;padding:8px;border:1.5px solid #378ADD;border-radius:8px;font-size:11px;margin-top:2px"><option value="">-- All Areas --</option>'+areaOpts2+'</select></div>';
+  html+='<div><label style="font-size:10px;font-weight:700;color:#555">Area</label><select id="fdLinkArea" onchange="window._fdManualArea=this.value;_fdRefreshManual()" style="width:100%;padding:8px;border:1.5px solid #378ADD;border-radius:8px;font-size:11px;margin-top:2px"><option value="">-- All --</option>'+areaOpts2+'</select></div>';
+  html+='<div><label style="font-size:10px;font-weight:700;color:#555">Status</label><select id="fdLinkStatus" onchange="window._fdManualStatus=this.value;_fdRefreshManual()" style="width:100%;padding:8px;border:1.5px solid #378ADD;border-radius:8px;font-size:11px;margin-top:2px"><option value="all"'+(selStatus==='all'?' selected':'')+'>All</option><option value="linked"'+(selStatus==='linked'?' selected':'')+'>🔗 Linked</option><option value="unlinked"'+(selStatus==='unlinked'?' selected':'')+'>⭕ Unlinked</option></select></div>';
   html+='</div>';
   html+='<input type="text" id="fdLinkDonorQ" value="'+selQ+'" placeholder="Search by name, ID or mobile..." oninput="window._fdManualQ=this.value;_fdRefreshManual()" autocomplete="off" style="width:100%;padding:8px;border:1.5px solid #378ADD;border-radius:8px;font-size:12px;box-sizing:border-box;margin-bottom:8px">';
-  html+='<div id="fdManualResults">'+_fdBuildManualResults(selFrId,selArea,selQ)+'</div>';
+  html+='<div id="fdManualResults">'+_fdBuildManualResults(selFrId,selArea,selQ,selStatus)+'</div>';
   html+='</div>';
 
   // Donor list with sub area input + area filter
@@ -11288,40 +11395,48 @@ function _fdLinkDonors(){
   return html;
 }
 
-function _fdBuildManualResults(frId,area,q){
+function _fdBuildManualResults(frId,area,q,status){
+  status=status||'all';
   var allPeople=[];
-  DB.donors.forEach(function(d){allPeople.push({id:d.id,name:d.name,mobile:d.mobile,area:d.area,type:'donor'});});
+  DB.donors.forEach(function(d){allPeople.push({id:d.id,name:d.name,mobile:d.mobile,area:d.area,type:'donor',photo:d.photo||null});});
   DB.users.filter(function(u){return u.approved&&u.role==='user';}).forEach(function(u){
-    if(!allPeople.find(function(p){return p.id===u.id;}))allPeople.push({id:u.id,name:u.name,mobile:u.mobile,area:u.area,type:'user'});
+    if(!allPeople.find(function(p){return p.id===u.id;}))allPeople.push({id:u.id,name:u.name,mobile:u.mobile,area:u.area,type:'user',photo:u.photo||null});
   });
   if(area) allPeople=allPeople.filter(function(p){return (p.area||'')===area;});
   if(q) allPeople=allPeople.filter(function(p){return (p.name||'').toLowerCase().includes(q.toLowerCase())||(p.id||'').toLowerCase().includes(q.toLowerCase())||(p.mobile||'').includes(q);});
-  if(!frId&&!area&&!q) return '<div style="font-size:11px;color:#aaa;text-align:center;padding:8px">Fundraiser ya Area select karein</div>';
+  if(status==='linked') allPeople=allPeople.filter(function(p){return !!DB.fundraisingLinks.find(function(l){return l.donorId===p.id;});});
+  else if(status==='unlinked') allPeople=allPeople.filter(function(p){return !DB.fundraisingLinks.find(function(l){return l.donorId===p.id;});});
+  if(!frId&&!area&&!q&&status==='all') return '<div style="font-size:11px;color:#aaa;text-align:center;padding:8px">Fundraiser ya filter select karein</div>';
   if(!allPeople.length) return '<div style="font-size:11px;color:#aaa;text-align:center;padding:8px">Koi result nahi mila</div>';
-  var html='<div style="max-height:200px;overflow-y:auto;border:1px solid #ddd;border-radius:8px;background:#fff">';
-  allPeople.slice(0,30).forEach(function(p){
+  var linkedCount=allPeople.filter(function(p){return !!DB.fundraisingLinks.find(function(l){return l.donorId===p.id;});}).length;
+  var unlinkedCount=allPeople.length-linkedCount;
+  var html='<div style="font-size:10px;color:#888;margin-bottom:6px">'+allPeople.length+' entries &bull; <span style="color:#0F6E56">🔗 '+linkedCount+' linked</span> &bull; <span style="color:#854F0B">&#9898; '+unlinkedCount+' unlinked</span></div>';
+  html+='<div style="max-height:240px;overflow-y:auto;border:1px solid #ddd;border-radius:8px;background:#fff">';
+  allPeople.slice(0,40).forEach(function(p){
     var alreadyLinked=DB.fundraisingLinks.find(function(l){return l.donorId===p.id;});
     var init=(p.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
-    html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #f5f5f5;background:'+(alreadyLinked?'#f9f9f9':'#fff')+'">';
-    html+='<div style="width:30px;height:30px;border-radius:50%;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#0F6E56;flex-shrink:0">'+init+'</div>';
-    html+='<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700">'+p.name+'</div>';
-    html+='<div style="font-size:10px;color:#888">'+p.id+' &bull; '+(p.type==='user'?'👤':'💰')+(p.area?' &bull; '+p.area:'')+'</div>';
-    if(alreadyLinked){var af=DB.fundraisers.find(function(f){return f.id===alreadyLinked.fundraiserId;});if(af)html+='<div style="font-size:10px;color:#0F6E56">🔗 '+af.name+'</div>';}
+    var avatar=p.photo
+      ?'<img src="'+p.photo+'" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0">'
+      :'<div style="width:34px;height:34px;border-radius:50%;background:'+(alreadyLinked?'#E1F5EE':'#f5f5f5')+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:'+(alreadyLinked?'#0F6E56':'#888')+';flex-shrink:0">'+init+'</div>';
+    html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid #f5f5f5;background:'+(alreadyLinked?'#f0fff8':'#fff')+'">';
+    html+=avatar;
+    html+='<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+p.name+'</div>';
+    html+='<div style="font-size:10px;color:#888">'+p.id+' &bull; '+(p.type==='user'?'&#128100; User':'&#128176; Donor')+(p.area?' &bull; '+p.area:'')+'</div>';
+    if(alreadyLinked){var af=DB.fundraisers.find(function(f){return f.id===alreadyLinked.fundraiserId;});if(af)html+='<div style="font-size:10px;color:#0F6E56;font-weight:600">&#128279; '+af.name+'</div>';}
     html+='</div>';
     if(frId){
       if(alreadyLinked){
-        html+='<button onclick="_fdManualLinkDirect(\''+frId+'\',\''+p.id+'\',true)" style="background:#FFF0F0;border:1px solid #FCBFBF;color:#E24B4A;border-radius:7px;padding:5px 8px;font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0">Re-link</button>';
+        html+='<button onclick="_fdManualLinkDirect(\"'+frId+'\",\"'+p.id+'\",true)" style="background:#FFF0F0;border:1px solid #FCBFBF;color:#E24B4A;border-radius:7px;padding:5px 8px;font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap">Re-link</button>';
       } else {
-        html+='<button onclick="_fdManualLinkDirect(\''+frId+'\',\''+p.id+'\',false)" style="background:#0F6E56;color:#fff;border:none;border-radius:7px;padding:5px 8px;font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0">Link</button>';
+        html+='<button onclick="_fdManualLinkDirect(\"'+frId+'\",\"'+p.id+'\",false)" style="background:#0F6E56;color:#fff;border:none;border-radius:7px;padding:5px 8px;font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0">Link</button>';
       }
     }
     html+='</div>';
   });
-  if(allPeople.length>30) html+='<div style="font-size:10px;color:#aaa;text-align:center;padding:6px">+'+( allPeople.length-30)+' more — refine search</div>';
+  if(allPeople.length>40) html+='<div style="font-size:10px;color:#aaa;text-align:center;padding:6px">+'+(allPeople.length-40)+' more — refine search/filters</div>';
   html+='</div>';
   return html;
 }
-
 function _fdBuildSubList(q,areaFilter,linked){
   var allEntries=[];
   DB.donors.forEach(function(d){allEntries.push({id:d.id,name:d.name,mobile:d.mobile,area:d.area,subArea:d.subArea||'',type:'donor',photo:d.photo});});
@@ -11357,7 +11472,8 @@ function _fdRefreshManual(){
   var frId=window._fdManualFrId||'';
   var area=window._fdManualArea||'';
   var q=window._fdManualQ||'';
-  el.innerHTML=_fdBuildManualResults(frId,area,q);
+  var status=window._fdManualStatus||'all';
+  el.innerHTML=_fdBuildManualResults(frId,area,q,status);
 }
 
 function _fdRefreshSubList(){
@@ -11423,12 +11539,37 @@ function _fdList(){
   var selId=window._fdViewId||null;
   var html='';
 
-  // Fundraiser selector
-  var frOpts=DB.fundraisers.map(function(f){return '<option value="'+f.id+'" '+(selId===f.id?'selected':'')+'>'+f.name+' — '+f.subArea+'</option>';}).join('');
-  html+='<select onchange="window._fdViewId=this.value;renderTab(\'fundraisingdept\')" style="width:100%;padding:10px;border:1.5px solid #1D9E75;border-radius:10px;font-size:13px;margin-bottom:12px">';
-  html+='<option value="">-- Select Fundraiser --</option>'+frOpts+'</select>';
+  // Fundraiser card grid with photos
+  if(!DB.fundraisers.length){
+    return '<div style="text-align:center;color:#aaa;padding:24px;font-size:13px">Koi fundraiser nahi. Assign tab se add karein.</div>';
+  }
+  html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:14px">';
+  DB.fundraisers.forEach(function(f){
+    var isActive=selId===f.id;
+    var cnt=DB.fundraisingLinks.filter(function(l){return l.fundraiserId===f.id;}).length;
+    var init=(f.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+    var person=DB.users.find(function(u){return u.id===f.personId;})||DB.donors.find(function(d){return d.id===f.personId;});
+    var photo=person&&person.photo?person.photo:null;
+    var bg=isActive?'linear-gradient(135deg,#0F6E56,#185FA5)':'#f9f9f9';
+    var bdr=isActive?'#0F6E56':'#e8e8e8';
+    var namecol=isActive?'#fff':'#1a1a1a';
+    var subcol=isActive?'rgba(255,255,255,0.75)':'#888';
+    var cntcol=isActive?'rgba(255,255,255,0.85)':'#0F6E56';
+    html+='<div onclick="window._fdViewId=\''+f.id+'\';renderTab(\'fundraisingdept\')" style="background:'+bg+';border:2px solid '+bdr+';border-radius:14px;padding:12px 8px;text-align:center;cursor:pointer">';
+    if(photo){
+      html+='<img src="'+photo+'" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:3px solid '+(isActive?'rgba(255,255,255,0.4)':'#fff')+';margin-bottom:6px">';
+    } else {
+      html+='<div style="width:52px;height:52px;border-radius:50%;background:'+(isActive?'rgba(255,255,255,0.2)':'#E1F5EE')+';display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:'+(isActive?'#fff':'#0F6E56')+';margin:0 auto 6px">'+init+'</div>';
+    }
+    html+='<div style="font-size:12px;font-weight:700;color:'+namecol+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+f.name+'</div>';
+    html+='<div style="font-size:10px;color:'+subcol+';margin-top:2px">'+(f.subArea||'—')+'</div>';
+    html+='<div style="font-size:11px;font-weight:700;color:'+cntcol+';margin-top:3px">'+cnt+' donors</div>';
+    html+='</div>';
+  });
+  html+='</div>';
 
-  if(!selId) return html+'<div style="text-align:center;color:#aaa;padding:20px;font-size:13px">Upar se fundraiser select karein</div>';
+  if(!selId) return html+'<div style="text-align:center;color:#aaa;padding:16px;font-size:13px">Upar se fundraiser card select karein</div>';
+
   var fr=DB.fundraisers.find(function(f){return f.id===selId;});
   if(!fr) return html;
 
@@ -11472,15 +11613,13 @@ function _fdList(){
 function _fdDonorSection(title,links,collectedIds,showWA,fr){
   if(!links.length) return '';
   var org=ORG_CONFIG.name||'Falah e Qabristan';
-  var defaultMsg='السلام علیکم پیارے بھائی 🌿\n\nامید ہے آپ خیریت سے ہوں گے۔\n\nمحترم *{name}* صاحب! اس ماہ آپ کی طرف سے فنڈ ابھی تک موصول نہیں ہو سکا۔ براہِ کرم جلد ارسال فرما دیں۔\n\nشکریہ\n'+org;
-  var waMsg=ORG_CONFIG.waMessage&&ORG_CONFIG.waMessage.trim()?ORG_CONFIG.waMessage:defaultMsg;
   var html='<div style="font-size:12px;font-weight:800;color:#1a1a1a;margin-bottom:8px;margin-top:4px">'+title+' ('+links.length+')</div>';
   links.forEach(function(lnk){
     var d=DB.donors.find(function(x){return x.id===lnk.donorId;})||DB.users.find(function(x){return x.id===lnk.donorId;});
     if(!d)return;
     var init=(d.name||'').split(' ').map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
     var mob=(d.mobile||'').replace(/[^0-9]/g,'');
-    var waUrl=mob?'whatsapp://send?phone=92'+mob.replace(/^0/,'')+'&text='+encodeURIComponent(waMsg.replace(/\{name\}/g,d.name).replace(/\{org\}/g,org)):'';
+    var waUrl=buildWAUrl(d.mobile,d.name);
     var lastDon=DB.donations.filter(function(x){return x.donorId===d.id;}).sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
     var lastDate=lastDon.length?lastDon[0].date:'—';
     html+='<div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #f5f5f5">';
@@ -12164,15 +12303,19 @@ async function submitSuperExpense(){
   if(!amount){showPopup('⚠️','Required','Amount darj karein.');return;}
   if(!desc){showPopup('⚠️','Required','Description darj karein.');return;}
   if(!mgr){showPopup('⚠️','Required','Manager select karein.');return;}
-  var billNo='BILL-'+String(++expBillCounter).padStart(4,'0');
-  var newExp={id:'BILL-'+String(++expBillCounter).padStart(4,'0'),billNo:billNo,desc:desc,amount:amount,date:today(),category:cat||'Other',by:currentUser.id,assignedTo:mgr,assignedBy:currentUser.id,assignedByName:currentUser.name,area:''};
-  DB.expenses.push(newExp);
-  try{await FS.save('expenses',newExp.id,newExp);saveLocalCache();}catch(e){}
-  DB.auditLog.push({by:currentUser.id,action:'Expense Added',target:billNo,detail:desc+' Rs '+fmt(amount),date:today()});
-  addNotification('expense','Super Expense','Bill '+billNo+' — Rs '+fmt(amount)+' (via '+currentUser.name+')');
-  closeCustomPopup();
-  // Show slip
-  setTimeout(function(){showExpenseSlip(newExp.id);},100);
+  var _seExpMgrName=(DB.users.find(function(u){return u.id===mgr;})||{name:mgr}).name;
+  showConfirm({icon:'📋',title:'Super Expense Confirm',titleUr:'اخراجات کی تصدیق',
+    rows:[{label:'📝 Description',value:desc},{label:'🏷️ Category',value:cat||'Other'},{label:'👨‍💼 Manager',value:_seExpMgrName},{label:'💸 Amount',value:'Rs '+fmt(amount)}],
+    confirmText:'✅ Save Expense',
+    onConfirm:async function(){
+      var billNo='BILL-'+String(++expBillCounter).padStart(4,'0');
+      var newExp={id:'BILL-'+String(++expBillCounter).padStart(4,'0'),billNo:billNo,desc:desc,amount:amount,date:today(),category:cat||'Other',by:currentUser.id,assignedTo:mgr,assignedBy:currentUser.id,assignedByName:currentUser.name,area:''};
+      DB.expenses.push(newExp);
+      try{await FS.save('expenses',newExp.id,newExp);saveLocalCache();}catch(e){}
+      DB.auditLog.push({by:currentUser.id,action:'Expense Added',target:billNo,detail:desc+' Rs '+fmt(amount),date:today()});
+      addNotification('expense','Super Expense','Bill '+billNo+' — Rs '+fmt(amount)+' (via '+currentUser.name+')');
+      setTimeout(function(){showExpenseSlip(newExp.id);},100);
+    }});
 }
 function openSuperEntryDonation(donorId){
   var donor=DB.donors.find(function(d){return d.id===donorId;})||DB.users.find(function(u){return u.id===donorId;});
@@ -12240,6 +12383,11 @@ async function submitSuperEntry(donorId){
   if(!mgr){showPopup('⚠️','Required','Manager select karein.');return;}
   var donor=DB.donors.find(function(d){return d.id===donorId;})||DB.users.find(function(u){return u.id===donorId;});
   if(!donor){showPopup('⚠️','Error','Donor nahi mila.');return;}
+  var _mgrName=(DB.users.find(function(u){return u.id===mgr;})||{name:mgr}).name;
+  showConfirm({icon:'⚡',title:'Super Entry Confirm',titleUr:'سپر اندراج کی تصدیق',
+    rows:[{label:'👤 Donor',value:donor.name},{label:'🆔 ID',value:donor.id},{label:'📍 Area',value:donor.area||'—'},{label:'👨‍💼 Manager',value:_mgrName},{label:'📝 Remarks',value:remarks||'Donation'},{label:'💵 Amount',value:'Rs '+fmt(amount)}],
+    confirmText:'✅ Save Entry',
+    onConfirm:async function(){
   var id='IN-'+String(++donCounter).padStart(4,'0');
   var entry={id:id,donorId:donorId,amount:amount,date:today(),desc:remarks||'Donation',by:currentUser.id,assignedTo:mgr,assignedBy:currentUser.id,assignedByName:currentUser.name};
   DB.donations.push(entry);
@@ -12248,8 +12396,10 @@ async function submitSuperEntry(donorId){
   donor.entries.push({id:id,date:today(),amount:amount,by:mgr,desc:remarks||'Donation'});
   try{await FS.save('donations',id,entry);await FS.save('donors',donor.id,donor);saveLocalCache();}catch(e){}
   addNotification('donation','Super Entry','Rs '+fmt(amount)+' — '+donor.name+' (via '+currentUser.name+')');
-  closeCustomPopup();
-  showPopup('✅','Saved!','Rs '+fmt(amount)+' — '+donor.name);
+  if(seAmtEl)seAmtEl.value='';
+  if(seRmkEl)seRmkEl.value='';
+  showPopup('\u2705','Saved!','Rs '+fmt(amount)+' \u2014 '+donor.name);
+  }});
 }
 function filterContacts(area){
   const searchEl=document.getElementById('contactSearch');
@@ -12627,9 +12777,14 @@ function submitAddDonor(){
   const dupDonor=DB.donors.find(d=>normMob(d.mobile)===normMob(mobile));
   if(dupDonor){showPopup('⚠️','Duplicate Donor',dupDonor.name+' (ID: '+dupDonor.id+') already exists with this mobile.\n\nDuplicate donor add nahi hoga.');return;}
   // Confirmation
-  const nid=nextAllId();
-  const fi=document.getElementById('adPhotoInp');
-  function finish(photo){
+  showConfirm({icon:'👤',title:'Add Donor Confirm',titleUr:'ڈونر شامل کرنے کی تصدیق',
+    rows:[{label:'👤 Name',value:name},{label:'📱 Mobile',value:mobile},{label:'📍 Area',value:area||'—'},{label:'🩸 Blood Group',value:bloodGroup||'—'},{label:'💼 Profession',value:profession||'—'}],
+    confirmText:'✅ Add Donor',
+    onConfirm:async function(){
+      const nid=nextAllId();
+      const fi=document.getElementById('adPhotoInp');
+      function finish(photo){
+
     const subArea=(document.getElementById('adSubArea')||{value:''}).value.trim()||null;
     const donor={id:nid,name,mobile,cnic:'',area,subArea,bloodGroup,profession,totalDonation:0,photo:photo||null,entries:[],addedBy:currentUser.id,addedByName:currentUser.name,addedDate:today()};
     DB.donors.push(donor);
@@ -12650,8 +12805,9 @@ function submitAddDonor(){
     }
     showCustomPopup('<div style="background:#fff;border-radius:16px;overflow:hidden;max-width:300px;width:88vw"><div style="background:linear-gradient(135deg,#0F6E56,#1D9E75);padding:18px;text-align:center"><div style="font-size:28px;margin-bottom:6px">&#9989;</div><div style="font-size:16px;font-weight:800;color:#fff">Donor Added!</div><div style="font-size:12px;color:rgba(255,255,255,0.8);margin-top:2px">ڈونر شامل ہو گیا</div></div><div style="padding:20px;text-align:center"><div style="font-size:13px;font-weight:600;color:#555;margin-bottom:14px">'+name+'</div><div style="background:#E1F5EE;border:2px solid #1D9E75;border-radius:12px;padding:16px"><div style="font-size:10px;color:#085041;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Donor ID Assigned</div><div style="font-size:36px;font-weight:900;color:#0F6E56;letter-spacing:2px;font-family:monospace">'+nid+'</div><div style="font-size:10px;color:#888;margin-top:6px">یہ ID یاد رکھیں</div></div><button onclick="closeCustomPopup();_resetAddDonorForm&&_resetAddDonorForm()" style="width:100%;background:#0F6E56;color:#fff;border:none;padding:12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-top:14px">OK</button></div></div>');
   }
-  if(fi&&fi.files[0]){const r=new FileReader();r.onload=e=>finish(e.target.result);r.readAsDataURL(fi.files[0]);}
-  else finish(null);
+      if(fi&&fi.files[0]){const r=new FileReader();r.onload=e=>finish(e.target.result);r.readAsDataURL(fi.files[0]);}
+      else finish(null);
+    }});
 }
 
 T.feedback=function(){
@@ -12764,6 +12920,7 @@ function submitSuggestion(type){
     if(statusEl){statusEl.style.display='block';statusEl.innerHTML='<div style="background:#FCEBEB;border:1px solid #E24B4A;border-radius:6px;padding:8px 10px;font-size:12px;color:#A32D2D">⚠️ Please write your suggestion first. | پہلے تجویز لکھیں</div>';}
     return;
   }
+  showConfirm({icon:'💬',title:isComplaint?'Submit Complaint':'Submit Suggestion',titleUr:isComplaint?'شکایت جمع کریں':'تجویز جمع کریں',confirmText:'✅ Submit',onConfirm:async function(){
   const sid='SUGG'+Date.now();
   const now=new Date();
   const sugg={
@@ -12793,6 +12950,7 @@ function submitSuggestion(type){
     setTimeout(()=>{statusEl.style.display='none';},4000);
   }
   renderTab(isComplaint?'complaint':'suggestion');
+  }});
 }
 
 // ============================================================
@@ -13761,7 +13919,7 @@ function buildSMSMessage(type,donor,amount){
   }
   return '';
 }
-function buildWAMessage(type,donor,amount){
+function _smsBuildWAMessage(type,donor,amount){
   var org=orgName();
   var lifeTotal=DB.donations.filter(function(x){return x.donorId===donor.id;}).reduce(function(s,x){return s+x.amount;},0);
   var prevTotal=lifeTotal-(amount||0);
@@ -13855,7 +14013,7 @@ function openSMSReminders(activeTab){
       </div>
       ${paidList.length===0?'<p style="font-size:12px;color:#888;margin-bottom:12px;text-align:center">Is mah kisi ne donate nahi kiya.</p>':paidList.map(p=>{
         const sms=buildSMSMessage('thanks',{id:p.id,name:p.name,mobile:p.mobile},p.amount);
-        const wa=buildWAMessage('thanks',{id:p.id,name:p.name,mobile:p.mobile},p.amount);
+        const wa=_smsBuildWAMessage('thanks',{id:p.id,name:p.name,mobile:p.mobile},p.amount);
         const mob=normMob(p.mobile||'').replace(/^0/,'').replace(/-/g,'');
         return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid #e8f5ee">
           ${avatarHtml(p.photo,p.name,38)}
@@ -13879,7 +14037,7 @@ function openSMSReminders(activeTab){
       </div>
       ${pendingList.length===0?'<p style="font-size:12px;color:#888;text-align:center">Sab ne donate kar diya!</p>':pendingList.map(p=>{
         const sms=buildSMSMessage('reminder',{id:p.id,name:p.name,mobile:p.mobile},0);
-        const wa=buildWAMessage('reminder',{id:p.id,name:p.name,mobile:p.mobile},0);
+        const wa=encodeURIComponent(buildWAMessage(p.name));
         const mob=normMob(p.mobile||'').replace(/^0/,'').replace(/-/g,'');
         return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid #fde8e8">
           ${avatarHtml(p.photo,p.name,38)}
